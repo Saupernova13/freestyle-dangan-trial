@@ -1,0 +1,13 @@
+# Blender 4.1.0 MTL File: 'Optimised_Beams.blend'
+# www.blender.org
+
+newmtl Bench_Rod_Mat
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd UV_Bench_Rod_2x.png
+map_Ns C:/Users/Sauraav/Documents/My Blender Stuff/Textures/2025/dark_wood_4k.blend/textures/dark_wood_rough_4k.exr
+map_Bump -bm 1.000000 C:/Users/Sauraav/Documents/My Blender Stuff/Textures/2025/dark_wood_4k.blend/textures/dark_wood_nor_gl_4k.exr

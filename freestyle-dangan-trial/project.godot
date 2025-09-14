@@ -11,7 +11,6 @@ config_version=5
 [application]
 
 config/name="freestyle-dangan-trial"
-run/main_scene="uid://1xm80k8b4bg4"
 config/features=PackedStringArray("4.4", "Mobile")
 config/icon="res://icon.svg"
 
@@ -21,4 +20,5 @@ project/assembly_name="freestyle-dangan-trial"
 
 [rendering]
 
-renderer/rendering_method="mobile"
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=4
+lights_and_shadows/positional_shadow/soft_shadow_filter_quality=4

@@ -1,0 +1,54 @@
+{
+  "id": "trial1_beat001",                       // Unique ID for referencing/debugging
+  "character": {
+    "name": "Kyoko",                            // Name of the active/speaking character
+    "emote": "serious",                         // Expression/emote to use (linked to sprite)
+    "sprite": "kyoko_serious.png",              // 2D sprite asset name
+    "position": "center"                        // Optional: where on screen they are (left, center, right, or world coordinates)
+  },
+  "dialogue": {
+    "text": "Are you suggesting <highlight>Makoto</highlight> is the culprit?", // Main dialogue, with highlight markup
+    "highlight_tag": "<highlight>",             // Tag used for highlights (to be parsed)
+    "highlight_style": {
+      "color": "#FFDC00",                       // Color for highlighted word(s)
+      "bold": true,                             // If highlights should be bolded
+      "italic": false                           // Or italicized
+    },
+    "voice_line": "kyoko_suggesting.wav",       // Optional: Voice line audio asset
+    "auto_advance": false,                      // Whether it should advance automatically
+    "advance_delay": 0                          // If auto_advance is true, time in seconds to wait before proceeding
+  },
+  "spotlight": {
+    "enabled": true,                            // Should a spotlight effect be used?
+    "target": "Kyoko",                          // Who the spotlight is on (can be [name, name, ...])
+    "color": "#ffffff",                         // (Optional) Spotlight color
+    "intensity": 1.0,                           // (Optional) Intensity of the effect
+    "width": 1.0                                // (Optional) Spotlight size
+  },
+  "camera": {
+    "target": "Kyoko",                          // Camera focus (can be a character, spatial position, or null for default)
+    "transition": "dolly",                      // Type of movement: "cut", "dolly", "pan", "shake"
+    "duration": 1.5                             // Transition/movement duration (seconds)
+  },
+  "sound": {
+    "effects": ["dramatic_stab.wav"],           // List of sound effects to play (by filename/key)
+    "music": null                               // BGM cue (filename/key, null if unchanged)
+  },
+  "ui": {
+    "effects": ["screen_shake"],                // UI/visual effects, e.g. ["white_flash", "objection_overlay"]
+    "show_evidence_panel": false,               // Should evidence panel be visible during this beat?
+    "show_health_bar": true                     // Show/hide health bar, if used
+  },
+  "visible_characters": [                       // List of visible characters in the scene and their positions/emotes
+    {"name": "Kyoko", "emote": "serious", "position": "center"},
+    {"name": "Makoto", "emote": "shocked", "position": "right"}
+  ],
+  "logic": {
+    "branch": null,                             // If this beat leads to a choice, put "choice_id" or null
+    "minigame": null                            // If this beat triggers a minigame/event, specify it or null
+  },
+  "metadata": {
+    "tags": ["accusation", "plot_intense"],     // For categorization/search
+    "notes": "Plot twist moment; highlight Makoto." // Author/editor notes, not shown to player
+  }
+}

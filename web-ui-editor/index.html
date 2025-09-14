@@ -3,481 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <title>Danganronpa Cast Manager</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;700;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root {
-      --main-accent: #ff2a82;
-      --main-bg: #201336;
-      --block-bg: #301536;
-      --block-glow: #ff6fe0b5;
-    }
-    html, body {height: 100%;margin:0;}
-    body {
-      min-height:100vh; margin:0;
-      font-family:'Montserrat',Arial,sans-serif;
-      background:linear-gradient(to bottom right, #19001b, #27143d 89%);
-      color: #ffd1ef;
-      display:flex;flex-direction:column;
-    }
-    header {
-      background: #2A0435;
-      padding: 18px 0 12px 0;
-      font-size: 2em; text-align: center;
-      color: var(--main-accent);
-      font-weight: 800;
-      text-shadow: 0 2px 15px #ff77dfc7, 0 0 5px #fff1;
-      letter-spacing:.08em;
-    }
-    .trialbar {
-      display:flex;align-items:center;justify-content:center;
-      background:none;padding:20px 0 0 0;flex-wrap:wrap;
-    }
-    label.trialname-l {
-      color:#ffe0fa;font-size:1.13em;font-weight:900;letter-spacing:.03em;
-      margin-right:15px;
-    }
-    #trialNameInput {
-      font-family:inherit; font-weight:800; font-size:1.13em; border-radius:12px;
-      border:2.3px solid #ffafe0;color: var(--main-accent); outline:0; padding:7px;
-      background:#ffdafc21; transition:.18s border; min-width:80px;
-      margin-right:18px;
-    }
-    #trialNameInput:focus {border-color:var(--main-accent);}
-    .dir-actions {margin-left:12px;}
-    .dr-btn {
-      padding:9px 27px; background: var(--main-accent);
-      font-family:inherit;font-weight:900;font-size:1.07em;color:#fff;border:0;border-radius:13px;cursor:pointer;
-      box-shadow:0 2px 9px #36311a22,0 0 0 #0000; margin-right:7px; margin-bottom:3px;
-      transition:.13s box-shadow,.13s background,.13s transform;
-      min-width:120px;
-    }
-    .dr-btn:disabled { background:#ccc;color:#a57096; cursor: not-allowed; }
-    .dr-btn:hover:not(:disabled) { background:#fa45c7f1; transform:scale(1.04);}
-    .dr-btn.cancel{ background:#36173d;}
-    main {flex:1;display:flex;min-height:0;}
-    nav {
-      background: #28123c;
-      width: 167px; min-width:120px; border-right: 3.1px solid #390032; display:flex;
-      flex-direction:column; align-items:center; padding: 41px 0 0 0;
-    }
-    .nav-item {
-      color: #ff2a82; background: #1c0722; border-radius: 15px;
-      font-size: 1.08em; font-weight: 700; margin-bottom: 14px; width: 109px;
-      padding: 10px 6px; text-align: center; letter-spacing:.7px;cursor:pointer;
-      border:1.7px solid #a3077e;box-shadow:0 1px 9px #ff49d92c;
-      transition:.17s background;
-      display:flex;gap:9px;align-items:center;justify-content:center;
-    }
-    .nav-item.selected {
-      color: #fff; background:linear-gradient(90deg,#ff2a8219 75%,#aa70be2a 120%);
-      border-color:var(--main-accent);
-      text-shadow: 0 1px 5px #ff2a8298;
-    }
-    #mainGrid {
-      flex:1;display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-      gap:30px 21px;padding: 30px 10vw 30px 10vw;
-      align-content:flex-start; min-width:0; min-height:0;
-    }
-    .cast-block {
-      background:var(--block-bg);
-      border-radius:29px; min-height:170px;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      position:relative;cursor:pointer;
-      border:2px solid #932192;
-      transition:.16s box-shadow, .13s border, .15s background; box-shadow:0 3px 13px #ff2a824a;
-      outline:0;padding:0;overflow:hidden;
-    }
-    .cast-block[data-filled="1"]:hover, .cast-block[data-filled="1"] {
-      background:linear-gradient(120deg, #ff2a8232 1%,#7018afc2 50%,#3a224d 100%);
-      border-color: var(--main-accent);
-      box-shadow:0 7px 22px #ff2a8243,0 0 28px #c448e13d;}
-    .blk-ppic {
-      width:87px; height:165px; margin-top:9px; border-radius:13px;
-      box-shadow:0 1.5px 11px #ff8ad1a2; background:#20082a;
-      display:block; object-fit:cover; overflow:hidden;
-    }
-    .blk-main {margin-bottom:.7em;}
-    .cast-name {
-      background:var(--main-accent);color:#fff; border-radius:9px;
-      padding:5px 12px; font-size:1.14em;font-weight:900;
-      box-shadow:0 2.5px 15px var(--block-glow);letter-spacing:.05em;
-      display:block;max-width:160px;overflow-wrap:break-word;text-align:center;margin:7px 0 1px 0;
-    }
-    .cast-block .blk-plus {
-      font-size:2.1em;color:#ff8ad1c3;font-weight:800;margin-top:32px;margin-bottom:33px;letter-spacing:.11em;
-    }
-    .cast-block-title {
-      position:absolute;bottom:14px;left:0;width:100%;color:#e1a3e9;font-size:1.01rem;
-      text-align:center;letter-spacing:1.1px;pointer-events:none;user-select:none;font-weight:800;
-      text-shadow:0 1px 7px #28162e99,0 0 2.2px #ffcefa2c;letter-spacing:.01em;}
-    .dr-modal-bg {
-      position:fixed;z-index:90;left:0;top:0;width:100vw;height:100vh;
-      background:radial-gradient(ellipse closest-side at 50% 45%, #e43ffa10,#2d0b39ef 99%,#000d64 100%);
-      display:flex;align-items:center;justify-content:center;
-      animation:fadein .13s;}
-    .dr-modal {
-      width:900px; min-width:660px;max-width:97vw;max-height:97vh;
-      background:linear-gradient(120deg,#411b4b 66%, #230d30 99%);
-      border:6.1px solid var(--main-accent);
-      border-radius:23px; padding:31px 3vw 22px 3vw;position:relative;overflow-y:auto;
-      box-shadow:0 5px 62px #0e012799, 0 0 0 13px #ff2a8259;
-      animation:showin .13s;}
-    @keyframes showin {0%{transform:scale(.94);}60%{transform:scale(1.02);}100%{transform:scale(1);}}
-    .dr-close {
-      position:absolute;top:13px;right:27px;color:#ffe4f9;font-size:2.11em;cursor:pointer;
-      filter:drop-shadow(0 2px 0 #df299d44);transition:.13s;line-height:1;}
-    .dr-close:hover {color:var(--main-accent);}
-    .dr-tabs {width:100%;display:flex;margin-bottom:19px;border-bottom:4px solid #a3077e;}
-    .dr-tab {
-      flex:1;text-align:center;font-weight:900;font-size:1.17em;
-      border-radius:13px 13px 0 0;background:linear-gradient(0deg,#2300090a 90%,#ca2bc3 210%);
-      color:#ffd9fd;padding:14px 0 13px 0;cursor:pointer;
-      margin-right:13px;border-bottom:4px solid transparent;
-      letter-spacing:.06em;box-shadow:0 2.5px 6px #e11b8b13;font-family:inherit;transition:.14s background;}
-    .dr-tab:last-child {margin-right:0;}
-    .dr-tab.active {
-      color:#fffbe6;background:linear-gradient(90deg, var(--main-accent) 0%, #a3077e 135%);
-      border-bottom:4.5px solid #fff9;
-      text-shadow:0 1px 13px #ff2a825b;}
-    /* Form Layout */
-    .dr-form {
-      width:100%;box-sizing: border-box; padding:0 2vw;
-      display:flex;flex-direction:column;gap:0;
-    }
-    .dr-details-row {
-      display: grid;
-      grid-template-columns: 1.3fr 1.3fr;
-      gap: 19px 32px;
-      margin-bottom:7px;
-    }
-    .dr-details-row2 {
-      display: grid;
-      grid-template-columns: 1.1fr 1fr 1fr;
-      gap: 19px 8px; margin-bottom:7px;
-    }
-    .dr-form label {margin-top:10px;font-size:1em;font-weight:800;color:#fff8da;display:block;}
-    .dr-form input, .dr-form select, .dr-form textarea {
-      font-family:inherit;font-size:1.05em;color:#49175b;background:#fff8f8;
-      border-radius:8px;border:2px solid #fd66ce;outline:none; padding:10px 10px;margin-bottom:2px;width:100%;font-weight:900;
-      transition:.16s border;}
-    .dr-form input:focus, .dr-form select:focus, .dr-form textarea:focus {border:2.7px solid #ff2a82;background:#fff8;}
-    .dr-form textarea {min-height:33px;}
-    .dr-btn-row {display:flex;gap:18px;justify-content:center;margin-top:18px;}
-    .dr-btn {padding:9px 27px;}
-    .dr-sprgrid {margin-top:1vw;display:grid;grid-template-columns:repeat(5,1fr);gap:13px;}
-    .dr-sprslot {
-      aspect-ratio: 1024/2048; min-width:70px; max-width:140px; min-height:110px;
-      background:#2c0c2e;color:#ff8ad1; border-radius:15px;
-      border:3px solid #ff2a82;box-shadow:0 2px 13px #ff2a829d;
-      display:flex;align-items:center;justify-content:center;position:relative;
-      cursor:pointer;text-align:center;overflow:hidden;font-size:1.11em; transition:.13s border;}
-    .dr-sprslot input {display:none;}
-    .dr-sprslot img {width:100%;height:100%;object-fit:cover;}
-    .dr-sprslot-num{position:absolute;top:5px;right:14px;font-size:.9em;color:#f9d0fa;text-shadow:0 1px 8px #fff7;}
-    .dr-sprslot.bad{border:3px solid #ff4a2a;}
-    .dr-sprslot-bulk{margin:0 0 20px 0;}
-    .dr-err{color:#ff4967;background:rgba(32,10,32,0.39);border-left:6px solid var(--main-accent);
-      padding:10px 0 9px 14px;margin:2em 0 .2em 0;font-weight:900;}
-    .dr-success{color:#43e2b7;background:rgba(62,41,99,.23);border-left:6px solid #2ae255;
-      padding:10px 0 9px 13px;margin:.2em 0 .05em 0;font-weight:900;}
-    @media (max-width:1000px) {
-      .dr-modal{min-width:0;width:98vw;}
-      #mainGrid{padding:10px;}
-    }
-  </style>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
-  <header>Danganronpa Cast Manager</header>
+<body data-theme="light">
+  <header>
+    <h1>Danganronpa Cast Manager</h1>
+    <div class="header-actions">
+      <button class="settings-toggle" onclick="openSettings()" title="Settings">
+        <span>⚙️</span>
+      </button>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <span class="theme-icon">🌙</span>
+      </button>
+    </div>
+  </header>
+  
   <div class="trialbar">
-    <label class="trialname-l" for="trialNameInput">Trial Name:</label>
-    <input id="trialNameInput" maxlength="60" placeholder="Enter Trial Name" spellcheck="false">
-    <span class="dir-actions">
-      <button class="dr-btn" onclick="chooseTrialDir()">Choose/Load Folder</button>
-      <span id="dirDisplay" style="color:#ffd2fa;font-size:1.05em;margin-left:14px;"></span>
-    </span>
+    <label for="trialNameInput">Trial Name:</label>
+    <input id="trialNameInput" maxlength="60" placeholder="Enter trial name..." spellcheck="false">
+    <div class="dir-actions">
+      <button class="btn btn-primary" onclick="chooseTrialDir()">
+        📁 Choose Folder
+      </button>
+      <span id="dirDisplay"></span>
+    </div>
   </div>
+
   <main>
     <nav>
-      <div class="nav-item selected"><span>🧑‍🎓</span> Cast</div>
+      <div class="nav-item selected">
+        <span class="icon">👥</span>
+        <span>Cast</span>
+      </div>
     </nav>
-    <div style="flex:1;min-width:0;">
+    
+    <div style="flex: 1; min-width: 0;">
       <div id="mainGrid"></div>
     </div>
   </main>
+
   <div id="modalroot"></div>
-<script>
-const BLOCK_COUNT = 17;
-const blockNames = [...Array(16)].map((_,i)=>`Student ${String(i+1).padStart(2,'0')}`).concat(['Headmaster']);
-let cast = Array(BLOCK_COUNT).fill(null);
-let trialName = "";
-let dirHandle = null;
-
-async function chooseTrialDir() {
-  try {
-    let dH = await window.showDirectoryPicker({id:'dr-trial-dir', mode:'readwrite'});
-    dirHandle = dH;
-    renderDirDisplay(dirHandle);
-    let files = [];
-    for await (const entry of dirHandle.values()) files.push(entry.name);
-    if (files.includes("trial.json")) {
-      // Load trial
-      const file = await dirHandle.getFileHandle("trial.json").then(fh=>fh.getFile());
-      const data = JSON.parse(await file.text());
-      trialName = data.trialName||"";
-      document.getElementById('trialNameInput').value = trialName;
-      cast = data.cast.map(x=>x || null);
-      let charsDir = await dirHandle.getDirectoryHandle("Characters",{create:false}).catch(()=>null);
-      if (charsDir)
-      for(let i=0;i<cast.length;i++) if (cast[i]) {
-        let cd = await charsDir.getDirectoryHandle(
-                  (cast[i].name+"_"+cast[i].surname).replace(/[^a-zA-Z0-9_\- ]/g,'_'),{create:false}).catch(()=>null);
-        cast[i].sprites = [];
-        if (cd)
-        for(let j=1;j<=25;j++)
-          try {
-            let f = await cd.getFileHandle(`sprite_${String(j).padStart(2,'0')}.png`).then(fh=>fh.getFile());
-            let b64 = await fileToDataUrl(f);
-            cast[i].sprites.push({dataURL:b64,bad:false,fname:f.name, blob:f});
-          }catch{cast[i].sprites.push(null);}
-      }
-    } else {
-      trialName = "";
-      document.getElementById('trialNameInput').value = "";
-      cast = Array(BLOCK_COUNT).fill(null);
-      await dirHandle.getDirectoryHandle('Characters', {create:true});
-    }
-    renderCastGrid();
-  }catch(err){console.log(err);}
-}
-function renderDirDisplay(dh) {
-  document.getElementById('dirDisplay').innerText = dh ? `Working Folder: ${dh.name}` : "";
-}
-function fileToDataUrl(file) {
-  return new Promise((resolve,reject)=>{
-    let fr=new FileReader(); fr.onload=_=>resolve(fr.result); fr.onerror=reject; fr.readAsDataURL(file);
-  });
-}
-document.getElementById('trialNameInput').addEventListener('input',e=>{
-  trialName = e.target.value.trim();
-  autoSaveTrial();
-});
-function renderCastGrid() {
-  const grid = document.getElementById('mainGrid');
-  grid.innerHTML = '';
-  for (let i=0;i<BLOCK_COUNT;i++) {
-    const c = cast[i];
-    const div = document.createElement('div');
-    div.className = 'cast-block';
-    div.setAttribute('tabindex',0);
-    div.setAttribute('data-filled', c ? "1" : "0");
-    div.onclick = ()=> dirHandle ? openCharModal(i) : null;
-    if (c && c.sprites && c.sprites[0]) {
-      let thumb = c.sprites[0].dataURL;
-      div.innerHTML = `<img src="${thumb}" class="blk-ppic" alt="sprite">
-        <div class="blk-main">
-            <span class="cast-name">${c.name || ""} ${c.surname||""}</span>
-        </div>`;
-    } else {
-      div.innerHTML = `<div class="blk-plus">+</div>`;
-    }
-    div.innerHTML += `<div class="cast-block-title">${blockNames[i]}</div>`;
-    grid.appendChild(div);
-  }
-}
-let activeIdx = null;
-let charFields = {name:"",surname:"",heightM:1,heightCM:50,weight:"",chest:"",blood:"A",dob:"",likes:"",dislikes:"",notes:""};
-let charSprites = [];
-let modalTab = "details";
-let modalErr = "";
-let modalMsg = "";
-function openCharModal(idx) {
-  if (!dirHandle) { alert("Choose a folder first!"); return;}
-  activeIdx = idx;
-  modalTab = "details";
-  modalErr = "";
-  modalMsg = "";
-  let c = cast[idx]||{};
-  charFields = {
-    name: c.name||"",surname: c.surname||"",heightM:c.heightM||1,heightCM:c.heightCM||50,weight:c.weight||"",chest:c.chest||"",blood:c.blood||"A",dob:c.dob||"",likes:c.likes||"",dislikes:c.dislikes||"",notes:c.notes||""
-  };
-  charSprites = c.sprites ? [...c.sprites] : Array(25).fill(null);
-  renderModal();
-}
-function renderModal() {
-  let root = document.getElementById("modalroot");
-  root.innerHTML = `
-  <div class="dr-modal-bg"><div class="dr-modal">
-      <span class="dr-close" onclick="closeModal()">&times;</span>
-      <div class="dr-tabs">
-        <button class="dr-tab${modalTab==='details'?' active':''}" onclick="switchModalTab('details')">Details</button>
-        <button class="dr-tab${modalTab==='sprites'?' active':''}" onclick="switchModalTab('sprites')">Sprites</button>
-      </div>
-      <div id="dr-tab-content">${modalTab==='details'?renderDetailsTab():renderSpritesTab()}</div>
-      <div class="dr-btn-row">
-        <button class="dr-btn cancel" onclick="closeModal()">Cancel</button>
-        <button class="dr-btn" onclick="trySaveChar()" ${(!dirHandle)?"disabled":""}>Save Character</button>
-      </div>
-      ${ modalErr ? `<div class="dr-err">${modalErr}</div>`:""}
-      ${ modalMsg ? `<div class="dr-success">${modalMsg}</div>`:""}
-    </div></div>
-  `;
-}
-function closeModal() { document.getElementById("modalroot").innerHTML = ""; activeIdx = null;}
-function switchModalTab(tab) { modalTab=tab; modalErr=""; modalMsg=""; renderModal(); }
-function fieldUpdate(field, val) { charFields[field]=val; }
-function renderDetailsTab() {
-  return `<form class="dr-form" onsubmit="event.preventDefault();">
-    <div class="dr-details-row">
-      <div>
-        <label>Name</label>
-        <input required value="${charFields.name||''}" onchange="fieldUpdate('name',this.value)">
-      </div>
-      <div>
-        <label>Surname</label>
-        <input required value="${charFields.surname||''}" onchange="fieldUpdate('surname',this.value)">
-      </div>
-    </div>
-    <div class="dr-details-row">
-      <div>
-        <label>Date of Birth</label>
-        <input type="date" required value="${charFields.dob||''}" onchange="fieldUpdate('dob',this.value)">
-      </div>
-      <div></div>
-    </div>
-    <div class="dr-details-row2">
-      <div>
-        <label>Height</label>
-        <div style="display:flex;align-items:center;gap:5px;">
-          <input type="number" min="0.9" max="2.5" step="0.01" value="${charFields.heightM||''}" onchange="fieldUpdate('heightM',this.value)" style="width:51px;">m
-          <input type="number" min="0" max="99" step="1" value="${charFields.heightCM||''}" onchange="fieldUpdate('heightCM',this.value)" style="width:47px;">cm
-        </div>
-      </div>
-      <div>
-        <label>Weight (kg)</label>
-        <input type="number" min="0" max="300" required value="${charFields.weight||''}" onchange="fieldUpdate('weight',this.value)">
-      </div>
-      <div>
-        <label>Chest (cm)</label>
-        <input type="number" min="0" max="200" required value="${charFields.chest||''}" onchange="fieldUpdate('chest',this.value)">
-      </div>
-    </div>
-    <div class="dr-details-row2">
-      <div>
-        <label>Blood Type</label>
-        <select required onchange="fieldUpdate('blood',this.value)" value="${charFields.blood||'A'}">
-          <option${charFields.blood==="A"?' selected':''}>A</option>
-          <option${charFields.blood==="B"?' selected':''}>B</option>
-          <option${charFields.blood==="O"?' selected':''}>O</option>
-          <option${charFields.blood==="AB"?' selected':''}>AB</option>
-          <option${charFields.blood==="Unknown"?' selected':''}>Unknown</option>
-        </select>
-      </div>
-      <div></div><div></div>
-    </div>
-    <label>Likes</label>
-    <textarea required onchange="fieldUpdate('likes',this.value)">${charFields.likes||''}</textarea>
-    <label>Dislikes</label>
-    <textarea required onchange="fieldUpdate('dislikes',this.value)">${charFields.dislikes||''}</textarea>
-    <label>Notes</label>
-    <textarea required onchange="fieldUpdate('notes',this.value)">${charFields.notes||''}</textarea>
-  </form>`;
-}
-function renderSpritesTab() {
-  return `
-  <button class="dr-btn dr-sprslot-bulk" type="button" onclick="bulkImportSprites()">Bulk Import All 25</button>
-  <div class="dr-sprgrid">
-    ${charSprites.map((spr,i)=>
-      `<div class="dr-sprslot${spr?(spr.bad?' bad':''):''}" onclick="triggerSpriteInput(${i})">
-        <input type="file" accept="image/*" id="sprite_inp_${i}" onchange="spriteUpload(event,${i})">
-        ${spr?
-           `<img src="${spr.dataURL}"><span class="dr-sprslot-num">#${i+1}</span>`
-          :`<span>+<br><span class="dr-sprslot-num">#${i+1}</span></span>`
-        }
-      </div>`
-    ).join("")}
+  <div id="loaderOverlay">
+    <div class="spinner"></div>
   </div>
-  <div style="font-size:.98em; color:#ff8ad1; margin:.89em 0 0 0;">Sprites must be 1024x2048 or equivalent.</div>
-  `;
-}
-function spriteUpload(e, idx) {
-  const file = e.target.files[0]; if (!file) return;
-  const url = URL.createObjectURL(file);
-  let img = new window.Image();
-  img.onload = function() {
-    let ratio = img.naturalWidth / img.naturalHeight;
-    let bad = Math.abs(ratio - (1024/2048)) > 0.01;
-    charSprites[idx]={dataURL:url,bad,fname:file.name,blob:file};
-    renderModal();
-  };
-  img.src=url;
-}
-function triggerSpriteInput(i){ document.getElementById(`sprite_inp_${i}`).click(); }
-function bulkImportSprites() {
-  let inp = document.createElement("input");
-  inp.type='file'; inp.accept="image/*"; inp.multiple=true;
-  inp.onchange=e=>{
-    let files = Array.from(inp.files);
-    if (files.length !== 25) { modalErr="Select exactly 25 images."; renderModal(); return; }
-    files.forEach((f,idx)=>{
-      let url = URL.createObjectURL(f);
-      let img = new window.Image();
-      img.onload = function() {
-        let ratio = img.naturalWidth / img.naturalHeight;
-        let bad = Math.abs(ratio - (1024/2048)) > 0.01;
-        charSprites[idx]={dataURL:url,bad,fname:f.name,blob:f};
-        if (idx===24) renderModal();
-      };
-      img.src=url;
-    });
-  }; inp.click();
-}
-async function trySaveChar() {
-  let missingF = !charFields.name || !charFields.surname || !charFields.weight || !charFields.chest 
-    || !charFields.dob || !charFields.likes || !charFields.dislikes || !charFields.notes;
-  let badh = isNaN(parseFloat(charFields.heightM)) || isNaN(parseInt(charFields.heightCM));
-  let allSprites = charSprites.length===25 && charSprites.every(s=>s && !s.bad && s.blob);
-  if (missingF || badh || !allSprites) {
-    modalErr = "";
-    if (missingF||badh) modalErr += "All fields must be filled correctly.<br>";
-    if (!allSprites) modalErr += "All 25 sprites must be valid and 1024x2048 ratio.";
-    renderModal(); return;
-  }
-  if (!dirHandle) {modalErr="Choose a folder first!"; renderModal(); return;}
-  let charDirname = (charFields.name + "_" + charFields.surname).replace(/[^a-zA-Z0-9_\- ]/g,'_');
-  let charsDir = await dirHandle.getDirectoryHandle("Characters",{create:true});
-  let charDir = await charsDir.getDirectoryHandle(charDirname,{create:true});
-  let charJson = {...charFields, height: `${charFields.heightM}m ${charFields.heightCM}cm`};
-  let writer = await charDir.getFileHandle("character.json",{create:true}).then(fh=>fh.createWritable());
-  await writer.write(JSON.stringify(charJson,null,2)); await writer.close();
-  // Save sprites as real PNG files, using their File/blobs
-  for(let k=0;k<25;k++) {
-    let s = charSprites[k];
-    if (!s || !s.blob) continue;
-    let sw = await charDir.getFileHandle(`sprite_${String(k+1).padStart(2,'0')}.png`, {create:true}).then(fh=>fh.createWritable());
-    await sw.write(s.blob);
-    await sw.close();
-  }
-  cast[activeIdx] = {...charFields, sprites: [...charSprites]};
-  await autoSaveTrial();
-  closeModal();
-  renderCastGrid();
-}
-async function autoSaveTrial() {
-  if (!dirHandle) return;
-  let vals = cast.map(c=>c?{
-    name:c.name||"",surname:c.surname||"",heightM:c.heightM,heightCM:c.heightCM, weight:c.weight,chest:c.chest,
-    blood:c.blood, dob:c.dob, likes:c.likes, dislikes:c.dislikes, notes:c.notes
-  }:null);
-  let trialJs = { trialName, cast:vals };
-  let fHandle = await dirHandle.getFileHandle("trial.json",{create:true});
-  let wr = await fHandle.createWritable();
-  await wr.write(JSON.stringify(trialJs,null,2));
-  await wr.close();
-}
-renderCastGrid();
 
-</script>
+  <script src="js/utils.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/modal.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

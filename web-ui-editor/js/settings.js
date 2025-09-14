@@ -23,16 +23,18 @@ function openSettings() {
         <div class="dr-tabs">
           <div class="dr-tab active">⚙️ Settings</div>
         </div>
-        <div class="dr-form">
-          <div class="settings-section">
-            <h3>Application Settings</h3>
-            <div class="settings-field">
-              <label for="maxSpritesInput">Maximum sprites per character:</label>
-              <input type="number" id="maxSpritesInput" min="1" max="100" value="${appSettings.maxSprites}">
+        <div class="dr-modal-content">
+          <div class="dr-form">
+            <div class="settings-section">
+              <h3>Application Settings</h3>
+              <div class="settings-field">
+                <label for="maxSpritesInput">Maximum sprites per character:</label>
+                <input type="number" id="maxSpritesInput" min="1" max="100" value="${appSettings.maxSprites}">
+              </div>
+              <p style="font-size: 0.875rem; color: var(--text-tertiary); margin: 0.5rem 0;">
+                Changes will apply to newly created characters. Existing characters will keep their current sprite count.
+              </p>
             </div>
-            <p style="font-size: 0.875rem; color: var(--text-tertiary); margin: 0.5rem 0;">
-              Changes will apply to newly created characters. Existing characters will keep their current sprite count.
-            </p>
           </div>
         </div>
         <div class="dr-btn-row">

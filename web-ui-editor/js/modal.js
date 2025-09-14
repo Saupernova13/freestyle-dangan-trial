@@ -18,6 +18,17 @@ let modalTab = "details";
 let modalErr = "";
 let modalMsg = "";
 
+// Generate human-readable ID for characters
+function generateCharacterId(name, surname, dob) {
+  // Clean and format components
+  const cleanName = name.charAt(0).toUpperCase().replace(/[^A-Za-z0-9]/g, '') || 'X';
+  const cleanSurname = surname.charAt(0).toUpperCase().replace(/[^A-Za-z0-9]/g, '') || 'Y';
+  const dobFormatted = dob.replace(/-/g, ''); // YYYYMMDD format
+  const randomString = Math.random().toString(36).substr(2, 6).toUpperCase();
+  
+  return `${cleanName}${cleanSurname}_${dobFormatted}_${randomString}`;
+}
+
 function openCharModal(idx) {
   if (!dirHandle) {
     alert("Choose a folder first!");
@@ -56,21 +67,28 @@ function openCharModal(idx) {
 
 function renderModal() {
   let root = document.getElementById("modalroot");
+  const characterType = getCharacterType(activeIdx);
+  const isHeadmasterChar = isHeadmaster(activeIdx);
+  
   root.innerHTML = `
     <div class="dr-modal-bg">
       <div class="dr-modal">
         <button class="dr-close" onclick="closeModal()">&times;</button>
         <div class="dr-tabs">
-          <button class="dr-tab${modalTab === 'details' ? ' active' : ''}" onclick="switchModalTab('details')">Character Details</button>
+          <button class="dr-tab${modalTab === 'details' ? ' active' : ''}" onclick="switchModalTab('details')">
+            ${isHeadmasterChar ? '👑' : '🎓'} Character Details (${characterType.charAt(0).toUpperCase() + characterType.slice(1)})
+          </button>
           <button class="dr-tab${modalTab === 'sprites' ? ' active' : ''}" onclick="switchModalTab('sprites')">Sprites</button>
         </div>
-        <div id="dr-tab-content">${modalTab === 'details' ? renderDetailsTab() : renderSpritesTab()}</div>
+        <div class="dr-modal-content">
+          <div id="dr-tab-content">${modalTab === 'details' ? renderDetailsTab() : renderSpritesTab()}</div>
+          ${modalErr ? `<div class="dr-err">${modalErr}</div>` : ""}
+          ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ""}
+        </div>
         <div class="dr-btn-row">
           <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="trySaveChar()" ${(!dirHandle) ? "disabled" : ""}>Save Character</button>
+          <button class="btn btn-primary" onclick="trySaveChar()" ${(!dirHandle) ? "disabled" : ""}>Save ${isHeadmasterChar ? 'Headmaster' : 'Student'}</button>
         </div>
-        ${modalErr ? `<div class="dr-err">${modalErr}</div>` : ""}
-        ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ""}
       </div>
     </div>
   `;
@@ -93,7 +111,13 @@ function fieldUpdate(field, val) {
 }
 
 function renderDetailsTab() {
+  const isHeadmasterChar = isHeadmaster(activeIdx);
+  const characterType = getCharacterType(activeIdx);
+  
   return `<form class="dr-form" onsubmit="event.preventDefault();">
+    <div style="background: ${isHeadmasterChar ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, var(--primary), var(--primary-dark))'}; color: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; text-align: center; font-weight: 600;">
+      ${isHeadmasterChar ? '👑 HEADMASTER CHARACTER' : '🎓 STUDENT CHARACTER'}
+    </div>
     <div class="dr-fg-row">
       <div class="dr-fg-field">
           <label>First Name</label>
@@ -145,26 +169,28 @@ function renderDetailsTab() {
     <div class="dr-fg-row">
       <div class="dr-fg-field">
         <label>Likes</label>
-        <textarea required onchange="fieldUpdate('likes',this.value)" oninput="fieldUpdate('likes',this.value)">${charFields.likes || ''}</textarea>
+        <textarea required onchange="fieldUpdate('likes',this.value)" oninput="fieldUpdate('likes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster enjoy?' : 'What does this student like?'}">${charFields.likes || ''}</textarea>
       </div>
       <div class="dr-fg-field">
         <label>Dislikes</label>
-        <textarea required onchange="fieldUpdate('dislikes',this.value)" oninput="fieldUpdate('dislikes',this.value)">${charFields.dislikes || ''}</textarea>
+        <textarea required onchange="fieldUpdate('dislikes',this.value)" oninput="fieldUpdate('dislikes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster dislike?' : 'What does this student dislike?'}">${charFields.dislikes || ''}</textarea>
       </div>
     </div>
     <div class="dr-fg-row single">
       <div class="dr-fg-field">
         <label>Notes</label>
-        <textarea required onchange="fieldUpdate('notes',this.value)" oninput="fieldUpdate('notes',this.value)">${charFields.notes || ''}</textarea>
+        <textarea required onchange="fieldUpdate('notes',this.value)" oninput="fieldUpdate('notes',this.value)" placeholder="${isHeadmasterChar ? 'Additional notes about this headmaster...' : 'Additional notes about this student...'}">${charFields.notes || ''}</textarea>
       </div>
     </div>
   </form>`;
 }
 
 function renderSpritesTab() {
+  const isHeadmasterChar = isHeadmaster(activeIdx);
+  
   return `
     <div class="dr-form">
-      <button class="btn btn-primary dr-sprslot-bulk" type="button" onclick="bulkImportSprites()">📁 Bulk Import All ${appSettings.maxSprites} Sprites</button>
+      <button class="btn btn-primary dr-sprslot-bulk" type="button" onclick="bulkImportSprites()">📁 Bulk Import All ${appSettings.maxSprites} ${isHeadmasterChar ? 'Headmaster' : 'Student'} Sprites</button>
       <div class="dr-sprgrid">
         ${charSprites.map((spr, i) =>
     `<div class="dr-sprslot" onclick="triggerSpriteInput(${i})">
@@ -178,6 +204,7 @@ function renderSpritesTab() {
       </div>
       <p style="font-size: 0.875rem; color: var(--text-tertiary); margin-top: 1rem;">
         Upload images in any format. They will be automatically processed and saved as PNG files.
+        ${isHeadmasterChar ? '<br><strong>Note:</strong> This is for the Headmaster character.' : ''}
       </p>
     </div>
   `;
@@ -240,29 +267,76 @@ async function trySaveChar() {
     return;
   }
   
-  showLoader(true);
-  
-  let charDirname = (charFields.name + "_" + charFields.surname).replace(/[^a-zA-Z0-9_\- ]/g, '_');
-  let charsDir = await dirHandle.getDirectoryHandle("Characters", { create: true });
-  let charDir = await charsDir.getDirectoryHandle(charDirname, { create: true });
-  
-  let charJson = { ...charFields, height: `${charFields.heightM}m ${charFields.heightCM}cm` };
-  let writer = await charDir.getFileHandle("character.json", { create: true }).then(fh => fh.createWritable());
-  await writer.write(JSON.stringify(charJson, null, 2));
-  await writer.close();
-  
-  for (let k = 0; k < appSettings.maxSprites; k++) {
-    let s = charSprites[k];
-    if (!s || !s.blob) continue;
-    let sw = await charDir.getFileHandle(`sprite_${String(k + 1).padStart(2, '0')}.png`, { create: true }).then(fh => fh.createWritable());
-    await sw.write(s.blob);
-    await sw.close();
+  try {
+    showLoader(true);
+    
+    // Generate human-readable ID for new characters or keep existing ID
+    const existingChar = cast[activeIdx];
+    const characterId = existingChar ? existingChar.id : generateCharacterId(charFields.name, charFields.surname, charFields.dob);
+    
+    let charDirname = (charFields.name + "_" + charFields.surname).replace(/[^a-zA-Z0-9_\- ]/g, '_');
+    let charsDir = await dirHandle.getDirectoryHandle("Characters", { create: true });
+    let charDir = await charsDir.getDirectoryHandle(charDirname, { create: true });
+    
+    // Save character data (optimized structure)
+    let charJson = { 
+      id: characterId,
+      name: charFields.name,
+      surname: charFields.surname,
+      heightM: parseFloat(charFields.heightM),
+      heightCM: parseInt(charFields.heightCM),
+      weight: parseInt(charFields.weight),
+      chest: parseInt(charFields.chest),
+      blood: charFields.blood,
+      dob: charFields.dob,
+      likes: charFields.likes,
+      dislikes: charFields.dislikes,
+      notes: charFields.notes,
+      isHeadmaster: isHeadmaster(activeIdx), // Single boolean instead of redundant fields
+      position: activeIdx,
+      lastModified: new Date().toISOString()
+    };
+    
+    let writer = await charDir.getFileHandle("character.json", { create: true }).then(fh => fh.createWritable());
+    await writer.write(JSON.stringify(charJson, null, 2));
+    await writer.close();
+    
+    // Save sprites with proper error handling
+    let savedSprites = [];
+    for (let k = 0; k < appSettings.maxSprites; k++) {
+      let s = charSprites[k];
+      if (s && s.blob) {
+        try {
+          let sw = await charDir.getFileHandle(`sprite_${String(k + 1).padStart(2, '0')}.png`, { create: true }).then(fh => fh.createWritable());
+          await sw.write(s.blob);
+          await sw.close();
+          savedSprites.push(s);
+        } catch (error) {
+          console.error(`Failed to save sprite ${k + 1}:`, error);
+          throw new Error(`Failed to save sprite ${k + 1}: ${error.message}`);
+        }
+      } else {
+        savedSprites.push(null);
+      }
+    }
+    
+    // Update cast with new character data
+    cast[activeIdx] = { 
+      ...charJson,
+      sprites: savedSprites
+    };
+    
+    // Save trial data
+    await autoSaveTrial();
+    
+    showLoader(false);
+    closeModal();
+    renderCastGrid();
+    
+  } catch (error) {
+    showLoader(false);
+    modalErr = `Failed to save character: ${error.message}`;
+    renderModal();
+    console.error('Character save error:', error);
   }
-  
-  cast[activeIdx] = { ...charFields, sprites: [...charSprites] };
-  await autoSaveTrial();
-  
-  showLoader(false);
-  closeModal();
-  renderCastGrid();
 }

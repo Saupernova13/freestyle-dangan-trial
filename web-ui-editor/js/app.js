@@ -442,6 +442,8 @@ function renderScriptLineBar(line, index) {
         </select>
       </div>
 
+      ${line.type === 'speaking' ? `<button class="script-line-edit" onclick="event.stopPropagation(); openScriptLineModal('${line.id}')" title="Edit advanced properties">✏️</button>` : ''}
+
       <button class="script-line-delete" onclick="event.stopPropagation(); deleteScriptLine('${line.id}')" title="Delete line">🗑️</button>
     </div>
   `;
@@ -638,4 +640,64 @@ function isHeadmaster(index) {
 
 function isStudent(index) {
   return blockTypes[index] === false;
+}
+
+// ==================== Script Line Advanced Editing ====================
+
+async function saveScriptLineAdvanced() {
+  const line = scriptLines.find(l => l.id === activeLineId);
+  if (!line) {
+    alert("Script line not found!");
+    closeModal();
+    return;
+  }
+
+  try {
+    showLoader(true);
+
+    // Update line data
+    line.spriteIndex = scriptLineFields.spriteIndex;
+    line.highlights = scriptLineFields.highlights;
+    line.cameraMotion = scriptLineFields.cameraMotion;
+    line.specialEffects = scriptLineFields.specialEffects;
+
+    // Handle audio file upload
+    if (scriptLineFields.audioBlob) {
+      // Create Audio directory if it doesn't exist
+      const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: true });
+
+      // Generate filename based on line ID
+      const audioFileName = `${line.id}.${scriptLineFields.audioBlob.name.split('.').pop()}`;
+
+      // Write audio file
+      const audioFileHandle = await audioDir.getFileHandle(audioFileName, { create: true });
+      const writable = await audioFileHandle.createWritable();
+      await writable.write(scriptLineFields.audioBlob);
+      await writable.close();
+
+      line.audioFile = audioFileName;
+    } else if (scriptLineFields.audioFile === null && line.audioFile) {
+      // Audio was cleared, remove the file
+      try {
+        const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+        await audioDir.removeEntry(line.audioFile);
+      } catch (e) {
+        console.warn("Could not remove audio file:", e);
+      }
+      line.audioFile = null;
+    }
+
+    // Save trial data
+    await autoSaveTrial();
+
+    showLoader(false);
+    closeModal();
+    renderScriptEditor();
+
+  } catch (error) {
+    console.error("Error saving script line:", error);
+    showLoader(false);
+    modalErr = "Failed to save: " + error.message;
+    renderScriptLineModal();
+  }
 }

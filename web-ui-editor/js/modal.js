@@ -18,6 +18,33 @@ let modalTab = "details";
 let modalErr = "";
 let modalMsg = "";
 
+// Script line modal state
+let activeLineId = null;
+let scriptLineTab = "sprite";
+let scriptLineFields = {
+  spriteIndex: null,
+  audioFile: null,
+  audioBlob: null,
+  highlights: [],
+  cameraMotion: {
+    type: "none",
+    duration: 1.0,
+    easing: "ease-in-out"
+  },
+  specialEffects: {
+    effects: []
+  }
+};
+let highlightingState = {
+  startChar: 0,
+  endChar: 0,
+  currentColor: "#FFFF00"
+};
+
+// Audio preview state
+let audioPreviewElement = null;
+let isAudioPlaying = false;
+
 // Generate human-readable ID for characters
 function generateCharacterId(name, surname, dob) {
   // Clean and format components
@@ -95,6 +122,16 @@ function renderModal() {
 }
 
 function closeModal() {
+  // Stop and cleanup audio if playing
+  if (audioPreviewElement) {
+    audioPreviewElement.pause();
+    if (audioPreviewElement.src) {
+      URL.revokeObjectURL(audioPreviewElement.src);
+    }
+    audioPreviewElement = null;
+    isAudioPlaying = false;
+  }
+
   document.getElementById("modalroot").innerHTML = "";
   activeIdx = null;
 }
@@ -339,4 +376,893 @@ async function trySaveChar() {
     renderModal();
     console.error('Character save error:', error);
   }
+}
+
+// ==================== Script Line Modal Functions ====================
+
+function openScriptLineModal(lineId) {
+  if (!dirHandle) {
+    alert("Choose a folder first!");
+    return;
+  }
+
+  activeLineId = lineId;
+  scriptLineTab = "sprite";
+  modalErr = "";
+  modalMsg = "";
+
+  // Find the script line
+  const line = scriptLines.find(l => l.id === lineId);
+  if (!line) {
+    alert("Script line not found!");
+    return;
+  }
+
+  // Load existing data
+  scriptLineFields = {
+    spriteIndex: line.spriteIndex ?? null,
+    audioFile: line.audioFile || null,
+    audioBlob: null,
+    highlights: line.highlights ? [...line.highlights] : [],
+    cameraMotion: line.cameraMotion || {
+      type: "none",
+      duration: 1.0,
+      easing: "ease-in-out"
+    },
+    specialEffects: line.specialEffects || {
+      effects: []
+    }
+  };
+
+  highlightingState = {
+    startChar: 0,
+    endChar: 0,
+    currentColor: "#FFFF00"
+  };
+
+  renderScriptLineModal();
+}
+
+function renderScriptLineModal() {
+  const root = document.getElementById("modalroot");
+  const line = scriptLines.find(l => l.id === activeLineId);
+  const character = cast.find(c => c && c.id === line.characterId);
+
+  if (!character) {
+    alert("No character selected for this line!");
+    closeModal();
+    return;
+  }
+
+  let tabContent = "";
+  if (scriptLineTab === "sprite") {
+    tabContent = renderSpriteSelectionTab(character);
+  } else if (scriptLineTab === "audio") {
+    tabContent = renderAudioUploadTab(line);
+  } else if (scriptLineTab === "highlighting") {
+    tabContent = renderHighlightingTab(line);
+  } else if (scriptLineTab === "cameraMotion") {
+    tabContent = renderCameraMotionTab(line);
+  } else if (scriptLineTab === "specialEffects") {
+    tabContent = renderSpecialEffectsTab(line);
+  }
+
+  root.innerHTML = `
+    <div class="dr-modal-bg">
+      <div class="dr-modal">
+        <button class="dr-close" onclick="closeModal()">&times;</button>
+
+        <div class="dr-tabs">
+          <div class="dr-tab ${scriptLineTab === 'sprite' ? 'active' : ''}"
+               onclick="switchScriptLineTab('sprite')">
+            🎭 Sprite
+          </div>
+          <div class="dr-tab ${scriptLineTab === 'audio' ? 'active' : ''}"
+               onclick="switchScriptLineTab('audio')">
+            🔊 Audio
+          </div>
+          <div class="dr-tab ${scriptLineTab === 'highlighting' ? 'active' : ''}"
+               onclick="switchScriptLineTab('highlighting')">
+            🖍️ Highlighting
+          </div>
+          <div class="dr-tab ${scriptLineTab === 'cameraMotion' ? 'active' : ''}"
+               onclick="switchScriptLineTab('cameraMotion')">
+            📹 Camera
+          </div>
+          <div class="dr-tab ${scriptLineTab === 'specialEffects' ? 'active' : ''}"
+               onclick="switchScriptLineTab('specialEffects')">
+            ✨ Effects
+          </div>
+        </div>
+
+        <div class="dr-modal-content">
+          ${tabContent}
+        </div>
+
+        ${modalErr ? `<div class="dr-err">${modalErr}</div>` : ""}
+        ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ""}
+
+        <div class="dr-btn-row">
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveScriptLineAdvanced()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function switchScriptLineTab(tab) {
+  scriptLineTab = tab;
+  modalErr = "";
+  modalMsg = "";
+  renderScriptLineModal();
+
+  // Initialize drag selection if switching to highlighting tab
+  if (tab === 'highlighting') {
+    setTimeout(() => initializeDragSelection(), 0);
+  }
+}
+
+// Tab rendering functions
+function renderSpriteSelectionTab(character) {
+  if (!character.sprites || character.sprites.length === 0) {
+    return `
+      <div class="dr-form">
+        <p>This character has no sprites uploaded yet.</p>
+        <p>Please edit the character in the Cast view to add sprites.</p>
+      </div>
+    `;
+  }
+
+  let spriteSlots = character.sprites.map((spr, idx) => {
+    if (!spr) {
+      return `
+        <div class="dr-sprslot empty">
+          <span>No Sprite</span>
+        </div>
+      `;
+    }
+
+    const isSelected = scriptLineFields.spriteIndex === idx;
+    return `
+      <div class="dr-sprslot ${isSelected ? 'selected-sprite' : ''}"
+           onclick="selectSprite(${idx})"
+           title="Sprite ${idx + 1}">
+        <img src="${spr.dataURL}" alt="Sprite ${idx + 1}">
+        ${isSelected ? '<div class="sprite-check">✓</div>' : ''}
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="dr-form">
+      <h3>Select Character Sprite</h3>
+      <p style="color: var(--text-tertiary); margin-bottom: 1rem;">
+        Choose which sprite expression to show during this dialogue.
+      </p>
+      <div class="dr-sprgrid">
+        ${spriteSlots}
+      </div>
+    </div>
+  `;
+}
+
+function selectSprite(index) {
+  scriptLineFields.spriteIndex = index;
+  renderScriptLineModal();
+}
+
+function renderAudioUploadTab(line) {
+  const hasAudio = scriptLineFields.audioFile !== null;
+
+  return `
+    <div class="dr-form">
+      <h3>Audio Playback</h3>
+      <p style="color: var(--text-tertiary); margin-bottom: 1rem;">
+        Upload an audio file for this dialogue line (optional).
+      </p>
+
+      ${hasAudio ? `
+        <div class="audio-preview">
+          <div class="audio-info">
+            <span class="audio-icon">🎵</span>
+            <span class="audio-filename">${scriptLineFields.audioFile || 'audio.mp3'}</span>
+          </div>
+          <div class="audio-controls">
+            <button class="btn btn-secondary" onclick="playAudioPreview()">${isAudioPlaying ? '⏸️ Pause' : '▶️ Play'}</button>
+            <button class="btn btn-secondary" onclick="clearAudio()">🗑️ Remove</button>
+          </div>
+        </div>
+      ` : `
+        <div class="audio-empty">
+          <p>No audio file uploaded</p>
+        </div>
+      `}
+
+      <input type="file" accept="audio/*" id="audioFileInput"
+             onchange="handleAudioUpload(event)" style="display: none;">
+      <button class="btn btn-primary" onclick="triggerAudioInput()">
+        📁 ${hasAudio ? 'Replace' : 'Upload'} Audio
+      </button>
+    </div>
+  `;
+}
+
+function triggerAudioInput() {
+  document.getElementById('audioFileInput').click();
+}
+
+function handleAudioUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validate file type
+  if (!file.type.startsWith('audio/')) {
+    modalErr = "Please select a valid audio file.";
+    renderScriptLineModal();
+    return;
+  }
+
+  scriptLineFields.audioFile = file.name;
+  scriptLineFields.audioBlob = file;
+  modalErr = "";
+  renderScriptLineModal();
+}
+
+function clearAudio() {
+  scriptLineFields.audioFile = null;
+  scriptLineFields.audioBlob = null;
+  renderScriptLineModal();
+}
+
+function playAudioPreview() {
+  // Toggle pause if already playing
+  if (audioPreviewElement && !audioPreviewElement.paused) {
+    audioPreviewElement.pause();
+    audioPreviewElement.currentTime = 0;
+    isAudioPlaying = false;
+    updateAudioPlayButton();
+    return;
+  }
+
+  if (!scriptLineFields.audioBlob) {
+    modalErr = "No audio file to play.";
+    renderScriptLineModal();
+    return;
+  }
+
+  try {
+    // Create blob URL for preview
+    const blobUrl = URL.createObjectURL(scriptLineFields.audioBlob);
+
+    // Create or reuse audio element
+    if (!audioPreviewElement) {
+      audioPreviewElement = new Audio();
+
+      // Event handlers
+      audioPreviewElement.onended = () => {
+        isAudioPlaying = false;
+        URL.revokeObjectURL(audioPreviewElement.src);
+        updateAudioPlayButton();
+      };
+
+      audioPreviewElement.onerror = (e) => {
+        isAudioPlaying = false;
+        modalErr = `Audio playback error: ${audioPreviewElement.error.message}`;
+        renderScriptLineModal();
+      };
+    }
+
+    audioPreviewElement.src = blobUrl;
+    audioPreviewElement.play()
+      .then(() => {
+        isAudioPlaying = true;
+        updateAudioPlayButton();
+      })
+      .catch(err => {
+        isAudioPlaying = false;
+        modalErr = `Failed to play audio: ${err.message}`;
+        renderScriptLineModal();
+      });
+
+  } catch (error) {
+    modalErr = `Error playing audio: ${error.message}`;
+    renderScriptLineModal();
+  }
+}
+
+// Update only the play button without full re-render
+function updateAudioPlayButton() {
+  const playButton = document.querySelector('.audio-controls .btn-secondary');
+  if (playButton) {
+    playButton.innerHTML = isAudioPlaying ? '⏸️ Pause' : '▶️ Play';
+  }
+}
+
+function renderCameraMotionTab(line) {
+  const cam = scriptLineFields.cameraMotion;
+
+  const cameraTypes = [
+    { value: "none", label: "None", desc: "No camera movement" },
+    { value: "pan_left", label: "Pan Left", desc: "Camera pans to the left" },
+    { value: "pan_right", label: "Pan Right", desc: "Camera pans to the right" },
+    { value: "pan_up", label: "Pan Up", desc: "Camera pans upward" },
+    { value: "pan_down", label: "Pan Down", desc: "Camera pans downward" },
+    { value: "zoom_in", label: "Zoom In", desc: "Camera zooms closer" },
+    { value: "zoom_out", label: "Zoom Out", desc: "Camera zooms out" },
+    { value: "rotate_cw", label: "Rotate Clockwise", desc: "Camera rotates clockwise" },
+    { value: "rotate_ccw", label: "Rotate Counter-Clockwise", desc: "Camera rotates counter-clockwise" },
+    { value: "tilt_up", label: "Tilt Up", desc: "Camera tilts upward" },
+    { value: "tilt_down", label: "Tilt Down", desc: "Camera tilts downward" },
+    { value: "dolly_in", label: "Dolly In", desc: "Camera moves forward on track" },
+    { value: "dolly_out", label: "Dolly Out", desc: "Camera moves backward on track" },
+    { value: "truck_left", label: "Truck Left", desc: "Camera moves left on track" },
+    { value: "truck_right", label: "Truck Right", desc: "Camera moves right on track" },
+    { value: "pedestal_up", label: "Pedestal Up", desc: "Camera moves up vertically" },
+    { value: "pedestal_down", label: "Pedestal Down", desc: "Camera moves down vertically" }
+  ];
+
+  const easingTypes = [
+    { value: "linear", label: "Linear" },
+    { value: "ease-in", label: "Ease In" },
+    { value: "ease-out", label: "Ease Out" },
+    { value: "ease-in-out", label: "Ease In-Out" }
+  ];
+
+  const cameraOptions = cameraTypes.map(type =>
+    `<option value="${type.value}" ${cam.type === type.value ? 'selected' : ''} title="${type.desc}">
+      ${type.label}
+    </option>`
+  ).join('');
+
+  const easingOptions = easingTypes.map(easing =>
+    `<option value="${easing.value}" ${cam.easing === easing.value ? 'selected' : ''}>
+      ${easing.label}
+    </option>`
+  ).join('');
+
+  const selectedType = cameraTypes.find(t => t.value === cam.type);
+
+  return `
+    <div class="dr-form">
+      <h3>Camera Motion</h3>
+      <p style="color: var(--text-tertiary); margin-bottom: 1rem;">
+        Configure camera animation during this dialogue line.
+      </p>
+
+      <div class="camera-preview-box">
+        <div class="camera-preview-icon">📹</div>
+        <div class="camera-preview-text">
+          <strong>${selectedType ? selectedType.label : 'None'}</strong>
+          <p>${selectedType ? selectedType.desc : 'No camera movement'}</p>
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field" style="flex: 2;">
+          <label>Motion Type:</label>
+          <select onchange="updateCameraMotion('type', this.value)">
+            ${cameraOptions}
+          </select>
+        </div>
+      </div>
+
+      ${cam.type !== 'none' ? `
+        <div class="dr-fg-row">
+          <div class="dr-fg-field">
+            <label>Duration (seconds):</label>
+            <input type="number" min="0.1" max="10" step="0.1"
+                   value="${cam.duration}"
+                   onchange="updateCameraMotion('duration', parseFloat(this.value))">
+          </div>
+          <div class="dr-fg-field">
+            <label>Easing:</label>
+            <select onchange="updateCameraMotion('easing', this.value)">
+              ${easingOptions}
+            </select>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function updateCameraMotion(field, value) {
+  scriptLineFields.cameraMotion[field] = value;
+
+  // Update only the camera tab content
+  const tabContent = document.querySelector('.dr-modal-content');
+  if (tabContent && scriptLineTab === 'cameraMotion') {
+    const line = scriptLines.find(l => l.id === activeLineId);
+    tabContent.innerHTML = renderCameraMotionTab(line);
+  }
+}
+
+function renderSpecialEffectsTab(line) {
+  const effects = scriptLineFields.specialEffects.effects;
+
+  const availableEffects = [
+    { type: "shake", label: "Screen Shake", icon: "📳", hasIntensity: true },
+    { type: "flash", label: "Flash", icon: "⚡", hasColor: true },
+    { type: "fade_black", label: "Fade to Black", icon: "⬛" },
+    { type: "fade_white", label: "Fade to White", icon: "⬜" },
+    { type: "blur", label: "Background Blur", icon: "💨", hasIntensity: true },
+    { type: "distortion", label: "Distortion/Ripple", icon: "🌀", hasIntensity: true },
+    { type: "sepia", label: "Sepia Filter", icon: "🟫" },
+    { type: "grayscale", label: "Grayscale", icon: "⚫" },
+    { type: "invert", label: "Color Invert", icon: "🔄" },
+    { type: "vignette", label: "Vignette", icon: "◉", hasIntensity: true },
+    { type: "scanlines", label: "Scanlines", icon: "📺" }
+  ];
+
+  // Render active effects list
+  const activeEffectsList = effects.map((effect, idx) => {
+    const effectDef = availableEffects.find(e => e.type === effect.type);
+    return `
+      <div class="effect-active-item">
+        <span class="effect-icon">${effectDef ? effectDef.icon : '✨'}</span>
+        <div class="effect-details">
+          <strong>${effectDef ? effectDef.label : effect.type}</strong>
+          <div class="effect-params">
+            ${effect.intensity !== undefined ? `Intensity: ${effect.intensity}` : ''}
+            ${effect.color !== undefined ? `Color: ${effect.color}` : ''}
+            ${effect.duration ? `Duration: ${effect.duration}s` : ''}
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="removeEffect(${idx})">
+          🗑️
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  // Render available effects grid
+  const effectsGrid = availableEffects.map(effect => {
+    const isActive = effects.some(e => e.type === effect.type);
+    return `
+      <div class="effect-option ${isActive ? 'effect-active' : ''}"
+           onclick="toggleEffect('${effect.type}')">
+        <div class="effect-option-icon">${effect.icon}</div>
+        <div class="effect-option-label">${effect.label}</div>
+        ${isActive ? '<div class="effect-checkmark">✓</div>' : ''}
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="dr-form">
+      <h3>Special Effects</h3>
+      <p style="color: var(--text-tertiary); margin-bottom: 1rem;">
+        Add visual effects that trigger during this dialogue line.
+      </p>
+
+      ${effects.length > 0 ? `
+        <div class="active-effects-list">
+          <h4>Active Effects:</h4>
+          ${activeEffectsList}
+        </div>
+      ` : ''}
+
+      <div class="effects-grid">
+        <h4>Available Effects:</h4>
+        <div class="effects-grid-container">
+          ${effectsGrid}
+        </div>
+      </div>
+
+      <div class="effects-help">
+        <small>💡 Click an effect to add/remove it. Effects will trigger when this dialogue line appears.</small>
+      </div>
+    </div>
+  `;
+}
+
+function toggleEffect(effectType) {
+  const effects = scriptLineFields.specialEffects.effects;
+  const existingIndex = effects.findIndex(e => e.type === effectType);
+
+  if (existingIndex !== -1) {
+    // Remove effect
+    effects.splice(existingIndex, 1);
+  } else {
+    // Add effect with default values
+    const newEffect = { type: effectType };
+
+    // Set defaults based on effect type
+    if (['shake', 'blur', 'distortion', 'vignette'].includes(effectType)) {
+      newEffect.intensity = 0.5;
+      newEffect.duration = 0.5;
+    } else if (effectType === 'flash') {
+      newEffect.color = '#FFFFFF';
+      newEffect.duration = 0.2;
+    } else {
+      newEffect.duration = 1.0;
+    }
+
+    effects.push(newEffect);
+  }
+
+  // Update only the effects tab content
+  const tabContent = document.querySelector('.dr-modal-content');
+  if (tabContent && scriptLineTab === 'specialEffects') {
+    const line = scriptLines.find(l => l.id === activeLineId);
+    tabContent.innerHTML = renderSpecialEffectsTab(line);
+  }
+}
+
+function removeEffect(index) {
+  scriptLineFields.specialEffects.effects.splice(index, 1);
+
+  // Update only the effects tab content
+  const tabContent = document.querySelector('.dr-modal-content');
+  if (tabContent && scriptLineTab === 'specialEffects') {
+    const line = scriptLines.find(l => l.id === activeLineId);
+    tabContent.innerHTML = renderSpecialEffectsTab(line);
+  }
+}
+
+function renderHighlightingTab(line) {
+  const dialogue = line.dialogue || "";
+
+  // Render the dialogue with highlights applied
+  const highlightedText = renderHighlightedDialogue(dialogue, scriptLineFields.highlights);
+
+  // Render existing highlights list
+  const highlightsList = scriptLineFields.highlights.map((h, idx) => {
+    const excerpt = dialogue.substring(h.startChar, h.endChar);
+    return `
+      <div class="highlight-item" style="border-left: 4px solid ${h.color};">
+        <div class="highlight-info">
+          <span class="highlight-text">"${excerpt}"</span>
+          <span class="highlight-range">(chars ${h.startChar}-${h.endChar})</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="removeHighlight(${idx})">
+          🗑️
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  // Render dialogue as individual character spans for selection
+  const selectableDialogue = dialogue.split('').map((char, idx) =>
+    `<span class="char-selectable" data-char-index="${idx}">${char === ' ' ? '&nbsp;' : char}</span>`
+  ).join('');
+
+  return `
+    <div class="dr-form">
+      <h3>Text Highlighting</h3>
+      <p style="color: var(--text-tertiary); margin-bottom: 1rem;">
+        Click and drag across the text to select the portion you want to highlight.
+      </p>
+
+      <!-- Preview with current highlights -->
+      <div class="highlight-preview">
+        <h4>Preview:</h4>
+        <div class="preview-text" id="highlight-final-preview">
+          ${highlightedText}
+        </div>
+      </div>
+
+      <!-- Existing highlights list -->
+      ${scriptLineFields.highlights.length > 0 ? `
+        <div class="highlights-list">
+          <h4>Current Highlights:</h4>
+          ${highlightsList}
+        </div>
+      ` : ''}
+
+      <!-- Drag-to-select controls -->
+      <div class="highlight-controls">
+        <h4>Add New Highlight:</h4>
+
+        <!-- Selectable dialogue text -->
+        <div class="dialogue-selector" id="dialogue-selector">
+          <div class="dialogue-text" data-dialogue-text="${dialogue}">
+            ${selectableDialogue}
+          </div>
+          <div class="selection-info" id="selection-info">
+            <span>Selected: <strong id="selection-range">None</strong></span>
+          </div>
+        </div>
+
+        <!-- Color selection -->
+        <div class="color-selection">
+          <label>Highlight Color:</label>
+          <div class="color-presets">
+            <button class="color-preset ${highlightingState.currentColor === '#FFFF00' ? 'active' : ''}"
+                    style="background: #FFFF00;"
+                    onclick="selectHighlightColor('#FFFF00')"
+                    title="Yellow">
+            </button>
+            <button class="color-preset ${highlightingState.currentColor === '#FF0000' ? 'active' : ''}"
+                    style="background: #FF0000;"
+                    onclick="selectHighlightColor('#FF0000')"
+                    title="Red">
+            </button>
+            <button class="color-preset ${highlightingState.currentColor === '#00FF00' ? 'active' : ''}"
+                    style="background: #00FF00;"
+                    onclick="selectHighlightColor('#00FF00')"
+                    title="Green">
+            </button>
+            <input type="color" value="${highlightingState.currentColor}"
+                   onchange="selectHighlightColor(this.value)"
+                   title="Custom color">
+          </div>
+          <div class="current-color-preview" style="background: ${highlightingState.currentColor};">
+            <span>${highlightingState.currentColor}</span>
+          </div>
+        </div>
+
+        <!-- Live preview of current selection -->
+        <div class="selection-preview" id="selection-preview-container">
+          <h5>Selection Preview:</h5>
+          <div class="preview-text" id="selection-live-preview">
+            <em>Drag across the text above to select</em>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="addHighlightFromSelection()" id="add-highlight-btn" disabled>
+          ➕ Add Highlight
+        </button>
+        <button class="btn btn-secondary" onclick="clearSelection()">
+          ❌ Clear Selection
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// Initialize drag selection after rendering highlighting tab
+function initializeDragSelection() {
+  const dialogueSelector = document.getElementById('dialogue-selector');
+  if (!dialogueSelector) return;
+
+  const dialogueText = dialogueSelector.querySelector('.dialogue-text');
+  const selectionInfo = document.getElementById('selection-info');
+  const selectionRange = document.getElementById('selection-range');
+  const addButton = document.getElementById('add-highlight-btn');
+  const livePreview = document.getElementById('selection-live-preview');
+
+  let isSelecting = false;
+  let startIndex = -1;
+  let currentEndIndex = -1;
+
+  // Mouse down - start selection
+  dialogueText.addEventListener('mousedown', (e) => {
+    if (!e.target.classList.contains('char-selectable')) return;
+
+    isSelecting = true;
+    startIndex = parseInt(e.target.dataset.charIndex);
+    currentEndIndex = startIndex;
+
+    clearPreviousSelection();
+    highlightingState.startChar = startIndex;
+    highlightingState.endChar = startIndex + 1;
+
+    updateSelectionDisplay();
+  });
+
+  // Mouse move - extend selection
+  dialogueText.addEventListener('mousemove', (e) => {
+    if (!isSelecting) return;
+    if (!e.target.classList.contains('char-selectable')) return;
+
+    currentEndIndex = parseInt(e.target.dataset.charIndex);
+
+    // Calculate proper start/end (handle backward selection)
+    const selStart = Math.min(startIndex, currentEndIndex);
+    const selEnd = Math.max(startIndex, currentEndIndex) + 1;
+
+    highlightingState.startChar = selStart;
+    highlightingState.endChar = selEnd;
+
+    clearPreviousSelection();
+    updateSelectionDisplay();
+  });
+
+  // Mouse up - finish selection
+  document.addEventListener('mouseup', () => {
+    if (isSelecting) {
+      isSelecting = false;
+
+      // Enable add button if valid selection
+      const validSelection = highlightingState.endChar > highlightingState.startChar;
+      if (addButton) {
+        addButton.disabled = !validSelection;
+      }
+    }
+  });
+
+  function clearPreviousSelection() {
+    dialogueText.querySelectorAll('.char-selectable').forEach(span => {
+      span.classList.remove('char-selected');
+    });
+  }
+
+  function updateSelectionDisplay() {
+    const line = scriptLines.find(l => l.id === activeLineId);
+    const dialogue = line.dialogue || "";
+
+    // Highlight selected characters
+    const spans = dialogueText.querySelectorAll('.char-selectable');
+    for (let i = highlightingState.startChar; i < highlightingState.endChar; i++) {
+      if (spans[i]) {
+        spans[i].classList.add('char-selected');
+      }
+    }
+
+    // Update selection info
+    const selectedText = dialogue.substring(highlightingState.startChar, highlightingState.endChar);
+    selectionRange.innerHTML = highlightingState.endChar > highlightingState.startChar
+      ? `"${selectedText}" (${highlightingState.startChar}-${highlightingState.endChar})`
+      : 'None';
+
+    // Update live preview
+    if (livePreview) {
+      livePreview.innerHTML = highlightingState.endChar > highlightingState.startChar
+        ? renderSelectionPreview(dialogue, highlightingState.startChar, highlightingState.endChar, highlightingState.currentColor)
+        : '<em>Drag across the text above to select</em>';
+    }
+  }
+}
+
+// Render dialogue with all highlights applied
+function renderHighlightedDialogue(dialogue, highlights) {
+  if (!dialogue) return '<em>No dialogue text</em>';
+  if (!highlights || highlights.length === 0) return dialogue;
+
+  // Sort highlights by start position to apply them correctly
+  const sorted = [...highlights].sort((a, b) => a.startChar - b.startChar);
+
+  // Build highlighted HTML
+  let result = '';
+  let lastIndex = 0;
+
+  sorted.forEach(h => {
+    // Add text before highlight
+    result += dialogue.substring(lastIndex, h.startChar);
+    // Add highlighted text
+    result += `<span style="background-color: ${h.color}; padding: 2px 4px; border-radius: 3px;">`;
+    result += dialogue.substring(h.startChar, h.endChar);
+    result += '</span>';
+    lastIndex = h.endChar;
+  });
+
+  // Add remaining text
+  result += dialogue.substring(lastIndex);
+
+  return result;
+}
+
+// Render preview of current selection (before adding)
+function renderSelectionPreview(dialogue, start, end, color) {
+  if (!dialogue || start >= end || start < 0 || end > dialogue.length) {
+    return '<em>Invalid selection</em>';
+  }
+
+  return dialogue.substring(0, start) +
+         `<span style="background-color: ${color}; padding: 2px 4px; border-radius: 3px;">` +
+         dialogue.substring(start, end) +
+         '</span>' +
+         dialogue.substring(end);
+}
+
+// Clear text selection
+function clearSelection() {
+  highlightingState.startChar = 0;
+  highlightingState.endChar = 0;
+
+  const dialogueText = document.querySelector('.dialogue-text');
+  if (dialogueText) {
+    dialogueText.querySelectorAll('.char-selectable').forEach(span => {
+      span.classList.remove('char-selected');
+    });
+  }
+
+  const selectionRange = document.getElementById('selection-range');
+  if (selectionRange) {
+    selectionRange.innerHTML = 'None';
+  }
+
+  const livePreview = document.getElementById('selection-live-preview');
+  if (livePreview) {
+    livePreview.innerHTML = '<em>Drag across the text above to select</em>';
+  }
+
+  const addButton = document.getElementById('add-highlight-btn');
+  if (addButton) {
+    addButton.disabled = true;
+  }
+}
+
+// Select color (updated to avoid full re-render)
+function selectHighlightColor(color) {
+  highlightingState.currentColor = color;
+
+  // Update color preview without full re-render
+  const colorPreview = document.querySelector('.current-color-preview');
+  if (colorPreview) {
+    colorPreview.style.background = color;
+    colorPreview.querySelector('span').textContent = color;
+  }
+
+  // Update color preset active states
+  document.querySelectorAll('.color-preset').forEach(btn => {
+    const btnColor = btn.style.background.toLowerCase();
+    const targetColor = color.toLowerCase();
+    if (btnColor === targetColor || rgbToHex(btnColor) === targetColor) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // Update live preview if selection exists
+  const line = scriptLines.find(l => l.id === activeLineId);
+  const livePreview = document.getElementById('selection-live-preview');
+  if (livePreview && highlightingState.endChar > highlightingState.startChar && line) {
+    livePreview.innerHTML = renderSelectionPreview(
+      line.dialogue,
+      highlightingState.startChar,
+      highlightingState.endChar,
+      color
+    );
+  }
+}
+
+// Helper function to convert RGB to hex for color comparison
+function rgbToHex(rgb) {
+  if (rgb.startsWith('#')) return rgb.toLowerCase();
+  const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+  if (!match) return rgb;
+  const r = parseInt(match[1]).toString(16).padStart(2, '0');
+  const g = parseInt(match[2]).toString(16).padStart(2, '0');
+  const b = parseInt(match[3]).toString(16).padStart(2, '0');
+  return `#${r}${g}${b}`;
+}
+
+// Add highlight from drag selection
+function addHighlightFromSelection() {
+  const line = scriptLines.find(l => l.id === activeLineId);
+  const dialogue = line.dialogue || "";
+
+  // Validate
+  if (highlightingState.startChar >= highlightingState.endChar) {
+    modalErr = "Please select text to highlight.";
+    renderScriptLineModal();
+    return;
+  }
+
+  if (highlightingState.startChar < 0 || highlightingState.endChar > dialogue.length) {
+    modalErr = "Invalid selection range.";
+    renderScriptLineModal();
+    return;
+  }
+
+  // Add highlight
+  scriptLineFields.highlights.push({
+    startChar: highlightingState.startChar,
+    endChar: highlightingState.endChar,
+    color: highlightingState.currentColor
+  });
+
+  // Reset state
+  highlightingState.startChar = 0;
+  highlightingState.endChar = 0;
+  modalErr = "";
+
+  // Re-render to show updated highlights
+  renderScriptLineModal();
+
+  // Re-initialize drag selection after re-render
+  setTimeout(() => initializeDragSelection(), 0);
+}
+
+// Remove highlight
+function removeHighlight(index) {
+  scriptLineFields.highlights.splice(index, 1);
+  renderScriptLineModal();
+
+  // Re-initialize drag selection after re-render
+  setTimeout(() => initializeDragSelection(), 0);
 }

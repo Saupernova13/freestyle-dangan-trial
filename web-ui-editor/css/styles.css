@@ -1020,6 +1020,411 @@ nav {
   font-weight: 600;
 }
 
+/* Edit Button */
+.script-line-edit {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.25rem;
+}
+
+.script-line-edit:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Script Line Modal - Sprite Selection */
+.selected-sprite {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  position: relative;
+}
+
+.sprite-check {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--primary);
+  color: white;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: bold;
+  box-shadow: var(--shadow-md);
+}
+
+/* Script Line Modal - Audio Upload */
+.audio-preview {
+  background: var(--bg-tertiary);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.audio-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.audio-icon {
+  font-size: 2rem;
+}
+
+.audio-filename {
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.audio-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.audio-empty {
+  background: var(--bg-tertiary);
+  padding: 2rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  color: var(--text-tertiary);
+  margin-bottom: 1rem;
+}
+
+/* Script Line Modal - Text Highlighting */
+.highlight-preview {
+  background: var(--bg-tertiary);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.preview-text {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--text-primary);
+  padding: 1rem;
+  background: var(--bg-primary);
+  border-radius: 0.5rem;
+  min-height: 3rem;
+}
+
+.highlights-list {
+  margin-bottom: 1.5rem;
+}
+
+.highlight-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.highlight-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.highlight-text {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.highlight-range {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+.highlight-controls {
+  background: var(--bg-tertiary);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+}
+
+.highlight-controls h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.color-selection {
+  margin: 1.5rem 0;
+}
+
+.color-selection label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.color-presets {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.color-preset {
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid var(--border-primary);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-preset:hover {
+  transform: scale(1.1);
+  border-color: var(--primary);
+}
+
+.color-presets input[type="color"] {
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid var(--border-primary);
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.current-color-preview {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  color: #000;
+}
+
+.selection-preview {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-primary);
+  border-radius: 0.5rem;
+}
+
+.selection-preview h5 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.btn-sm {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* Drag-to-Select Highlighting Styles */
+.dialogue-selector {
+  background: var(--bg-primary);
+  border: 2px solid var(--border-primary);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dialogue-text {
+  font-size: 1.25rem;
+  line-height: 2;
+  color: var(--text-primary);
+  user-select: none;
+  cursor: text;
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.char-selectable {
+  display: inline-block;
+  transition: background-color 0.1s ease;
+  border-radius: 2px;
+}
+
+.char-selectable:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+}
+
+.char-selected {
+  background-color: rgba(99, 102, 241, 0.3);
+  color: var(--text-primary);
+}
+
+.selection-info {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  padding: 0.5rem;
+}
+
+.selection-info strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.color-preset.active {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Camera Motion Tab */
+.camera-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--bg-tertiary);
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  border: 2px solid var(--border-primary);
+}
+
+.camera-preview-icon {
+  font-size: 3rem;
+}
+
+.camera-preview-text {
+  flex: 1;
+}
+
+.camera-preview-text strong {
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.camera-preview-text p {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+}
+
+/* Special Effects Tab */
+.active-effects-list {
+  margin-bottom: 1.5rem;
+}
+
+.active-effects-list h4 {
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.effect-active-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 2px solid var(--primary);
+}
+
+.effect-icon {
+  font-size: 2rem;
+}
+
+.effect-details {
+  flex: 1;
+}
+
+.effect-details strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.effect-params {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+.effects-grid h4 {
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.effects-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.effect-option {
+  position: relative;
+  padding: 1.25rem 0.75rem;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-primary);
+  border-radius: 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.effect-option:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.effect-option.effect-active {
+  background: var(--bg-secondary);
+  border-color: var(--primary);
+}
+
+.effect-option-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.effect-option-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.effect-checkmark {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+.effects-help {
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border-radius: 0.5rem;
+  border-left: 3px solid var(--primary);
+}
+
+.effects-help small {
+  color: var(--text-tertiary);
+}
+
 /* Delete Button */
 .script-line-delete {
   padding: 0.5rem 0.75rem;

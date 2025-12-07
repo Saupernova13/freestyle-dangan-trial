@@ -44,6 +44,12 @@ Currently, the focus is on the **Danganronpa Cast Manager**, a web-based interfa
   - Smooth CSS animations during reordering
   - Ghost preview showing what's being dragged ("1 line" or "X lines")
   - Auto-save to trial.json with complete script preservation
+  - **Advanced Script Line Properties** ✨ (for speaking lines):
+    - 🎭 Sprite selection for character expressions
+    - 🔊 Voice acting audio upload with browser playback
+    - 🖍️ Text highlighting with drag-to-select interface
+    - 📹 Camera motion configuration (17 types: pan, zoom, rotate, tilt, dolly, truck, pedestal)
+    - ✨ Special screen effects (11 types: shake, flash, fades, blur, filters, etc.)
 
 - **User Experience**
   - Dark/Light theme toggle with localStorage persistence
@@ -161,6 +167,62 @@ Currently, the focus is on the **Danganronpa Cast Manager**, a web-based interfa
    - Click the 🗑️ button on any line to remove it
    - Remaining lines automatically renumber
 
+### Script Line Advanced Properties ✨
+
+Each speaking dialogue line can be enhanced with advanced properties via the edit button (✏️):
+
+#### 🎭 Sprite Selection
+- Choose which character sprite expression displays during the line
+- Visual grid of all uploaded character sprites
+- Selected sprite shown with checkmark indicator
+
+#### 🔊 Audio
+- Upload audio file for voice acting (supports MP3, WAV, OGG)
+- Play/pause audio preview in browser (▶️/⏸️ toggle)
+- Audio files stored in `Audio/` directory with line ID naming
+
+#### 🖍️ Text Highlighting
+- Highlight portions of dialogue text with custom colors
+- **Drag-to-select interface**: Click and drag across text to select range
+- Multiple highlight ranges supported
+- 3 preset colors (yellow, red, green) + custom color picker
+- Live preview of highlights
+- Real-time selection feedback without page scrolling
+
+#### 📹 Camera Motion
+Configure camera animations during dialogue:
+
+**Available Motions**:
+- **Pan** (Left, Right, Up, Down)
+- **Zoom** (In, Out)
+- **Rotate** (Clockwise, Counter-Clockwise)
+- **Tilt** (Up, Down)
+- **Dolly** (In, Out) - move on track forward/back
+- **Truck** (Left, Right) - move on track side-to-side
+- **Pedestal** (Up, Down) - move vertically
+
+**Settings**:
+- Duration: 0.1-10 seconds
+- Easing: Linear, Ease-In, Ease-Out, Ease-In-Out
+
+#### ✨ Special Effects
+Add visual screen effects when dialogue appears:
+
+**Available Effects**:
+- 📳 **Screen Shake** (with intensity)
+- ⚡ **Flash** (white or custom color)
+- ⬛ **Fade to Black**
+- ⬜ **Fade to White**
+- 💨 **Background Blur** (with intensity)
+- 🌀 **Distortion/Ripple** (with intensity)
+- 🟫 **Sepia Filter**
+- ⚫ **Grayscale**
+- 🔄 **Color Invert**
+- ◉ **Vignette** (with intensity)
+- 📺 **Scanlines** (retro effect)
+
+Multiple effects can be active simultaneously. Click effect tiles to toggle on/off.
+
 ---
 
 ## Data Structure & JSON Schema
@@ -172,6 +234,10 @@ When you select a workspace folder, the system creates the following structure:
 ```
 [Your Workspace Folder]/
 ├── trial.json                    # Trial metadata and character references
+├── Audio/                        # Voice acting audio files (optional)
+│   ├── line_1733585420123.mp3
+│   ├── line_1733585430456.wav
+│   └── ...
 └── Characters/                   # Character data folder
     ├── John_Doe/
     │   ├── character.json        # Character profile data
@@ -267,14 +333,42 @@ The root trial metadata file that references all characters in the cast and cont
 
 Each script line object in the `script.lines` array has the following structure:
 
-**Speaking Line:**
+**Speaking Line (with all advanced properties):**
 ```json
 {
   "id": "line_1733585420123",
   "order": 0,
   "type": "speaking",
   "characterId": "JD_19920315_A1B2C3",
-  "dialogue": "Something doesn't add up here..."
+  "dialogue": "Something doesn't add up here...",
+  "spriteIndex": 2,
+  "audioFile": "line_1733585420123.mp3",
+  "highlights": [
+    {
+      "startChar": 10,
+      "endChar": 15,
+      "color": "#FFFF00"
+    }
+  ],
+  "cameraMotion": {
+    "type": "zoom_in",
+    "duration": 1.5,
+    "easing": "ease-in-out"
+  },
+  "specialEffects": {
+    "effects": [
+      {
+        "type": "shake",
+        "intensity": 0.5,
+        "duration": 0.3
+      },
+      {
+        "type": "flash",
+        "color": "#FFFFFF",
+        "duration": 0.2
+      }
+    ]
+  }
 }
 ```
 
@@ -307,6 +401,24 @@ Each script line object in the `script.lines` array has the following structure:
 - `text` (string): Narration text (narrator lines only)
 - `minigameId` (string): Minigame type identifier (minigame lines only)
   - Options: `"truth_bullets"`, `"hangmans_gambit"`, `"rebuttal_showdown"`
+
+**Advanced Properties (speaking lines only):**
+- `spriteIndex` (number, optional): Index of character sprite to display (0-24, or configured max)
+- `audioFile` (string, optional): Audio filename for voice acting (stored in `Audio/` directory)
+- `highlights` (array, optional): Text highlight ranges
+  - `startChar` (number): Starting character index (0-based)
+  - `endChar` (number): Ending character index (exclusive)
+  - `color` (string): Highlight color in hex format (e.g., `#FFFF00`)
+- `cameraMotion` (object, optional): Camera animation configuration
+  - `type` (string): Motion type - `"none"`, `"pan_left"`, `"pan_right"`, `"pan_up"`, `"pan_down"`, `"zoom_in"`, `"zoom_out"`, `"rotate_cw"`, `"rotate_ccw"`, `"tilt_up"`, `"tilt_down"`, `"dolly_in"`, `"dolly_out"`, `"truck_left"`, `"truck_right"`, `"pedestal_up"`, `"pedestal_down"`
+  - `duration` (number): Animation duration in seconds (0.1-10)
+  - `easing` (string): Easing function - `"linear"`, `"ease-in"`, `"ease-out"`, `"ease-in-out"`
+- `specialEffects` (object, optional): Screen effects configuration
+  - `effects` (array): Array of active effects
+    - `type` (string): Effect type - `"shake"`, `"flash"`, `"fade_black"`, `"fade_white"`, `"blur"`, `"distortion"`, `"sepia"`, `"grayscale"`, `"invert"`, `"vignette"`, `"scanlines"`
+    - `intensity` (number, optional): Effect intensity (0.0-1.0, for applicable effects)
+    - `color` (string, optional): Effect color (for flash effect)
+    - `duration` (number): Effect duration in seconds
 
 ### character.json Schema
 
@@ -460,13 +572,19 @@ freestyle-dangan-trial/
 - 🆕 Script line type handling (speaking, narrator, minigame)
 - 🆕 Script data persistence in trial.json
 
-**modal.js** (Character Editor)
+**modal.js** (Character & Script Line Editor)
 - Character modal lifecycle (open/close/render)
 - Details tab: Profile form with validation
 - Sprites tab: Upload interface (individual/bulk)
 - Character ID generation with human-readable format
 - Character data validation and saving
 - Sprite file writing with error handling
+- 🆕 Script line advanced properties modal (5 tabs)
+- 🆕 Sprite selection tab with visual grid
+- 🆕 Audio upload tab with HTML5 playback preview
+- 🆕 Text highlighting tab with drag-to-select interface
+- 🆕 Camera motion tab with 17 motion types
+- 🆕 Special effects tab with 11 effect types
 
 **settings.js** (Configuration)
 - Application settings object management
@@ -532,12 +650,16 @@ You can choose any folder on your system when prompted by the "Choose Folder" di
 - [x] Multi-select support for batch operations
 - [x] Visual feedback and animations
 - [x] Auto-save script to trial.json
+- [x] Character expression/sprite mapping per line
+- [x] Voice acting audio upload with browser preview
+- [x] Text highlighting with drag-to-select interface
+- [x] Camera motion configuration (17 motion types)
+- [x] Special screen effects (11 effect types)
 - [ ] Evidence management
 - [ ] Truth bullets system
 - [ ] Scene sequence editor
 - [ ] Music and sound effect assignment
 - [ ] Background selection
-- [ ] Character expression/sprite mapping per line
 
 ### Phase 3: Trial Engine (Godot)
 - [ ] 3D trial room environment

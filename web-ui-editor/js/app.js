@@ -660,6 +660,7 @@ async function saveScriptLineAdvanced() {
     line.highlights = scriptLineFields.highlights;
     line.cameraMotion = scriptLineFields.cameraMotion;
     line.specialEffects = scriptLineFields.specialEffects;
+    line.dialogueBoxStyle = scriptLineFields.dialogueBoxStyle;
 
     // Handle audio file upload
     if (scriptLineFields.audioBlob) {

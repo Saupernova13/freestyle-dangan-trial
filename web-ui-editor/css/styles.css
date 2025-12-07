@@ -1087,6 +1087,51 @@ nav {
   flex: 1;
 }
 
+.audio-seek-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.audio-time-current,
+.audio-time-total {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  min-width: 3rem;
+  text-align: center;
+}
+
+.audio-seek-bar {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.audio-seek-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.audio-seek-bar::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
 .audio-controls {
   display: flex;
   gap: 0.5rem;
@@ -1208,6 +1253,17 @@ nav {
   text-align: center;
   font-weight: 600;
   color: #000;
+}
+
+.highlight-button-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.highlight-button-row .btn {
+  flex: 1;
+  min-width: 150px;
 }
 
 .selection-preview {
@@ -1611,4 +1667,37 @@ nav {
   .script-drop-zone.drag-over-gap {
     height: 2rem;
   }
+}
+
+/* Dialogue Box Style Tab */
+.dialoguebox-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--bg-tertiary);
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  border: 2px solid var(--border-primary);
+}
+
+.dialoguebox-preview-icon {
+  font-size: 3rem;
+}
+
+.dialoguebox-preview-text {
+  flex: 1;
+}
+
+.dialoguebox-preview-text strong {
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.dialoguebox-preview-text p {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
 }

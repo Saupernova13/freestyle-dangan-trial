@@ -33,6 +33,12 @@ let scriptLineFields = {
   },
   specialEffects: {
     effects: []
+  },
+  dialogueBoxStyle: {
+    style: "default",
+    borderColor: "#FFFFFF",
+    bgOpacity: 0.9,
+    borderThickness: 2
   }
 };
 let highlightingState = {
@@ -411,6 +417,12 @@ function openScriptLineModal(lineId) {
     },
     specialEffects: line.specialEffects || {
       effects: []
+    },
+    dialogueBoxStyle: line.dialogueBoxStyle || {
+      style: "default",
+      borderColor: "#FFFFFF",
+      bgOpacity: 0.9,
+      borderThickness: 2
     }
   };
 
@@ -439,6 +451,8 @@ function renderScriptLineModal() {
     tabContent = renderSpriteSelectionTab(character);
   } else if (scriptLineTab === "audio") {
     tabContent = renderAudioUploadTab(line);
+  } else if (scriptLineTab === "dialogueBox") {
+    tabContent = renderDialogueBoxTab(line);
   } else if (scriptLineTab === "highlighting") {
     tabContent = renderHighlightingTab(line);
   } else if (scriptLineTab === "cameraMotion") {
@@ -460,6 +474,10 @@ function renderScriptLineModal() {
           <div class="dr-tab ${scriptLineTab === 'audio' ? 'active' : ''}"
                onclick="switchScriptLineTab('audio')">
             🔊 Audio
+          </div>
+          <div class="dr-tab ${scriptLineTab === 'dialogueBox' ? 'active' : ''}"
+               onclick="switchScriptLineTab('dialogueBox')">
+            💬 Box Style
           </div>
           <div class="dr-tab ${scriptLineTab === 'highlighting' ? 'active' : ''}"
                onclick="switchScriptLineTab('highlighting')">
@@ -568,6 +586,19 @@ function renderAudioUploadTab(line) {
             <span class="audio-icon">🎵</span>
             <span class="audio-filename">${scriptLineFields.audioFile || 'audio.mp3'}</span>
           </div>
+
+          <div class="audio-seek-container">
+            <span class="audio-time-current" id="audio-time-current">0:00</span>
+            <input type="range"
+                   class="audio-seek-bar"
+                   id="audio-seek-bar"
+                   min="0"
+                   max="100"
+                   value="0"
+                   oninput="seekAudio(this.value)">
+            <span class="audio-time-total" id="audio-time-total">0:00</span>
+          </div>
+
           <div class="audio-controls">
             <button class="btn btn-secondary" onclick="playAudioPreview()">${isAudioPlaying ? '⏸️ Pause' : '▶️ Play'}</button>
             <button class="btn btn-secondary" onclick="clearAudio()">🗑️ Remove</button>
@@ -615,7 +646,114 @@ function clearAudio() {
   renderScriptLineModal();
 }
 
-function playAudioPreview() {
+function renderDialogueBoxTab(line) {
+  const box = scriptLineFields.dialogueBoxStyle;
+
+  const boxStyles = [
+    { value: "default", label: "Default", desc: "Standard rectangular box" },
+    { value: "slant_left", label: "Slant Left", desc: "Box tilted to the left" },
+    { value: "slant_right", label: "Slant Right", desc: "Box tilted to the right" },
+    { value: "spiky", label: "Spiky", desc: "Sharp pointed edges" },
+    { value: "bubbly", label: "Bubbly", desc: "Rounded speech bubble style" },
+    { value: "rounded", label: "Rounded", desc: "Soft rounded corners" },
+    { value: "sharp", label: "Sharp", desc: "Hard angular edges" }
+  ];
+
+  const styleOptions = boxStyles.map(style =>
+    `<option value="${style.value}" ${box.style === style.value ? 'selected' : ''} title="${style.desc}">
+      ${style.label}
+    </option>`
+  ).join('');
+
+  const selectedStyle = boxStyles.find(s => s.value === box.style);
+
+  return `
+    <div class="dr-form">
+      <h3>Dialogue Box Style</h3>
+      <p style="color: var(--text-tertiary); margin-bottom: 1rem;">
+        Customize the appearance of the dialogue box for this line.
+      </p>
+
+      <div class="dialoguebox-preview-box">
+        <div class="dialoguebox-preview-icon">💬</div>
+        <div class="dialoguebox-preview-text">
+          <strong>${selectedStyle ? selectedStyle.label : 'Default'}</strong>
+          <p>${selectedStyle ? selectedStyle.desc : 'Standard rectangular box'}</p>
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field" style="flex: 2;">
+          <label>Box Style:</label>
+          <select onchange="updateDialogueBoxStyle('style', this.value)">
+            ${styleOptions}
+          </select>
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Border Color:</label>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="color"
+                   value="${box.borderColor}"
+                   onchange="updateDialogueBoxStyle('borderColor', this.value)"
+                   style="width: 50px; height: 35px;">
+            <span style="font-size: 0.875rem; color: var(--text-tertiary);">${box.borderColor}</span>
+          </div>
+        </div>
+        <div class="dr-fg-field">
+          <label>Background Opacity:</label>
+          <input type="range"
+                 min="0"
+                 max="1"
+                 step="0.1"
+                 value="${box.bgOpacity}"
+                 oninput="updateDialogueBoxStyle('bgOpacity', parseFloat(this.value))"
+                 style="width: 100%;">
+          <span style="font-size: 0.875rem; color: var(--text-tertiary);">${Math.round(box.bgOpacity * 100)}%</span>
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Border Thickness (px):</label>
+          <input type="number"
+                 min="0"
+                 max="10"
+                 step="1"
+                 value="${box.borderThickness}"
+                 onchange="updateDialogueBoxStyle('borderThickness', parseInt(this.value))">
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function updateDialogueBoxStyle(field, value) {
+  scriptLineFields.dialogueBoxStyle[field] = value;
+
+  // Update only the dialogue box tab content
+  const tabContent = document.querySelector('.dr-modal-content');
+  if (tabContent && scriptLineTab === 'dialogueBox') {
+    const line = scriptLines.find(l => l.id === activeLineId);
+    tabContent.innerHTML = renderDialogueBoxTab(line);
+  }
+}
+
+async function loadAudioFileFromDisk(filename) {
+  try {
+    const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+    const fileHandle = await audioDir.getFileHandle(filename);
+    const file = await fileHandle.getFile();
+    return file;
+  } catch (error) {
+    console.error("Error loading audio file:", error);
+    return null;
+  }
+}
+
+async function playAudioPreview() {
   // Toggle pause if already playing
   if (audioPreviewElement && !audioPreviewElement.paused) {
     audioPreviewElement.pause();
@@ -623,6 +761,24 @@ function playAudioPreview() {
     isAudioPlaying = false;
     updateAudioPlayButton();
     return;
+  }
+
+  // Load audio from disk if we have filename but no blob
+  if (!scriptLineFields.audioBlob && scriptLineFields.audioFile) {
+    try {
+      const audioFile = await loadAudioFileFromDisk(scriptLineFields.audioFile);
+      if (audioFile) {
+        scriptLineFields.audioBlob = audioFile;
+      } else {
+        modalErr = "Failed to load audio file from disk.";
+        renderScriptLineModal();
+        return;
+      }
+    } catch (error) {
+      modalErr = `Error loading audio: ${error.message}`;
+      renderScriptLineModal();
+      return;
+    }
   }
 
   if (!scriptLineFields.audioBlob) {
@@ -651,6 +807,14 @@ function playAudioPreview() {
         modalErr = `Audio playback error: ${audioPreviewElement.error.message}`;
         renderScriptLineModal();
       };
+
+      audioPreviewElement.ontimeupdate = () => {
+        updateAudioSeekBar();
+      };
+
+      audioPreviewElement.onloadedmetadata = () => {
+        updateAudioSeekBar();
+      };
     }
 
     audioPreviewElement.src = blobUrl;
@@ -658,6 +822,7 @@ function playAudioPreview() {
       .then(() => {
         isAudioPlaying = true;
         updateAudioPlayButton();
+        updateAudioSeekBar();
       })
       .catch(err => {
         isAudioPlaying = false;
@@ -677,6 +842,38 @@ function updateAudioPlayButton() {
   if (playButton) {
     playButton.innerHTML = isAudioPlaying ? '⏸️ Pause' : '▶️ Play';
   }
+}
+
+function seekAudio(value) {
+  if (audioPreviewElement) {
+    const duration = audioPreviewElement.duration;
+    audioPreviewElement.currentTime = (value / 100) * duration;
+  }
+}
+
+function updateAudioSeekBar() {
+  if (!audioPreviewElement) return;
+
+  const seekBar = document.getElementById('audio-seek-bar');
+  const currentTimeEl = document.getElementById('audio-time-current');
+  const totalTimeEl = document.getElementById('audio-time-total');
+
+  if (seekBar && currentTimeEl && totalTimeEl) {
+    const current = audioPreviewElement.currentTime;
+    const duration = audioPreviewElement.duration || 0;
+    const percent = duration > 0 ? (current / duration) * 100 : 0;
+
+    seekBar.value = percent;
+    currentTimeEl.textContent = formatTime(current);
+    totalTimeEl.textContent = formatTime(duration);
+  }
+}
+
+function formatTime(seconds) {
+  if (isNaN(seconds) || seconds === Infinity) return '0:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 function renderCameraMotionTab(line) {
@@ -784,6 +981,7 @@ function renderSpecialEffectsTab(line) {
   const availableEffects = [
     { type: "shake", label: "Screen Shake", icon: "📳", hasIntensity: true },
     { type: "flash", label: "Flash", icon: "⚡", hasColor: true },
+    { type: "pulse", label: "Pulse", icon: "💓", hasIntensity: true },
     { type: "fade_black", label: "Fade to Black", icon: "⬛" },
     { type: "fade_white", label: "Fade to White", icon: "⬜" },
     { type: "blur", label: "Background Blur", icon: "💨", hasIntensity: true },
@@ -869,7 +1067,7 @@ function toggleEffect(effectType) {
     const newEffect = { type: effectType };
 
     // Set defaults based on effect type
-    if (['shake', 'blur', 'distortion', 'vignette'].includes(effectType)) {
+    if (['shake', 'blur', 'distortion', 'vignette', 'pulse'].includes(effectType)) {
       newEffect.intensity = 0.5;
       newEffect.duration = 0.5;
     } else if (effectType === 'flash') {
@@ -935,11 +1133,14 @@ function renderHighlightingTab(line) {
         Click and drag across the text to select the portion you want to highlight.
       </p>
 
-      <!-- Preview with current highlights -->
+      <!-- Single unified preview -->
       <div class="highlight-preview">
-        <h4>Preview:</h4>
-        <div class="preview-text" id="highlight-final-preview">
+        <h4>Text Preview:</h4>
+        <div class="preview-text" id="highlight-unified-preview">
           ${highlightedText}
+        </div>
+        <div class="selection-info" id="selection-info" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-tertiary);">
+          <span>Selection: <strong id="selection-range">None</strong></span>
         </div>
       </div>
 
@@ -960,14 +1161,11 @@ function renderHighlightingTab(line) {
           <div class="dialogue-text" data-dialogue-text="${dialogue}">
             ${selectableDialogue}
           </div>
-          <div class="selection-info" id="selection-info">
-            <span>Selected: <strong id="selection-range">None</strong></span>
-          </div>
         </div>
 
         <!-- Color selection -->
         <div class="color-selection">
-          <label>Highlight Color:</label>
+          <label>Text Color:</label>
           <div class="color-presets">
             <button class="color-preset ${highlightingState.currentColor === '#FFFF00' ? 'active' : ''}"
                     style="background: #FFFF00;"
@@ -993,20 +1191,14 @@ function renderHighlightingTab(line) {
           </div>
         </div>
 
-        <!-- Live preview of current selection -->
-        <div class="selection-preview" id="selection-preview-container">
-          <h5>Selection Preview:</h5>
-          <div class="preview-text" id="selection-live-preview">
-            <em>Drag across the text above to select</em>
-          </div>
+        <div class="highlight-button-row">
+          <button class="btn btn-primary" onclick="addHighlightFromSelection()" id="add-highlight-btn" disabled>
+            ➕ Add Highlight
+          </button>
+          <button class="btn btn-secondary" onclick="clearSelection()">
+            ❌ Clear Selection
+          </button>
         </div>
-
-        <button class="btn btn-primary" onclick="addHighlightFromSelection()" id="add-highlight-btn" disabled>
-          ➕ Add Highlight
-        </button>
-        <button class="btn btn-secondary" onclick="clearSelection()">
-          ❌ Clear Selection
-        </button>
       </div>
     </div>
   `;
@@ -1021,7 +1213,6 @@ function initializeDragSelection() {
   const selectionInfo = document.getElementById('selection-info');
   const selectionRange = document.getElementById('selection-range');
   const addButton = document.getElementById('add-highlight-btn');
-  const livePreview = document.getElementById('selection-live-preview');
 
   let isSelecting = false;
   let startIndex = -1;
@@ -1083,7 +1274,7 @@ function initializeDragSelection() {
     const line = scriptLines.find(l => l.id === activeLineId);
     const dialogue = line.dialogue || "";
 
-    // Highlight selected characters
+    // Highlight selected characters in the selectable text
     const spans = dialogueText.querySelectorAll('.char-selectable');
     for (let i = highlightingState.startChar; i < highlightingState.endChar; i++) {
       if (spans[i]) {
@@ -1097,11 +1288,19 @@ function initializeDragSelection() {
       ? `"${selectedText}" (${highlightingState.startChar}-${highlightingState.endChar})`
       : 'None';
 
-    // Update live preview
-    if (livePreview) {
-      livePreview.innerHTML = highlightingState.endChar > highlightingState.startChar
-        ? renderSelectionPreview(dialogue, highlightingState.startChar, highlightingState.endChar, highlightingState.currentColor)
-        : '<em>Drag across the text above to select</em>';
+    // Update unified preview with live selection + existing highlights
+    const unifiedPreview = document.getElementById('highlight-unified-preview');
+    if (unifiedPreview) {
+      const tempHighlights = [...scriptLineFields.highlights];
+      if (highlightingState.endChar > highlightingState.startChar) {
+        tempHighlights.push({
+          startChar: highlightingState.startChar,
+          endChar: highlightingState.endChar,
+          color: highlightingState.currentColor,
+          isTemp: true  // Mark as temporary
+        });
+      }
+      unifiedPreview.innerHTML = renderHighlightedDialogue(dialogue, tempHighlights);
     }
   }
 }
@@ -1122,7 +1321,7 @@ function renderHighlightedDialogue(dialogue, highlights) {
     // Add text before highlight
     result += dialogue.substring(lastIndex, h.startChar);
     // Add highlighted text
-    result += `<span style="background-color: ${h.color}; padding: 2px 4px; border-radius: 3px;">`;
+    result += `<span style="color: ${h.color}; font-weight: 600;">`;
     result += dialogue.substring(h.startChar, h.endChar);
     result += '</span>';
     lastIndex = h.endChar;

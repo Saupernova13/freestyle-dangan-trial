@@ -85,8 +85,10 @@ html, body {
 
 body {
   min-height: 100vh;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Custom scrollbar styles */
@@ -279,6 +281,7 @@ main {
   display: flex;
   min-height: 0;
   background: var(--bg-secondary);
+  overflow: hidden;
 }
 
 /* Navigation */
@@ -323,9 +326,14 @@ nav {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-auto-rows: min-content;
   gap: 1.5rem;
   padding: 2rem;
   align-content: start;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  min-height: 0;
 }
 
 .cast-block {
@@ -868,8 +876,7 @@ nav {
 /* Script Editor Container */
 #scriptEditorContainer {
   padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  grid-column: 1 / -1;
 }
 
 /* Empty State */

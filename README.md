@@ -48,9 +48,12 @@ Currently, the focus is on the **Danganronpa Cast Manager**, a web-based interfa
 - **User Experience**
   - Dark/Light theme toggle with localStorage persistence
   - Responsive grid layout for all screen sizes
+  - Optimized scrolling container with proper overflow handling
+  - Full-width content utilization for script editor
   - Real-time validation and error messaging
   - Intuitive modal-based character editing
   - Loading states for async operations
+  - Custom scrollbar styling for modern appearance
 
 ---
 
@@ -384,7 +387,7 @@ All sprites are automatically converted to PNG format regardless of the original
 ### Web Interface
 
 - **HTML5**: Semantic structure and File System Access API
-- **CSS3**: Custom properties (variables) for theming, Grid/Flexbox layouts
+- **CSS3**: Custom properties (variables) for theming, Grid/Flexbox layouts, optimized overflow handling
 - **Vanilla JavaScript**: Modular ES5+ with no framework dependencies
 - **Google Fonts**: Inter font family for clean typography
 
@@ -481,6 +484,9 @@ freestyle-dangan-trial/
 **styles.css** (Presentation)
 - CSS custom properties for light/dark themes
 - Responsive grid layouts for cast display
+- Optimized overflow handling and scrolling containers
+- Body/main layout with proper height constraints
+- Grid auto-row sizing for content-based heights
 - Modal styling with animations
 - Character type visual distinction (student/headmaster)
 - Custom scrollbar and form styling
@@ -587,6 +593,28 @@ For unsupported browsers, consider using a Chromium-based alternative or impleme
 - Descriptive variable and function names
 - Comments for complex logic
 - Modular file organization
+
+### Layout Architecture
+
+The application uses a carefully structured CSS layout hierarchy to ensure proper scrolling behavior:
+
+```
+body (max-height: 100vh, overflow: hidden)
+└─ header (sticky positioning)
+└─ trialbar
+└─ main (flex: 1, overflow: hidden)
+   └─ nav (sidebar, fixed width: 280px)
+   └─ #mainGrid (overflow-y: auto, height: 100%) ← Scrollable container
+      └─ Cast blocks (grid-auto-rows: min-content)
+      └─ Script container (grid-column: 1 / -1)
+```
+
+**Key Design Decisions:**
+- Body has `overflow: hidden` to prevent whole-page scrolling
+- `#mainGrid` is the scrollable container with `overflow-y: auto`
+- Grid uses `grid-auto-rows: min-content` to size rows based on content
+- Script container spans all grid columns with `grid-column: 1 / -1`
+- This architecture keeps the gradient background hidden and maintains fixed header/sidebar positions
 
 ---
 

@@ -1054,25 +1054,45 @@ nav {
 
 /* Drag Handle */
 .script-drag-handle {
-  font-size: 1.25rem;
-  color: var(--text-tertiary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  gap: 0.125rem;
+  user-select: none;
+  flex-shrink: 0;
   cursor: grab;
-  padding: 0.5rem;
+}
+
+.script-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Arrow Buttons */
+.arrow-btn {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0.125rem 0.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
   transition: all 0.2s ease;
-  flex-shrink: 0;
+  border-radius: 0.25rem;
+  line-height: 1;
 }
 
-.script-drag-handle:hover {
+.arrow-btn:hover {
   color: var(--primary);
-  transform: scale(1.2);
+  background: rgba(99, 102, 241, 0.1);
+  transform: scale(1.15);
 }
 
-.script-drag-handle:active {
-  cursor: grabbing;
+.arrow-btn:active {
+  transform: scale(0.95);
+  background: rgba(99, 102, 241, 0.2);
 }
 
 /* Dragging State */
@@ -1082,10 +1102,43 @@ nav {
   background: var(--bg-secondary);
 }
 
-/* Drag Over State (Drop Zone Indicator) */
-.script-line-bar.drag-over {
-  border-top: 3px solid var(--primary);
-  background: rgba(99, 102, 241, 0.05);
+/* Drop Zone Gaps */
+.script-drop-zone {
+  height: 0.75rem;
+  width: 100%;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* Drop Zone Hover State - Show highlight line */
+.script-drop-zone.drag-over-gap {
+  height: 1.5rem;
+}
+
+.script-drop-zone.drag-over-gap::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary);
+  border-radius: 2px;
+  transform: translateY(-50%);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+  animation: pulse-line 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse-line {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.8);
+  }
 }
 
 /* Prevent text selection during drag */
@@ -1122,15 +1175,28 @@ nav {
   transition: all 0.2s ease, transform 0.3s ease;
 }
 
-/* Update mobile responsive to include drag handle */
+/* Update mobile responsive to include drag handle and drop zones */
 @media (max-width: 768px) {
   .script-drag-handle {
-    font-size: 1.5rem;
-    padding: 0.75rem;
+    padding: 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .arrow-btn {
+    font-size: 1rem;
+    padding: 0.25rem 0.5rem;
   }
 
   .drag-ghost {
     font-size: 1.1rem;
     padding: 1.25rem 1.75rem;
+  }
+
+  .script-drop-zone {
+    height: 1rem;
+  }
+
+  .script-drop-zone.drag-over-gap {
+    height: 2rem;
   }
 }

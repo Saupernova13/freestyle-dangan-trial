@@ -73,10 +73,17 @@ function renderScriptEditor() {
       </div>
     `;
   } else {
-    // Render script lines
-    let linesHtml = scriptLines.map((line, index) => {
-      return renderScriptLineBar(line, index);
-    }).join('');
+    // Render script lines with drop zones between them
+    let linesHtml = '';
+
+    // Add drop zone at the top (before first line)
+    linesHtml += `<div class="script-drop-zone" data-insert-position="0" ondragover="handleGapDragOver(event)" ondrop="handleDropInGap(event, 0)" ondragleave="handleGapDragLeave(event)"></div>`;
+
+    // Add each line with a drop zone after it
+    scriptLines.forEach((line, index) => {
+      linesHtml += renderScriptLineBar(line, index);
+      linesHtml += `<div class="script-drop-zone" data-insert-position="${index + 1}" ondragover="handleGapDragOver(event)" ondrop="handleDropInGap(event, ${index + 1})" ondragleave="handleGapDragLeave(event)"></div>`;
+    });
 
     grid.innerHTML = `
       <div id="scriptEditorContainer">
@@ -166,32 +173,28 @@ function createDragGhost(lineIds) {
   document.body.appendChild(dragGhostElement);
 }
 
-function handleDragOver(event) {
+function handleGapDragOver(event) {
   event.preventDefault();  // Allow drop
   event.dataTransfer.dropEffect = 'move';
 
-  // Add visual feedback
-  const bar = event.currentTarget;
-  if (bar.classList.contains('script-line-bar') && !bar.classList.contains('dragging')) {
-    bar.classList.add('drag-over');
+  // Add visual feedback to the gap
+  const gap = event.currentTarget;
+  if (gap.classList.contains('script-drop-zone')) {
+    gap.classList.add('drag-over-gap');
   }
 }
 
-function handleDrop(event, targetLineId) {
+function handleGapDragLeave(event) {
+  // Remove visual feedback when leaving the gap
+  const gap = event.currentTarget;
+  if (gap.classList.contains('script-drop-zone')) {
+    gap.classList.remove('drag-over-gap');
+  }
+}
+
+function handleDropInGap(event, insertPosition) {
   event.preventDefault();
   event.stopPropagation();
-
-  // Don't drop onto itself if single line
-  if (draggedLineIds.length === 1 && draggedLineIds[0] === targetLineId) {
-    cleanupDrag();
-    return;
-  }
-
-  const targetIndex = scriptLines.findIndex(l => l.id === targetLineId);
-  if (targetIndex === -1) {
-    cleanupDrag();
-    return;
-  }
 
   // Get the lines being dragged
   const draggedLines = draggedLineIds.map(id =>
@@ -203,20 +206,35 @@ function handleDrop(event, targetLineId) {
     return;
   }
 
-  // Remove dragged lines from array (in reverse order to preserve indices)
+  // Calculate the indices of dragged lines
   const draggedIndices = draggedLineIds
     .map(id => scriptLines.findIndex(l => l.id === id))
-    .sort((a, b) => b - a);  // Sort descending
+    .filter(idx => idx !== -1)
+    .sort((a, b) => a - b);  // Sort ascending for position calculation
 
-  draggedIndices.forEach(idx => {
-    if (idx !== -1) scriptLines.splice(idx, 1);
+  // Check if we're dropping in the same position (no-op)
+  // The dragged block starts at draggedIndices[0] and ends at draggedIndices[draggedIndices.length - 1]
+  if (insertPosition >= draggedIndices[0] && insertPosition <= draggedIndices[draggedIndices.length - 1] + 1) {
+    cleanupDrag();
+    return;
+  }
+
+  // Remove dragged lines from array (in reverse order to preserve indices)
+  const draggedIndicesSorted = [...draggedIndices].sort((a, b) => b - a);
+  draggedIndicesSorted.forEach(idx => {
+    scriptLines.splice(idx, 1);
   });
 
-  // Find new target index (may have shifted after removals)
-  const newTargetIndex = scriptLines.findIndex(l => l.id === targetLineId);
+  // Adjust insert position based on how many lines were removed before it
+  let adjustedPosition = insertPosition;
+  for (let idx of draggedIndices) {
+    if (idx < insertPosition) {
+      adjustedPosition--;
+    }
+  }
 
-  // Insert dragged lines at new position
-  scriptLines.splice(newTargetIndex, 0, ...draggedLines);
+  // Insert dragged lines at the new position
+  scriptLines.splice(adjustedPosition, 0, ...draggedLines);
 
   // Update order field for all lines
   scriptLines.forEach((line, index) => {
@@ -252,6 +270,10 @@ function cleanupDrag() {
     el.classList.remove('drag-over');
   });
 
+  document.querySelectorAll('.drag-over-gap').forEach(el => {
+    el.classList.remove('drag-over-gap');
+  });
+
   // Remove ghost element
   if (dragGhostElement && dragGhostElement.parentNode) {
     dragGhostElement.parentNode.removeChild(dragGhostElement);
@@ -269,6 +291,42 @@ function deleteScriptLine(lineId) {
   scriptLines.forEach((line, index) => {
     line.order = index;
   });
+  renderScriptEditor();
+  autoSaveTrial();
+}
+
+function moveLineUp(lineId) {
+  const currentIndex = scriptLines.findIndex(l => l.id === lineId);
+  if (currentIndex <= 0) return; // Already at top
+
+  // Swap with previous line
+  const temp = scriptLines[currentIndex];
+  scriptLines[currentIndex] = scriptLines[currentIndex - 1];
+  scriptLines[currentIndex - 1] = temp;
+
+  // Update order fields
+  scriptLines.forEach((line, index) => {
+    line.order = index;
+  });
+
+  renderScriptEditor();
+  autoSaveTrial();
+}
+
+function moveLineDown(lineId) {
+  const currentIndex = scriptLines.findIndex(l => l.id === lineId);
+  if (currentIndex === -1 || currentIndex >= scriptLines.length - 1) return; // Already at bottom
+
+  // Swap with next line
+  const temp = scriptLines[currentIndex];
+  scriptLines[currentIndex] = scriptLines[currentIndex + 1];
+  scriptLines[currentIndex + 1] = temp;
+
+  // Update order fields
+  scriptLines.forEach((line, index) => {
+    line.order = index;
+  });
+
   renderScriptEditor();
   autoSaveTrial();
 }
@@ -362,13 +420,12 @@ function renderScriptLineBar(line, index) {
          data-line-id="${line.id}"
          draggable="true"
          ondragstart="handleDragStart(event, '${line.id}')"
-         ondragover="handleDragOver(event)"
-         ondrop="handleDrop(event, '${line.id}')"
          ondragend="handleDragEnd(event)"
          onclick="toggleLineSelection(event, '${line.id}')">
 
-      <div class="script-drag-handle" title="Drag to reorder">
-        ↕
+      <div class="script-drag-handle">
+        <div class="arrow-btn arrow-up" onclick="event.stopPropagation(); moveLineUp('${line.id}')" title="Move up">▲</div>
+        <div class="arrow-btn arrow-down" onclick="event.stopPropagation(); moveLineDown('${line.id}')" title="Move down">▼</div>
       </div>
 
       <div class="script-line-number">#${lineNumber}</div>

@@ -32,6 +32,19 @@ Currently, the focus is on the **Danganronpa Cast Manager**, a web-based interfa
   - Configurable sprite count per character (1-100, default: 25)
   - Automatic PNG conversion and standardized naming
 
+- **Script Editor** 🆕
+  - Visual script line editor with three line types:
+    - **Speaking**: Character selection + dialogue input
+    - **Narrator**: Pure narration text
+    - **Minigame Start**: Minigame type selection
+  - Clickable arrow buttons (▲▼) for precise single-step reordering
+  - Intuitive drag-and-drop reordering with gap-based insertion
+  - Pulsing blue highlight lines show where items will be inserted
+  - Multi-select support (Ctrl+Click) to move multiple lines at once
+  - Smooth CSS animations during reordering
+  - Ghost preview showing what's being dragged ("1 line" or "X lines")
+  - Auto-save to trial.json with complete script preservation
+
 - **User Experience**
   - Dark/Light theme toggle with localStorage persistence
   - Responsive grid layout for all screen sizes
@@ -102,6 +115,49 @@ Currently, the focus is on the **Danganronpa Cast Manager**, a web-based interfa
 - **Theme Preference**: Click the 🌙/☀️ icon to toggle between dark and light modes
 - **Adjust Settings**: Click the ⚙️ icon to configure max sprites per character
 
+### Creating Trial Scripts 🆕
+
+1. **Switch to Script View**
+   - Click the "📝 Script" navigation item in the sidebar
+   - This switches from Cast management to Script editing mode
+
+2. **Add Script Lines**
+   - Click the "➕ Add Line" button to create a new script line
+   - Each line has up/down arrow buttons (▲▼), line number, content area, type selector, and delete button
+
+3. **Configure Line Types**
+   - Use the dropdown on the right side of each line to select the type:
+     - **Speaking**: Select a character from your cast and enter their dialogue
+     - **Narrator**: Enter narration text (no character selection)
+     - **Minigame Start**: Select which minigame to trigger (Truth Bullets, Hangman's Gambit, Rebuttal Showdown)
+
+4. **Reorder Script Lines**
+
+   **Method 1: Arrow Buttons (Precise Single-Step Movement)**
+   - Click the **▲** button to move a line up one position
+   - Click the **▼** button to move a line down one position
+   - Arrows change color on hover for visual feedback
+
+   **Method 2: Drag-and-Drop (Flexible Multi-Line Movement)**
+   - **Single line**: Click and drag any line (anywhere on the bar or the arrow area)
+   - **Multiple lines**: Hold Ctrl (Cmd on Mac) and click lines to select them, then drag to move all at once
+   - **Drop target**: Drag to the **gap between two lines** (not onto a line itself)
+   - Visual feedback:
+     - Dragged lines become semi-transparent with dashed borders
+     - A **pulsing blue highlight line** appears in the gap where you're hovering
+     - The gap expands slightly to make targeting easier
+     - Ghost preview shows "1 line" or "X lines" being dragged
+     - Smooth animations when lines reorder
+
+5. **Edit Script Content**
+   - Click into any input field to edit dialogue or narration text
+   - Use character dropdowns to change who is speaking
+   - All changes auto-save to trial.json
+
+6. **Delete Script Lines**
+   - Click the 🗑️ button on any line to remove it
+   - Remaining lines automatically renumber
+
 ---
 
 ## Data Structure & JSON Schema
@@ -129,7 +185,7 @@ When you select a workspace folder, the system creates the following structure:
 
 ### trial.json Schema
 
-The root trial metadata file that references all characters in the cast:
+The root trial metadata file that references all characters in the cast and contains the trial script:
 
 ```json
 {
@@ -153,12 +209,37 @@ The root trial metadata file that references all characters in the cast:
     null,
     "MN_19700101_G7H8I9"            // Position 16: Headmaster
   ],
+  "script": {
+    "lines": [
+      {
+        "id": "line_1733585420123",
+        "order": 0,
+        "type": "speaking",
+        "characterId": "JD_19920315_A1B2C3",
+        "dialogue": "Something doesn't add up here..."
+      },
+      {
+        "id": "line_1733585430456",
+        "order": 1,
+        "type": "narrator",
+        "text": "The room fell silent as everyone considered the evidence."
+      },
+      {
+        "id": "line_1733585440789",
+        "order": 2,
+        "type": "minigame",
+        "minigameId": "truth_bullets"
+      }
+    ],
+    "lastModified": "2025-12-07T15:30:00Z"
+  },
   "metadata": {
     "version": "3.0",
     "lastModified": "2025-12-07T15:30:00Z",
     "studentCount": 16,
     "headmasterCount": 1,
-    "totalCharacters": 3
+    "totalCharacters": 3,
+    "scriptLineCount": 3
   }
 }
 ```
@@ -168,12 +249,61 @@ The root trial metadata file that references all characters in the cast:
 - `characters` (array[17]): Array of character IDs or null values
   - Indices 0-15: Student slots
   - Index 16: Headmaster slot
+- `script` (object): 🆕 Trial script data
+  - `lines` (array): Array of script line objects in sequence order
+  - `lastModified`: ISO 8601 timestamp of last script modification
 - `metadata` (object): System-generated metadata
   - `version`: Data format version
   - `lastModified`: ISO 8601 timestamp
   - `studentCount`: Number of student slots (always 16)
   - `headmasterCount`: Number of headmaster slots (always 1)
   - `totalCharacters`: Count of non-null character entries
+  - `scriptLineCount`: 🆕 Total number of script lines
+
+### Script Line Schema 🆕
+
+Each script line object in the `script.lines` array has the following structure:
+
+**Speaking Line:**
+```json
+{
+  "id": "line_1733585420123",
+  "order": 0,
+  "type": "speaking",
+  "characterId": "JD_19920315_A1B2C3",
+  "dialogue": "Something doesn't add up here..."
+}
+```
+
+**Narrator Line:**
+```json
+{
+  "id": "line_1733585430456",
+  "order": 1,
+  "type": "narrator",
+  "text": "The room fell silent as everyone considered the evidence."
+}
+```
+
+**Minigame Line:**
+```json
+{
+  "id": "line_1733585440789",
+  "order": 2,
+  "type": "minigame",
+  "minigameId": "truth_bullets"
+}
+```
+
+**Field Descriptions:**
+- `id` (string): Unique line identifier (format: `line_[timestamp]`)
+- `order` (number): Zero-based position in script sequence
+- `type` (string): Line type - `"speaking"`, `"narrator"`, or `"minigame"`
+- `characterId` (string): Character ID reference (speaking lines only)
+- `dialogue` (string): Character dialogue text (speaking lines only)
+- `text` (string): Narration text (narrator lines only)
+- `minigameId` (string): Minigame type identifier (minigame lines only)
+  - Options: `"truth_bullets"`, `"hangmans_gambit"`, `"rebuttal_showdown"`
 
 ### character.json Schema
 
@@ -318,6 +448,14 @@ freestyle-dangan-trial/
 - Character data loading from ID references
 - Cast grid rendering and UI updates
 - Character type utilities (student/headmaster distinction)
+- 🆕 View management (Cast/Script view switching)
+- 🆕 Script editor rendering with drop zone gaps
+- 🆕 Script line CRUD operations (add, delete, update, reorder)
+- 🆕 Arrow button navigation (moveLineUp/moveLineDown)
+- 🆕 Gap-based drag-and-drop with position calculation
+- 🆕 Multi-select support for batch line operations
+- 🆕 Script line type handling (speaking, narrator, minigame)
+- 🆕 Script data persistence in trial.json
 
 **modal.js** (Character Editor)
 - Character modal lifecycle (open/close/render)
@@ -346,6 +484,13 @@ freestyle-dangan-trial/
 - Modal styling with animations
 - Character type visual distinction (student/headmaster)
 - Custom scrollbar and form styling
+- 🆕 Script editor layout and line styling
+- 🆕 Arrow button styling with hover/active states
+- 🆕 Drop zone gap styling (invisible by default, visible on hover)
+- 🆕 Pulsing highlight line animation for drop targets
+- 🆕 Drag-and-drop visual states (dragging, selected)
+- 🆕 Ghost element preview styling
+- 🆕 Smooth reordering animations (300ms transitions)
 
 ---
 
@@ -374,14 +519,19 @@ You can choose any folder on your system when prompted by the "Choose Folder" di
 - [ ] Character reordering/swapping
 - [ ] Export/Import trial packages
 
-### Phase 2: Script Writer
-- [ ] Dialogue scripting interface
+### Phase 2: Script Writer (In Progress)
+- [x] Dialogue scripting interface with speaking/narrator/minigame lines
+- [x] Gap-based drag-and-drop reordering with pulsing highlight lines
+- [x] Arrow button navigation for precise single-step reordering
+- [x] Multi-select support for batch operations
+- [x] Visual feedback and animations
+- [x] Auto-save script to trial.json
 - [ ] Evidence management
 - [ ] Truth bullets system
 - [ ] Scene sequence editor
 - [ ] Music and sound effect assignment
 - [ ] Background selection
-- [ ] Character expression mapping
+- [ ] Character expression/sprite mapping per line
 
 ### Phase 3: Trial Engine (Godot)
 - [ ] 3D trial room environment

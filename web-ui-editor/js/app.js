@@ -10,6 +10,11 @@ let dirHandle = null;
 let activeView = "cast";  // "cast" or "script"
 let scriptLines = [];     // Array of script line objects
 
+// Drag-and-drop state
+let draggedLineIds = [];       // IDs of lines being dragged (supports multi-select)
+let selectedLineIds = new Set();  // Set of selected line IDs for multi-select
+let dragGhostElement = null;   // Ghost element for drag preview
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
   initializeTheme();
@@ -100,6 +105,164 @@ function addScriptLine() {
   autoSaveTrial();
 }
 
+// Multi-select functions
+function toggleLineSelection(event, lineId) {
+  // Ctrl+Click or Cmd+Click to multi-select
+  if (event.ctrlKey || event.metaKey) {
+    event.preventDefault();
+    if (selectedLineIds.has(lineId)) {
+      selectedLineIds.delete(lineId);
+    } else {
+      selectedLineIds.add(lineId);
+    }
+    renderScriptEditor();  // Re-render to show selection
+  }
+}
+
+function clearSelection() {
+  selectedLineIds.clear();
+  renderScriptEditor();
+}
+
+// Drag-and-drop event handlers
+function handleDragStart(event, lineId) {
+  // Check if this line is part of a selection
+  if (selectedLineIds.size > 0 && selectedLineIds.has(lineId)) {
+    // Dragging multiple selected lines
+    draggedLineIds = Array.from(selectedLineIds);
+  } else {
+    // Dragging single line
+    draggedLineIds = [lineId];
+    selectedLineIds.clear();
+  }
+
+  event.target.classList.add('dragging');
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/html', event.target.innerHTML);
+
+  // Create ghost element for visual preview
+  createDragGhost(draggedLineIds);
+
+  // Set custom drag image
+  if (dragGhostElement) {
+    event.dataTransfer.setDragImage(dragGhostElement, 0, 0);
+  }
+}
+
+function createDragGhost(lineIds) {
+  // Create a ghost element showing what's being dragged
+  dragGhostElement = document.createElement('div');
+  dragGhostElement.className = 'drag-ghost';
+
+  if (lineIds.length === 1) {
+    dragGhostElement.textContent = '1 line';
+  } else {
+    dragGhostElement.textContent = `${lineIds.length} lines`;
+  }
+
+  dragGhostElement.style.position = 'absolute';
+  dragGhostElement.style.top = '-1000px';
+  dragGhostElement.style.left = '-1000px';
+  document.body.appendChild(dragGhostElement);
+}
+
+function handleDragOver(event) {
+  event.preventDefault();  // Allow drop
+  event.dataTransfer.dropEffect = 'move';
+
+  // Add visual feedback
+  const bar = event.currentTarget;
+  if (bar.classList.contains('script-line-bar') && !bar.classList.contains('dragging')) {
+    bar.classList.add('drag-over');
+  }
+}
+
+function handleDrop(event, targetLineId) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  // Don't drop onto itself if single line
+  if (draggedLineIds.length === 1 && draggedLineIds[0] === targetLineId) {
+    cleanupDrag();
+    return;
+  }
+
+  const targetIndex = scriptLines.findIndex(l => l.id === targetLineId);
+  if (targetIndex === -1) {
+    cleanupDrag();
+    return;
+  }
+
+  // Get the lines being dragged
+  const draggedLines = draggedLineIds.map(id =>
+    scriptLines.find(l => l.id === id)
+  ).filter(Boolean);
+
+  if (draggedLines.length === 0) {
+    cleanupDrag();
+    return;
+  }
+
+  // Remove dragged lines from array (in reverse order to preserve indices)
+  const draggedIndices = draggedLineIds
+    .map(id => scriptLines.findIndex(l => l.id === id))
+    .sort((a, b) => b - a);  // Sort descending
+
+  draggedIndices.forEach(idx => {
+    if (idx !== -1) scriptLines.splice(idx, 1);
+  });
+
+  // Find new target index (may have shifted after removals)
+  const newTargetIndex = scriptLines.findIndex(l => l.id === targetLineId);
+
+  // Insert dragged lines at new position
+  scriptLines.splice(newTargetIndex, 0, ...draggedLines);
+
+  // Update order field for all lines
+  scriptLines.forEach((line, index) => {
+    line.order = index;
+  });
+
+  // Add animation class for smooth transition
+  document.querySelectorAll('.script-line-bar').forEach(el => {
+    el.classList.add('reordering');
+  });
+
+  // Remove animation class after transition
+  setTimeout(() => {
+    document.querySelectorAll('.script-line-bar').forEach(el => {
+      el.classList.remove('reordering');
+    });
+  }, 300);
+
+  // Clean up and re-render
+  cleanupDrag();
+  renderScriptEditor();
+  autoSaveTrial();
+}
+
+function handleDragEnd(event) {
+  event.target.classList.remove('dragging');
+  cleanupDrag();
+}
+
+function cleanupDrag() {
+  // Clean up all visual feedback
+  document.querySelectorAll('.drag-over').forEach(el => {
+    el.classList.remove('drag-over');
+  });
+
+  // Remove ghost element
+  if (dragGhostElement && dragGhostElement.parentNode) {
+    dragGhostElement.parentNode.removeChild(dragGhostElement);
+  }
+  dragGhostElement = null;
+
+  // Clear selection after successful drag
+  selectedLineIds.clear();
+  draggedLineIds = [];
+}
+
 function deleteScriptLine(lineId) {
   scriptLines = scriptLines.filter(line => line.id !== lineId);
   // Reorder remaining lines
@@ -157,7 +320,7 @@ function renderScriptLineBar(line, index) {
     ).join('');
 
     contentHtml = `
-      <select class="script-character-select" onchange="updateScriptLine('${line.id}', 'characterId', this.value)">
+      <select class="script-character-select" onchange="updateScriptLine('${line.id}', 'characterId', this.value)" onclick="event.stopPropagation()">
         <option value="">Select Character...</option>
         ${characterOptions}
       </select>
@@ -167,6 +330,7 @@ function renderScriptLineBar(line, index) {
         placeholder="Enter dialogue..."
         value="${line.dialogue || ''}"
         oninput="updateScriptLine('${line.id}', 'dialogue', this.value)"
+        onclick="event.stopPropagation()"
       >
     `;
   } else if (line.type === "narrator") {
@@ -177,11 +341,12 @@ function renderScriptLineBar(line, index) {
         placeholder="Enter narration text..."
         value="${line.text || ''}"
         oninput="updateScriptLine('${line.id}', 'text', this.value)"
+        onclick="event.stopPropagation()"
       >
     `;
   } else if (line.type === "minigame") {
     contentHtml = `
-      <select class="script-minigame-select" onchange="updateScriptLine('${line.id}', 'minigameId', this.value)">
+      <select class="script-minigame-select" onchange="updateScriptLine('${line.id}', 'minigameId', this.value)" onclick="event.stopPropagation()">
         <option value="">Select Minigame...</option>
         <option value="truth_bullets" ${line.minigameId === 'truth_bullets' ? 'selected' : ''}>Truth Bullets</option>
         <option value="hangmans_gambit" ${line.minigameId === 'hangmans_gambit' ? 'selected' : ''}>Hangman's Gambit</option>
@@ -190,8 +355,22 @@ function renderScriptLineBar(line, index) {
     `;
   }
 
+  const isSelected = selectedLineIds.has(line.id);
+
   return `
-    <div class="script-line-bar" data-line-id="${line.id}">
+    <div class="script-line-bar ${isSelected ? 'selected' : ''}"
+         data-line-id="${line.id}"
+         draggable="true"
+         ondragstart="handleDragStart(event, '${line.id}')"
+         ondragover="handleDragOver(event)"
+         ondrop="handleDrop(event, '${line.id}')"
+         ondragend="handleDragEnd(event)"
+         onclick="toggleLineSelection(event, '${line.id}')">
+
+      <div class="script-drag-handle" title="Drag to reorder">
+        ↕
+      </div>
+
       <div class="script-line-number">#${lineNumber}</div>
 
       <div class="script-line-content">
@@ -199,14 +378,14 @@ function renderScriptLineBar(line, index) {
       </div>
 
       <div class="script-line-type-select">
-        <select onchange="changeScriptLineType('${line.id}', this.value)">
+        <select onchange="changeScriptLineType('${line.id}', this.value)" onclick="event.stopPropagation()">
           <option value="speaking" ${line.type === 'speaking' ? 'selected' : ''}>Speaking</option>
           <option value="narrator" ${line.type === 'narrator' ? 'selected' : ''}>Narrator</option>
           <option value="minigame" ${line.type === 'minigame' ? 'selected' : ''}>Minigame Start</option>
         </select>
       </div>
 
-      <button class="script-line-delete" onclick="deleteScriptLine('${line.id}')">🗑️</button>
+      <button class="script-line-delete" onclick="event.stopPropagation(); deleteScriptLine('${line.id}')" title="Delete line">🗑️</button>
     </div>
   `;
 }

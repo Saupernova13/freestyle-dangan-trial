@@ -1047,3 +1047,90 @@ nav {
     min-width: unset;
   }
 }
+
+/* ============================================================
+   DRAG-AND-DROP FUNCTIONALITY
+   ============================================================ */
+
+/* Drag Handle */
+.script-drag-handle {
+  font-size: 1.25rem;
+  color: var(--text-tertiary);
+  cursor: grab;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.script-drag-handle:hover {
+  color: var(--primary);
+  transform: scale(1.2);
+}
+
+.script-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Dragging State */
+.script-line-bar.dragging {
+  opacity: 0.5;
+  border: 2px dashed var(--primary);
+  background: var(--bg-secondary);
+}
+
+/* Drag Over State (Drop Zone Indicator) */
+.script-line-bar.drag-over {
+  border-top: 3px solid var(--primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+/* Prevent text selection during drag */
+.script-line-bar[draggable="true"] {
+  user-select: none;
+}
+
+/* Multi-Select State */
+.script-line-bar.selected {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+}
+
+/* Reordering Animation */
+.script-line-bar.reordering {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Drag Ghost Element */
+.drag-ghost {
+  padding: 1rem 1.5rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+/* Smooth transitions for all state changes */
+.script-line-bar {
+  transition: all 0.2s ease, transform 0.3s ease;
+}
+
+/* Update mobile responsive to include drag handle */
+@media (max-width: 768px) {
+  .script-drag-handle {
+    font-size: 1.5rem;
+    padding: 0.75rem;
+  }
+
+  .drag-ghost {
+    font-size: 1.1rem;
+    padding: 1.25rem 1.75rem;
+  }
+}

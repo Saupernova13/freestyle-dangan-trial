@@ -48,8 +48,10 @@ function openSettings() {
 
 function saveAppSettings() {
   const maxSpritesInput = document.getElementById('maxSpritesInput');
+  if (!maxSpritesInput) return;
+
   const newMaxSprites = parseInt(maxSpritesInput.value);
-  
+
   if (isNaN(newMaxSprites) || newMaxSprites < 1 || newMaxSprites > 100) {
     alert('Please enter a valid number between 1 and 100');
     return;
@@ -73,6 +75,3 @@ function saveAppSettings() {
     document.body.removeChild(successDiv);
   }, 3000);
 }
-
-// Initialize settings on page load
-loadSettings();

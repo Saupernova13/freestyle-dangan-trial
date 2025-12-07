@@ -24,9 +24,9 @@ function generateCharacterId(name, surname, dob) {
   const cleanName = name.charAt(0).toUpperCase().replace(/[^A-Za-z0-9]/g, '') || 'X';
   const cleanSurname = surname.charAt(0).toUpperCase().replace(/[^A-Za-z0-9]/g, '') || 'Y';
   const dobFormatted = dob.replace(/-/g, ''); // YYYYMMDD format
-  const randomString = Math.random().toString(36).substr(2, 6).toUpperCase();
-  
-  return `${cleanName}${cleanSurname}_${dobFormatted}_${randomString}`;
+  const randomString = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+  return `${cleanSurname}${cleanName}_${dobFormatted}_${randomString}`;
 }
 
 function openCharModal(idx) {

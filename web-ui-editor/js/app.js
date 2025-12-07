@@ -19,11 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-// Generate unique ID for characters
-function generateCharacterId() {
-  return 'char_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
-}
-
 async function chooseTrialDir() {
   try {
     showLoader(true);
@@ -35,13 +30,21 @@ async function chooseTrialDir() {
     for await (const entry of dirHandle.values()) files.push(entry.name);
     
     if (files.includes("trial.json")) {
-      const file = await dirHandle.getFileHandle("trial.json").then(fh => fh.getFile());
-      const data = JSON.parse(await file.text());
-      trialName = data.trialName || "";
-      document.getElementById('trialNameInput').value = trialName;
-      
-      // Load characters from ID references
-      await loadCharactersFromIds(data.characters || []);
+      try {
+        const file = await dirHandle.getFileHandle("trial.json").then(fh => fh.getFile());
+        const data = JSON.parse(await file.text());
+        trialName = data.trialName || "";
+        document.getElementById('trialNameInput').value = trialName;
+
+        // Load characters from ID references
+        await loadCharactersFromIds(data.characters || []);
+      } catch (error) {
+        console.error("Failed to parse trial.json:", error);
+        // Initialize with empty trial if corrupted
+        trialName = "";
+        document.getElementById('trialNameInput').value = "";
+        cast = Array(BLOCK_COUNT).fill(null);
+      }
     } else {
       trialName = "";
       document.getElementById('trialNameInput').value = "";

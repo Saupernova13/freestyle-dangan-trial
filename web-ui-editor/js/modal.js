@@ -51,6 +51,17 @@ let highlightingState = {
 let audioPreviewElement = null;
 let isAudioPlaying = false;
 
+// Minigame modal state
+let activeMinigameId = null;
+let minigameTab = "common";
+let minigameFields = {
+  name: "",
+  gameType: "truth_bullets",
+  difficulty: "medium",
+  timeLimit: 60,
+  typeSpecific: {}
+};
+
 // Generate human-readable ID for characters
 function generateCharacterId(name, surname, dob) {
   // Clean and format components
@@ -386,6 +397,15 @@ async function trySaveChar() {
 
 // ==================== Script Line Modal Functions ====================
 
+function getAvailableTabs(line) {
+  if (line.type === 'narrator') {
+    return ['audio', 'dialogueBox', 'highlighting', 'specialEffects'];
+  } else if (line.type === 'speaking') {
+    return ['sprite', 'audio', 'dialogueBox', 'highlighting', 'cameraMotion', 'specialEffects'];
+  }
+  return [];
+}
+
 function openScriptLineModal(lineId) {
   if (!dirHandle) {
     alert("Choose a folder first!");
@@ -393,7 +413,6 @@ function openScriptLineModal(lineId) {
   }
 
   activeLineId = lineId;
-  scriptLineTab = "sprite";
   modalErr = "";
   modalMsg = "";
 
@@ -402,6 +421,13 @@ function openScriptLineModal(lineId) {
   if (!line) {
     alert("Script line not found!");
     return;
+  }
+
+  // Set initial tab based on line type
+  if (line.type === 'narrator') {
+    scriptLineTab = "audio";  // Start with audio for narrator
+  } else {
+    scriptLineTab = "sprite";  // Start with sprite for speaking
   }
 
   // Load existing data
@@ -438,16 +464,27 @@ function openScriptLineModal(lineId) {
 function renderScriptLineModal() {
   const root = document.getElementById("modalroot");
   const line = scriptLines.find(l => l.id === activeLineId);
-  const character = cast.find(c => c && c.id === line.characterId);
 
-  if (!character) {
-    alert("No character selected for this line!");
-    closeModal();
-    return;
+  // For speaking lines, validate character selection
+  if (line.type === 'speaking') {
+    const character = cast.find(c => c && c.id === line.characterId);
+    if (!character) {
+      alert("No character selected for this line!");
+      closeModal();
+      return;
+    }
+  }
+
+  const availableTabs = getAvailableTabs(line);
+
+  // Set default tab if current tab is not available
+  if (!availableTabs.includes(scriptLineTab)) {
+    scriptLineTab = availableTabs[0] || 'audio';
   }
 
   let tabContent = "";
-  if (scriptLineTab === "sprite") {
+  if (scriptLineTab === "sprite" && line.type === 'speaking') {
+    const character = cast.find(c => c && c.id === line.characterId);
     tabContent = renderSpriteSelectionTab(character);
   } else if (scriptLineTab === "audio") {
     tabContent = renderAudioUploadTab(line);
@@ -455,7 +492,7 @@ function renderScriptLineModal() {
     tabContent = renderDialogueBoxTab(line);
   } else if (scriptLineTab === "highlighting") {
     tabContent = renderHighlightingTab(line);
-  } else if (scriptLineTab === "cameraMotion") {
+  } else if (scriptLineTab === "cameraMotion" && line.type === 'speaking') {
     tabContent = renderCameraMotionTab(line);
   } else if (scriptLineTab === "specialEffects") {
     tabContent = renderSpecialEffectsTab(line);
@@ -467,30 +504,47 @@ function renderScriptLineModal() {
         <button class="dr-close" onclick="closeModal()">&times;</button>
 
         <div class="dr-tabs">
-          <div class="dr-tab ${scriptLineTab === 'sprite' ? 'active' : ''}"
-               onclick="switchScriptLineTab('sprite')">
-            🎭 Sprite
-          </div>
-          <div class="dr-tab ${scriptLineTab === 'audio' ? 'active' : ''}"
-               onclick="switchScriptLineTab('audio')">
-            🔊 Audio
-          </div>
-          <div class="dr-tab ${scriptLineTab === 'dialogueBox' ? 'active' : ''}"
-               onclick="switchScriptLineTab('dialogueBox')">
-            💬 Box Style
-          </div>
-          <div class="dr-tab ${scriptLineTab === 'highlighting' ? 'active' : ''}"
-               onclick="switchScriptLineTab('highlighting')">
-            🖍️ Highlighting
-          </div>
-          <div class="dr-tab ${scriptLineTab === 'cameraMotion' ? 'active' : ''}"
-               onclick="switchScriptLineTab('cameraMotion')">
-            📹 Camera
-          </div>
-          <div class="dr-tab ${scriptLineTab === 'specialEffects' ? 'active' : ''}"
-               onclick="switchScriptLineTab('specialEffects')">
-            ✨ Effects
-          </div>
+          ${availableTabs.includes('sprite') ? `
+            <div class="dr-tab ${scriptLineTab === 'sprite' ? 'active' : ''}"
+                 onclick="switchScriptLineTab('sprite')">
+              🎭 Sprite
+            </div>
+          ` : ''}
+
+          ${availableTabs.includes('audio') ? `
+            <div class="dr-tab ${scriptLineTab === 'audio' ? 'active' : ''}"
+                 onclick="switchScriptLineTab('audio')">
+              🔊 Audio
+            </div>
+          ` : ''}
+
+          ${availableTabs.includes('dialogueBox') ? `
+            <div class="dr-tab ${scriptLineTab === 'dialogueBox' ? 'active' : ''}"
+                 onclick="switchScriptLineTab('dialogueBox')">
+              💬 Box Style
+            </div>
+          ` : ''}
+
+          ${availableTabs.includes('highlighting') ? `
+            <div class="dr-tab ${scriptLineTab === 'highlighting' ? 'active' : ''}"
+                 onclick="switchScriptLineTab('highlighting')">
+              🖍️ Highlighting
+            </div>
+          ` : ''}
+
+          ${availableTabs.includes('cameraMotion') ? `
+            <div class="dr-tab ${scriptLineTab === 'cameraMotion' ? 'active' : ''}"
+                 onclick="switchScriptLineTab('cameraMotion')">
+              📹 Camera
+            </div>
+          ` : ''}
+
+          ${availableTabs.includes('specialEffects') ? `
+            <div class="dr-tab ${scriptLineTab === 'specialEffects' ? 'active' : ''}"
+                 onclick="switchScriptLineTab('specialEffects')">
+              ✨ Effects
+            </div>
+          ` : ''}
         </div>
 
         <div class="dr-modal-content">
@@ -1100,7 +1154,7 @@ function removeEffect(index) {
 }
 
 function renderHighlightingTab(line) {
-  const dialogue = line.dialogue || "";
+  const dialogue = line.dialogue || line.text || "";
 
   // Render the dialogue with highlights applied
   const highlightedText = renderHighlightedDialogue(dialogue, scriptLineFields.highlights);
@@ -1464,4 +1518,256 @@ function removeHighlight(index) {
 
   // Re-initialize drag selection after re-render
   setTimeout(() => initializeDragSelection(), 0);
+}
+
+// ==================== Minigame Modal Functions ====================
+
+function openMinigameModal(gameId) {
+  if (!dirHandle) {
+    alert("Choose a folder first!");
+    return;
+  }
+
+  activeMinigameId = gameId;
+  minigameTab = "common";
+  modalErr = "";
+  modalMsg = "";
+
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg) {
+    alert("Minigame not found!");
+    return;
+  }
+
+  minigameFields = {
+    name: mg.name || "",
+    gameType: mg.gameType || "truth_bullets",
+    difficulty: mg.difficulty || "medium",
+    timeLimit: mg.timeLimit || 60,
+    typeSpecific: { ...mg.typeSpecific } || {}
+  };
+
+  renderMinigameModal();
+}
+
+function renderMinigameModal() {
+  const root = document.getElementById("modalroot");
+  const mg = minigames.find(m => m.gameId === activeMinigameId);
+
+  const availableTabs = ['common', minigameFields.gameType];
+  let tabContent = "";
+
+  if (minigameTab === 'common') {
+    tabContent = renderMinigameCommonTab(mg);
+  } else if (minigameTab === 'truth_bullets') {
+    tabContent = renderTruthBulletsTab(mg);
+  } else if (minigameTab === 'hangmans_gambit') {
+    tabContent = renderHangmansGambitTab(mg);
+  } else if (minigameTab === 'rebuttal_showdown') {
+    tabContent = renderRebuttalShowdownTab(mg);
+  }
+
+  root.innerHTML = `
+    <div class="dr-modal-bg">
+      <div class="dr-modal">
+        <button class="dr-close" onclick="closeMinigameModal()">&times;</button>
+
+        <div class="dr-tabs">
+          <div class="dr-tab ${minigameTab === 'common' ? 'active' : ''}"
+               onclick="switchMinigameTab('common')">
+            ⚙️ Common Settings
+          </div>
+          <div class="dr-tab ${minigameTab === minigameFields.gameType ? 'active' : ''}"
+               onclick="switchMinigameTab('${minigameFields.gameType}')">
+            ${getMinigameTabIcon(minigameFields.gameType)} ${getMinigameTabLabel(minigameFields.gameType)}
+          </div>
+        </div>
+
+        <div class="dr-modal-content">
+          ${tabContent}
+        </div>
+
+        ${modalErr ? `<div class="dr-err">${modalErr}</div>` : ""}
+        ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ""}
+
+        <div class="dr-btn-row">
+          <button class="btn btn-secondary" onclick="closeMinigameModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveMinigame()">Save Minigame</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getMinigameTabIcon(gameType) {
+  const icons = {
+    'truth_bullets': '🎯',
+    'hangmans_gambit': '📝',
+    'rebuttal_showdown': '⚔️'
+  };
+  return icons[gameType] || '🎮';
+}
+
+function getMinigameTabLabel(gameType) {
+  const labels = {
+    'truth_bullets': 'Truth Bullets Settings',
+    'hangmans_gambit': 'Hangman\'s Gambit Settings',
+    'rebuttal_showdown': 'Rebuttal Showdown Settings'
+  };
+  return labels[gameType] || 'Game Settings';
+}
+
+function switchMinigameTab(tab) {
+  minigameTab = tab;
+  modalErr = "";
+  modalMsg = "";
+  renderMinigameModal();
+}
+
+function closeMinigameModal() {
+  document.getElementById("modalroot").innerHTML = "";
+  activeMinigameId = null;
+}
+
+function renderMinigameCommonTab(mg) {
+  return `
+    <div class="dr-form">
+      <h3>Minigame Configuration</h3>
+
+      <div class="minigame-id-display">
+        <label>Game ID (Read-only):</label>
+        <code>${mg.gameId}</code>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Minigame Name:</label>
+          <input type="text"
+                 value="${minigameFields.name || ''}"
+                 oninput="updateMinigameField('name', this.value)"
+                 placeholder="Enter a descriptive name...">
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Game Type:</label>
+          <select onchange="updateMinigameGameType(this.value)">
+            <option value="truth_bullets" ${minigameFields.gameType === 'truth_bullets' ? 'selected' : ''}>
+              Truth Bullets
+            </option>
+            <option value="hangmans_gambit" ${minigameFields.gameType === 'hangmans_gambit' ? 'selected' : ''}>
+              Hangman's Gambit
+            </option>
+            <option value="rebuttal_showdown" ${minigameFields.gameType === 'rebuttal_showdown' ? 'selected' : ''}>
+              Rebuttal Showdown
+            </option>
+          </select>
+        </div>
+        <div class="dr-fg-field">
+          <label>Difficulty:</label>
+          <select onchange="updateMinigameField('difficulty', this.value)">
+            <option value="easy" ${minigameFields.difficulty === 'easy' ? 'selected' : ''}>Easy</option>
+            <option value="medium" ${minigameFields.difficulty === 'medium' ? 'selected' : ''}>Medium</option>
+            <option value="hard" ${minigameFields.difficulty === 'hard' ? 'selected' : ''}>Hard</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Time Limit (seconds):</label>
+          <input type="number"
+                 min="10"
+                 max="600"
+                 step="5"
+                 value="${minigameFields.timeLimit || 60}"
+                 onchange="updateMinigameField('timeLimit', parseInt(this.value))">
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTruthBulletsTab(mg) {
+  return `
+    <div class="dr-form">
+      <h3>Truth Bullets Configuration</h3>
+      <p style="color: var(--text-tertiary);">
+        Configure truth bullet mechanics and targets for this minigame instance.
+      </p>
+
+      <div class="placeholder-content">
+        <p>Truth Bullets specific settings will be implemented here.</p>
+        <p>Example fields: bullet list, target statements, correct bullet-target pairs</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderHangmansGambitTab(mg) {
+  return `
+    <div class="dr-form">
+      <h3>Hangman's Gambit Configuration</h3>
+      <p style="color: var(--text-tertiary);">
+        Configure word sequences and timing for this minigame instance.
+      </p>
+
+      <div class="placeholder-content">
+        <p>Hangman's Gambit specific settings will be implemented here.</p>
+        <p>Example fields: word list, time per word, combo multipliers</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderRebuttalShowdownTab(mg) {
+  return `
+    <div class="dr-form">
+      <h3>Rebuttal Showdown Configuration</h3>
+      <p style="color: var(--text-tertiary);">
+        Configure statements and evidence for this minigame instance.
+      </p>
+
+      <div class="placeholder-content">
+        <p>Rebuttal Showdown specific settings will be implemented here.</p>
+        <p>Example fields: opponent statements, correct evidence, weak points</p>
+      </div>
+    </div>
+  `;
+}
+
+function updateMinigameField(field, value) {
+  minigameFields[field] = value;
+}
+
+function updateMinigameGameType(newType) {
+  minigameFields.gameType = newType;
+  minigameTab = 'common';
+  renderMinigameModal();
+}
+
+function saveMinigame() {
+  const mg = minigames.find(m => m.gameId === activeMinigameId);
+  if (!mg) {
+    alert("Minigame not found!");
+    closeMinigameModal();
+    return;
+  }
+
+  if (!minigameFields.name.trim()) {
+    modalErr = "Please enter a minigame name.";
+    renderMinigameModal();
+    return;
+  }
+
+  mg.name = minigameFields.name;
+  mg.gameType = minigameFields.gameType;
+  mg.difficulty = minigameFields.difficulty;
+  mg.timeLimit = minigameFields.timeLimit;
+  mg.typeSpecific = minigameFields.typeSpecific;
+
+  autoSaveTrial();
+  closeMinigameModal();
+  renderMinigameDetails();
 }

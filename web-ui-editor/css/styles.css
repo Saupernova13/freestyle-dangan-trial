@@ -1701,3 +1701,93 @@ nav {
   color: var(--text-tertiary);
   font-size: 0.875rem;
 }
+
+/* ==================== Minigame Styles ==================== */
+
+/* Minigame bars */
+.minigame-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.minigame-id-badge {
+  font-family: monospace;
+  font-size: 0.75rem;
+  background: var(--bg-tertiary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-primary);
+}
+
+.minigame-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.minigame-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.minigame-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.minigame-type {
+  font-weight: 500;
+}
+
+.minigame-difficulty {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.minigame-time {
+  color: var(--text-tertiary);
+}
+
+/* Minigame modal */
+.minigame-id-display {
+  background: var(--bg-tertiary);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  margin-bottom: 1rem;
+}
+
+.minigame-id-display label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.minigame-id-display code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  color: var(--primary);
+  background: var(--bg-primary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.placeholder-content {
+  background: var(--bg-tertiary);
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  color: var(--text-tertiary);
+  border: 2px dashed var(--border-primary);
+}
+
+.placeholder-content p {
+  margin: 0.5rem 0;
+}

@@ -7,8 +7,9 @@ let trialName = "";
 let dirHandle = null;
 
 // View management
-let activeView = "cast";  // "cast" or "script"
+let activeView = "cast";  // "cast", "script", or "minigames"
 let scriptLines = [];     // Array of script line objects
+let minigames = [];       // Array of minigame instance objects
 
 // Drag-and-drop state
 let draggedLineIds = [];       // IDs of lines being dragged (supports multi-select)
@@ -51,6 +52,8 @@ function renderActiveView() {
     renderCastGrid();
   } else if (activeView === "script") {
     renderScriptEditor();
+  } else if (activeView === "minigames") {
+    renderMinigameDetails();
   }
 }
 
@@ -403,12 +406,23 @@ function renderScriptLineBar(line, index) {
       >
     `;
   } else if (line.type === "minigame") {
+    const typeLabels = {
+      'truth_bullets': 'Truth Bullets',
+      'hangmans_gambit': "Hangman's Gambit",
+      'rebuttal_showdown': 'Rebuttal Showdown'
+    };
+
+    const minigameOptions = minigames.map(mg => {
+      return `<option value="${mg.gameId}" ${line.minigameId === mg.gameId ? 'selected' : ''}>
+        ${mg.name} (${typeLabels[mg.gameType]})
+      </option>`;
+    }).join('');
+
     contentHtml = `
       <select class="script-minigame-select" onchange="updateScriptLine('${line.id}', 'minigameId', this.value)" onclick="event.stopPropagation()">
-        <option value="">Select Minigame...</option>
-        <option value="truth_bullets" ${line.minigameId === 'truth_bullets' ? 'selected' : ''}>Truth Bullets</option>
-        <option value="hangmans_gambit" ${line.minigameId === 'hangmans_gambit' ? 'selected' : ''}>Hangman's Gambit</option>
-        <option value="rebuttal_showdown" ${line.minigameId === 'rebuttal_showdown' ? 'selected' : ''}>Rebuttal Showdown</option>
+        <option value="">Select Minigame Instance...</option>
+        ${minigameOptions}
+        ${minigames.length === 0 ? '<option value="" disabled>No minigames configured - visit Minigame Details to create one</option>' : ''}
       </select>
     `;
   }
@@ -442,7 +456,7 @@ function renderScriptLineBar(line, index) {
         </select>
       </div>
 
-      ${line.type === 'speaking' ? `<button class="script-line-edit" onclick="event.stopPropagation(); openScriptLineModal('${line.id}')" title="Edit advanced properties">✏️</button>` : ''}
+      ${(line.type === 'speaking' || line.type === 'narrator') ? `<button class="script-line-edit" onclick="event.stopPropagation(); openScriptLineModal('${line.id}')" title="Edit advanced properties">✏️</button>` : ''}
 
       <button class="script-line-delete" onclick="event.stopPropagation(); deleteScriptLine('${line.id}')" title="Delete line">🗑️</button>
     </div>
@@ -475,6 +489,13 @@ async function chooseTrialDir() {
         } else {
           scriptLines = [];
         }
+
+        // Load minigames
+        if (data.minigames && Array.isArray(data.minigames)) {
+          minigames = data.minigames;
+        } else {
+          minigames = [];
+        }
       } catch (error) {
         console.error("Failed to parse trial.json:", error);
         // Initialize with empty trial if corrupted
@@ -482,12 +503,14 @@ async function chooseTrialDir() {
         document.getElementById('trialNameInput').value = "";
         cast = Array(BLOCK_COUNT).fill(null);
         scriptLines = [];
+        minigames = [];
       }
     } else {
       trialName = "";
       document.getElementById('trialNameInput').value = "";
       cast = Array(BLOCK_COUNT).fill(null);
       scriptLines = [];
+      minigames = [];
       await dirHandle.getDirectoryHandle('Characters', { create: true });
     }
 
@@ -596,6 +619,7 @@ async function autoSaveTrial() {
   let trialJs = {
     trialName,
     characters: characterIds, // Just an array of IDs or nulls
+    minigames: minigames,
     script: {
       lines: scriptLines,
       lastModified: new Date().toISOString()
@@ -606,7 +630,8 @@ async function autoSaveTrial() {
       studentCount: blockTypes.filter(t => !t).length,
       headmasterCount: blockTypes.filter(t => t).length,
       totalCharacters: characterIds.filter(id => id !== null).length,
-      scriptLineCount: scriptLines.length
+      scriptLineCount: scriptLines.length,
+      minigameCount: minigames.length
     }
   };
 
@@ -642,6 +667,116 @@ function isStudent(index) {
   return blockTypes[index] === false;
 }
 
+// ==================== Minigame Details Functions ====================
+
+function renderMinigameDetails() {
+  const grid = document.getElementById('mainGrid');
+
+  if (minigames.length === 0) {
+    grid.innerHTML = `
+      <div id="minigameDetailsContainer">
+        <div class="script-empty-state">
+          <div class="script-empty-icon">🎮</div>
+          <h2>No Minigames Configured</h2>
+          <p>Click the button below to create your first minigame instance</p>
+          <button class="btn btn-primary script-add-btn" onclick="addMinigame()">
+            ➕ Create Minigame
+          </button>
+        </div>
+      </div>
+    `;
+  } else {
+    let minigamesHtml = minigames.map((mg, index) =>
+      renderMinigameBar(mg, index)
+    ).join('');
+
+    grid.innerHTML = `
+      <div id="minigameDetailsContainer">
+        <div class="script-header">
+          <h2>Minigame Instances</h2>
+          <button class="btn btn-primary" onclick="addMinigame()">➕ Create Minigame</button>
+        </div>
+        <div class="script-lines-container">
+          ${minigamesHtml}
+        </div>
+      </div>
+    `;
+  }
+}
+
+function renderMinigameBar(mg, index) {
+  const typeLabels = {
+    'truth_bullets': 'Truth Bullets',
+    'hangmans_gambit': "Hangman's Gambit",
+    'rebuttal_showdown': 'Rebuttal Showdown'
+  };
+
+  const difficultyColors = {
+    'easy': '#10b981',
+    'medium': '#f59e0b',
+    'hard': '#ef4444'
+  };
+
+  return `
+    <div class="script-line-bar minigame-bar" data-minigame-id="${mg.gameId}">
+      <div class="minigame-id-badge">${mg.gameId}</div>
+
+      <div class="minigame-info">
+        <div class="minigame-name">${mg.name || 'Unnamed Minigame'}</div>
+        <div class="minigame-meta">
+          <span class="minigame-type">${typeLabels[mg.gameType] || mg.gameType}</span>
+          <span class="minigame-difficulty" style="color: ${difficultyColors[mg.difficulty]}">
+            ${mg.difficulty}
+          </span>
+          <span class="minigame-time">⏱️ ${mg.timeLimit}s</span>
+        </div>
+      </div>
+
+      <button class="script-line-edit"
+              onclick="event.stopPropagation(); openMinigameModal('${mg.gameId}')"
+              title="Edit minigame">✏️</button>
+
+      <button class="script-line-delete"
+              onclick="event.stopPropagation(); deleteMinigame('${mg.gameId}')"
+              title="Delete minigame">🗑️</button>
+    </div>
+  `;
+}
+
+function generateMinigameId() {
+  return `mg_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+}
+
+function addMinigame() {
+  const newMinigame = {
+    gameId: generateMinigameId(),
+    name: "",
+    gameType: "truth_bullets",
+    difficulty: "medium",
+    timeLimit: 60
+  };
+  minigames.push(newMinigame);
+  renderMinigameDetails();
+  openMinigameModal(newMinigame.gameId);
+}
+
+function deleteMinigame(gameId) {
+  if (!confirm('Delete this minigame? This will also remove it from any script lines that reference it.')) {
+    return;
+  }
+
+  minigames = minigames.filter(mg => mg.gameId !== gameId);
+
+  scriptLines.forEach(line => {
+    if (line.type === 'minigame' && line.minigameId === gameId) {
+      line.minigameId = "";
+    }
+  });
+
+  renderMinigameDetails();
+  autoSaveTrial();
+}
+
 // ==================== Script Line Advanced Editing ====================
 
 async function saveScriptLineAdvanced() {
@@ -655,10 +790,14 @@ async function saveScriptLineAdvanced() {
   try {
     showLoader(true);
 
-    // Update line data
-    line.spriteIndex = scriptLineFields.spriteIndex;
+    // Update line data based on type
+    if (line.type === 'speaking') {
+      line.spriteIndex = scriptLineFields.spriteIndex;
+      line.cameraMotion = scriptLineFields.cameraMotion;
+    }
+
+    // Common fields for both narrator and speaking
     line.highlights = scriptLineFields.highlights;
-    line.cameraMotion = scriptLineFields.cameraMotion;
     line.specialEffects = scriptLineFields.specialEffects;
     line.dialogueBoxStyle = scriptLineFields.dialogueBoxStyle;
 

@@ -62,6 +62,35 @@ let minigameFields = {
   typeSpecific: {}
 };
 
+// Truth Bullet modal state
+let activeBulletId = null;
+let bulletFields = {
+  name: "",
+  description: "",
+  imageFile: null,
+  imageBlob: null,
+  inversedLieBulletName: ""
+};
+
+// Nonstop Debate dialogue line modal state
+let activeDebateLineId = null;
+let debateLineTab = "sentence";
+let debateLineFields = {
+  sentenceBeginning: "",
+  target: "",
+  sentenceEnd: "",
+  isCorrect: false,
+  userFailedComment: "",
+  userWrongAnswerComment: "",
+  textEffect: "none",
+  textMovementDirection: "none",
+  textFont: "default",
+  characterId: "",
+  characterSpotlight: false,
+  voiceLineFile: null,
+  voiceLineBlob: null
+};
+
 // Generate human-readable ID for characters
 function generateCharacterId(name, surname, dob) {
   // Clean and format components
@@ -1528,20 +1557,31 @@ function openMinigameModal(gameId) {
     return;
   }
 
+  const mg = minigames.find(m => m.gameId === gameId);
+
+  if (!mg) {
+    console.error('ERROR: Could not find minigame with ID:', gameId);
+    console.error('Available minigames:', minigames);
+    alert('Error: Minigame not found. Please try again.');
+    return;
+  }
+
+  console.log('Opening minigame modal for:', mg);
+
   activeMinigameId = gameId;
   minigameTab = "common";
   modalErr = "";
   modalMsg = "";
 
-  const mg = minigames.find(m => m.gameId === gameId);
-  if (!mg) {
-    alert("Minigame not found!");
-    return;
+  // Ensure typeSpecific exists before opening modal
+  if (!mg.typeSpecific) {
+    console.warn('Initializing missing typeSpecific in openMinigameModal');
+    mg.typeSpecific = { selectedBullets: [], dialogueLines: [] };
   }
 
   minigameFields = {
     name: mg.name || "",
-    gameType: mg.gameType || "truth_bullets",
+    gameType: mg.gameType || "nonstop_debate",
     difficulty: mg.difficulty || "medium",
     timeLimit: mg.timeLimit || 60,
     typeSpecific: { ...mg.typeSpecific } || {}
@@ -1559,12 +1599,22 @@ function renderMinigameModal() {
 
   if (minigameTab === 'common') {
     tabContent = renderMinigameCommonTab(mg);
-  } else if (minigameTab === 'truth_bullets') {
-    tabContent = renderTruthBulletsTab(mg);
+  } else if (minigameTab === 'nonstop_debate') {
+    tabContent = renderNonstopDebateTab(mg);
+  } else if (minigameTab === 'mass_panic_debate') {
+    tabContent = renderPlaceholderTab('Mass Panic Debate');
+  } else if (minigameTab === 'logic_dive') {
+    tabContent = renderPlaceholderTab('Logic Dive');
   } else if (minigameTab === 'hangmans_gambit') {
-    tabContent = renderHangmansGambitTab(mg);
+    tabContent = renderPlaceholderTab('Hangman\'s Gambit');
+  } else if (minigameTab === 'debate_scrum') {
+    tabContent = renderPlaceholderTab('Debate Scrum');
   } else if (minigameTab === 'rebuttal_showdown') {
-    tabContent = renderRebuttalShowdownTab(mg);
+    tabContent = renderPlaceholderTab('Rebuttal Showdown');
+  } else if (minigameTab === 'psyche_taxi') {
+    tabContent = renderPlaceholderTab('Psyche Taxi');
+  } else if (minigameTab === 'closing_argument') {
+    tabContent = renderPlaceholderTab('Closing Argument');
   }
 
   root.innerHTML = `
@@ -1601,18 +1651,28 @@ function renderMinigameModal() {
 
 function getMinigameTabIcon(gameType) {
   const icons = {
-    'truth_bullets': '🎯',
+    'nonstop_debate': '💬',
+    'mass_panic_debate': '🗣️',
+    'logic_dive': '🎿',
     'hangmans_gambit': '📝',
-    'rebuttal_showdown': '⚔️'
+    'debate_scrum': '⚔️',
+    'rebuttal_showdown': '🔫',
+    'psyche_taxi': '🚕',
+    'closing_argument': '⚖️'
   };
   return icons[gameType] || '🎮';
 }
 
 function getMinigameTabLabel(gameType) {
   const labels = {
-    'truth_bullets': 'Truth Bullets Settings',
+    'nonstop_debate': 'Nonstop Debate Settings',
+    'mass_panic_debate': 'Mass Panic Debate Settings',
+    'logic_dive': 'Logic Dive Settings',
     'hangmans_gambit': 'Hangman\'s Gambit Settings',
-    'rebuttal_showdown': 'Rebuttal Showdown Settings'
+    'debate_scrum': 'Debate Scrum Settings',
+    'rebuttal_showdown': 'Rebuttal Showdown Settings',
+    'psyche_taxi': 'Psyche Taxi Settings',
+    'closing_argument': 'Closing Argument Settings'
   };
   return labels[gameType] || 'Game Settings';
 }
@@ -1653,14 +1713,29 @@ function renderMinigameCommonTab(mg) {
         <div class="dr-fg-field">
           <label>Game Type:</label>
           <select onchange="updateMinigameGameType(this.value)">
-            <option value="truth_bullets" ${minigameFields.gameType === 'truth_bullets' ? 'selected' : ''}>
-              Truth Bullets
+            <option value="nonstop_debate" ${minigameFields.gameType === 'nonstop_debate' ? 'selected' : ''}>
+              Nonstop Debate
+            </option>
+            <option value="mass_panic_debate" ${minigameFields.gameType === 'mass_panic_debate' ? 'selected' : ''}>
+              Mass Panic Debate
+            </option>
+            <option value="logic_dive" ${minigameFields.gameType === 'logic_dive' ? 'selected' : ''}>
+              Logic Dive
             </option>
             <option value="hangmans_gambit" ${minigameFields.gameType === 'hangmans_gambit' ? 'selected' : ''}>
               Hangman's Gambit
             </option>
+            <option value="debate_scrum" ${minigameFields.gameType === 'debate_scrum' ? 'selected' : ''}>
+              Debate Scrum
+            </option>
             <option value="rebuttal_showdown" ${minigameFields.gameType === 'rebuttal_showdown' ? 'selected' : ''}>
               Rebuttal Showdown
+            </option>
+            <option value="psyche_taxi" ${minigameFields.gameType === 'psyche_taxi' ? 'selected' : ''}>
+              Psyche Taxi
+            </option>
+            <option value="closing_argument" ${minigameFields.gameType === 'closing_argument' ? 'selected' : ''}>
+              Closing Argument
             </option>
           </select>
         </div>
@@ -1689,52 +1764,335 @@ function renderMinigameCommonTab(mg) {
   `;
 }
 
-function renderTruthBulletsTab(mg) {
+function renderPlaceholderTab(gameName) {
   return `
     <div class="dr-form">
-      <h3>Truth Bullets Configuration</h3>
+      <h3>${gameName} Configuration</h3>
       <p style="color: var(--text-tertiary);">
-        Configure truth bullet mechanics and targets for this minigame instance.
+        Configure ${gameName.toLowerCase()} settings for this minigame instance.
       </p>
 
       <div class="placeholder-content">
-        <p>Truth Bullets specific settings will be implemented here.</p>
-        <p>Example fields: bullet list, target statements, correct bullet-target pairs</p>
+        <p>${gameName} specific settings will be implemented in a future update.</p>
       </div>
     </div>
   `;
 }
 
-function renderHangmansGambitTab(mg) {
+function renderNonstopDebateTab(mg) {
+  try {
+    console.log('=== Rendering Nonstop Debate Tab ===');
+    console.log('Minigame object:', mg);
+    console.log('Truth bullets available:', truthBullets);
+    console.log('Cast available:', cast);
+    console.log('Active minigame ID:', activeMinigameId);
+
+    // Null safety check for minigame object
+    if (!mg) {
+      console.error('ERROR: Minigame object is null/undefined');
+      return `
+        <div class="dr-form">
+          <h3>Error: Minigame Not Found</h3>
+          <p style="color: var(--error);">The minigame object could not be loaded. Please try closing and reopening the modal.</p>
+        </div>
+      `;
+    }
+
+    // Null safety check for truthBullets
+    if (!truthBullets) {
+      console.error('ERROR: truthBullets is null/undefined');
+      truthBullets = [];
+    }
+    if (!Array.isArray(truthBullets)) {
+      console.error('ERROR: truthBullets is not an array:', typeof truthBullets);
+      truthBullets = [];
+    }
+
+    // Null safety check for cast
+    if (!cast) {
+      console.error('ERROR: cast is null/undefined');
+      cast = Array(17).fill(null);
+    }
+
+    // Initialize typeSpecific if needed
+    if (!mg.typeSpecific) {
+      console.warn('Initializing missing typeSpecific');
+      mg.typeSpecific = { selectedBullets: [], dialogueLines: [] };
+    }
+    if (!mg.typeSpecific.selectedBullets) {
+      console.warn('Initializing missing selectedBullets');
+      mg.typeSpecific.selectedBullets = [];
+    }
+    if (!mg.typeSpecific.dialogueLines) {
+      console.warn('Initializing missing dialogueLines');
+      mg.typeSpecific.dialogueLines = [];
+    }
+
+    const selectedBullets = mg.typeSpecific.selectedBullets || [];
+    const dialogueLines = mg.typeSpecific.dialogueLines || [];
+
+    console.log('Selected bullets:', selectedBullets);
+    console.log('Dialogue lines:', dialogueLines);
+
+    // Render bullet selection grid
+    const bulletSelectionHtml = truthBullets.map(bullet => {
+    const isSelected = selectedBullets.includes(bullet.bulletId);
+    return `
+      <div class="bullet-select-item ${isSelected ? 'selected' : ''}"
+           onclick="toggleBulletSelection('${bullet.bulletId}')">
+        <div class="bullet-select-checkbox">${isSelected ? '✓' : ''}</div>
+        <div class="bullet-select-image">
+          ${bullet.imageDataURL ? `<img src="${bullet.imageDataURL}" alt="${bullet.name}">` : '📷'}
+        </div>
+        <div class="bullet-select-info">
+          <div class="bullet-select-name">${bullet.name || 'Unnamed'}</div>
+          <div class="bullet-select-desc">${bullet.description || ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Render dialogue lines list
+  const dialogueLinesHtml = dialogueLines
+    .sort((a, b) => a.order - b.order)
+    .map((line, index) => renderDebateDialogueBar(line, index))
+    .join('');
+
   return `
     <div class="dr-form">
-      <h3>Hangman's Gambit Configuration</h3>
-      <p style="color: var(--text-tertiary);">
-        Configure word sequences and timing for this minigame instance.
-      </p>
+      <h3>Nonstop Debate Configuration</h3>
 
-      <div class="placeholder-content">
-        <p>Hangman's Gambit specific settings will be implemented here.</p>
-        <p>Example fields: word list, time per word, combo multipliers</p>
+      <!-- Bullet Selection Section -->
+      <div class="nsd-section">
+        <h4>Truth Bullets (Select up to 6)</h4>
+        <p style="color: var(--text-tertiary); font-size: 0.875rem;">
+          Selected: ${selectedBullets.length}/6
+        </p>
+
+        ${truthBullets.length === 0 ? `
+          <div class="placeholder-content">
+            <p>No truth bullets available.</p>
+            <p>Visit the Truth Bullets section to create evidence.</p>
+          </div>
+        ` : `
+          <div class="bullet-selection-grid">
+            ${bulletSelectionHtml}
+          </div>
+        `}
       </div>
+
+      <!-- Dialogue Lines Section -->
+      <div class="nsd-section">
+        <h4>Debate Dialogue Lines (${dialogueLines.length}/30)</h4>
+
+        ${dialogueLines.length === 0 ? `
+          <div class="placeholder-content">
+            <p>No dialogue lines yet.</p>
+            <button class="btn btn-primary" onclick="addDebateDialogueLine()">
+              ➕ Add Dialogue Line
+            </button>
+          </div>
+        ` : `
+          <div class="nsd-dialogue-header">
+            <button class="btn btn-primary" onclick="addDebateDialogueLine()"
+                    ${dialogueLines.length >= 30 ? 'disabled' : ''}>
+              ➕ Add Dialogue Line
+            </button>
+          </div>
+          <div class="nsd-dialogue-list">
+            ${dialogueLinesHtml}
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+  } catch (error) {
+    console.error('CRITICAL ERROR in renderNonstopDebateTab:', error);
+    console.error('Stack trace:', error.stack);
+    return `
+      <div class="dr-form">
+        <h3>Error Rendering Tab</h3>
+        <p style="color: var(--error);">An error occurred while rendering the Nonstop Debate settings.</p>
+        <details>
+          <summary>Error Details (for debugging)</summary>
+          <pre style="background: var(--bg-tertiary); padding: 1rem; border-radius: 4px; font-size: 0.75rem;">
+${error.message}
+
+${error.stack}
+          </pre>
+        </details>
+        <p style="margin-top: 1rem;">Please check the browser console (F12) for more information.</p>
+      </div>
+    `;
+  }
+}
+
+function toggleBulletSelection(bulletId) {
+  const mg = minigames.find(m => m.gameId === activeMinigameId);
+  if (!mg || !mg.typeSpecific) return;
+
+  const selectedBullets = mg.typeSpecific.selectedBullets;
+  const index = selectedBullets.indexOf(bulletId);
+
+  if (index !== -1) {
+    // Deselect
+    selectedBullets.splice(index, 1);
+  } else {
+    // Select (max 6)
+    if (selectedBullets.length >= 6) {
+      modalErr = "Maximum 6 truth bullets can be selected.";
+      setTimeout(() => {
+        modalErr = "";
+        renderMinigameModal();
+      }, 2000);
+      return;
+    }
+    selectedBullets.push(bulletId);
+  }
+
+  renderMinigameModal();
+}
+
+function renderDebateDialogueBar(line, index) {
+  const fullSentence = `${line.sentenceBeginning || ''}${line.target || ''}${line.sentenceEnd || ''}`;
+
+  // Add defensive check for cast
+  let characterName = 'No character';
+  if (cast && Array.isArray(cast)) {
+    const character = cast.find(c => c && c.id === line.characterId);
+    if (character) {
+      characterName = `${character.name} ${character.surname}`;
+    }
+  } else {
+    console.warn('Cast array not available in renderDebateDialogueBar');
+  }
+
+  return `
+    <div class="nsd-dialogue-line-bar ${line.isCorrect ? 'nsd-line-correct' : 'nsd-line-incorrect'}"
+         data-line-id="${line.lineId}"
+         draggable="true"
+         ondragstart="handleDebateLineDragStart(event, '${line.lineId}')"
+         ondragend="handleDebateLineDragEnd(event)"
+         ondragover="handleDebateLineDragOver(event)"
+         ondrop="handleDebateLineDrop(event, '${line.lineId}')">
+
+      <div class="nsd-line-number">#${index + 1}</div>
+
+      <div class="nsd-line-content">
+        <div class="nsd-line-sentence">"${fullSentence || 'Empty line'}"</div>
+        <div class="nsd-line-meta">
+          <span>${characterName}</span>
+          ${line.isCorrect ? '<span class="nsd-correct-badge">✓ Correct</span>' : '<span class="nsd-incorrect-badge">✗ Incorrect</span>'}
+        </div>
+      </div>
+
+      <button class="script-line-edit"
+              onclick="event.stopPropagation(); openDebateDialogueModal('${line.lineId}')"
+              title="Edit dialogue">✏️</button>
+
+      <button class="script-line-delete"
+              onclick="event.stopPropagation(); deleteDebateDialogueLine('${line.lineId}')"
+              title="Delete dialogue">🗑️</button>
     </div>
   `;
 }
 
-function renderRebuttalShowdownTab(mg) {
-  return `
-    <div class="dr-form">
-      <h3>Rebuttal Showdown Configuration</h3>
-      <p style="color: var(--text-tertiary);">
-        Configure statements and evidence for this minigame instance.
-      </p>
+function generateDebateLineId() {
+  return `nsd_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+}
 
-      <div class="placeholder-content">
-        <p>Rebuttal Showdown specific settings will be implemented here.</p>
-        <p>Example fields: opponent statements, correct evidence, weak points</p>
-      </div>
-    </div>
-  `;
+function addDebateDialogueLine() {
+  const mg = minigames.find(m => m.gameId === activeMinigameId);
+  if (!mg || !mg.typeSpecific) return;
+
+  if (mg.typeSpecific.dialogueLines.length >= 30) {
+    modalErr = "Maximum 30 dialogue lines per debate.";
+    renderMinigameModal();
+    return;
+  }
+
+  const newLine = {
+    lineId: generateDebateLineId(),
+    order: mg.typeSpecific.dialogueLines.length,
+    sentenceBeginning: "",
+    target: "",
+    sentenceEnd: "",
+    isCorrect: false,
+    userFailedComment: "",
+    userWrongAnswerComment: "",
+    textEffect: "none",
+    textMovementDirection: "none",
+    textFont: "default",
+    characterId: "",
+    characterSpotlight: false,
+    voiceLineFile: null
+  };
+
+  mg.typeSpecific.dialogueLines.push(newLine);
+  renderMinigameModal();
+  openDebateDialogueModal(newLine.lineId);
+}
+
+function deleteDebateDialogueLine(lineId) {
+  const mg = minigames.find(m => m.gameId === activeMinigameId);
+  if (!mg || !mg.typeSpecific) return;
+
+  mg.typeSpecific.dialogueLines = mg.typeSpecific.dialogueLines.filter(l => l.lineId !== lineId);
+
+  // Reorder remaining lines
+  mg.typeSpecific.dialogueLines.forEach((line, index) => {
+    line.order = index;
+  });
+
+  renderMinigameModal();
+  autoSaveTrial();
+}
+
+// Drag-and-drop handlers for dialogue lines
+let draggedDebateLineId = null;
+
+function handleDebateLineDragStart(event, lineId) {
+  draggedDebateLineId = lineId;
+  event.target.classList.add('dragging');
+  event.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDebateLineDragEnd(event) {
+  event.target.classList.remove('dragging');
+  draggedDebateLineId = null;
+}
+
+function handleDebateLineDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+}
+
+function handleDebateLineDrop(event, targetLineId) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (!draggedDebateLineId || draggedDebateLineId === targetLineId) return;
+
+  const mg = minigames.find(m => m.gameId === activeMinigameId);
+  if (!mg || !mg.typeSpecific) return;
+
+  const lines = mg.typeSpecific.dialogueLines;
+  const draggedIndex = lines.findIndex(l => l.lineId === draggedDebateLineId);
+  const targetIndex = lines.findIndex(l => l.lineId === targetLineId);
+
+  if (draggedIndex === -1 || targetIndex === -1) return;
+
+  // Remove dragged line and insert at target position
+  const [draggedLine] = lines.splice(draggedIndex, 1);
+  lines.splice(targetIndex, 0, draggedLine);
+
+  // Update order fields
+  lines.forEach((line, index) => {
+    line.order = index;
+  });
+
+  renderMinigameModal();
+  autoSaveTrial();
 }
 
 function updateMinigameField(field, value) {
@@ -1770,4 +2128,674 @@ function saveMinigame() {
   autoSaveTrial();
   closeMinigameModal();
   renderMinigameDetails();
+}
+
+// ==================== Truth Bullet Modal Functions ====================
+
+function openTruthBulletModal(bulletId) {
+  if (!dirHandle) {
+    alert("Choose a folder first!");
+    return;
+  }
+
+  activeBulletId = bulletId;
+  modalErr = "";
+  modalMsg = "";
+
+  const bullet = truthBullets.find(b => b.bulletId === bulletId);
+  if (!bullet) {
+    alert("Truth bullet not found!");
+    return;
+  }
+
+  bulletFields = {
+    name: bullet.name || "",
+    description: bullet.description || "",
+    imageFile: bullet.imageFile || null,
+    imageBlob: null,
+    inversedLieBulletName: bullet.inversedLieBulletName || ""
+  };
+
+  renderTruthBulletModal();
+}
+
+function renderTruthBulletModal() {
+  const root = document.getElementById("modalroot");
+  const bullet = truthBullets.find(b => b.bulletId === activeBulletId);
+
+  const hasImage = bulletFields.imageFile !== null;
+
+  root.innerHTML = `
+    <div class="dr-modal-bg">
+      <div class="dr-modal">
+        <button class="dr-close" onclick="closeTruthBulletModal()">&times;</button>
+
+        <div class="dr-modal-content">
+          <div class="dr-form">
+            <h3>Truth Bullet Configuration</h3>
+
+            <div class="minigame-id-display">
+              <label>Bullet ID (Read-only):</label>
+              <code>${bullet.bulletId}</code>
+            </div>
+
+            <div class="dr-fg-row">
+              <div class="dr-fg-field">
+                <label>Bullet Name:</label>
+                <input type="text"
+                       value="${bulletFields.name}"
+                       oninput="updateBulletField('name', this.value)"
+                       placeholder="E.g., Bloody Knife">
+              </div>
+            </div>
+
+            <div class="dr-fg-row">
+              <div class="dr-fg-field">
+                <label>Description:</label>
+                <textarea rows="3"
+                          oninput="updateBulletField('description', this.value)"
+                          placeholder="Describe this evidence...">${bulletFields.description}</textarea>
+              </div>
+            </div>
+
+            <div class="dr-fg-row">
+              <div class="dr-fg-field">
+                <label>Inversed Lie Bullet Name:</label>
+                <input type="text"
+                       value="${bulletFields.inversedLieBulletName}"
+                       oninput="updateBulletField('inversedLieBulletName', this.value)"
+                       placeholder="E.g., Clean Knife">
+                <small style="color: var(--text-tertiary);">Name when converted to a lie</small>
+              </div>
+            </div>
+
+            <div class="dr-fg-row">
+              <div class="dr-fg-field">
+                <label>Bullet Image:</label>
+                ${hasImage ? `
+                  <div class="bullet-image-preview">
+                    <img src="${bullet.imageDataURL || ''}" alt="Bullet image">
+                    <button class="btn btn-secondary" onclick="clearBulletImage()">🗑️ Remove Image</button>
+                  </div>
+                ` : `
+                  <div class="bullet-image-empty">
+                    <p>No image uploaded</p>
+                  </div>
+                `}
+                <input type="file" accept="image/*" id="bulletImageInput"
+                       onchange="handleBulletImageUpload(event)" style="display: none;">
+                <button class="btn btn-primary" onclick="triggerBulletImageInput()">
+                  📁 ${hasImage ? 'Replace' : 'Upload'} Image
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        ${modalErr ? `<div class="dr-err">${modalErr}</div>` : ""}
+        ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ""}
+
+        <div class="dr-btn-row">
+          <button class="btn btn-secondary" onclick="closeTruthBulletModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveTruthBullet()">Save Bullet</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function updateBulletField(field, value) {
+  bulletFields[field] = value;
+}
+
+function triggerBulletImageInput() {
+  document.getElementById('bulletImageInput').click();
+}
+
+function handleBulletImageUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    modalErr = "Please select a valid image file.";
+    renderTruthBulletModal();
+    return;
+  }
+
+  bulletFields.imageFile = file.name;
+  bulletFields.imageBlob = file;
+  modalErr = "";
+  renderTruthBulletModal();
+}
+
+function clearBulletImage() {
+  bulletFields.imageFile = null;
+  bulletFields.imageBlob = null;
+  renderTruthBulletModal();
+}
+
+function closeTruthBulletModal() {
+  document.getElementById("modalroot").innerHTML = "";
+  activeBulletId = null;
+}
+
+async function saveTruthBullet() {
+  const bullet = truthBullets.find(b => b.bulletId === activeBulletId);
+  if (!bullet) {
+    alert("Bullet not found!");
+    closeTruthBulletModal();
+    return;
+  }
+
+  if (!bulletFields.name.trim()) {
+    modalErr = "Please enter a bullet name.";
+    renderTruthBulletModal();
+    return;
+  }
+
+  try {
+    showLoader(true);
+
+    // Handle image upload
+    if (bulletFields.imageBlob) {
+      const bulletsDir = await dirHandle.getDirectoryHandle("TruthBullets", { create: true });
+      const imageFileName = `${bullet.bulletId}.${bulletFields.imageBlob.name.split('.').pop()}`;
+      const imageFileHandle = await bulletsDir.getFileHandle(imageFileName, { create: true });
+      const writable = await imageFileHandle.createWritable();
+      await writable.write(bulletFields.imageBlob);
+      await writable.close();
+
+      bullet.imageFile = imageFileName;
+
+      // Store data URL for preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        bullet.imageDataURL = e.target.result;
+      };
+      reader.readAsDataURL(bulletFields.imageBlob);
+    } else if (bulletFields.imageFile === null && bullet.imageFile) {
+      // Image was cleared, remove the file
+      try {
+        const bulletsDir = await dirHandle.getDirectoryHandle("TruthBullets", { create: false });
+        await bulletsDir.removeEntry(bullet.imageFile);
+      } catch (e) {
+        console.warn("Could not remove image file:", e);
+      }
+      bullet.imageFile = null;
+      bullet.imageDataURL = null;
+    }
+
+    bullet.name = bulletFields.name;
+    bullet.description = bulletFields.description;
+    bullet.inversedLieBulletName = bulletFields.inversedLieBulletName;
+
+    await autoSaveTrial();
+
+    showLoader(false);
+    closeTruthBulletModal();
+    renderTruthBulletsView();
+
+  } catch (error) {
+    console.error("Error saving truth bullet:", error);
+    showLoader(false);
+    modalErr = "Failed to save: " + error.message;
+    renderTruthBulletModal();
+  }
+}
+
+// ==================== Debate Dialogue Line Modal ====================
+
+function openDebateDialogueModal(lineId) {
+  if (!dirHandle) {
+    alert("Choose a folder first!");
+    return;
+  }
+
+  const mg = minigames.find(m => m.gameId === activeMinigameId);
+  if (!mg || !mg.typeSpecific) return;
+
+  const line = mg.typeSpecific.dialogueLines.find(l => l.lineId === lineId);
+  if (!line) {
+    alert("Dialogue line not found!");
+    return;
+  }
+
+  activeDebateLineId = lineId;
+  debateLineTab = "sentence";
+  modalErr = "";
+  modalMsg = "";
+
+  debateLineFields = {
+    sentenceBeginning: line.sentenceBeginning || "",
+    target: line.target || "",
+    sentenceEnd: line.sentenceEnd || "",
+    isCorrect: line.isCorrect || false,
+    userFailedComment: line.userFailedComment || "",
+    userWrongAnswerComment: line.userWrongAnswerComment || "",
+    textEffect: line.textEffect || "none",
+    textMovementDirection: line.textMovementDirection || "none",
+    textFont: line.textFont || "default",
+    characterId: line.characterId || "",
+    characterSpotlight: line.characterSpotlight || false,
+    voiceLineFile: line.voiceLineFile || null,
+    voiceLineBlob: null
+  };
+
+  renderDebateDialogueModal();
+}
+
+function renderDebateDialogueModal() {
+  const root = document.getElementById("modalroot");
+  const mg = minigames.find(m => m.gameId === activeMinigameId);
+  const line = mg.typeSpecific.dialogueLines.find(l => l.lineId === activeDebateLineId);
+
+  const tabs = ['sentence', 'target', 'feedback', 'effects', 'character'];
+  let tabContent = "";
+
+  if (debateLineTab === 'sentence') {
+    tabContent = renderSentenceTab();
+  } else if (debateLineTab === 'target') {
+    tabContent = renderTargetTab();
+  } else if (debateLineTab === 'feedback') {
+    tabContent = renderFeedbackTab();
+  } else if (debateLineTab === 'effects') {
+    tabContent = renderEffectsTab();
+  } else if (debateLineTab === 'character') {
+    tabContent = renderCharacterTab();
+  }
+
+  root.innerHTML = `
+    <div class="dr-modal-bg">
+      <div class="dr-modal">
+        <button class="dr-close" onclick="closeDebateDialogueModal()">&times;</button>
+
+        <div class="dr-tabs">
+          <div class="dr-tab ${debateLineTab === 'sentence' ? 'active' : ''}"
+               onclick="switchDebateLineTab('sentence')">
+            📝 Sentence
+          </div>
+          <div class="dr-tab ${debateLineTab === 'target' ? 'active' : ''}"
+               onclick="switchDebateLineTab('target')">
+            🎯 Target
+          </div>
+          <div class="dr-tab ${debateLineTab === 'feedback' ? 'active' : ''}"
+               onclick="switchDebateLineTab('feedback')">
+            💬 Feedback
+          </div>
+          <div class="dr-tab ${debateLineTab === 'effects' ? 'active' : ''}"
+               onclick="switchDebateLineTab('effects')">
+            ✨ Effects
+          </div>
+          <div class="dr-tab ${debateLineTab === 'character' ? 'active' : ''}"
+               onclick="switchDebateLineTab('character')">
+            👤 Character
+          </div>
+        </div>
+
+        <div class="dr-modal-content">
+          ${tabContent}
+        </div>
+
+        ${modalErr ? `<div class="dr-err">${modalErr}</div>` : ""}
+        ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ""}
+
+        <div class="dr-btn-row">
+          <button class="btn btn-secondary" onclick="closeDebateDialogueModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveDebateDialogueLine()">Save Line</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function switchDebateLineTab(tab) {
+  debateLineTab = tab;
+  modalErr = "";
+  modalMsg = "";
+  renderDebateDialogueModal();
+}
+
+function closeDebateDialogueModal() {
+  document.getElementById("modalroot").innerHTML = "";
+  activeDebateLineId = null;
+}
+
+function renderSentenceTab() {
+  const fullSentence = `${debateLineFields.sentenceBeginning}${debateLineFields.target}${debateLineFields.sentenceEnd}`;
+
+  return `
+    <div class="dr-form">
+      <h3>3-Part Sentence Structure</h3>
+      <p style="color: var(--text-tertiary);">
+        Split the sentence into three parts: before target, target (weak point), and after target.
+      </p>
+
+      <div class="sentence-preview">
+        <h4>Live Preview:</h4>
+        <div class="sentence-preview-text" id="sentencePreview">
+          ${debateLineFields.sentenceBeginning}
+          <span class="sentence-target">${debateLineFields.target || '[target]'}</span>
+          ${debateLineFields.sentenceEnd}
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Before Target:</label>
+          <input type="text"
+                 value="${debateLineFields.sentenceBeginning}"
+                 oninput="updateDebateLineField('sentenceBeginning', this.value); updateSentencePreview()"
+                 placeholder="I think that">
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Target (Weak Point):</label>
+          <input type="text"
+                 value="${debateLineFields.target}"
+                 oninput="updateDebateLineField('target', this.value); updateSentencePreview()"
+                 placeholder="the murder weapon"
+                 style="font-weight: 600; color: var(--error);">
+          <small style="color: var(--text-tertiary);">This is the part players will shoot</small>
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>After Target:</label>
+          <input type="text"
+                 value="${debateLineFields.sentenceEnd}"
+                 oninput="updateDebateLineField('sentenceEnd', this.value); updateSentencePreview()"
+                 placeholder="was left at the scene">
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTargetTab() {
+  return `
+    <div class="dr-form">
+      <h3>Target Properties</h3>
+      <p style="color: var(--text-tertiary);">
+        Configure whether this is the correct target to shoot.
+      </p>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox"
+                   ${debateLineFields.isCorrect ? 'checked' : ''}
+                   onchange="updateDebateLineField('isCorrect', this.checked)"
+                   style="width: auto;">
+            <span>This is the CORRECT target</span>
+          </label>
+          <small style="color: var(--text-tertiary); display: block; margin-top: 0.5rem;">
+            Check this if shooting this target with the right bullet solves the debate
+          </small>
+        </div>
+      </div>
+
+      <div class="target-status-indicator ${debateLineFields.isCorrect ? 'correct' : 'incorrect'}">
+        ${debateLineFields.isCorrect
+          ? '<span>✓ This target is CORRECT</span>'
+          : '<span>✗ This target is INCORRECT</span>'}
+      </div>
+    </div>
+  `;
+}
+
+function renderFeedbackTab() {
+  return `
+    <div class="dr-form">
+      <h3>User Feedback Messages</h3>
+      <p style="color: var(--text-tertiary);">
+        Messages shown to the player when they fail or use the wrong bullet.
+      </p>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Time Ran Out Comment:</label>
+          <textarea rows="2"
+                    oninput="updateDebateLineField('userFailedComment', this.value)"
+                    placeholder="Time's up! You failed to break through...">${debateLineFields.userFailedComment}</textarea>
+          <small style="color: var(--text-tertiary);">Shown when the debate timer expires</small>
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Wrong Answer Comment:</label>
+          <textarea rows="2"
+                    oninput="updateDebateLineField('userWrongAnswerComment', this.value)"
+                    placeholder="That's not right! Try again...">${debateLineFields.userWrongAnswerComment}</textarea>
+          <small style="color: var(--text-tertiary);">Shown when player uses wrong truth bullet</small>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderEffectsTab() {
+  return `
+    <div class="dr-form">
+      <h3>Visual Effects</h3>
+      <p style="color: var(--text-tertiary);">
+        Configure how this text appears and moves during the debate.
+      </p>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Text Effect:</label>
+          <select onchange="updateDebateLineField('textEffect', this.value)">
+            <option value="none" ${debateLineFields.textEffect === 'none' ? 'selected' : ''}>None</option>
+            <option value="shake" ${debateLineFields.textEffect === 'shake' ? 'selected' : ''}>Shake</option>
+            <option value="pulse" ${debateLineFields.textEffect === 'pulse' ? 'selected' : ''}>Pulse</option>
+            <option value="glow" ${debateLineFields.textEffect === 'glow' ? 'selected' : ''}>Glow</option>
+            <option value="fade" ${debateLineFields.textEffect === 'fade' ? 'selected' : ''}>Fade</option>
+            <option value="bounce" ${debateLineFields.textEffect === 'bounce' ? 'selected' : ''}>Bounce</option>
+          </select>
+        </div>
+        <div class="dr-fg-field">
+          <label>Movement Direction:</label>
+          <select onchange="updateDebateLineField('textMovementDirection', this.value)">
+            <option value="none" ${debateLineFields.textMovementDirection === 'none' ? 'selected' : ''}>None</option>
+            <option value="left" ${debateLineFields.textMovementDirection === 'left' ? 'selected' : ''}>Left →</option>
+            <option value="right" ${debateLineFields.textMovementDirection === 'right' ? 'selected' : ''}>← Right</option>
+            <option value="up" ${debateLineFields.textMovementDirection === 'up' ? 'selected' : ''}>Up ↑</option>
+            <option value="down" ${debateLineFields.textMovementDirection === 'down' ? 'selected' : ''}>Down ↓</option>
+            <option value="circular" ${debateLineFields.textMovementDirection === 'circular' ? 'selected' : ''}>Circular ⭮</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Text Font Style:</label>
+          <select onchange="updateDebateLineField('textFont', this.value)">
+            <option value="default" ${debateLineFields.textFont === 'default' ? 'selected' : ''}>Default</option>
+            <option value="bold" ${debateLineFields.textFont === 'bold' ? 'selected' : ''}>Bold</option>
+            <option value="italic" ${debateLineFields.textFont === 'italic' ? 'selected' : ''}>Italic</option>
+            <option value="handwritten" ${debateLineFields.textFont === 'handwritten' ? 'selected' : ''}>Handwritten</option>
+            <option value="glitch" ${debateLineFields.textFont === 'glitch' ? 'selected' : ''}>Glitch</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCharacterTab() {
+  const characters = cast.filter(c => c !== null);
+  const characterOptions = characters.map(c =>
+    `<option value="${c.id}" ${c.id === debateLineFields.characterId ? 'selected' : ''}>
+      ${c.name} ${c.surname} (${c.isHeadmaster ? 'Headmaster' : 'Student'})
+    </option>`
+  ).join('');
+
+  const hasVoice = debateLineFields.voiceLineFile !== null;
+
+  return `
+    <div class="dr-form">
+      <h3>Character & Audio</h3>
+      <p style="color: var(--text-tertiary);">
+        Assign a character to this line and optionally add voice acting.
+      </p>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Speaking Character:</label>
+          <select onchange="updateDebateLineField('characterId', this.value)">
+            <option value="">No character</option>
+            ${characterOptions}
+          </select>
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox"
+                   ${debateLineFields.characterSpotlight ? 'checked' : ''}
+                   onchange="updateDebateLineField('characterSpotlight', this.checked)"
+                   style="width: auto;">
+            <span>Enable Character Spotlight</span>
+          </label>
+          <small style="color: var(--text-tertiary); display: block; margin-top: 0.5rem;">
+            Highlight/focus on the character while this line appears
+          </small>
+        </div>
+      </div>
+
+      <div class="dr-fg-row">
+        <div class="dr-fg-field">
+          <label>Voice Line Audio:</label>
+          ${hasVoice ? `
+            <div class="audio-preview">
+              <div class="audio-info">
+                <span class="audio-icon">🎵</span>
+                <span class="audio-filename">${debateLineFields.voiceLineFile}</span>
+              </div>
+              <div class="audio-controls">
+                <button class="btn btn-secondary" onclick="clearDebateVoiceLine()">🗑️ Remove</button>
+              </div>
+            </div>
+          ` : `
+            <div class="audio-empty">
+              <p>No voice line uploaded</p>
+            </div>
+          `}
+          <input type="file" accept="audio/*" id="debateVoiceInput"
+                 onchange="handleDebateVoiceUpload(event)" style="display: none;">
+          <button class="btn btn-primary" onclick="triggerDebateVoiceInput()">
+            📁 ${hasVoice ? 'Replace' : 'Upload'} Voice Line
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function updateDebateLineField(field, value) {
+  debateLineFields[field] = value;
+}
+
+function updateSentencePreview() {
+  const preview = document.getElementById('sentencePreview');
+  if (preview) {
+    preview.innerHTML = `
+      ${debateLineFields.sentenceBeginning}
+      <span class="sentence-target">${debateLineFields.target || '[target]'}</span>
+      ${debateLineFields.sentenceEnd}
+    `;
+  }
+}
+
+function triggerDebateVoiceInput() {
+  document.getElementById('debateVoiceInput').click();
+}
+
+function handleDebateVoiceUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('audio/')) {
+    modalErr = "Please select a valid audio file.";
+    renderDebateDialogueModal();
+    return;
+  }
+
+  debateLineFields.voiceLineFile = file.name;
+  debateLineFields.voiceLineBlob = file;
+  modalErr = "";
+  renderDebateDialogueModal();
+}
+
+function clearDebateVoiceLine() {
+  debateLineFields.voiceLineFile = null;
+  debateLineFields.voiceLineBlob = null;
+  renderDebateDialogueModal();
+}
+
+async function saveDebateDialogueLine() {
+  const mg = minigames.find(m => m.gameId === activeMinigameId);
+  if (!mg || !mg.typeSpecific) return;
+
+  const line = mg.typeSpecific.dialogueLines.find(l => l.lineId === activeDebateLineId);
+  if (!line) {
+    alert("Dialogue line not found!");
+    closeDebateDialogueModal();
+    return;
+  }
+
+  try {
+    showLoader(true);
+
+    // Handle voice line upload
+    if (debateLineFields.voiceLineBlob) {
+      const debateDir = await dirHandle.getDirectoryHandle("NonstopDebate", { create: true });
+      const voiceFileName = `${line.lineId}.${debateLineFields.voiceLineBlob.name.split('.').pop()}`;
+      const voiceFileHandle = await debateDir.getFileHandle(voiceFileName, { create: true });
+      const writable = await voiceFileHandle.createWritable();
+      await writable.write(debateLineFields.voiceLineBlob);
+      await writable.close();
+
+      line.voiceLineFile = voiceFileName;
+    } else if (debateLineFields.voiceLineFile === null && line.voiceLineFile) {
+      // Voice was cleared, remove the file
+      try {
+        const debateDir = await dirHandle.getDirectoryHandle("NonstopDebate", { create: false });
+        await debateDir.removeEntry(line.voiceLineFile);
+      } catch (e) {
+        console.warn("Could not remove voice file:", e);
+      }
+      line.voiceLineFile = null;
+    }
+
+    // Update line data
+    line.sentenceBeginning = debateLineFields.sentenceBeginning;
+    line.target = debateLineFields.target;
+    line.sentenceEnd = debateLineFields.sentenceEnd;
+    line.isCorrect = debateLineFields.isCorrect;
+    line.userFailedComment = debateLineFields.userFailedComment;
+    line.userWrongAnswerComment = debateLineFields.userWrongAnswerComment;
+    line.textEffect = debateLineFields.textEffect;
+    line.textMovementDirection = debateLineFields.textMovementDirection;
+    line.textFont = debateLineFields.textFont;
+    line.characterId = debateLineFields.characterId;
+    line.characterSpotlight = debateLineFields.characterSpotlight;
+
+    await autoSaveTrial();
+
+    showLoader(false);
+    closeDebateDialogueModal();
+    renderMinigameModal();
+
+  } catch (error) {
+    console.error("Error saving dialogue line:", error);
+    showLoader(false);
+    modalErr = "Failed to save: " + error.message;
+    renderDebateDialogueModal();
+  }
 }

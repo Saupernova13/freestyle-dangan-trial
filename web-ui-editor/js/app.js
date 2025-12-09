@@ -7,9 +7,10 @@ let trialName = "";
 let dirHandle = null;
 
 // View management
-let activeView = "cast";  // "cast", "script", or "minigames"
+let activeView = "cast";  // "cast", "script", "truthBullets", or "minigames"
 let scriptLines = [];     // Array of script line objects
 let minigames = [];       // Array of minigame instance objects
+let truthBullets = [];    // Array of truth bullet objects
 
 // Drag-and-drop state
 let draggedLineIds = [];       // IDs of lines being dragged (supports multi-select)
@@ -52,6 +53,8 @@ function renderActiveView() {
     renderCastGrid();
   } else if (activeView === "script") {
     renderScriptEditor();
+  } else if (activeView === "truthBullets") {
+    renderTruthBulletsView();
   } else if (activeView === "minigames") {
     renderMinigameDetails();
   }
@@ -407,9 +410,14 @@ function renderScriptLineBar(line, index) {
     `;
   } else if (line.type === "minigame") {
     const typeLabels = {
-      'truth_bullets': 'Truth Bullets',
+      'nonstop_debate': 'Nonstop Debate',
+      'mass_panic_debate': 'Mass Panic Debate',
+      'logic_dive': 'Logic Dive',
       'hangmans_gambit': "Hangman's Gambit",
-      'rebuttal_showdown': 'Rebuttal Showdown'
+      'debate_scrum': 'Debate Scrum',
+      'rebuttal_showdown': 'Rebuttal Showdown',
+      'psyche_taxi': 'Psyche Taxi',
+      'closing_argument': 'Closing Argument'
     };
 
     const minigameOptions = minigames.map(mg => {
@@ -496,6 +504,14 @@ async function chooseTrialDir() {
         } else {
           minigames = [];
         }
+
+        // Load truth bullets
+        if (data.truthBullets && Array.isArray(data.truthBullets)) {
+          truthBullets = data.truthBullets;
+          await loadTruthBulletImages();
+        } else {
+          truthBullets = [];
+        }
       } catch (error) {
         console.error("Failed to parse trial.json:", error);
         // Initialize with empty trial if corrupted
@@ -504,6 +520,7 @@ async function chooseTrialDir() {
         cast = Array(BLOCK_COUNT).fill(null);
         scriptLines = [];
         minigames = [];
+        truthBullets = [];
       }
     } else {
       trialName = "";
@@ -511,6 +528,7 @@ async function chooseTrialDir() {
       cast = Array(BLOCK_COUNT).fill(null);
       scriptLines = [];
       minigames = [];
+      truthBullets = [];
       await dirHandle.getDirectoryHandle('Characters', { create: true });
     }
 
@@ -569,6 +587,24 @@ async function loadCharactersFromIds(characterIds) {
   }
 }
 
+async function loadTruthBulletImages() {
+  let bulletsDir = await dirHandle.getDirectoryHandle("TruthBullets", { create: false }).catch(() => null);
+  if (!bulletsDir) return;
+
+  for (let bullet of truthBullets) {
+    if (bullet.imageFile) {
+      try {
+        const fileHandle = await bulletsDir.getFileHandle(bullet.imageFile);
+        const file = await fileHandle.getFile();
+        const dataURL = await fileToDataUrl(file);
+        bullet.imageDataURL = dataURL;
+      } catch (error) {
+        console.warn(`Failed to load image for bullet ${bullet.bulletId}:`, error);
+      }
+    }
+  }
+}
+
 function renderCastGrid() {
   const grid = document.getElementById('mainGrid');
   grid.innerHTML = '';
@@ -619,19 +655,27 @@ async function autoSaveTrial() {
   let trialJs = {
     trialName,
     characters: characterIds, // Just an array of IDs or nulls
+    truthBullets: truthBullets.map(b => ({  // Exclude imageDataURL
+      bulletId: b.bulletId,
+      name: b.name,
+      description: b.description,
+      imageFile: b.imageFile,
+      inversedLieBulletName: b.inversedLieBulletName
+    })),
     minigames: minigames,
     script: {
       lines: scriptLines,
       lastModified: new Date().toISOString()
     },
     metadata: {
-      version: "3.0",
+      version: "4.0",
       lastModified: new Date().toISOString(),
       studentCount: blockTypes.filter(t => !t).length,
       headmasterCount: blockTypes.filter(t => t).length,
       totalCharacters: characterIds.filter(id => id !== null).length,
       scriptLineCount: scriptLines.length,
-      minigameCount: minigames.length
+      minigameCount: minigames.length,
+      truthBulletCount: truthBullets.length
     }
   };
 
@@ -706,9 +750,14 @@ function renderMinigameDetails() {
 
 function renderMinigameBar(mg, index) {
   const typeLabels = {
-    'truth_bullets': 'Truth Bullets',
+    'nonstop_debate': 'Nonstop Debate',
+    'mass_panic_debate': 'Mass Panic Debate',
+    'logic_dive': 'Logic Dive',
     'hangmans_gambit': "Hangman's Gambit",
-    'rebuttal_showdown': 'Rebuttal Showdown'
+    'debate_scrum': 'Debate Scrum',
+    'rebuttal_showdown': 'Rebuttal Showdown',
+    'psyche_taxi': 'Psyche Taxi',
+    'closing_argument': 'Closing Argument'
   };
 
   const difficultyColors = {
@@ -751,9 +800,13 @@ function addMinigame() {
   const newMinigame = {
     gameId: generateMinigameId(),
     name: "",
-    gameType: "truth_bullets",
+    gameType: "nonstop_debate",
     difficulty: "medium",
-    timeLimit: 60
+    timeLimit: 60,
+    typeSpecific: {
+      selectedBullets: [],
+      dialogueLines: []
+    }
   };
   minigames.push(newMinigame);
   renderMinigameDetails();
@@ -774,6 +827,104 @@ function deleteMinigame(gameId) {
   });
 
   renderMinigameDetails();
+  autoSaveTrial();
+}
+
+// ==================== Truth Bullets Functions ====================
+
+function renderTruthBulletsView() {
+  const grid = document.getElementById('mainGrid');
+
+  if (truthBullets.length === 0) {
+    grid.innerHTML = `
+      <div id="truthBulletsContainer">
+        <div class="script-empty-state">
+          <div class="script-empty-icon">🎯</div>
+          <h2>No Truth Bullets</h2>
+          <p>Create truth bullets that can be used as evidence in debates</p>
+          <button class="btn btn-primary script-add-btn" onclick="addTruthBullet()">
+            ➕ Add Truth Bullet
+          </button>
+        </div>
+      </div>
+    `;
+  } else {
+    let bulletsHtml = truthBullets.map((bullet, index) =>
+      renderTruthBulletBar(bullet, index)
+    ).join('');
+
+    grid.innerHTML = `
+      <div id="truthBulletsContainer">
+        <div class="script-header">
+          <h2>Truth Bullets</h2>
+          <button class="btn btn-primary" onclick="addTruthBullet()">➕ Add Truth Bullet</button>
+        </div>
+        <div class="script-lines-container">
+          ${bulletsHtml}
+        </div>
+      </div>
+    `;
+  }
+}
+
+function renderTruthBulletBar(bullet, index) {
+  const hasImage = bullet.imageFile;
+
+  return `
+    <div class="script-line-bar truth-bullet-bar" data-bullet-id="${bullet.bulletId}">
+      <div class="truth-bullet-image">
+        ${hasImage ? `<img src="${bullet.imageDataURL || ''}" alt="Bullet image">` : '<span class="no-image">📷</span>'}
+      </div>
+
+      <div class="truth-bullet-info">
+        <div class="truth-bullet-name">${bullet.name || 'Unnamed Bullet'}</div>
+        <div class="truth-bullet-desc">${bullet.description || 'No description'}</div>
+        ${bullet.inversedLieBulletName ? `<div class="truth-bullet-lie">Lie: ${bullet.inversedLieBulletName}</div>` : ''}
+      </div>
+
+      <button class="script-line-edit"
+              onclick="event.stopPropagation(); openTruthBulletModal('${bullet.bulletId}')"
+              title="Edit bullet">✏️</button>
+
+      <button class="script-line-delete"
+              onclick="event.stopPropagation(); deleteTruthBullet('${bullet.bulletId}')"
+              title="Delete bullet">🗑️</button>
+    </div>
+  `;
+}
+
+function generateBulletId() {
+  return `tb_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+}
+
+function addTruthBullet() {
+  const newBullet = {
+    bulletId: generateBulletId(),
+    name: "",
+    description: "",
+    imageFile: null,
+    inversedLieBulletName: ""
+  };
+  truthBullets.push(newBullet);
+  renderTruthBulletsView();
+  openTruthBulletModal(newBullet.bulletId);
+}
+
+function deleteTruthBullet(bulletId) {
+  if (!confirm('Delete this truth bullet? It will be removed from any debates that reference it.')) {
+    return;
+  }
+
+  truthBullets = truthBullets.filter(b => b.bulletId !== bulletId);
+
+  // Remove from all minigame selections
+  minigames.forEach(mg => {
+    if (mg.typeSpecific && mg.typeSpecific.selectedBullets) {
+      mg.typeSpecific.selectedBullets = mg.typeSpecific.selectedBullets.filter(id => id !== bulletId);
+    }
+  });
+
+  renderTruthBulletsView();
   autoSaveTrial();
 }
 

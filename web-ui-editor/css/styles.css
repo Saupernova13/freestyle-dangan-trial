@@ -336,6 +336,13 @@ nav {
   min-height: 0;
 }
 
+/* Full-width containers that should span entire grid */
+#minigameDetailsContainer,
+#truthBulletsContainer,
+#scriptEditorContainer {
+  grid-column: 1 / -1;
+}
+
 .cast-block {
   background: var(--bg-primary);
   border-radius: 1rem;
@@ -475,6 +482,10 @@ nav {
   position: relative;
   display: flex;
   flex-direction: column;
+}
+
+.dr-modal-small {
+  max-width: 600px;
 }
 
 .dr-close {
@@ -1792,19 +1803,28 @@ nav {
   margin: 0.5rem 0;
 }
 
-/* ==================== Truth Bullets Styles ==================== */
+/* ==================== Truth Bullets Styles (Redesigned) ==================== */
 
-.truth-bullet-bar {
+.truth-bullet-item {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  transition: all 0.2s ease;
 }
 
-.truth-bullet-image {
-  width: 80px;
-  height: 80px;
+.truth-bullet-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Image Section */
+.truth-bullet-image-wrapper {
   flex-shrink: 0;
+  width: 100px;
+  height: 100px;
   border-radius: 8px;
   overflow: hidden;
   background: var(--bg-tertiary);
@@ -1814,41 +1834,83 @@ nav {
   justify-content: center;
 }
 
-.truth-bullet-image img {
+.truth-bullet-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.truth-bullet-image .no-image {
-  font-size: 2rem;
+.truth-bullet-no-image {
+  font-size: 2.5rem;
   color: var(--text-tertiary);
 }
 
-.truth-bullet-info {
+/* Content Section */
+.truth-bullet-content {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.truth-bullet-name {
+.truth-bullet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.truth-bullet-title {
+  margin: 0;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 0.25rem;
 }
 
-.truth-bullet-desc {
+.truth-bullet-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.truth-bullet-description {
+  margin: 0;
   font-size: 0.875rem;
   color: var(--text-secondary);
-  margin-bottom: 0.25rem;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.truth-bullet-lie {
+.truth-bullet-lie-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
   font-size: 0.75rem;
+  align-self: flex-start;
+}
+
+.lie-label {
   color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.lie-name {
+  color: var(--error);
+  font-weight: 600;
   font-style: italic;
+}
+
+.btn-icon-danger:hover {
+  color: var(--error);
+  opacity: 1;
 }
 
 .bullet-image-preview {
@@ -2109,6 +2171,7 @@ nav {
   color: var(--error);
 }
 
+/* Note: Duplicate audio styles below are for debate dialogue modal context (legacy/unused after modal removal) */
 .audio-preview {
   background: var(--bg-tertiary);
   padding: 1rem;
@@ -2207,6 +2270,7 @@ nav {
 }
 
 .minigame-editor-section {
+  margin-top: 2rem;
   margin-bottom: 2rem;
 }
 
@@ -2224,6 +2288,10 @@ nav {
 
 .minigame-editor-section h3:first-child {
   margin-top: 0;
+}
+
+.debate-dialogue-add-btn {
+  margin-bottom: 1.5rem;
 }
 
 .help-text {
@@ -2268,7 +2336,7 @@ nav {
   margin-bottom: 1rem;
 }
 
-/* Bullet Selection Grid */
+/* Bullet Selection Grid - Inline Editor (compact layout with 120px cells) */
 .bullet-selection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));

@@ -1567,12 +1567,7 @@ function renderTruthBulletModal() {
           <div class="dr-form">
             <h3>Truth Bullet Configuration</h3>
 
-            <div class="minigame-id-display">
-              <label>Bullet ID (Read-only):</label>
-              <code>${bullet.bulletId}</code>
-            </div>
-
-            <div class="dr-fg-row">
+            <div class="dr-fg-row single">
               <div class="dr-fg-field">
                 <label>Bullet Name:</label>
                 <input type="text"
@@ -1582,7 +1577,7 @@ function renderTruthBulletModal() {
               </div>
             </div>
 
-            <div class="dr-fg-row">
+            <div class="dr-fg-row single">
               <div class="dr-fg-field">
                 <label>Description:</label>
                 <textarea rows="3"
@@ -1591,7 +1586,7 @@ function renderTruthBulletModal() {
               </div>
             </div>
 
-            <div class="dr-fg-row">
+            <div class="dr-fg-row single">
               <div class="dr-fg-field">
                 <label>Inversed Lie Bullet Name:</label>
                 <input type="text"
@@ -1657,6 +1652,18 @@ function handleBulletImageUpload(event) {
 
   bulletFields.imageFile = file.name;
   bulletFields.imageBlob = file;
+
+  // Create data URL for immediate preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const bullet = truthBullets.find(b => b.bulletId === activeBulletId);
+    if (bullet) {
+      bullet.imageDataURL = e.target.result;
+      renderTruthBulletModal();
+    }
+  };
+  reader.readAsDataURL(file);
+
   modalErr = "";
   renderTruthBulletModal();
 }
@@ -1664,6 +1671,10 @@ function handleBulletImageUpload(event) {
 function clearBulletImage() {
   bulletFields.imageFile = null;
   bulletFields.imageBlob = null;
+  const bullet = truthBullets.find(b => b.bulletId === activeBulletId);
+  if (bullet) {
+    bullet.imageDataURL = null;
+  }
   renderTruthBulletModal();
 }
 

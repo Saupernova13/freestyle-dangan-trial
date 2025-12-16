@@ -30,6 +30,7 @@ async function chooseTrialDir() {
         // Load minigames
         if (data.minigames && Array.isArray(data.minigames)) {
           minigames = data.minigames;
+          await loadMinigameAudio();
         } else {
           minigames = [];
         }
@@ -131,6 +132,81 @@ async function loadTruthBulletImages() {
         console.warn(`Failed to load image for bullet ${bullet.bulletId}:`, error);
       }
     }
+  }
+}
+
+async function loadMinigameAudio() {
+  try {
+    const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+    const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
+
+    for (let mg of minigames) {
+      try {
+        const gameAudioDir = await minigamesDir.getDirectoryHandle(mg.gameId, { create: false });
+
+        // Load Nonstop Debate dialogue audio
+        if (mg.gameType === 'nonstop_debate' && mg.typeSpecific && mg.typeSpecific.dialogueLines) {
+          for (let line of mg.typeSpecific.dialogueLines) {
+            if (line.voiceLineFile) {
+              try {
+                const fileHandle = await gameAudioDir.getFileHandle(line.voiceLineFile);
+                const file = await fileHandle.getFile();
+                line.voiceLineBlob = file;
+              } catch (error) {
+                console.warn(`Failed to load audio for dialogue line ${line.lineId}:`, error);
+              }
+            }
+          }
+        }
+
+        // Load Debate Scrum argument audio
+        if (mg.gameType === 'debate_scrum' && mg.typeSpecific && mg.typeSpecific.arguments) {
+          for (let arg of mg.typeSpecific.arguments) {
+            if (arg.oppositionAudioFile) {
+              try {
+                const fileHandle = await gameAudioDir.getFileHandle(arg.oppositionAudioFile);
+                const file = await fileHandle.getFile();
+                arg.oppositionAudioBlob = file;
+              } catch (error) {
+                console.warn(`Failed to load opposition audio for argument ${arg.argumentId}:`, error);
+              }
+            }
+            if (arg.defenseAudioFile) {
+              try {
+                const fileHandle = await gameAudioDir.getFileHandle(arg.defenseAudioFile);
+                const file = await fileHandle.getFile();
+                arg.defenseAudioBlob = file;
+              } catch (error) {
+                console.warn(`Failed to load defense audio for argument ${arg.argumentId}:`, error);
+              }
+            }
+          }
+        }
+
+        // Load Mass Panic Debate speaker audio
+        if (mg.gameType === 'mass_panic_debate' && mg.typeSpecific && mg.typeSpecific.speakers) {
+          for (let speaker of mg.typeSpecific.speakers) {
+            if (speaker.dialogueLines) {
+              for (let line of speaker.dialogueLines) {
+                if (line.voiceLineFile) {
+                  try {
+                    const fileHandle = await gameAudioDir.getFileHandle(line.voiceLineFile);
+                    const file = await fileHandle.getFile();
+                    line.voiceLineBlob = file;
+                  } catch (error) {
+                    console.warn(`Failed to load audio for panic line ${line.lineId}:`, error);
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to load audio for minigame ${mg.gameId}:`, error);
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to load minigame audio:", error);
   }
 }
 

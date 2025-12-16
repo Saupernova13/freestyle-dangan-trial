@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e:*)",
+      "Bash(if [ -d \"js/modals\" ])",
+      "Bash(then rmdir js/modals)",
+      "Bash(else echo \"Directory does not exist\")",
+      "Bash(fi)",
+      "Bash(node -c:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nRemove unused code and legacy modal system\n\nRemoved ~1,080 lines of dead code from the codebase following the\nrefactoring to modular architecture with inline editing. This cleanup\nimproves maintainability and reduces confusion between active and\nlegacy code.\n\nChanges:\n- Remove old minigame modal system from modal.js (~1,064 lines)\n  * openMinigameModal() and all related functions\n  * openDebateDialogueModal() and nested modal system\n  * Unused state variables (activeMinigameId, minigameFields, etc.)\n  * All modal-based editing functions replaced by inline editing\n- Remove unused character model functions from characterModel.js (17 lines)\n  * getStudents(), getHeadmaster(), getCharactersByType(), isStudent()\n  * Kept getCharacterType() and isHeadmaster() which are actively used\n- Add clarifying comments to duplicate CSS selectors in styles.css\n  * Document legacy/unused audio preview styles\n  * Clarify bullet-selection-grid is for inline editor\n- Remove empty js/modals/ directory\n\nImpact:\n- modal.js: 2,800 → 1,737 lines (38% reduction)\n- characterModel.js: 27 → 10 lines (63% reduction)\n- All JavaScript syntax validated\n- No breaking changes - all active features preserved\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")"
+    ]
+  }
+}

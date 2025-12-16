@@ -2504,3 +2504,370 @@ nav {
 .btn-icon:hover {
   opacity: 1;
 }
+
+/* ==================== Logic Dive Styles ==================== */
+
+.logic-dive-section {
+  margin-bottom: 2rem;
+}
+
+.section-description {
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.logic-dive-add-btn {
+  margin-bottom: 1.5rem;
+}
+
+.logic-dive-questions-container {
+  margin-top: 1.5rem;
+}
+
+.logic-dive-question-wrapper {
+  margin-bottom: 1rem;
+}
+
+.logic-dive-question-wrapper.dragging {
+  opacity: 0.5;
+}
+
+.logic-dive-question-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+}
+
+.question-drag-handle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.question-number {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.question-body {
+  padding: 1rem;
+}
+
+.answers-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+}
+
+.answers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.answers-header h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.answers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.answer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+}
+
+.answer-item.correct-answer {
+  border-color: var(--success);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.answer-radio {
+  flex-shrink: 0;
+}
+
+.answer-radio input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.answer-text-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.validation-warning {
+  color: var(--warning);
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}
+
+.question-drop-zone,
+.argument-drop-zone,
+.dialogue-drop-zone {
+  height: 8px;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.question-drop-zone.drag-over-gap,
+.argument-drop-zone.drag-over-gap,
+.dialogue-drop-zone.drag-over-gap {
+  height: 40px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 2px dashed var(--primary);
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 2px dashed var(--border-primary);
+  margin-top: 1rem;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* ==================== Debate Scrum Styles ==================== */
+
+.argument-wrapper {
+  margin-bottom: 1rem;
+}
+
+.argument-wrapper.dragging {
+  opacity: 0.5;
+}
+
+.debate-argument-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.argument-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+}
+
+.argument-drag-handle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.argument-number {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.argument-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.argument-side {
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+}
+
+.opposition-side {
+  border-left: 4px solid rgba(239, 68, 68, 0.5);
+}
+
+.defense-side {
+  border-left: 4px solid rgba(59, 130, 246, 0.5);
+}
+
+.argument-side h4 {
+  margin: 0 0 1rem 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.keywords-input {
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+}
+
+.audio-preview-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.audio-preview-mini .audio-icon {
+  font-size: 1.25rem;
+}
+
+.audio-preview-mini .audio-filename {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==================== Mass Panic Debate Styles ==================== */
+
+.mass-panic-section {
+  margin-bottom: 2rem;
+}
+
+.mass-panic-speakers-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.mass-panic-speaker-track {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1rem;
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+.speaker-track-header {
+  margin-bottom: 1rem;
+}
+
+.speaker-track-header h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.speaker-dialogue-lines {
+  margin-top: 1rem;
+}
+
+.mass-panic-line-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.mass-panic-line-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary);
+}
+
+.line-number {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.mass-panic-line-badges {
+  flex: 1;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.badge-loud {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.badge-weak {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.mass-panic-line-body {
+  padding: 0.75rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.empty-state-small {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.empty-state-small p {
+  margin: 0;
+  font-size: 0.875rem;
+}

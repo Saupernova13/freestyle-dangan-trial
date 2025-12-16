@@ -39,24 +39,29 @@ function renderTruthBulletBar(bullet, index) {
   const hasImage = bullet.imageFile;
 
   return `
-    <div class="script-line-bar truth-bullet-bar" data-bullet-id="${bullet.bulletId}">
-      <div class="truth-bullet-image">
-        ${hasImage ? `<img src="${bullet.imageDataURL || ''}" alt="Bullet image">` : '<span class="no-image">📷</span>'}
+    <div class="truth-bullet-item" data-bullet-id="${bullet.bulletId}">
+      <div class="truth-bullet-image-wrapper">
+        ${hasImage ? `<img src="${bullet.imageDataURL || ''}" alt="Bullet image" class="truth-bullet-img">` : '<span class="truth-bullet-no-image">📷</span>'}
       </div>
 
-      <div class="truth-bullet-info">
-        <div class="truth-bullet-name">${bullet.name || 'Unnamed Bullet'}</div>
-        <div class="truth-bullet-desc">${bullet.description || 'No description'}</div>
-        ${bullet.inversedLieBulletName ? `<div class="truth-bullet-lie">Lie: ${bullet.inversedLieBulletName}</div>` : ''}
+      <div class="truth-bullet-content">
+        <div class="truth-bullet-header">
+          <h4 class="truth-bullet-title">${bullet.name || 'Unnamed Bullet'}</h4>
+          <div class="truth-bullet-actions">
+            <button class="btn-icon" onclick="event.stopPropagation(); openTruthBulletModal('${bullet.bulletId}')" title="Edit bullet">✏️</button>
+            <button class="btn-icon btn-icon-danger" onclick="event.stopPropagation(); deleteTruthBullet('${bullet.bulletId}')" title="Delete bullet">🗑️</button>
+          </div>
+        </div>
+
+        <p class="truth-bullet-description">${bullet.description || 'No description'}</p>
+
+        ${bullet.inversedLieBulletName ? `
+          <div class="truth-bullet-lie-tag">
+            <span class="lie-label">Lie Form:</span>
+            <span class="lie-name">${bullet.inversedLieBulletName}</span>
+          </div>
+        ` : ''}
       </div>
-
-      <button class="script-line-edit"
-              onclick="event.stopPropagation(); openTruthBulletModal('${bullet.bulletId}')"
-              title="Edit bullet">✏️</button>
-
-      <button class="script-line-delete"
-              onclick="event.stopPropagation(); deleteTruthBullet('${bullet.bulletId}')"
-              title="Delete bullet">🗑️</button>
     </div>
   `;
 }

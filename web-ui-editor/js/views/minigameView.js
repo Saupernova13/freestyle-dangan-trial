@@ -792,182 +792,261 @@ async function clearDialogueVoiceLine(gameId, lineId) {
 // ==================== Mass Panic Debate Editor ====================
 
 function renderMassPanicDebateEditor(mg) {
-  // Initialize typeSpecific.speakers if needed
+  // Initialize typeSpecific
   if (!mg.typeSpecific) {
     mg.typeSpecific = {};
   }
-  if (!mg.typeSpecific.speakers) {
-    mg.typeSpecific.speakers = [
-      { speakerId: `sp_1_${Date.now()}`, characterId: "", dialogueLines: [] },
-      { speakerId: `sp_2_${Date.now()}`, characterId: "", dialogueLines: [] },
-      { speakerId: `sp_3_${Date.now()}`, characterId: "", dialogueLines: [] }
-    ];
+  if (!mg.typeSpecific.lineGroups) {
+    mg.typeSpecific.lineGroups = [];
   }
+  if (!mg.typeSpecific.speaker1CharacterId) mg.typeSpecific.speaker1CharacterId = "";
+  if (!mg.typeSpecific.speaker2CharacterId) mg.typeSpecific.speaker2CharacterId = "";
+  if (!mg.typeSpecific.speaker3CharacterId) mg.typeSpecific.speaker3CharacterId = "";
 
-  const speakers = mg.typeSpecific.speakers;
+  const lineGroups = mg.typeSpecific.lineGroups;
 
   return `
     <div class="minigame-editor-section mass-panic-section">
       <h3>💥 Mass Panic Debate - Simultaneous Speakers</h3>
       <p class="section-description">
-        Configure 3 characters who speak simultaneously. Loud assertions can block access to weak points in other tracks until shot down.
+        Configure 3 characters who speak simultaneously. Each line group has all 3 speakers talking at once.
+        Only one speaker can have a loud assertion per line group.
       </p>
 
-      <div class="mass-panic-speakers-container">
-        ${speakers.map((speaker, index) => renderMassPanicSpeaker(mg.gameId, speaker, index)).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function renderMassPanicSpeaker(gameId, speaker, speakerIndex) {
-  const speakerLabels = ['Speaker 1', 'Speaker 2', 'Speaker 3'];
-  const speakerColors = ['rgba(239, 68, 68, 0.2)', 'rgba(59, 130, 246, 0.2)', 'rgba(16, 185, 129, 0.2)'];
-
-  return `
-    <div class="mass-panic-speaker-track" style="border-left: 4px solid ${speakerColors[speakerIndex]};">
-      <div class="speaker-track-header">
-        <h4>${speakerLabels[speakerIndex]}</h4>
-
-        <div class="form-group">
-          <label>Character</label>
-          <select class="form-input" onchange="updateMassPanicSpeaker('${gameId}', ${speakerIndex}, 'characterId', this.value)">
-            <option value="">None</option>
-            ${cast.filter(c => c).map(c => `
-              <option value="${c.id}" ${speaker.characterId === c.id ? 'selected' : ''}>
-                ${c.name} ${c.surname}
-              </option>
-            `).join('')}
-          </select>
+      <div class="mass-panic-character-setup">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Speaker 1 Character</label>
+            <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker1CharacterId', this.value)">
+              <option value="">None</option>
+              ${cast.filter(c => c).map(c => `
+                <option value="${c.id}" ${mg.typeSpecific.speaker1CharacterId === c.id ? 'selected' : ''}>
+                  ${c.name} ${c.surname}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Speaker 2 Character</label>
+            <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker2CharacterId', this.value)">
+              <option value="">None</option>
+              ${cast.filter(c => c).map(c => `
+                <option value="${c.id}" ${mg.typeSpecific.speaker2CharacterId === c.id ? 'selected' : ''}>
+                  ${c.name} ${c.surname}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Speaker 3 Character</label>
+            <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker3CharacterId', this.value)">
+              <option value="">None</option>
+              ${cast.filter(c => c).map(c => `
+                <option value="${c.id}" ${mg.typeSpecific.speaker3CharacterId === c.id ? 'selected' : ''}>
+                  ${c.name} ${c.surname}
+                </option>
+              `).join('')}
+            </select>
+          </div>
         </div>
+      </div>
 
-        <button class="btn btn-primary btn-sm" onclick="addMassPanicLine('${gameId}', ${speakerIndex})">
-          ➕ Add Dialogue Line
+      <div class="mass-panic-controls">
+        <button class="btn btn-primary" onclick="addMassPanicLineGroup('${mg.gameId}')">
+          ➕ Add Line Group (All 3 Speakers)
         </button>
       </div>
 
-      <div class="speaker-dialogue-lines">
-        ${speaker.dialogueLines.length === 0 ? `
-          <div class="empty-state-small">
-            <p>No dialogue lines yet</p>
+      <div class="mass-panic-line-groups">
+        ${lineGroups.length === 0 ? `
+          <div class="empty-state">
+            <p>No line groups yet. Add a line group to create simultaneous dialogue for all 3 speakers.</p>
           </div>
-        ` : speaker.dialogueLines.map((line, lineIndex) =>
-          renderMassPanicLineEditor(gameId, speakerIndex, line, lineIndex)
+        ` : lineGroups.map((group, index) =>
+          renderMassPanicLineGroup(mg.gameId, group, index)
         ).join('')}
       </div>
     </div>
   `;
 }
 
-function renderMassPanicLineEditor(gameId, speakerIndex, line, lineIndex) {
+function renderMassPanicLineGroup(gameId, group, groupIndex) {
+  const speakerLabels = ['Speaker 1', 'Speaker 2', 'Speaker 3'];
+  const speakerColors = ['rgba(239, 68, 68, 0.3)', 'rgba(59, 130, 246, 0.3)', 'rgba(16, 185, 129, 0.3)'];
+
   return `
-    <div class="mass-panic-line-card">
-      <div class="mass-panic-line-header">
-        <span class="line-number">Line #${lineIndex + 1}</span>
-        <div class="mass-panic-line-badges">
-          ${line.isLoudAssertion ? '<span class="badge badge-loud">📢 LOUD</span>' : ''}
-          ${line.isWeakPoint ? '<span class="badge badge-weak">🎯 WEAK POINT</span>' : ''}
-        </div>
-        <button class="btn-icon" onclick="deleteMassPanicLine('${gameId}', ${speakerIndex}, '${line.lineId}')" title="Delete line">🗑️</button>
+    <div class="mass-panic-group-card">
+      <div class="mass-panic-group-header">
+        <span class="group-number">Line Group #${groupIndex + 1}</span>
+        <button class="btn-icon" onclick="deleteMassPanicLineGroup('${gameId}', '${group.groupId}')" title="Delete line group">🗑️</button>
       </div>
 
-      <div class="mass-panic-line-body">
+      <div class="mass-panic-group-body">
+        ${['speaker1', 'speaker2', 'speaker3'].map((speakerKey, speakerIndex) =>
+          renderMassPanicLine(gameId, group, group[speakerKey], speakerKey, speakerIndex, speakerColors[speakerIndex], speakerLabels[speakerIndex])
+        ).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, color, label) {
+  return `
+    <div class="mass-panic-speaker-line" style="border-left: 4px solid ${color};">
+      <div class="speaker-line-header">
+        <h5>${label}</h5>
+        ${line.isLoudAssertion ? '<span class="badge badge-loud">📢 LOUD</span>' : ''}
+      </div>
+
+      <div class="sentence-structure">
+        <input type="text"
+               class="form-input sentence-part"
+               value="${line.sentenceBeginning || ''}"
+               placeholder="Beginning..."
+               onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'sentenceBeginning', this.value)">
+        <input type="text"
+               class="form-input sentence-part target-part"
+               value="${line.target || ''}"
+               placeholder="Target (shootable)"
+               onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'target', this.value)">
+        <input type="text"
+               class="form-input sentence-part"
+               value="${line.sentenceEnd || ''}"
+               placeholder="...end"
+               onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'sentenceEnd', this.value)">
+      </div>
+
+      <div class="form-row">
         <div class="form-group">
-          <label>Dialogue Text</label>
-          <textarea class="form-input"
-                    rows="2"
-                    placeholder="What does this character say..."
-                    onchange="updateMassPanicLine('${gameId}', ${speakerIndex}, '${line.lineId}', 'text', this.value)">${line.text || ''}</textarea>
+          <label class="checkbox-label">
+            <input type="checkbox"
+                   ${line.isLoudAssertion ? 'checked' : ''}
+                   onchange="handleLoudAssertionToggle('${gameId}', '${group.groupId}', '${speakerKey}', this.checked)">
+            <span>Loud Assertion (Only 1 per group)</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox"
+                   ${line.isShootable ? 'checked' : ''}
+                   onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'isShootable', this.checked)">
+            <span>Weak Point (Shootable)</span>
+          </label>
+        </div>
+      </div>
+
+      ${line.isShootable ? `
+        <div class="form-row">
+          <div class="form-group">
+            <label>Correct Truth Bullet</label>
+            <select class="form-input"
+                    onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'answerBulletId', this.value)">
+              <option value="">None</option>
+              ${truthBullets.map(b => `
+                <option value="${b.bulletId}" ${line.answerBulletId === b.bulletId ? 'selected' : ''}>
+                  ${b.name}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox"
+                     ${line.useNegativeBullet ? 'checked' : ''}
+                     onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'useNegativeBullet', this.checked)">
+              <span>Use Lie Bullet</span>
+            </label>
+          </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox"
-                     ${line.isLoudAssertion ? 'checked' : ''}
-                     onchange="updateMassPanicLine('${gameId}', ${speakerIndex}, '${line.lineId}', 'isLoudAssertion', this.checked)">
-              <span>Loud Assertion (Blocks other weak points)</span>
-            </label>
+            <label>User Failed Comment</label>
+            <input type="text"
+                   class="form-input"
+                   value="${line.userFailedComment || ''}"
+                   placeholder="Message when user fails to shoot"
+                   onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'userFailedComment', this.value)">
           </div>
-
           <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox"
-                     ${line.isWeakPoint ? 'checked' : ''}
-                     onchange="updateMassPanicLine('${gameId}', ${speakerIndex}, '${line.lineId}', 'isWeakPoint', this.checked)">
-              <span>Weak Point (Shootable)</span>
-            </label>
+            <label>Wrong Answer Comment</label>
+            <input type="text"
+                   class="form-input"
+                   value="${line.userWrongAnswerComment || ''}"
+                   placeholder="Message when user shoots wrong target"
+                   onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'userWrongAnswerComment', this.value)">
           </div>
         </div>
+      ` : ''}
 
-        ${line.isWeakPoint ? `
-          <div class="form-row">
-            <div class="form-group">
-              <label>Correct Truth Bullet</label>
-              <select class="form-input"
-                      onchange="updateMassPanicLine('${gameId}', ${speakerIndex}, '${line.lineId}', 'answerBulletId', this.value)">
-                <option value="">None</option>
-                ${truthBullets.map(b => `
-                  <option value="${b.bulletId}" ${line.answerBulletId === b.bulletId ? 'selected' : ''}>
-                    ${b.name}
-                  </option>
-                `).join('')}
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="checkbox-label">
-                <input type="checkbox"
-                       ${line.useNegativeBullet ? 'checked' : ''}
-                       onchange="updateMassPanicLine('${gameId}', ${speakerIndex}, '${line.lineId}', 'useNegativeBullet', this.checked)">
-                <span>Use Lie Bullet</span>
-              </label>
-            </div>
-          </div>
-        ` : ''}
-
+      <div class="form-row">
         <div class="form-group">
-          <label>Voice Line Audio</label>
-          ${line.voiceLineFile ? `
-            <div class="audio-preview">
-              <div class="audio-info">
-                <span class="audio-icon">🎵</span>
-                <span class="audio-filename">${line.voiceLineFile}</span>
-              </div>
-
-              <div class="audio-seek-container">
-                <span class="audio-time-current" id="panic-audio-time-current-${line.lineId}">0:00</span>
-                <input type="range"
-                       class="audio-seek-bar"
-                       id="panic-audio-seek-bar-${line.lineId}"
-                       min="0"
-                       max="100"
-                       value="0"
-                       oninput="seekPanicAudio('${gameId}', ${speakerIndex}, '${line.lineId}', this.value)">
-                <span class="audio-time-total" id="panic-audio-time-total-${line.lineId}">0:00</span>
-              </div>
-
-              <div class="audio-controls">
-                <button class="btn btn-secondary"
-                        id="panic-play-btn-${line.lineId}"
-                        onclick="playPanicAudioPreview('${gameId}', ${speakerIndex}, '${line.lineId}')">
-                  ▶️ Play
-                </button>
-                <button class="btn btn-secondary"
-                        onclick="clearPanicVoiceLine('${gameId}', ${speakerIndex}, '${line.lineId}')">
-                  🗑️ Remove
-                </button>
-              </div>
-            </div>
-          ` : `
-            <div class="audio-empty">
-              <p>No audio file uploaded</p>
-            </div>
-            <input type="file"
-                   accept="audio/*"
-                   onchange="handlePanicVoiceUpload('${gameId}', ${speakerIndex}, '${line.lineId}', event)">
-          `}
+          <label>Text Effect</label>
+          <select class="form-input"
+                  onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'textEffect', this.value)">
+            <option value="normal" ${line.textEffect === 'normal' ? 'selected' : ''}>Normal</option>
+            <option value="shake" ${line.textEffect === 'shake' ? 'selected' : ''}>Shake</option>
+            <option value="wave" ${line.textEffect === 'wave' ? 'selected' : ''}>Wave</option>
+          </select>
         </div>
+        <div class="form-group">
+          <label>Text Font</label>
+          <select class="form-input"
+                  onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'textFont', this.value)">
+            <option value="default" ${line.textFont === 'default' ? 'selected' : ''}>Default</option>
+            <option value="handwritten" ${line.textFont === 'handwritten' ? 'selected' : ''}>Handwritten</option>
+            <option value="monospace" ${line.textFont === 'monospace' ? 'selected' : ''}>Monospace</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Movement Direction</label>
+          <select class="form-input"
+                  onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'textMovementDirection', this.value)">
+            <option value="left_to_right" ${line.textMovementDirection === 'left_to_right' ? 'selected' : ''}>Left to Right</option>
+            <option value="right_to_left" ${line.textMovementDirection === 'right_to_left' ? 'selected' : ''}>Right to Left</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Voice Line Audio</label>
+        ${line.voiceLineFile ? `
+          <div class="audio-preview">
+            <div class="audio-info">
+              <span class="audio-icon">🎵</span>
+              <span class="audio-filename">${line.voiceLineFile}</span>
+            </div>
+            <div class="audio-seek-container">
+              <span class="audio-time-current" id="panic-audio-time-current-${group.groupId}-${speakerKey}">0:00</span>
+              <input type="range"
+                     class="audio-seek-bar"
+                     id="panic-audio-seek-bar-${group.groupId}-${speakerKey}"
+                     min="0"
+                     max="100"
+                     value="0"
+                     oninput="seekPanicAudio('${gameId}', '${group.groupId}', '${speakerKey}', this.value)">
+              <span class="audio-time-total" id="panic-audio-time-total-${group.groupId}-${speakerKey}">0:00</span>
+            </div>
+            <div class="audio-controls">
+              <button class="btn btn-secondary"
+                      id="panic-play-btn-${group.groupId}-${speakerKey}"
+                      onclick="playPanicAudioPreview('${gameId}', '${group.groupId}', '${speakerKey}')">
+                ▶️ Play
+              </button>
+              <button class="btn btn-secondary"
+                      onclick="clearPanicVoiceLine('${gameId}', '${group.groupId}', '${speakerKey}')">
+                🗑️ Remove
+              </button>
+            </div>
+          </div>
+        ` : `
+          <div class="audio-empty">
+            <p>No audio file uploaded</p>
+          </div>
+          <input type="file"
+                 accept="audio/*"
+                 onchange="handlePanicVoiceUpload('${gameId}', '${group.groupId}', '${speakerKey}', event)">
+        `}
       </div>
     </div>
   `;
@@ -2040,79 +2119,125 @@ function updateDebateScumPlayButton(argumentId, side, isPlaying) {
 
 // ==================== Mass Panic Debate Handlers ====================
 
-function updateMassPanicSpeaker(gameId, speakerIndex, field, value) {
+function updateMassPanicField(gameId, field, value) {
   const mg = minigames.find(m => m.gameId === gameId);
-  if (!mg || !mg.typeSpecific || !mg.typeSpecific.speakers) return;
+  if (!mg || !mg.typeSpecific) return;
 
-  const speaker = mg.typeSpecific.speakers[speakerIndex];
-  if (speaker) {
-    speaker[field] = value;
-    renderMinigameDetails();
-    autoSaveTrial();
-  }
+  mg.typeSpecific[field] = value;
+  autoSaveTrial();
 }
 
-function addMassPanicLine(gameId, speakerIndex) {
+function addMassPanicLineGroup(gameId) {
   const mg = minigames.find(m => m.gameId === gameId);
-  if (!mg || !mg.typeSpecific || !mg.typeSpecific.speakers) return;
+  if (!mg || !mg.typeSpecific) return;
 
-  const speaker = mg.typeSpecific.speakers[speakerIndex];
-  if (!speaker) return;
+  if (!mg.typeSpecific.lineGroups) {
+    mg.typeSpecific.lineGroups = [];
+  }
 
-  const newLine = {
-    lineId: `panic_line_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-    text: "",
-    order: speaker.dialogueLines.length,
-    isLoudAssertion: false,
-    isWeakPoint: false,
-    answerBulletId: null,
-    useNegativeBullet: false,
-    voiceLineFile: null,
-    voiceLineBlob: null
+  const groupId = `panic_group_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+
+  const newLineGroup = {
+    groupId: groupId,
+    order: mg.typeSpecific.lineGroups.length,
+    speaker1: createEmptyPanicLine(),
+    speaker2: createEmptyPanicLine(),
+    speaker3: createEmptyPanicLine()
   };
 
-  speaker.dialogueLines.push(newLine);
+  mg.typeSpecific.lineGroups.push(newLineGroup);
   renderMinigameDetails();
   autoSaveTrial();
 }
 
-function updateMassPanicLine(gameId, speakerIndex, lineId, field, value) {
-  const mg = minigames.find(m => m.gameId === gameId);
-  if (!mg || !mg.typeSpecific || !mg.typeSpecific.speakers) return;
-
-  const speaker = mg.typeSpecific.speakers[speakerIndex];
-  if (!speaker) return;
-
-  const line = speaker.dialogueLines.find(l => l.lineId === lineId);
-  if (line) {
-    line[field] = value;
-    renderMinigameDetails();
-    autoSaveTrial();
-  }
+function createEmptyPanicLine() {
+  return {
+    sentenceBeginning: "",
+    target: "",
+    sentenceEnd: "",
+    isShootable: false,
+    isLoudAssertion: false,
+    answerBulletId: null,
+    useNegativeBullet: false,
+    textEffect: "normal",
+    textMovementDirection: "left_to_right",
+    userFailedComment: "",
+    userWrongAnswerComment: "",
+    textFont: "default",
+    voiceLineFile: null,
+    voiceLineBlob: null
+  };
 }
 
-function deleteMassPanicLine(gameId, speakerIndex, lineId) {
-  if (!confirm('Delete this dialogue line?')) return;
+function deleteMassPanicLineGroup(gameId, groupId) {
+  if (!confirm('Delete this entire line group (all 3 speakers)?')) return;
 
   const mg = minigames.find(m => m.gameId === gameId);
-  if (!mg || !mg.typeSpecific || !mg.typeSpecific.speakers) return;
+  if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
-  const speaker = mg.typeSpecific.speakers[speakerIndex];
-  if (!speaker) return;
+  // Delete audio files first
+  const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
+  if (group) {
+    ['speaker1', 'speaker2', 'speaker3'].forEach(async (speakerKey) => {
+      const line = group[speakerKey];
+      if (line && line.voiceLineFile) {
+        try {
+          const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+          const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
+          const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
+          await gameAudioDir.removeEntry(line.voiceLineFile);
+        } catch (e) {
+          console.warn("Could not remove audio file:", e);
+        }
+      }
+    });
+  }
 
-  speaker.dialogueLines = speaker.dialogueLines.filter(l => l.lineId !== lineId);
+  mg.typeSpecific.lineGroups = mg.typeSpecific.lineGroups.filter(g => g.groupId !== groupId);
 
   // Re-index orders
-  speaker.dialogueLines.forEach((line, index) => {
-    line.order = index;
+  mg.typeSpecific.lineGroups.forEach((group, index) => {
+    group.order = index;
   });
 
   renderMinigameDetails();
   autoSaveTrial();
 }
 
+function updateMassPanicLineField(gameId, groupId, speakerKey, field, value) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
+
+  const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
+  if (!group || !group[speakerKey]) return;
+
+  group[speakerKey][field] = value;
+  autoSaveTrial();
+}
+
+function handleLoudAssertionToggle(gameId, groupId, speakerKey, checked) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
+
+  const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
+  if (!group) return;
+
+  // If checking this speaker as loud, uncheck all others in the group
+  if (checked) {
+    ['speaker1', 'speaker2', 'speaker3'].forEach(key => {
+      if (key !== speakerKey && group[key]) {
+        group[key].isLoudAssertion = false;
+      }
+    });
+  }
+
+  group[speakerKey].isLoudAssertion = checked;
+  renderMinigameDetails();
+  autoSaveTrial();
+}
+
 // Mass Panic Audio Handlers
-async function handlePanicVoiceUpload(gameId, speakerIndex, lineId, event) {
+async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -2123,13 +2248,12 @@ async function handlePanicVoiceUpload(gameId, speakerIndex, lineId, event) {
   }
 
   const mg = minigames.find(m => m.gameId === gameId);
-  if (!mg || !mg.typeSpecific || !mg.typeSpecific.speakers) return;
+  if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
-  const speaker = mg.typeSpecific.speakers[speakerIndex];
-  if (!speaker) return;
+  const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
+  if (!group || !group[speakerKey]) return;
 
-  const line = speaker.dialogueLines.find(l => l.lineId === lineId);
-  if (!line) return;
+  const line = group[speakerKey];
 
   try {
     const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: true });
@@ -2137,7 +2261,7 @@ async function handlePanicVoiceUpload(gameId, speakerIndex, lineId, event) {
     const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: true });
 
     const ext = file.name.split('.').pop();
-    const audioFileName = `panic_${lineId}.${ext}`;
+    const audioFileName = `panic_${groupId}_${speakerKey}.${ext}`;
 
     const audioFileHandle = await gameAudioDir.getFileHandle(audioFileName, { create: true });
     const writable = await audioFileHandle.createWritable();
@@ -2155,15 +2279,14 @@ async function handlePanicVoiceUpload(gameId, speakerIndex, lineId, event) {
   }
 }
 
-async function clearPanicVoiceLine(gameId, speakerIndex, lineId) {
+async function clearPanicVoiceLine(gameId, groupId, speakerKey) {
   const mg = minigames.find(m => m.gameId === gameId);
-  if (!mg || !mg.typeSpecific || !mg.typeSpecific.speakers) return;
+  if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
-  const speaker = mg.typeSpecific.speakers[speakerIndex];
-  if (!speaker) return;
+  const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
+  if (!group || !group[speakerKey]) return;
 
-  const line = speaker.dialogueLines.find(l => l.lineId === lineId);
-  if (!line) return;
+  const line = group[speakerKey];
 
   if (line.voiceLineFile) {
     try {
@@ -2186,25 +2309,25 @@ async function clearPanicVoiceLine(gameId, speakerIndex, lineId) {
 // Mass Panic Audio Playback
 const panicAudioPlayers = {};
 
-async function playPanicAudioPreview(gameId, speakerIndex, lineId) {
-  const playerKey = `${gameId}_${lineId}`;
+async function playPanicAudioPreview(gameId, groupId, speakerKey) {
+  const playerKey = `${gameId}_${groupId}_${speakerKey}`;
   const player = panicAudioPlayers[playerKey];
 
   if (player && !player.paused) {
     player.pause();
     player.currentTime = 0;
-    updatePanicPlayButton(lineId, false);
+    updatePanicPlayButton(groupId, speakerKey, false);
     return;
   }
 
   const mg = minigames.find(m => m.gameId === gameId);
-  if (!mg || !mg.typeSpecific || !mg.typeSpecific.speakers) return;
+  if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
-  const speaker = mg.typeSpecific.speakers[speakerIndex];
-  if (!speaker) return;
+  const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
+  if (!group || !group[speakerKey]) return;
 
-  const line = speaker.dialogueLines.find(l => l.lineId === lineId);
-  if (!line || !line.voiceLineFile) return;
+  const line = group[speakerKey];
+  if (!line.voiceLineFile) return;
 
   let audioBlob = line.voiceLineBlob;
   if (!audioBlob) {
@@ -2231,53 +2354,53 @@ async function playPanicAudioPreview(gameId, speakerIndex, lineId) {
       panicAudioPlayers[playerKey] = audio;
 
       audio.onended = () => {
-        updatePanicPlayButton(lineId, false);
+        updatePanicPlayButton(groupId, speakerKey, false);
         URL.revokeObjectURL(audio.src);
       };
 
       audio.onerror = () => {
         alert("Audio playback error");
-        updatePanicPlayButton(lineId, false);
+        updatePanicPlayButton(groupId, speakerKey, false);
       };
 
       audio.ontimeupdate = () => {
-        updatePanicSeekBar(lineId, audio);
+        updatePanicSeekBar(groupId, speakerKey, audio);
       };
 
       audio.onloadedmetadata = () => {
-        updatePanicSeekBar(lineId, audio);
+        updatePanicSeekBar(groupId, speakerKey, audio);
       };
     }
 
     const audio = panicAudioPlayers[playerKey];
     audio.src = blobUrl;
     await audio.play();
-    updatePanicPlayButton(lineId, true);
+    updatePanicPlayButton(groupId, speakerKey, true);
   } catch (error) {
     console.error("Error playing audio:", error);
     alert(`Failed to play audio: ${error.message}`);
   }
 }
 
-function updatePanicPlayButton(lineId, isPlaying) {
-  const btn = document.getElementById(`panic-play-btn-${lineId}`);
+function updatePanicPlayButton(groupId, speakerKey, isPlaying) {
+  const btn = document.getElementById(`panic-play-btn-${groupId}-${speakerKey}`);
   if (btn) {
     btn.innerHTML = isPlaying ? '⏸️ Pause' : '▶️ Play';
   }
 }
 
-function seekPanicAudio(gameId, speakerIndex, lineId, value) {
-  const playerKey = `${gameId}_${lineId}`;
+function seekPanicAudio(gameId, groupId, speakerKey, value) {
+  const playerKey = `${gameId}_${groupId}_${speakerKey}`;
   const audio = panicAudioPlayers[playerKey];
   if (audio && audio.duration) {
     audio.currentTime = (value / 100) * audio.duration;
   }
 }
 
-function updatePanicSeekBar(lineId, audio) {
-  const seekBar = document.getElementById(`panic-audio-seek-bar-${lineId}`);
-  const currentTimeEl = document.getElementById(`panic-audio-time-current-${lineId}`);
-  const totalTimeEl = document.getElementById(`panic-audio-time-total-${lineId}`);
+function updatePanicSeekBar(groupId, speakerKey, audio) {
+  const seekBar = document.getElementById(`panic-audio-seek-bar-${groupId}-${speakerKey}`);
+  const currentTimeEl = document.getElementById(`panic-audio-time-current-${groupId}-${speakerKey}`);
+  const totalTimeEl = document.getElementById(`panic-audio-time-total-${groupId}-${speakerKey}`);
 
   if (seekBar && currentTimeEl && totalTimeEl) {
     const current = audio.currentTime;

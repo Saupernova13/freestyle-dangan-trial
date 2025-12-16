@@ -2704,7 +2704,7 @@ nav {
 
 .argument-body {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.5rem;
   padding: 1rem;
 }
@@ -2713,6 +2713,8 @@ nav {
   padding: 1rem;
   background: var(--bg-tertiary);
   border-radius: 6px;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .opposition-side {
@@ -2738,25 +2740,28 @@ nav {
 .audio-preview-mini {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
   background: var(--bg-primary);
   border: 1px solid var(--border-primary);
   border-radius: 6px;
   margin-bottom: 0.5rem;
+  min-width: 0;
 }
 
 .audio-preview-mini .audio-icon {
-  font-size: 1.25rem;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .audio-preview-mini .audio-filename {
   flex: 1;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 /* ==================== Mass Panic Debate Styles ==================== */
@@ -2765,64 +2770,93 @@ nav {
   margin-bottom: 2rem;
 }
 
-.mass-panic-speakers-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.mass-panic-speaker-track {
+/* Character assignment row at top */
+.mass-panic-character-setup {
   background: var(--bg-secondary);
-  border-radius: 8px;
   padding: 1rem;
-  border-left-width: 4px;
-  border-left-style: solid;
-}
-
-.speaker-track-header {
+  border-radius: 8px;
   margin-bottom: 1rem;
 }
 
-.speaker-track-header h4 {
-  margin: 0 0 1rem 0;
-  font-size: 1rem;
+.mass-panic-character-setup .form-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* Controls for adding line groups */
+.mass-panic-controls {
+  margin: 1rem 0;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Container for all line groups */
+.mass-panic-line-groups {
+  margin-top: 1rem;
+}
+
+/* Individual line group card */
+.mass-panic-group-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+/* Line group header with number and delete button */
+.mass-panic-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.group-number {
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.speaker-dialogue-lines {
-  margin-top: 1rem;
+/* Container for all 3 speaker lines within a group */
+.mass-panic-group-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-.mass-panic-line-card {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-primary);
-  border-radius: 6px;
-  margin-bottom: 0.75rem;
-  overflow: hidden;
+/* Individual speaker's line within a group */
+.mass-panic-speaker-line {
+  padding: 1rem;
+  background: var(--bg-primary);
+  border-left-width: 4px;
+  border-left-style: solid;
 }
 
-.mass-panic-line-header {
+.mass-panic-speaker-line:not(:last-child) {
+  border-bottom: 1px solid var(--border-primary);
+}
+
+/* Speaker label and loud badge */
+.speaker-line-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background: var(--bg-secondary);
+  margin-bottom: 1rem;
 }
 
-.line-number {
-  font-size: 0.75rem;
+.speaker-line-header h5 {
+  margin: 0;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.mass-panic-line-badges {
+  color: var(--text-primary);
   flex: 1;
-  display: flex;
-  gap: 0.5rem;
 }
 
+/* Reuse existing badge styles */
 .badge {
   font-size: 0.75rem;
   padding: 0.125rem 0.5rem;
@@ -2840,10 +2874,7 @@ nav {
   color: #3b82f6;
 }
 
-.mass-panic-line-body {
-  padding: 0.75rem;
-}
-
+/* Checkbox labels */
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -2858,16 +2889,18 @@ nav {
   cursor: pointer;
 }
 
-.empty-state-small {
-  padding: 2rem;
-  text-align: center;
-  color: var(--text-tertiary);
+/* Empty state for when no audio uploaded */
+.audio-empty {
+  padding: 0.75rem;
   background: var(--bg-tertiary);
-  border-radius: 8px;
-  margin-top: 1rem;
+  border: 1px dashed var(--border-primary);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  text-align: center;
 }
 
-.empty-state-small p {
+.audio-empty p {
   margin: 0;
   font-size: 0.875rem;
+  color: var(--text-tertiary);
 }

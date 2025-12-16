@@ -183,19 +183,19 @@ async function loadMinigameAudio() {
           }
         }
 
-        // Load Mass Panic Debate speaker audio
-        if (mg.gameType === 'mass_panic_debate' && mg.typeSpecific && mg.typeSpecific.speakers) {
-          for (let speaker of mg.typeSpecific.speakers) {
-            if (speaker.dialogueLines) {
-              for (let line of speaker.dialogueLines) {
-                if (line.voiceLineFile) {
-                  try {
-                    const fileHandle = await gameAudioDir.getFileHandle(line.voiceLineFile);
-                    const file = await fileHandle.getFile();
-                    line.voiceLineBlob = file;
-                  } catch (error) {
-                    console.warn(`Failed to load audio for panic line ${line.lineId}:`, error);
-                  }
+        // Load Mass Panic Debate speaker audio (line groups structure)
+        if (mg.gameType === 'mass_panic_debate' && mg.typeSpecific && mg.typeSpecific.lineGroups) {
+          for (let group of mg.typeSpecific.lineGroups) {
+            // Each group has speaker1, speaker2, speaker3 lines
+            for (let speakerKey of ['speaker1', 'speaker2', 'speaker3']) {
+              const line = group[speakerKey];
+              if (line && line.voiceLineFile) {
+                try {
+                  const fileHandle = await gameAudioDir.getFileHandle(line.voiceLineFile);
+                  const file = await fileHandle.getFile();
+                  line.voiceLineBlob = file;
+                } catch (error) {
+                  console.warn(`Failed to load audio for panic line ${group.groupId}-${speakerKey}:`, error);
                 }
               }
             }

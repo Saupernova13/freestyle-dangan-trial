@@ -1,0 +1,369 @@
+// Logic Dive minigame editor
+// Handles question creation, answers, and drag-drop reordering
+
+// Drag state for questions
+let draggedQuestionId = null;
+
+// ==================== Main Rendering ====================
+
+function renderLogicDiveEditor(mg) {
+  // Initialize typeSpecific.questions if needed
+  if (!mg.typeSpecific) {
+    mg.typeSpecific = {};
+  }
+  if (!mg.typeSpecific.questions) {
+    mg.typeSpecific.questions = [];
+  }
+
+  const questions = mg.typeSpecific.questions;
+
+  let html = `
+    <div class="minigame-editor-section logic-dive-section">
+      <h3>Logic Dive Questions</h3>
+      <p class="section-description">Create questions with 3-5 multiple choice answers.</p>
+
+      <button class="btn btn-primary logic-dive-add-btn"
+              onclick="addLogicDiveQuestion('${mg.gameId}')">
+        ➕ Add Question
+      </button>
+
+      <div class="logic-dive-questions-container">
+        ${questions.length === 0 ? `
+          <div class="empty-state">
+            <p>No questions yet. Click "Add Question" to create your first question.</p>
+          </div>
+        ` : renderLogicDiveQuestions(mg.gameId, questions)}
+      </div>
+    </div>
+  `;
+
+  return html;
+}
+
+function renderLogicDiveQuestions(gameId, questions) {
+  let html = '';
+
+  // Add drop zone at top
+  html += `<div class="question-drop-zone"
+                data-insert-position="0"
+                ondragover="handleQuestionGapDragOver(event)"
+                ondrop="handleQuestionDropInGap(event, '${gameId}', 0)"
+                ondragleave="handleQuestionGapDragLeave(event)"></div>`;
+
+  questions
+    .sort((a, b) => a.order - b.order)
+    .forEach((question, index) => {
+      html += `
+        <div class="logic-dive-question-wrapper"
+             draggable="true"
+             ondragstart="handleQuestionDragStart(event, '${gameId}', '${question.questionId}')"
+             ondragend="handleQuestionDragEnd(event)">
+          ${renderLogicDiveQuestionEditor(gameId, question, index)}
+        </div>
+
+        <div class="question-drop-zone"
+             data-insert-position="${index + 1}"
+             ondragover="handleQuestionGapDragOver(event)"
+             ondrop="handleQuestionDropInGap(event, '${gameId}', ${index + 1})"
+             ondragleave="handleQuestionGapDragLeave(event)"></div>
+      `;
+    });
+
+  return html;
+}
+
+function renderLogicDiveQuestionEditor(gameId, question, index) {
+  return `
+    <div class="logic-dive-question-card">
+      <div class="question-header">
+        <div class="question-drag-handle">
+          <div class="arrow-btn arrow-up"
+               onclick="event.stopPropagation(); moveQuestionUp('${gameId}', '${question.questionId}')"
+               title="Move up">▲</div>
+          <div class="arrow-btn arrow-down"
+               onclick="event.stopPropagation(); moveQuestionDown('${gameId}', '${question.questionId}')"
+               title="Move down">▼</div>
+        </div>
+        <div class="question-number">Question #${index + 1}</div>
+        <button class="btn-icon" onclick="deleteLogicDiveQuestion('${gameId}', '${question.questionId}')"
+                title="Delete question">🗑️</button>
+      </div>
+
+      <div class="question-body">
+        <div class="form-group">
+          <label>Question Text</label>
+          <textarea class="form-input"
+                    rows="2"
+                    placeholder="Enter the question..."
+                    onchange="updateLogicDiveQuestion('${gameId}', '${question.questionId}', 'questionText', this.value)">${question.questionText || ''}</textarea>
+        </div>
+
+        <div class="answers-section">
+          <div class="answers-header">
+            <h4>Answers (${question.answers.length}/5)</h4>
+            ${question.answers.length < 5 ? `
+              <button class="btn btn-secondary btn-sm"
+                      onclick="addLogicDiveAnswer('${gameId}', '${question.questionId}')">
+                ➕ Add Answer
+              </button>
+            ` : ''}
+          </div>
+
+          <div class="answers-list">
+            ${question.answers.map((answer, ansIndex) => `
+              <div class="answer-item ${answer.isCorrect ? 'correct-answer' : ''}">
+                <div class="answer-radio">
+                  <input type="radio"
+                         name="correct_${question.questionId}"
+                         ${answer.isCorrect ? 'checked' : ''}
+                         onchange="setCorrectAnswer('${gameId}', '${question.questionId}', '${answer.answerId}')"
+                         title="Mark as correct answer">
+                </div>
+                <input type="text"
+                       class="form-input answer-text-input"
+                       placeholder="Answer ${ansIndex + 1}"
+                       value="${answer.answerText || ''}"
+                       onchange="updateLogicDiveAnswer('${gameId}', '${question.questionId}', '${answer.answerId}', 'answerText', this.value)">
+                ${question.answers.length > 2 ? `
+                  <button class="btn-icon btn-icon-danger"
+                          onclick="deleteLogicDiveAnswer('${gameId}', '${question.questionId}', '${answer.answerId}')"
+                          title="Delete answer">🗑️</button>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          ${question.answers.length < 2 ? `
+            <p class="validation-warning">⚠️ Add at least 2 answers</p>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ==================== Question Management ====================
+
+function addLogicDiveQuestion(gameId) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg) return;
+
+  if (!mg.typeSpecific) {
+    mg.typeSpecific = {};
+  }
+  if (!mg.typeSpecific.questions) {
+    mg.typeSpecific.questions = [];
+  }
+
+  const newQuestion = {
+    questionId: `q_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    order: mg.typeSpecific.questions.length,
+    questionText: "",
+    answers: [
+      { answerId: `a_${Date.now()}_1`, answerText: "", isCorrect: true },
+      { answerId: `a_${Date.now()}_2`, answerText: "", isCorrect: false },
+      { answerId: `a_${Date.now()}_3`, answerText: "", isCorrect: false },
+      { answerId: `a_${Date.now()}_4`, answerText: "", isCorrect: false },
+      { answerId: `a_${Date.now()}_5`, answerText: "", isCorrect: false }
+    ]
+  };
+
+  mg.typeSpecific.questions.push(newQuestion);
+  renderMinigameDetails();
+  autoSaveTrial();
+}
+
+function deleteLogicDiveQuestion(gameId, questionId) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg) return;
+
+  mg.typeSpecific.questions = mg.typeSpecific.questions.filter(q => q.questionId !== questionId);
+
+  // Re-index order
+  mg.typeSpecific.questions.forEach((q, index) => {
+    q.order = index;
+  });
+
+  renderMinigameDetails();
+  autoSaveTrial();
+}
+
+function updateLogicDiveQuestion(gameId, questionId, field, value) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg) return;
+
+  const question = mg.typeSpecific.questions.find(q => q.questionId === questionId);
+  if (!question) return;
+
+  question[field] = value;
+  autoSaveTrial();
+}
+
+// ==================== Answer Management ====================
+
+function addLogicDiveAnswer(gameId, questionId) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg) return;
+
+  const question = mg.typeSpecific.questions.find(q => q.questionId === questionId);
+  if (!question || question.answers.length >= 5) return;
+
+  const newAnswer = {
+    answerId: `a_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    answerText: "",
+    isCorrect: false
+  };
+
+  question.answers.push(newAnswer);
+  renderMinigameDetails();
+  autoSaveTrial();
+}
+
+function deleteLogicDiveAnswer(gameId, questionId, answerId) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg) return;
+
+  const question = mg.typeSpecific.questions.find(q => q.questionId === questionId);
+  if (!question || question.answers.length <= 2) return; // Minimum 2 answers
+
+  question.answers = question.answers.filter(a => a.answerId !== answerId);
+
+  // If deleted answer was correct, make first answer correct
+  if (!question.answers.some(a => a.isCorrect)) {
+    question.answers[0].isCorrect = true;
+  }
+
+  renderMinigameDetails();
+  autoSaveTrial();
+}
+
+function updateLogicDiveAnswer(gameId, questionId, answerId, field, value) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg) return;
+
+  const question = mg.typeSpecific.questions.find(q => q.questionId === questionId);
+  if (!question) return;
+
+  const answer = question.answers.find(a => a.answerId === answerId);
+  if (!answer) return;
+
+  answer[field] = value;
+  autoSaveTrial();
+}
+
+function setCorrectAnswer(gameId, questionId, answerId) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg) return;
+
+  const question = mg.typeSpecific.questions.find(q => q.questionId === questionId);
+  if (!question) return;
+
+  // Set all answers to false, then set selected to true
+  question.answers.forEach(a => {
+    a.isCorrect = (a.answerId === answerId);
+  });
+
+  renderMinigameDetails();
+  autoSaveTrial();
+}
+
+// ==================== Question Reordering ====================
+
+function moveQuestionUp(gameId, questionId) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg) return;
+
+  const questions = mg.typeSpecific.questions;
+  const currentIndex = questions.findIndex(q => q.questionId === questionId);
+
+  if (currentIndex <= 0) return;
+
+  [questions[currentIndex], questions[currentIndex - 1]] = [questions[currentIndex - 1], questions[currentIndex]];
+
+  questions.forEach((q, index) => {
+    q.order = index;
+  });
+
+  renderMinigameDetails();
+  autoSaveTrial();
+}
+
+function moveQuestionDown(gameId, questionId) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg) return;
+
+  const questions = mg.typeSpecific.questions;
+  const currentIndex = questions.findIndex(q => q.questionId === questionId);
+
+  if (currentIndex === -1 || currentIndex >= questions.length - 1) return;
+
+  [questions[currentIndex], questions[currentIndex + 1]] = [questions[currentIndex + 1], questions[currentIndex]];
+
+  questions.forEach((q, index) => {
+    q.order = index;
+  });
+
+  renderMinigameDetails();
+  autoSaveTrial();
+}
+
+// ==================== Drag-and-Drop for Questions ====================
+
+function handleQuestionDragStart(event, gameId, questionId) {
+  draggedQuestionId = questionId;
+  event.target.classList.add('dragging');
+  event.dataTransfer.effectAllowed = 'move';
+}
+
+function handleQuestionDragEnd(event) {
+  event.target.classList.remove('dragging');
+  draggedQuestionId = null;
+  document.querySelectorAll('.drag-over-gap').forEach(el => {
+    el.classList.remove('drag-over-gap');
+  });
+}
+
+function handleQuestionDropInGap(event, gameId, insertPosition) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg || !draggedQuestionId) return;
+
+  const questions = mg.typeSpecific.questions;
+  const draggedIndex = questions.findIndex(q => q.questionId === draggedQuestionId);
+
+  if (draggedIndex === -1) return;
+  if (insertPosition === draggedIndex || insertPosition === draggedIndex + 1) {
+    draggedQuestionId = null;
+    renderMinigameDetails();
+    return;
+  }
+
+  const [draggedQuestion] = questions.splice(draggedIndex, 1);
+
+  let adjustedPosition = insertPosition;
+  if (draggedIndex < insertPosition) {
+    adjustedPosition--;
+  }
+
+  questions.splice(adjustedPosition, 0, draggedQuestion);
+
+  questions.forEach((q, index) => {
+    q.order = index;
+  });
+
+  draggedQuestionId = null;
+  renderMinigameDetails();
+  autoSaveTrial();
+}
+
+function handleQuestionGapDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  event.currentTarget.classList.add('drag-over-gap');
+}
+
+function handleQuestionGapDragLeave(event) {
+  event.currentTarget.classList.remove('drag-over-gap');
+}

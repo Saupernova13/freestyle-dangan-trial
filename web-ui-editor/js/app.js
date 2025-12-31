@@ -70,6 +70,9 @@ function renderScriptEditor() {
       </div>
     `;
   }
+
+  // Update floating add button
+  updateFloatingAddButton();
 }
 
 function addScriptLine() {
@@ -397,7 +400,7 @@ function handleCharacterKeydown(lineId, event) {
       event.preventDefault();
       if (highlightedIndex < filteredCharacters.length - 1) {
         highlightedIndex++;
-        renderCharacterDropdownList(lineId);
+        updateDropdownHighlighting(lineId);
         scrollToHighlighted(lineId);
       }
       break;
@@ -406,7 +409,7 @@ function handleCharacterKeydown(lineId, event) {
       event.preventDefault();
       if (highlightedIndex > 0) {
         highlightedIndex--;
-        renderCharacterDropdownList(lineId);
+        updateDropdownHighlighting(lineId);
         scrollToHighlighted(lineId);
       }
       break;
@@ -463,8 +466,7 @@ function renderCharacterDropdownList(lineId) {
     return `
       <div class="${classes.join(' ')}"
            data-char-id="${c.id}"
-           onclick="selectCharacterFromDropdown('${lineId}', '${c.id}')"
-           onmouseenter="highlightedIndex = ${idx}; renderCharacterDropdownList('${lineId}')">
+           data-char-index="${idx}">
         ${c.name} ${c.surname} (${c.isHeadmaster ? 'Headmaster' : 'Student'})
       </div>
     `;
@@ -472,6 +474,54 @@ function renderCharacterDropdownList(lineId) {
 
   listEl.innerHTML = itemsHtml;
   listEl.style.display = 'block';
+
+  // Attach event delegation for clicks and hover
+  attachDropdownEventHandlers(lineId);
+}
+
+function attachDropdownEventHandlers(lineId) {
+  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
+  if (!listEl) return;
+
+  // Remove old listeners if any
+  const oldListEl = listEl.cloneNode(true);
+  listEl.parentNode.replaceChild(oldListEl, listEl);
+  const freshListEl = document.getElementById(`char-dropdown-list-${lineId}`);
+
+  // Click delegation
+  freshListEl.addEventListener('click', (e) => {
+    const item = e.target.closest('.searchable-dropdown-item');
+    if (item && item.hasAttribute('data-char-id')) {
+      const charId = item.getAttribute('data-char-id');
+      selectCharacterFromDropdown(lineId, charId);
+    }
+  });
+
+  // Mouseenter delegation for highlighting
+  freshListEl.addEventListener('mouseover', (e) => {
+    const item = e.target.closest('.searchable-dropdown-item');
+    if (item && item.hasAttribute('data-char-index')) {
+      const idx = parseInt(item.getAttribute('data-char-index'));
+      if (idx !== highlightedIndex) {
+        highlightedIndex = idx;
+        updateDropdownHighlighting(lineId);
+      }
+    }
+  });
+}
+
+function updateDropdownHighlighting(lineId) {
+  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
+  if (!listEl) return;
+
+  const items = listEl.querySelectorAll('.searchable-dropdown-item');
+  items.forEach((item, idx) => {
+    if (idx === highlightedIndex) {
+      item.classList.add('highlighted');
+    } else {
+      item.classList.remove('highlighted');
+    }
+  });
 }
 
 function scrollToHighlighted(lineId) {

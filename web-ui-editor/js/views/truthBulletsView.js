@@ -16,6 +16,7 @@ function renderTruthBulletsView() {
         </div>
       </div>
     `;
+    updateFloatingAddButton();
     return;
   }
 
@@ -61,6 +62,9 @@ function renderTruthBulletsView() {
       </div>
     </div>
   `;
+
+  // Update floating add button
+  updateFloatingAddButton();
 }
 
 function renderTruthBulletListItem(bullet) {

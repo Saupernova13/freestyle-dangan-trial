@@ -86,7 +86,9 @@ function renderTruthBulletModal() {
                 <label>Bullet Image:</label>
                 ${hasImage ? `
                   <div class="bullet-image-preview">
-                    <img src="${bullet.imageDataURL || ''}" alt="Bullet image">
+                    <div class="bullet-image-preview-container">
+                      <img src="${bullet.imageDataURL || ''}" alt="Bullet image">
+                    </div>
                     <button class="btn btn-secondary" onclick="clearBulletImage()">🗑️ Remove Image</button>
                   </div>
                 ` : `

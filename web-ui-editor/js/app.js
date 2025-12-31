@@ -1,6 +1,11 @@
 // Main application initialization
 // (Constants and state are now in separate files)
 
+// Searchable dropdown state
+let activeDropdownLineId = null;
+let filteredCharacters = [];
+let highlightedIndex = -1;
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
   initializeTheme();
@@ -11,6 +16,14 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('trialNameInput').addEventListener('input', e => {
     trialName = e.target.value.trim();
     autoSaveTrial();
+  });
+
+  // Click outside to close dropdown
+  document.addEventListener('click', function(e) {
+    // Check if click is outside any searchable dropdown
+    if (!e.target.closest('.searchable-dropdown') && activeDropdownLineId) {
+      closeCharacterDropdown(activeDropdownLineId);
+    }
   });
 });
 
@@ -324,24 +337,177 @@ function updateScriptLine(lineId, field, value) {
   autoSaveTrial();
 }
 
+// Searchable dropdown helper functions
+function openCharacterDropdown(lineId) {
+  // Close any open dropdown first
+  if (activeDropdownLineId && activeDropdownLineId !== lineId) {
+    closeCharacterDropdown(activeDropdownLineId);
+  }
+
+  activeDropdownLineId = lineId;
+  highlightedIndex = -1;
+
+  // Initialize with all characters
+  filteredCharacters = cast.filter(c => c !== null);
+
+  // Render the dropdown list
+  renderCharacterDropdownList(lineId);
+}
+
+function closeCharacterDropdown(lineId) {
+  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
+  if (listEl) {
+    listEl.style.display = 'none';
+  }
+
+  if (activeDropdownLineId === lineId) {
+    activeDropdownLineId = null;
+    filteredCharacters = [];
+    highlightedIndex = -1;
+  }
+}
+
+function filterCharacters(lineId, searchTerm) {
+  const characters = cast.filter(c => c !== null);
+  const term = searchTerm.toLowerCase().trim();
+
+  if (term === '') {
+    filteredCharacters = characters;
+  } else {
+    filteredCharacters = characters.filter(c => {
+      const fullName = `${c.name} ${c.surname}`.toLowerCase();
+      return fullName.includes(term);
+    });
+  }
+
+  highlightedIndex = filteredCharacters.length > 0 ? 0 : -1;
+  renderCharacterDropdownList(lineId);
+}
+
+function handleCharacterKeydown(lineId, event) {
+  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
+
+  // Only handle if dropdown is open
+  if (!listEl || listEl.style.display === 'none') {
+    return;
+  }
+
+  switch(event.key) {
+    case 'ArrowDown':
+      event.preventDefault();
+      if (highlightedIndex < filteredCharacters.length - 1) {
+        highlightedIndex++;
+        renderCharacterDropdownList(lineId);
+        scrollToHighlighted(lineId);
+      }
+      break;
+
+    case 'ArrowUp':
+      event.preventDefault();
+      if (highlightedIndex > 0) {
+        highlightedIndex--;
+        renderCharacterDropdownList(lineId);
+        scrollToHighlighted(lineId);
+      }
+      break;
+
+    case 'Enter':
+      event.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < filteredCharacters.length) {
+        const character = filteredCharacters[highlightedIndex];
+        selectCharacterFromDropdown(lineId, character.id);
+      }
+      break;
+
+    case 'Escape':
+      event.preventDefault();
+      closeCharacterDropdown(lineId);
+      break;
+  }
+}
+
+function selectCharacterFromDropdown(lineId, characterId) {
+  updateScriptLine(lineId, 'characterId', characterId);
+  closeCharacterDropdown(lineId);
+
+  // Update the input value to show selected character
+  const selectedChar = cast.find(c => c && c.id === characterId);
+  if (selectedChar) {
+    const inputEl = document.getElementById(`char-dropdown-input-${lineId}`);
+    if (inputEl) {
+      inputEl.value = `${selectedChar.name} ${selectedChar.surname}`;
+    }
+  }
+}
+
+function renderCharacterDropdownList(lineId) {
+  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
+  if (!listEl) return;
+
+  if (filteredCharacters.length === 0) {
+    listEl.innerHTML = '<div class="searchable-dropdown-item" style="cursor: default; opacity: 0.6;">No characters found</div>';
+    listEl.style.display = 'block';
+    return;
+  }
+
+  const line = scriptLines.find(l => l.id === lineId);
+  const selectedCharId = line ? line.characterId : '';
+
+  const itemsHtml = filteredCharacters.map((c, idx) => {
+    const isSelected = c.id === selectedCharId;
+    const isHighlighted = idx === highlightedIndex;
+    const classes = ['searchable-dropdown-item'];
+    if (isSelected) classes.push('selected');
+    if (isHighlighted) classes.push('highlighted');
+
+    return `
+      <div class="${classes.join(' ')}"
+           data-char-id="${c.id}"
+           onclick="selectCharacterFromDropdown('${lineId}', '${c.id}')"
+           onmouseenter="highlightedIndex = ${idx}; renderCharacterDropdownList('${lineId}')">
+        ${c.name} ${c.surname} (${c.isHeadmaster ? 'Headmaster' : 'Student'})
+      </div>
+    `;
+  }).join('');
+
+  listEl.innerHTML = itemsHtml;
+  listEl.style.display = 'block';
+}
+
+function scrollToHighlighted(lineId) {
+  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
+  if (!listEl) return;
+
+  const highlightedEl = listEl.querySelector('.highlighted');
+  if (highlightedEl) {
+    highlightedEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
 function renderScriptLineBar(line, index) {
   const lineNumber = index + 1;
   let contentHtml = "";
 
   // Generate content based on type
   if (line.type === "speaking") {
-    const characters = cast.filter(c => c !== null);
-    const characterOptions = characters.map(c =>
-      `<option value="${c.id}" ${c.id === line.characterId ? 'selected' : ''}>
-        ${c.name} ${c.surname} (${c.isHeadmaster ? 'Headmaster' : 'Student'})
-      </option>`
-    ).join('');
+    // Get selected character name for display
+    const selectedChar = cast.find(c => c && c.id === line.characterId);
+    const displayValue = selectedChar ? `${selectedChar.name} ${selectedChar.surname}` : '';
 
     contentHtml = `
-      <select class="script-character-select" onchange="updateScriptLine('${line.id}', 'characterId', this.value)" onclick="event.stopPropagation()">
-        <option value="">Select Character...</option>
-        ${characterOptions}
-      </select>
+      <div class="searchable-dropdown" onclick="event.stopPropagation()">
+        <input
+          type="text"
+          id="char-dropdown-input-${line.id}"
+          class="searchable-dropdown-input"
+          placeholder="Search character..."
+          value="${displayValue}"
+          onfocus="openCharacterDropdown('${line.id}')"
+          oninput="filterCharacters('${line.id}', this.value)"
+          onkeydown="handleCharacterKeydown('${line.id}', event)"
+        />
+        <div id="char-dropdown-list-${line.id}" class="searchable-dropdown-list" style="display: none;"></div>
+      </div>
       <input
         type="text"
         class="script-dialogue-input"

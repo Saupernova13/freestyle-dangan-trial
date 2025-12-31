@@ -1,4 +1,4 @@
-// Truth bullets view - displays truth bullet list
+// Truth bullets view - displays truth bullet list in split-pane layout
 
 function renderTruthBulletsView() {
   const grid = document.getElementById('mainGrid');
@@ -16,54 +16,112 @@ function renderTruthBulletsView() {
         </div>
       </div>
     `;
-  } else {
-    let bulletsHtml = truthBullets.map((bullet, index) =>
-      renderTruthBulletBar(bullet, index)
-    ).join('');
-
-    grid.innerHTML = `
-      <div id="truthBulletsContainer">
-        <div class="script-header">
-          <h2>Truth Bullets</h2>
-          <button class="btn btn-primary" onclick="addTruthBullet()">➕ Add Truth Bullet</button>
-        </div>
-        <div class="script-lines-container">
-          ${bulletsHtml}
-        </div>
-      </div>
-    `;
+    return;
   }
-}
 
-function renderTruthBulletBar(bullet, index) {
-  const hasImage = bullet.imageFile;
+  // Auto-select first bullet if none selected
+  if (!selectedTruthBulletId && truthBullets.length > 0) {
+    selectedTruthBulletId = truthBullets[0].bulletId;
+  }
 
-  return `
-    <div class="truth-bullet-item" data-bullet-id="${bullet.bulletId}">
-      <div class="truth-bullet-image-wrapper">
-        ${hasImage ? `<img src="${bullet.imageDataURL || ''}" alt="Bullet image" class="truth-bullet-img">` : '<span class="truth-bullet-no-image">📷</span>'}
+  // Check if selected bullet still exists (might have been deleted)
+  const selectedStillExists = truthBullets.some(b => b.bulletId === selectedTruthBulletId);
+  if (!selectedStillExists && truthBullets.length > 0) {
+    selectedTruthBulletId = truthBullets[0].bulletId;
+  }
+
+  const selectedBullet = truthBullets.find(b => b.bulletId === selectedTruthBulletId);
+
+  // Render list on left
+  const listHtml = truthBullets.map(bullet =>
+    renderTruthBulletListItem(bullet)
+  ).join('');
+
+  // Render details on right
+  const detailHtml = selectedBullet
+    ? renderTruthBulletDetail(selectedBullet)
+    : '<div class="no-selection">Select a truth bullet to view details</div>';
+
+  grid.innerHTML = `
+    <div id="truthBulletsContainer" class="truth-bullets-split-view">
+      <div class="script-header">
+        <h2>Truth Bullets</h2>
+        <button class="btn btn-primary" onclick="addTruthBullet()">➕ Add Truth Bullet</button>
       </div>
-
-      <div class="truth-bullet-content">
-        <div class="truth-bullet-header">
-          <h4 class="truth-bullet-title">${bullet.name || 'Unnamed Bullet'}</h4>
-          <div class="truth-bullet-actions">
-            <button class="btn-icon" onclick="event.stopPropagation(); openTruthBulletModal('${bullet.bulletId}')" title="Edit bullet">✏️</button>
-            <button class="btn-icon btn-icon-danger" onclick="event.stopPropagation(); deleteTruthBullet('${bullet.bulletId}')" title="Delete bullet">🗑️</button>
-          </div>
+      <div class="truth-bullets-content">
+        <!-- LEFT: Bullet List -->
+        <div class="truth-bullets-list-pane">
+          ${listHtml}
         </div>
 
-        <p class="truth-bullet-description">${bullet.description || 'No description'}</p>
-
-        ${bullet.inversedLieBulletName ? `
-          <div class="truth-bullet-lie-tag">
-            <span class="lie-label">Lie Form:</span>
-            <span class="lie-name">${bullet.inversedLieBulletName}</span>
-          </div>
-        ` : ''}
+        <!-- RIGHT: Detail Pane -->
+        <div class="truth-bullets-detail-pane">
+          ${detailHtml}
+        </div>
       </div>
     </div>
   `;
+}
+
+function renderTruthBulletListItem(bullet) {
+  const isSelected = bullet.bulletId === selectedTruthBulletId;
+  const displayName = bullet.name || 'Unnamed Bullet';
+
+  return `
+    <div class="truth-bullet-list-item ${isSelected ? 'selected' : ''}"
+         data-bullet-id="${bullet.bulletId}"
+         onclick="selectTruthBullet('${bullet.bulletId}')">
+      <span class="bullet-list-name">${displayName}</span>
+      <div class="bullet-list-actions">
+        <button onclick="openTruthBulletModal('${bullet.bulletId}'); event.stopPropagation()" title="Edit bullet">✏️</button>
+        <button onclick="deleteTruthBullet('${bullet.bulletId}'); event.stopPropagation()" title="Delete bullet">🗑️</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTruthBulletDetail(bullet) {
+  const hasImage = bullet.imageFile && bullet.imageDataURL;
+
+  return `
+    <!-- TOP: Image Preview -->
+    <div class="truth-bullet-image-preview">
+      ${hasImage
+        ? `<img src="${bullet.imageDataURL}" alt="${bullet.name || 'Bullet image'}" />`
+        : '<div class="truth-bullet-no-image-large">📷</div>'
+      }
+    </div>
+
+    <!-- BOTTOM: Details -->
+    <div class="truth-bullet-details">
+      <div class="detail-row">
+        <label>Name</label>
+        <span>${bullet.name || 'Unnamed Bullet'}</span>
+      </div>
+
+      <div class="detail-row">
+        <label>Description</label>
+        <p>${bullet.description || 'No description provided'}</p>
+      </div>
+
+      ${bullet.inversedLieBulletName ? `
+        <div class="detail-row">
+          <label>Lie Form</label>
+          <span class="lie-tag">${bullet.inversedLieBulletName}</span>
+        </div>
+      ` : ''}
+
+      <div class="detail-actions">
+        <button class="btn btn-primary" onclick="openTruthBulletModal('${bullet.bulletId}')">✏️ Edit Bullet</button>
+        <button class="btn btn-danger" onclick="deleteTruthBullet('${bullet.bulletId}')">🗑️ Delete Bullet</button>
+      </div>
+    </div>
+  `;
+}
+
+function selectTruthBullet(bulletId) {
+  selectedTruthBulletId = bulletId;
+  renderTruthBulletsView();
 }
 
 function generateBulletId() {
@@ -79,6 +137,10 @@ function addTruthBullet() {
     inversedLieBulletName: ""
   };
   truthBullets.push(newBullet);
+
+  // Auto-select the newly created bullet
+  selectedTruthBulletId = newBullet.bulletId;
+
   renderTruthBulletsView();
   openTruthBulletModal(newBullet.bulletId);
 }
@@ -88,6 +150,10 @@ function deleteTruthBullet(bulletId) {
     return;
   }
 
+  // Find the index of the bullet being deleted
+  const bulletIndex = truthBullets.findIndex(b => b.bulletId === bulletId);
+
+  // Remove the bullet
   truthBullets = truthBullets.filter(b => b.bulletId !== bulletId);
 
   // Remove from all minigame selections
@@ -96,6 +162,17 @@ function deleteTruthBullet(bulletId) {
       mg.typeSpecific.selectedBullets = mg.typeSpecific.selectedBullets.filter(id => id !== bulletId);
     }
   });
+
+  // Smart selection: if deleting the selected bullet, select another one
+  if (selectedTruthBulletId === bulletId) {
+    if (truthBullets.length > 0) {
+      // Try to select the next bullet, or the previous one if it was the last
+      const newIndex = Math.min(bulletIndex, truthBullets.length - 1);
+      selectedTruthBulletId = truthBullets[newIndex].bulletId;
+    } else {
+      selectedTruthBulletId = null;
+    }
+  }
 
   renderTruthBulletsView();
   autoSaveTrial();

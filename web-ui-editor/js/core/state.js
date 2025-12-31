@@ -10,6 +10,7 @@ let activeView = "cast";  // "cast", "script", "truthBullets", or "minigames"
 let scriptLines = [];     // Array of script line objects
 let minigames = [];       // Array of minigame instance objects
 let truthBullets = [];    // Array of truth bullet objects
+let selectedTruthBulletId = null; // Currently selected truth bullet in split-pane view
 
 // Drag-and-drop state
 let draggedLineIds = [];       // IDs of lines being dragged (supports multi-select)

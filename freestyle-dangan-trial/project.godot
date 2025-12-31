@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="freestyle-dangan-trial"
+run/main_scene="uid://cf6h777ockpp2"
 config/features=PackedStringArray("4.4", "Mobile")
 config/icon="res://icon.svg"
 

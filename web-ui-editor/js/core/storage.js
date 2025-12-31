@@ -70,6 +70,37 @@ async function chooseTrialDir() {
   }
 }
 
+// Lazy load remaining sprites for a character (performance optimization)
+async function loadRemainingSprites(charIndex) {
+  const char = cast[charIndex];
+  if (!char || !char._folderHandle) return;
+
+  // Check if sprites already loaded
+  if (char.sprites && char.sprites.length === appSettings.maxSprites) {
+    return; // Already loaded
+  }
+
+  // Initialize sprites array if needed
+  if (!char.sprites) {
+    char.sprites = [];
+  }
+
+  const spriteCount = appSettings.maxSprites;
+  for (let j = 1; j <= spriteCount; j++) {
+    // Skip if already loaded
+    if (char.sprites[j - 1]) continue;
+
+    try {
+      let f = await char._folderHandle.getFileHandle(`sprite_${String(j).padStart(2, '0')}.png`);
+      let file = await f.getFile();
+      let b64 = await fileToDataUrl(file);
+      char.sprites[j - 1] = { dataURL: b64, fname: file.name, blob: file };
+    } catch {
+      char.sprites[j - 1] = null;
+    }
+  }
+}
+
 async function loadCharactersFromIds(characterIds) {
   cast = Array(BLOCK_COUNT).fill(null);
 
@@ -88,19 +119,20 @@ async function loadCharactersFromIds(characterIds) {
               let charData = JSON.parse(await (await charFile.getFile()).text());
 
               if (charData.id === charId) {
-                // Load sprites
+                // Load only first sprite for cast grid (performance optimization)
+                // Remaining sprites loaded lazily when opening character modal
                 charData.sprites = [];
-                const spriteCount = appSettings.maxSprites;
-                for (let j = 1; j <= spriteCount; j++) {
-                  try {
-                    let f = await folderHandle.getFileHandle(`sprite_${String(j).padStart(2, '0')}.png`);
-                    let file = await f.getFile();
-                    let b64 = await fileToDataUrl(file);
-                    charData.sprites.push({ dataURL: b64, fname: file.name, blob: file });
-                  } catch {
-                    charData.sprites.push(null);
-                  }
+                try {
+                  let f = await folderHandle.getFileHandle('sprite_01.png');
+                  let file = await f.getFile();
+                  let b64 = await fileToDataUrl(file);
+                  charData.sprites[0] = { dataURL: b64, fname: file.name, blob: file };
+                } catch {
+                  charData.sprites[0] = null;
                 }
+
+                // Store folder handle for lazy loading remaining sprites
+                charData._folderHandle = folderHandle;
 
                 cast[i] = charData;
                 break;

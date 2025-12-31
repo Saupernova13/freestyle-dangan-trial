@@ -30,7 +30,7 @@ function generateCharacterId(name, surname, dob) {
   return `${cleanSurname}${cleanName}_${dobFormatted}_${randomString}`;
 }
 
-function openCharModal(idx) {
+async function openCharModal(idx) {
   if (!dirHandle) {
     alert("Choose a folder first!");
     return;
@@ -55,6 +55,14 @@ function openCharModal(idx) {
     dislikes: c.dislikes || "",
     notes: c.notes || ""
   };
+
+  // Lazy load remaining sprites if character exists (performance optimization)
+  if (c.id && c._folderHandle) {
+    showLoader(true);
+    await loadRemainingSprites(idx);
+    c = cast[idx]; // Refresh reference after loading sprites
+    showLoader(false);
+  }
 
   // Load existing sprites if they exist
   if (c.sprites) {

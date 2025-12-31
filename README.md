@@ -31,6 +31,8 @@ Currently, the focus is on the **Danganronpa Cast Manager**, a web-based interfa
   - Bulk import for all character sprites at once
   - Configurable sprite count per character (1-100, default: 25)
   - Automatic PNG conversion and standardized naming
+  - **Lazy loading optimization**: Only loads first sprite per character initially (~90% memory reduction)
+  - Remaining sprites load on-demand when editing a character
 
 - **Script Editor** 🆕
   - Visual script line editor with three line types:
@@ -222,6 +224,155 @@ Add visual screen effects when dialogue appears:
 - 📺 **Scanlines** (retro effect)
 
 Multiple effects can be active simultaneously. Click effect tiles to toggle on/off.
+
+---
+
+## CLI Tool - Batch Character Creation
+
+For advanced users who need to create multiple characters quickly, we provide a **Node.js CLI tool** that replicates the web UI's character creation functionality with batch processing capabilities.
+
+### Features
+
+- **Batch Processing**: Create multiple characters from JSON or CSV files
+- **Auto Sprite Discovery**: Automatically finds and copies sprites from source folders
+- **Web UI Compatible**: Creates identical file structures and uses the same ID generation algorithm
+- **Flexible Input**: Supports both JSON and CSV batch formats
+- **Error Resilient**: Continues processing on errors, logs detailed information
+- **Minimal Validation**: Validates required fields and auto-fills defaults
+
+### Prerequisites
+
+- Node.js 18+ installed on your system
+
+### Installation
+
+1. Navigate to the CLI directory:
+   ```bash
+   cd cli
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Quick Start
+
+1. **Prepare your batch file** with character data (JSON or CSV format)
+2. **Organize sprites** in a source directory (e.g., `D:\SpritePa\CharacterName\`)
+3. **Run the tool**:
+   ```bash
+   node create-character.js --batch characters.json --dest "C:\Path\To\Trial"
+   ```
+
+### Usage Examples
+
+**Batch Mode (JSON):**
+```bash
+node create-character.js --batch characters.json --dest "C:\Users\YourName\Desktop\Trials\MyTrial"
+```
+
+**Batch Mode (CSV):**
+```bash
+node create-character.js --batch characters.csv --dest "C:\Users\YourName\Desktop\Trials\MyTrial"
+```
+
+**Single Character Mode:**
+```bash
+node create-character.js \
+  --dest "C:\Path\To\Trial" \
+  --name "John" \
+  --surname "Doe" \
+  --dob "1992-03-15" \
+  --blood "A" \
+  --heightM 1.75 \
+  --weight 68 \
+  --chest 92 \
+  --likes "Mystery novels" \
+  --dislikes "Dishonesty" \
+  --notes "Ultimate Detective" \
+  --position 0 \
+  --spriteFolderName "John Doe"
+```
+
+### Batch File Formats
+
+**JSON Format** (`characters.json`):
+```json
+{
+  "spriteSourceRoot": "D:\\SpritePa",
+  "characters": [
+    {
+      "name": "John",
+      "surname": "Doe",
+      "dob": "1992-03-15",
+      "blood": "A",
+      "heightM": 1.75,
+      "heightCM": 0,
+      "weight": 68,
+      "chest": 92,
+      "likes": "Mystery novels, coffee",
+      "dislikes": "Dishonesty, loud noises",
+      "notes": "Ultimate Detective with analytical mind",
+      "position": 0,
+      "spriteFolderName": "John Doe"
+    }
+  ]
+}
+```
+
+**CSV Format** (`characters.csv`):
+```csv
+name,surname,dob,blood,heightM,heightCM,weight,chest,likes,dislikes,notes,position,spriteFolderName
+John,Doe,1992-03-15,A,1.75,0,68,92,"Mystery novels","Dishonesty","Ultimate Detective",0,John Doe
+```
+
+### Required Fields
+
+- `name`, `surname`, `dob`
+- `weight`, `chest`
+- `likes`, `dislikes`, `notes`
+- `position` (0-16: positions 0-15 are students, position 16 is headmaster)
+- `spriteFolderName` (name of sprite folder in sprite source root)
+
+### Optional Fields (with defaults)
+
+- `blood`: Default "A"
+- `heightM`: Default 1.75
+- `heightCM`: Default 0
+
+### Sprite Discovery
+
+The CLI automatically finds sprites:
+1. Looks for folder at `[spriteSourceRoot]/[spriteFolderName]`
+2. Finds all PNG files in the folder
+3. Sorts alphabetically
+4. Takes the first 25 PNG files
+5. Copies them as `sprite_01.png` through `sprite_25.png`
+
+### Output Example
+
+```
+ℹ Created new trial: MyTrial
+ℹ Loading batch file: characters.json
+ℹ Found 17 characters to process
+✓ Created character: John Doe (position 0)
+  ID: DJ_19920315_A1B2C3
+  Copied 25 sprites from D:\SpritePa\John Doe
+✓ Created character: Jane Smith (position 1)
+  ID: SJ_19930822_D4E5F6
+  Copied 25 sprites from D:\SpritePa\Jane Smith
+✓ Updated trial.json with 2 character(s)
+
+ℹ Summary: 2 created, 0 skipped
+```
+
+### Complete Documentation
+
+For detailed documentation including all command-line options, error handling, and advanced usage, see:
+- **[CLI README.md](cli/README.md)** - Complete CLI documentation
+- **[Example JSON batch file](cli/examples/characters.json)**
+- **[Example CSV batch file](cli/examples/characters.csv)**
 
 ---
 
@@ -522,15 +673,53 @@ All sprites are automatically converted to PNG format regardless of the original
 
 ```
 freestyle-dangan-trial/
+├── cli/                            # 🆕 CLI tool for batch character creation
+│   ├── package.json                # Node.js dependencies and metadata
+│   ├── .gitignore                  # Ignore node_modules
+│   ├── README.md                   # Complete CLI documentation
+│   ├── create-character.js         # Main CLI entry point
+│   ├── lib/                        # Shared modules
+│   │   ├── character-generator.js  # ID generation (ported from web UI)
+│   │   ├── validator.js            # Field validation
+│   │   ├── sprite-processor.js     # Sprite discovery and copying
+│   │   ├── trial-updater.js        # trial.json read/write
+│   │   └── logger.js               # Colored console output
+│   └── examples/                   # Example batch files
+│       ├── characters.json         # JSON batch file example
+│       └── characters.csv          # CSV batch file example
+│
 ├── web-ui-editor/                  # Web-based authoring tool (CURRENT FOCUS)
 │   ├── index.html                  # Main entry point
 │   ├── css/
 │   │   └── styles.css              # Complete styling system with theming
 │   └── js/
-│       ├── app.js                  # Core application logic and cast management
-│       ├── modal.js                # Character creation/editing modal system
+│       ├── core/                   # Core system files
+│       │   ├── constants.js        # Application constants
+│       │   ├── state.js            # Global state management
+│       │   └── storage.js          # File system operations and data persistence
+│       ├── models/                 # Data models
+│       │   └── characterModel.js   # Character data structure and utilities
+│       ├── views/                  # View rendering logic
+│       │   ├── castView.js         # Character cast grid rendering
+│       │   ├── minigameView.js     # Minigame editor coordinator (245 lines)
+│       │   ├── truthBulletsView.js # Truth bullets management view
+│       │   ├── viewManager.js      # View switching and navigation
+│       │   └── minigames/          # Modular minigame editors
+│       │       ├── nonstopDebateEditor.js      # (440 lines)
+│       │       ├── logicDiveEditor.js          # (380 lines)
+│       │       ├── debateScrumEditor.js        # (520 lines)
+│       │       ├── massPanicDebateEditor.js    # (480 lines)
+│       │       └── hangmansGambitEditor.js     # (35 lines)
+│       ├── modals/                 # Modal dialog components
+│       │   ├── modalCoordinator.js # Shared modal utilities (30 lines)
+│       │   ├── characterModal.js   # Character editing modal (400 lines)
+│       │   ├── truthBulletModal.js # Truth bullet editing modal (235 lines)
+│       │   └── scriptLineModal.js  # Script line properties modal (1175 lines)
+│       ├── ui/                     # UI utilities
+│       │   └── theme.js            # Theme management (dark/light mode)
+│       ├── app.js                  # Application initialization
 │       ├── settings.js             # Application settings management
-│       └── utils.js                # Utility functions (loader, theme, file handling)
+│       └── utils.js                # Common utility functions
 │
 ├── freestyle-dangan-trial/         # Godot 4.4 game engine project (NOT STARTED)
 │   ├── models/                     # 3D models for trial room
@@ -556,65 +745,171 @@ freestyle-dangan-trial/
 
 ### Module Responsibilities
 
-**app.js** (Main Controller)
-- Cast array management (17 character slots)
-- Workspace folder selection and file system integration
-- Trial metadata loading and auto-saving
-- Character data loading from ID references
-- Cast grid rendering and UI updates
-- Character type utilities (student/headmaster distinction)
-- 🆕 View management (Cast/Script view switching)
-- 🆕 Script editor rendering with drop zone gaps
-- 🆕 Script line CRUD operations (add, delete, update, reorder)
-- 🆕 Arrow button navigation (moveLineUp/moveLineDown)
-- 🆕 Gap-based drag-and-drop with position calculation
-- 🆕 Multi-select support for batch line operations
-- 🆕 Script line type handling (speaking, narrator, minigame)
-- 🆕 Script data persistence in trial.json
+#### Core Modules
 
-**modal.js** (Character & Script Line Editor)
+**app.js** (Application Initialization)
+- Application bootstrap and startup
+- Global event handler setup
+- View initialization coordinator
+
+**core/constants.js** (Constants)
+- Application-wide constant definitions
+- Configuration defaults
+
+**core/state.js** (State Management)
+- Global state variables (cast, minigames, truthBullets, script, etc.)
+- Shared state for all modules
+
+**core/storage.js** (File System & Persistence)
+- File System Access API integration
+- Trial metadata loading and auto-saving
+- Character data loading from directories with lazy sprite loading
+- **Performance optimization**: Only loads first sprite per character initially (~90% memory reduction)
+- Lazy loading function for remaining sprites on-demand
+- Minigame data persistence
+- Truth bullets data persistence
+- Audio file loading and management
+
+**models/characterModel.js** (Character Data)
+- Character data structure and validation
+- Character ID generation (human-readable format)
+- Character type utilities (student/headmaster)
+
+#### View Modules
+
+**views/castView.js** (Character Cast View)
+- Cast grid rendering (17 character slots)
+- Character card display
+- Cast view event handlers
+
+**views/minigameView.js** (Minigame Coordinator - 245 lines)
+- Minigame list rendering
+- Common minigame settings (name, order)
+- Delegates to specialized minigame editors
+- **90% code reduction** from original 2397 lines
+
+**views/minigames/nonstopDebateEditor.js** (440 lines)
+- Truth bullet selection for debates
+- Dialogue line configuration
+- Audio upload with playback preview
+- Seek bar and audio controls
+- Voice line file I/O (Audio/Minigames/{gameId}/)
+
+**views/minigames/logicDiveEditor.js** (380 lines)
+- Multiple choice question editor
+- Answer selection with correct answer marking
+- Drag-and-drop question reordering
+
+**views/minigames/debateScrumEditor.js** (520 lines)
+- Opposition vs. Defense paired arguments
+- Side-by-side argument layout
+- Audio upload for both sides
+- Keywords management (array-based)
+
+**views/minigames/massPanicDebateEditor.js** (480 lines)
+- 3-speaker synchronized line groups
+- Enforces equal lines across all speakers
+- Single correct answer per minigame
+- Loud assertion toggle (one per group)
+- Full customization (audio, sprite, etc.)
+
+**views/minigames/hangmansGambitEditor.js** (35 lines)
+- Simple answer key configuration
+
+**views/truthBulletsView.js** (Truth Bullets View)
+- Truth bullets grid rendering
+- Bullet card display
+- Add/edit/delete truth bullets
+
+**views/viewManager.js** (View Switching)
+- Navigation between Cast/Script/Truth Bullets/Minigames views
+- View state management
+
+#### Modal Modules
+
+**modals/modalCoordinator.js** (Modal Utilities - 30 lines)
+- Shared modal utilities
+- Generic closeModal() dispatcher
+- Shared error state variables (bulletModalErr, bulletModalMsg)
+
+**modals/characterModal.js** (Character Editor - 400 lines)
 - Character modal lifecycle (open/close/render)
+- Async opening with lazy sprite loading integration
 - Details tab: Profile form with validation
 - Sprites tab: Upload interface (individual/bulk)
-- Character ID generation with human-readable format
 - Character data validation and saving
 - Sprite file writing with error handling
-- 🆕 Script line advanced properties modal (5 tabs)
-- 🆕 Sprite selection tab with visual grid
-- 🆕 Audio upload tab with HTML5 playback preview
-- 🆕 Text highlighting tab with drag-to-select interface
-- 🆕 Camera motion tab with 17 motion types
-- 🆕 Special effects tab with 11 effect types
+
+**modals/truthBulletModal.js** (Truth Bullet Editor - 235 lines)
+- Truth bullet editing modal
+- Name, description, inversed lie bullet name
+- Image upload with preview
+- File I/O to TruthBullets/ directory
+
+**modals/scriptLineModal.js** (Script Line Properties - 1175 lines)
+- Script line advanced properties modal
+- Sprite selection tab with visual grid
+- Audio upload tab with HTML5 playback preview
+- Text highlighting tab with drag-to-select interface
+- Camera motion tab (17 motion types)
+- Special effects tab (11 effect types)
+- Audio cleanup on modal close
+
+#### UI & Utilities
+
+**ui/theme.js** (Theme Management)
+- Dark/Light theme toggle
+- LocalStorage persistence
+- Theme initialization
 
 **settings.js** (Configuration)
-- Application settings object management
-- Max sprites per character configuration (1-100)
-- LocalStorage persistence for settings
+- Application settings management
+- Max sprites per character (1-100)
 - Settings modal UI
 
-**utils.js** (Helpers)
+**utils.js** (Common Utilities)
 - Loading overlay display
-- File to data URL conversion for previews
+- File to data URL conversion
 - Directory display rendering
-- Theme toggle and initialization
-- Common utility functions
+- Common helper functions
 
 **styles.css** (Presentation)
-- CSS custom properties for light/dark themes
-- Responsive grid layouts for cast display
-- Optimized overflow handling and scrolling containers
-- Body/main layout with proper height constraints
-- Grid auto-row sizing for content-based heights
+- CSS custom properties for theming
+- Responsive grid layouts
 - Modal styling with animations
-- Character type visual distinction (student/headmaster)
-- Custom scrollbar and form styling
-- 🆕 Script editor layout and line styling
-- 🆕 Arrow button styling with hover/active states
-- 🆕 Drop zone gap styling (invisible by default, visible on hover)
-- 🆕 Pulsing highlight line animation for drop targets
-- 🆕 Drag-and-drop visual states (dragging, selected)
-- 🆕 Ghost element preview styling
-- 🆕 Smooth reordering animations (300ms transitions)
+- Script editor layout and line styling
+- Minigame editor styles (Logic Dive, Debate Scrum, Mass Panic)
+- Drag-and-drop visual states
+- Custom scrollbar styling
+
+### Modular Architecture Benefits
+
+The codebase has been refactored into a highly modular architecture for improved maintainability and scalability:
+
+#### Code Organization Improvements
+- **Minigame Modules**: Reduced from single 2397-line file to 6 focused modules (245-line coordinator + 5 type-specific editors)
+- **Modal Modules**: Split 1747-line modal.js into 4 specialized components (30-line coordinator + 3 modal types)
+- **Total Refactoring**: ~4000 lines reorganized into 12 logical, single-responsibility modules
+
+#### Key Benefits
+1. **Maintainability**: Each module focuses on a single minigame type or modal, making bugs easier to locate and fix
+2. **Scalability**: Adding new minigame types only requires creating a new editor file and registering it in the coordinator
+3. **Readability**: Individual files are manageable in size (35-520 lines vs. 2397 lines)
+4. **Collaboration**: Multiple developers can work on different minigame types without merge conflicts
+5. **Testing**: Isolated modules are easier to test individually
+6. **Load Performance**: Browser can parse smaller files more efficiently
+
+#### Module Pattern
+The architecture uses a **coordinator pattern**:
+- Lightweight coordinator files handle common functionality and delegation
+- Specialized modules handle type-specific logic
+- Shared state managed through core/state.js
+- Clean separation of concerns between rendering, data management, and file I/O
+
+#### Backup Files
+Original monolithic files are preserved for reference:
+- `web-ui-editor/js/views/minigameView-old.js` (original 2397 lines)
+- `web-ui-editor/js/modal-old.js` (original 1747 lines)
 
 ---
 
@@ -639,6 +934,8 @@ You can choose any folder on your system when prompted by the "Choose Folder" di
 - [x] Student/Headmaster type support
 - [x] Dark/Light theme system
 - [x] Settings configuration
+- [x] Lazy loading sprite optimization (~90% memory reduction)
+- [x] CLI tool for batch character creation 🆕
 - [ ] Character deletion functionality
 - [ ] Character reordering/swapping
 - [ ] Export/Import trial packages

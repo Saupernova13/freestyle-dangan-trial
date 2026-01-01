@@ -16,6 +16,9 @@ function initFloatingAddButton() {
 function updateFloatingAddButton() {
   if (!floatingButton) initFloatingAddButton();
 
+  // Hide button immediately to prevent flash/overlay during view switch
+  floatingButton.style.display = 'none';
+
   // Determine which button to show based on activeView
   let buttonConfig = null;
 

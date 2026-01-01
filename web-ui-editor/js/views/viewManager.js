@@ -4,6 +4,7 @@ function switchView(viewName) {
   activeView = viewName;
   updateNavSelection();
   renderActiveView();
+  updateFloatingAddButton();  // Update floating button for new view
 }
 
 function updateNavSelection() {

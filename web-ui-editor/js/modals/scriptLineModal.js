@@ -43,7 +43,7 @@ function getAvailableTabs(line) {
   return [];
 }
 
-function openScriptLineModal(lineId) {
+async function openScriptLineModal(lineId) {
   if (!dirHandle) {
     alert("Choose a folder first!");
     return;
@@ -58,6 +58,20 @@ function openScriptLineModal(lineId) {
   if (!line) {
     alert("Script line not found!");
     return;
+  }
+
+  // Load remaining sprites for the character if speaking line
+  if (line.type === 'speaking') {
+    const character = cast.find(c => c && c.id === line.characterId);
+    if (character && character.id && character._folderHandle) {
+      // Check if sprites need to be loaded
+      if (!character.sprites || character.sprites.length < appSettings.maxSprites) {
+        showLoader(true);
+        const charIndex = cast.indexOf(character);
+        await loadRemainingSprites(charIndex);
+        showLoader(false);
+      }
+    }
   }
 
   // Set initial tab based on line type

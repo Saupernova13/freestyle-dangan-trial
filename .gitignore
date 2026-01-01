@@ -20,3 +20,6 @@ mono_crash.*.json
 *.tscn
 /.claude
 /cli
+/freestyle-dangan-trial/.stfolder
+/freestyle-dangan-trial/godotgif/bin
+/freestyle-dangan-trial/godotgif

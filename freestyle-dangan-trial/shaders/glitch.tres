@@ -1,0 +1,8 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://ml5s4h4qhuue"]
+
+[ext_resource type="Shader" uid="uid://fosgw32swvad" path="res://shaders/glitch.gdshader" id="1_brt1c"]
+
+[resource]
+shader = ExtResource("1_brt1c")
+shader_parameter/speed = 0.999999977648
+shader_parameter/intensity = 0.249999994412

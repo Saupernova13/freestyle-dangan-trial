@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://dx10hxw738ooi"]
+
+[ext_resource type="Shader" uid="uid://dcvvh4udxxenc" path="res://shaders/button_pulse_fade.gdshader" id="1_5ld5j"]
+
+[resource]
+shader = ExtResource("1_5ld5j")
+shader_parameter/fade_speed = 5.0
+shader_parameter/min_opacity = 0.400000019
+shader_parameter/max_opacity = 1.0

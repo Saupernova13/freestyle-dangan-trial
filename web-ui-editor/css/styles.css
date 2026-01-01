@@ -2418,7 +2418,9 @@ nav {
 }
 
 .minigame-card-body {
+  position: relative; /* For absolute positioning of floating buttons */
   padding: 0 1.25rem 1.25rem 1.25rem;
+  padding-bottom: 5rem; /* Extra space for floating button */
   border-top: 1px solid var(--border-primary);
   background: var(--bg-primary);
 }
@@ -3101,4 +3103,42 @@ nav {
 .floating-add-btn-text {
   font-weight: 600;
   font-size: 1rem;
+}
+
+/* ==================== Minigame-Specific Floating Buttons ==================== */
+/* These buttons appear within expanded minigame cards (absolute positioning) */
+.minigame-floating-btn {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.minigame-floating-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  background: var(--primary-dark);
+}
+
+.minigame-floating-btn:active {
+  transform: translateY(0);
+}
+
+.minigame-floating-btn-text {
+  font-size: 0.875rem;
+  font-weight: 600;
 }

@@ -24,12 +24,6 @@ function renderDebateScumEditor(mg) {
     <div class="minigame-editor-section">
       <h3>Debate Arguments (${args.length}/8)</h3>
       <p class="help-text">Create paired opposition and defense statements.</p>
-
-      <button class="btn btn-primary"
-              onclick="addDebateScumArgument('${mg.gameId}')"
-              ${args.length >= 8 ? 'disabled' : ''}>
-        ➕ Add Argument
-      </button>
   `;
 
   if (args.length === 0) {
@@ -43,6 +37,18 @@ function renderDebateScumEditor(mg) {
   }
 
   html += `</div>`;
+
+  // Add floating button for arguments (only if under max limit)
+  if (args.length < 8) {
+    html += `
+      <button class="minigame-floating-btn"
+              onclick="addDebateScumArgument('${mg.gameId}')"
+              title="Add Argument">
+        ➕ <span class="minigame-floating-btn-text">Add Argument</span>
+      </button>
+    `;
+  }
+
   return html;
 }
 

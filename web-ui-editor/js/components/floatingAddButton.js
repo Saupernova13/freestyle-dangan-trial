@@ -24,7 +24,7 @@ function updateFloatingAddButton() {
       buttonConfig = {
         text: 'Add Line',
         onclick: () => addScriptLine(),
-        show: scriptLines.length > 5  // Only show if list is long
+        show: scriptLines.length > 0  // Show when not empty
       };
       break;
 
@@ -32,15 +32,15 @@ function updateFloatingAddButton() {
       buttonConfig = {
         text: 'Add Bullet',
         onclick: () => addTruthBullet(),
-        show: truthBullets.length > 3
+        show: truthBullets.length > 0  // Show when not empty
       };
       break;
 
     case 'minigames':
-      // For minigames, always show but hide in implementation
-      // Will be enhanced later for specific minigame types
       buttonConfig = {
-        show: false  // Disabled for now, can be enhanced later
+        text: 'Create Minigame',
+        onclick: () => addMinigame(),
+        show: minigames.length > 0  // Show when not empty
       };
       break;
 

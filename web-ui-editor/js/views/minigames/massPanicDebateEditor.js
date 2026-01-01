@@ -66,12 +66,6 @@ function renderMassPanicDebateEditor(mg) {
         </div>
       </div>
 
-      <div class="mass-panic-controls">
-        <button class="btn btn-primary" onclick="addMassPanicLineGroup('${mg.gameId}')">
-          ➕ Add Line Group (All 3 Speakers)
-        </button>
-      </div>
-
       <div class="mass-panic-line-groups">
         ${lineGroups.length === 0 ? `
           <div class="empty-state">
@@ -81,6 +75,13 @@ function renderMassPanicDebateEditor(mg) {
           renderMassPanicLineGroup(mg.gameId, group, index)
         ).join('')}
       </div>
+
+      <!-- Floating button for line groups -->
+      <button class="minigame-floating-btn"
+              onclick="addMassPanicLineGroup('${mg.gameId}')"
+              title="Add Line Group (All 3 Speakers)">
+        ➕ <span class="minigame-floating-btn-text">Add Line Group</span>
+      </button>
     </div>
   `;
 }

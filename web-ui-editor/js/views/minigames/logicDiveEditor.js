@@ -22,11 +22,6 @@ function renderLogicDiveEditor(mg) {
       <h3>Logic Dive Questions</h3>
       <p class="section-description">Create questions with 3-5 multiple choice answers.</p>
 
-      <button class="btn btn-primary logic-dive-add-btn"
-              onclick="addLogicDiveQuestion('${mg.gameId}')">
-        ➕ Add Question
-      </button>
-
       <div class="logic-dive-questions-container">
         ${questions.length === 0 ? `
           <div class="empty-state">
@@ -34,6 +29,13 @@ function renderLogicDiveEditor(mg) {
           </div>
         ` : renderLogicDiveQuestions(mg.gameId, questions)}
       </div>
+
+      <!-- Floating button for questions -->
+      <button class="minigame-floating-btn"
+              onclick="addLogicDiveQuestion('${mg.gameId}')"
+              title="Add Question">
+        ➕ <span class="minigame-floating-btn-text">Add Question</span>
+      </button>
     </div>
   `;
 

@@ -26,7 +26,6 @@ function renderMinigameDetails() {
       <div id="minigameDetailsContainer">
         <div class="script-header">
           <h2>Minigame Instances</h2>
-          <button class="btn btn-primary" onclick="addMinigame()">➕ Create Minigame</button>
         </div>
         <div class="minigame-cards-container">
           ${minigamesHtml}

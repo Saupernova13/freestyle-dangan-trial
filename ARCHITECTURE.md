@@ -847,12 +847,6 @@ Each module can be tested in isolation:
 - HTML structure unchanged (same IDs, classes)
 - Onclick handlers unchanged (function names in global scope)
 
-**Backup Files**:
-- `minigameView-old.js`: Original monolithic minigame file
-- `modal-old.js`: Original monolithic modal file
-
-These can be deleted once modular approach is verified stable.
-
 ## Conclusion
 
 This modular architecture provides:

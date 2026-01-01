@@ -906,11 +906,6 @@ The architecture uses a **coordinator pattern**:
 - Shared state managed through core/state.js
 - Clean separation of concerns between rendering, data management, and file I/O
 
-#### Backup Files
-Original monolithic files are preserved for reference:
-- `web-ui-editor/js/views/minigameView-old.js` (original 2397 lines)
-- `web-ui-editor/js/modal-old.js` (original 1747 lines)
-
 ---
 
 ## Default Trial Storage Location

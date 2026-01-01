@@ -62,7 +62,6 @@ function renderScriptEditor() {
       <div id="scriptEditorContainer">
         <div class="script-header">
           <h2>Trial Script</h2>
-          <button class="btn btn-primary" onclick="addScriptLine()">➕ Add Line</button>
         </div>
         <div class="script-lines-container">
           ${linesHtml}

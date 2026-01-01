@@ -56,10 +56,6 @@ function renderNonstopDebateEditor(mg) {
   html += `
     <div class="minigame-editor-section">
       <h3>Debate Dialogue Lines (${dialogueLines.length}/30)</h3>
-      <button class="btn btn-primary debate-dialogue-add-btn" onclick="addDialogueLine('${mg.gameId}')"
-              ${dialogueLines.length >= 30 ? 'disabled' : ''}>
-        ➕ Add Dialogue Line
-      </button>
   `;
 
   if (dialogueLines.length === 0) {
@@ -94,6 +90,17 @@ function renderNonstopDebateEditor(mg) {
   }
 
   html += `</div>`;
+
+  // Add floating button for dialogue lines (only if under max limit)
+  if (dialogueLines.length < 30) {
+    html += `
+      <button class="minigame-floating-btn"
+              onclick="addDialogueLine('${mg.gameId}')"
+              title="Add Dialogue Line">
+        ➕ <span class="minigame-floating-btn-text">Add Dialogue Line</span>
+      </button>
+    `;
+  }
 
   return html;
 }

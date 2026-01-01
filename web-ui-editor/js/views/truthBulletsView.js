@@ -47,7 +47,6 @@ function renderTruthBulletsView() {
     <div id="truthBulletsContainer" class="truth-bullets-split-view">
       <div class="script-header">
         <h2>Truth Bullets</h2>
-        <button class="btn btn-primary" onclick="addTruthBullet()">➕ Add Truth Bullet</button>
       </div>
       <div class="truth-bullets-content">
         <!-- LEFT: Bullet List -->

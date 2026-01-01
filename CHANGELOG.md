@@ -22,9 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Guide for adding new features
   - Dependency graph and load order
   - File system structure documentation
-- **Backup Files**: Preserved original monolithic files
-  - `minigameView-old.js` (2397 lines original)
-  - `modal-old.js` (1747 lines original)
 
 #### Changed
 - **Minigame System**: Refactored from 2397-line monolith to modular system

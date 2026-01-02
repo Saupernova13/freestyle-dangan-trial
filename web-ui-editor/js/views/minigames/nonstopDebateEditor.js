@@ -7,6 +7,24 @@ const dialogueAudioPlayers = {};
 // Drag state for dialogue lines
 let draggedDialogueLineId = null;
 
+// Collapsible sections state
+// Track which dialogue lines have expanded sections
+const expandedSections = {
+  // lineId: { textStyling: false, characterDisplay: false, feedback: false }
+};
+
+function toggleSection(lineId, sectionName) {
+  if (!expandedSections[lineId]) {
+    expandedSections[lineId] = {};
+  }
+  expandedSections[lineId][sectionName] = !expandedSections[lineId][sectionName];
+  renderMinigameDetails();
+}
+
+function isSectionExpanded(lineId, sectionName) {
+  return expandedSections[lineId]?.[sectionName] || false;
+}
+
 // ==================== Main Rendering ====================
 
 function renderNonstopDebateEditor(mg) {
@@ -127,6 +145,18 @@ function renderDialogueLineEditor(gameId, line, index) {
       </div>
 
       <div class="dialogue-line-body">
+        <!-- 1. CHARACTER (moved to top) -->
+        <div class="form-group">
+          <label>Character</label>
+          <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'characterId', this.value)">
+            <option value="">None</option>
+            ${cast.filter(c => c).map(c => `
+              <option value="${c.id}" ${line.characterId === c.id ? 'selected' : ''}>${c.name} ${c.surname}</option>
+            `).join('')}
+          </select>
+        </div>
+
+        <!-- 2. SENTENCE STRUCTURE -->
         <div class="form-group">
           <label>Sentence Structure</label>
           <div class="sentence-structure">
@@ -148,6 +178,7 @@ function renderDialogueLineEditor(gameId, line, index) {
           </div>
         </div>
 
+        <!-- 3. CORRECT ANSWER BULLET -->
         <div class="form-row">
           <div class="form-group">
             <label>Correct Answer Bullet</label>
@@ -174,121 +205,150 @@ function renderDialogueLineEditor(gameId, line, index) {
           ` : ''}
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Text Effect</label>
-            <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textEffect', this.value)">
-              <option value="normal" ${line.textEffect === 'normal' ? 'selected' : ''}>Normal</option>
-              <option value="shake" ${line.textEffect === 'shake' ? 'selected' : ''}>Shake</option>
-              <option value="fade" ${line.textEffect === 'fade' ? 'selected' : ''}>Fade</option>
-              <option value="glow" ${line.textEffect === 'glow' ? 'selected' : ''}>Glow</option>
-            </select>
-          </div>
+        <!-- 4. VOICE LINE AUDIO (moved up) -->
+        <div class="form-group">
+          <label>Voice Line Audio</label>
+          ${line.voiceLineFile ? `
+            <div class="audio-preview">
+              <div class="audio-info">
+                <span class="audio-icon">🎵</span>
+                <span class="audio-filename">${line.voiceLineFile}</span>
+              </div>
 
-          <div class="form-group">
-            <label>Text Font</label>
-            <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textFont', this.value)">
-              <option value="default" ${line.textFont === 'default' ? 'selected' : ''}>Default</option>
-              <option value="bold" ${line.textFont === 'bold' ? 'selected' : ''}>Bold</option>
-              <option value="italic" ${line.textFont === 'italic' ? 'selected' : ''}>Italic</option>
-              <option value="handwritten" ${line.textFont === 'handwritten' ? 'selected' : ''}>Handwritten</option>
-              <option value="glitch" ${line.textFont === 'glitch' ? 'selected' : ''}>Glitch</option>
-            </select>
-          </div>
+              <div class="audio-seek-container">
+                <span class="audio-time-current" id="dialogue-audio-time-current-${line.lineId}">0:00</span>
+                <input type="range"
+                       class="audio-seek-bar"
+                       id="dialogue-audio-seek-bar-${line.lineId}"
+                       min="0"
+                       max="100"
+                       value="0"
+                       oninput="seekDialogueAudio('${gameId}', '${line.lineId}', this.value)">
+                <span class="audio-time-total" id="dialogue-audio-time-total-${line.lineId}">0:00</span>
+              </div>
 
-          <div class="form-group">
-            <label>Movement Direction</label>
-            <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textMovementDirection', this.value)">
-              <option value="left_to_right" ${line.textMovementDirection === 'left_to_right' ? 'selected' : ''}>Left to Right</option>
-              <option value="right_to_left" ${line.textMovementDirection === 'right_to_left' ? 'selected' : ''}>Right to Left</option>
-            </select>
-          </div>
+              <div class="audio-controls">
+                <button class="btn btn-secondary"
+                        id="dialogue-play-btn-${line.lineId}"
+                        onclick="playDialogueAudioPreview('${gameId}', '${line.lineId}')">
+                  ▶️ Play
+                </button>
+                <button class="btn btn-secondary"
+                        onclick="clearDialogueVoiceLine('${gameId}', '${line.lineId}')">
+                  🗑️ Remove
+                </button>
+              </div>
+            </div>
+          ` : `
+            <div class="audio-empty">
+              <p>No audio file uploaded</p>
+            </div>
+            <input type="file"
+                   accept="audio/*"
+                   onchange="handleDialogueVoiceUpload('${gameId}', '${line.lineId}', event)">
+          `}
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Character</label>
-            <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'characterId', this.value)">
-              <option value="">None</option>
-              ${cast.filter(c => c).map(c => `
-                <option value="${c.id}" ${line.characterId === c.id ? 'selected' : ''}>${c.name} ${c.surname}</option>
-              `).join('')}
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>
-              <input type="checkbox"
-                     ${line.characterSpotlight ? 'checked' : ''}
-                     onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'characterSpotlight', this.checked)">
-              Enable Character Spotlight
-            </label>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>User Failed Comment</label>
-            <input type="text"
-                   class="form-input"
-                   value="${line.userFailedComment || ''}"
-                   onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'userFailedComment', this.value)"
-                   placeholder="Message when user fails">
-          </div>
-
-          <div class="form-group">
-            <label>Wrong Answer Comment</label>
-            <input type="text"
-                   class="form-input"
-                   value="${line.userWrongAnswerComment || ''}"
-                   onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'userWrongAnswerComment', this.value)"
-                   placeholder="Message when user shoots wrong target">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Voice Line Audio</label>
-            ${line.voiceLineFile ? `
-              <div class="audio-preview">
-                <div class="audio-info">
-                  <span class="audio-icon">🎵</span>
-                  <span class="audio-filename">${line.voiceLineFile}</span>
+        <!-- 5. COLLAPSIBLE: Advanced Text Styling -->
+        <div class="collapsible-section">
+          <button type="button"
+                  class="collapsible-header ${isSectionExpanded(line.lineId, 'textStyling') ? 'expanded' : ''}"
+                  onclick="toggleSection('${line.lineId}', 'textStyling')">
+            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'textStyling') ? '▼' : '▶'}</span>
+            <span class="collapsible-title">Advanced Text Styling</span>
+            <span class="collapsible-badge">Optional</span>
+          </button>
+          ${isSectionExpanded(line.lineId, 'textStyling') ? `
+            <div class="collapsible-content">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Text Effect</label>
+                  <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textEffect', this.value)">
+                    <option value="normal" ${line.textEffect === 'normal' ? 'selected' : ''}>Normal</option>
+                    <option value="shake" ${line.textEffect === 'shake' ? 'selected' : ''}>Shake</option>
+                    <option value="fade" ${line.textEffect === 'fade' ? 'selected' : ''}>Fade</option>
+                    <option value="glow" ${line.textEffect === 'glow' ? 'selected' : ''}>Glow</option>
+                  </select>
                 </div>
 
-                <div class="audio-seek-container">
-                  <span class="audio-time-current" id="dialogue-audio-time-current-${line.lineId}">0:00</span>
-                  <input type="range"
-                         class="audio-seek-bar"
-                         id="dialogue-audio-seek-bar-${line.lineId}"
-                         min="0"
-                         max="100"
-                         value="0"
-                         oninput="seekDialogueAudio('${gameId}', '${line.lineId}', this.value)">
-                  <span class="audio-time-total" id="dialogue-audio-time-total-${line.lineId}">0:00</span>
+                <div class="form-group">
+                  <label>Text Font</label>
+                  <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textFont', this.value)">
+                    <option value="default" ${line.textFont === 'default' ? 'selected' : ''}>Default</option>
+                    <option value="bold" ${line.textFont === 'bold' ? 'selected' : ''}>Bold</option>
+                    <option value="italic" ${line.textFont === 'italic' ? 'selected' : ''}>Italic</option>
+                    <option value="handwritten" ${line.textFont === 'handwritten' ? 'selected' : ''}>Handwritten</option>
+                    <option value="glitch" ${line.textFont === 'glitch' ? 'selected' : ''}>Glitch</option>
+                  </select>
                 </div>
 
-                <div class="audio-controls">
-                  <button class="btn btn-secondary"
-                          id="dialogue-play-btn-${line.lineId}"
-                          onclick="playDialogueAudioPreview('${gameId}', '${line.lineId}')">
-                    ▶️ Play
-                  </button>
-                  <button class="btn btn-secondary"
-                          onclick="clearDialogueVoiceLine('${gameId}', '${line.lineId}')">
-                    🗑️ Remove
-                  </button>
+                <div class="form-group">
+                  <label>Movement Direction</label>
+                  <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textMovementDirection', this.value)">
+                    <option value="left_to_right" ${line.textMovementDirection === 'left_to_right' ? 'selected' : ''}>Left to Right</option>
+                    <option value="right_to_left" ${line.textMovementDirection === 'right_to_left' ? 'selected' : ''}>Right to Left</option>
+                  </select>
                 </div>
               </div>
-            ` : `
-              <div class="audio-empty">
-                <p>No audio file uploaded</p>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- 6. COLLAPSIBLE: Character Display -->
+        <div class="collapsible-section">
+          <button type="button"
+                  class="collapsible-header ${isSectionExpanded(line.lineId, 'characterDisplay') ? 'expanded' : ''}"
+                  onclick="toggleSection('${line.lineId}', 'characterDisplay')">
+            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'characterDisplay') ? '▼' : '▶'}</span>
+            <span class="collapsible-title">Character Display</span>
+            <span class="collapsible-badge">Optional</span>
+          </button>
+          ${isSectionExpanded(line.lineId, 'characterDisplay') ? `
+            <div class="collapsible-content">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox"
+                         ${line.characterSpotlight ? 'checked' : ''}
+                         onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'characterSpotlight', this.checked)">
+                  Enable Character Spotlight
+                </label>
               </div>
-              <input type="file"
-                     accept="audio/*"
-                     onchange="handleDialogueVoiceUpload('${gameId}', '${line.lineId}', event)">
-            `}
-          </div>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- 7. COLLAPSIBLE: User Feedback Messages -->
+        <div class="collapsible-section">
+          <button type="button"
+                  class="collapsible-header ${isSectionExpanded(line.lineId, 'feedback') ? 'expanded' : ''}"
+                  onclick="toggleSection('${line.lineId}', 'feedback')">
+            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'feedback') ? '▼' : '▶'}</span>
+            <span class="collapsible-title">User Feedback Messages</span>
+            <span class="collapsible-badge">Optional</span>
+          </button>
+          ${isSectionExpanded(line.lineId, 'feedback') ? `
+            <div class="collapsible-content">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>User Failed Comment</label>
+                  <input type="text"
+                         class="form-input"
+                         value="${line.userFailedComment || ''}"
+                         onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'userFailedComment', this.value)"
+                         placeholder="Message when user fails">
+                </div>
+
+                <div class="form-group">
+                  <label>Wrong Answer Comment</label>
+                  <input type="text"
+                         class="form-input"
+                         value="${line.userWrongAnswerComment || ''}"
+                         onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'userWrongAnswerComment', this.value)"
+                         placeholder="Message when user shoots wrong target">
+                </div>
+              </div>
+            </div>
+          ` : ''}
         </div>
       </div>
     </div>

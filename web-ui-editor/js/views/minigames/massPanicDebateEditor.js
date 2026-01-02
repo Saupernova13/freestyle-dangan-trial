@@ -34,33 +34,51 @@ function renderMassPanicDebateEditor(mg) {
             <label>Speaker 1 Character</label>
             <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker1CharacterId', this.value)">
               <option value="">None</option>
-              ${cast.filter(c => c).map(c => `
-                <option value="${c.id}" ${mg.typeSpecific.speaker1CharacterId === c.id ? 'selected' : ''}>
-                  ${c.name} ${c.surname}
-                </option>
-              `).join('')}
+              ${cast.filter(c => c).map(c => {
+                const isDisabled = mg.typeSpecific.speaker2CharacterId === c.id ||
+                                  mg.typeSpecific.speaker3CharacterId === c.id;
+                return `
+                  <option value="${c.id}"
+                          ${mg.typeSpecific.speaker1CharacterId === c.id ? 'selected' : ''}
+                          ${isDisabled ? 'disabled' : ''}>
+                    ${c.name} ${c.surname}${isDisabled ? ' (already selected)' : ''}
+                  </option>
+                `;
+              }).join('')}
             </select>
           </div>
           <div class="form-group">
             <label>Speaker 2 Character</label>
             <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker2CharacterId', this.value)">
               <option value="">None</option>
-              ${cast.filter(c => c).map(c => `
-                <option value="${c.id}" ${mg.typeSpecific.speaker2CharacterId === c.id ? 'selected' : ''}>
-                  ${c.name} ${c.surname}
-                </option>
-              `).join('')}
+              ${cast.filter(c => c).map(c => {
+                const isDisabled = mg.typeSpecific.speaker1CharacterId === c.id ||
+                                  mg.typeSpecific.speaker3CharacterId === c.id;
+                return `
+                  <option value="${c.id}"
+                          ${mg.typeSpecific.speaker2CharacterId === c.id ? 'selected' : ''}
+                          ${isDisabled ? 'disabled' : ''}>
+                    ${c.name} ${c.surname}${isDisabled ? ' (already selected)' : ''}
+                  </option>
+                `;
+              }).join('')}
             </select>
           </div>
           <div class="form-group">
             <label>Speaker 3 Character</label>
             <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker3CharacterId', this.value)">
               <option value="">None</option>
-              ${cast.filter(c => c).map(c => `
-                <option value="${c.id}" ${mg.typeSpecific.speaker3CharacterId === c.id ? 'selected' : ''}>
-                  ${c.name} ${c.surname}
-                </option>
-              `).join('')}
+              ${cast.filter(c => c).map(c => {
+                const isDisabled = mg.typeSpecific.speaker1CharacterId === c.id ||
+                                  mg.typeSpecific.speaker2CharacterId === c.id;
+                return `
+                  <option value="${c.id}"
+                          ${mg.typeSpecific.speaker3CharacterId === c.id ? 'selected' : ''}
+                          ${isDisabled ? 'disabled' : ''}>
+                    ${c.name} ${c.surname}${isDisabled ? ' (already selected)' : ''}
+                  </option>
+                `;
+              }).join('')}
             </select>
           </div>
         </div>
@@ -107,10 +125,24 @@ function renderMassPanicLineGroup(gameId, group, groupIndex) {
 }
 
 function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, color, label) {
+  // Get character ID for this speaker
+  const mg = minigames.find(m => m.gameId === gameId);
+  const speakerCharIdField = `speaker${speakerIndex + 1}CharacterId`;
+  const speakerCharId = mg?.typeSpecific?.[speakerCharIdField];
+
+  // Build enhanced label with character name
+  let enhancedLabel = label;
+  if (speakerCharId) {
+    const character = cast.find(c => c && c.id === speakerCharId);
+    if (character) {
+      enhancedLabel = `${label} [${character.name} ${character.surname}]`;
+    }
+  }
+
   return `
     <div class="mass-panic-speaker-line" style="border-left: 4px solid ${color};">
       <div class="speaker-line-header">
-        <h5>${label}</h5>
+        <h5>${enhancedLabel}</h5>
         ${line.isLoudAssertion ? '<span class="badge badge-loud">📢 LOUD</span>' : ''}
       </div>
 
@@ -230,11 +262,42 @@ function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, colo
 
 // ==================== Line Group Management ====================
 
+function validateSpeakerSelection(gameId, speakerField, selectedCharacterId) {
+  const mg = minigames.find(m => m.gameId === gameId);
+  if (!mg || !mg.typeSpecific) return true;
+
+  // Check if this character is already selected in another speaker slot
+  const otherSpeakers = ['speaker1CharacterId', 'speaker2CharacterId', 'speaker3CharacterId']
+    .filter(field => field !== speakerField);
+
+  const isDuplicate = otherSpeakers.some(field =>
+    mg.typeSpecific[field] === selectedCharacterId && selectedCharacterId !== ""
+  );
+
+  if (isDuplicate) {
+    const character = cast.find(c => c && c.id === selectedCharacterId);
+    const characterName = character ? `${character.name} ${character.surname}` : 'This character';
+    alert(`${characterName} is already selected for another speaker. Please choose a different character.`);
+    return false;
+  }
+
+  return true;
+}
+
 function updateMassPanicField(gameId, field, value) {
   const mg = minigames.find(m => m.gameId === gameId);
   if (!mg || !mg.typeSpecific) return;
 
+  // Validate speaker selection if it's a character field
+  if (field.includes('CharacterId')) {
+    if (!validateSpeakerSelection(gameId, field, value)) {
+      renderMinigameDetails(); // Reset to previous value
+      return;
+    }
+  }
+
   mg.typeSpecific[field] = value;
+  renderMinigameDetails(); // Re-render to update labels
   autoSaveTrial();
 }
 

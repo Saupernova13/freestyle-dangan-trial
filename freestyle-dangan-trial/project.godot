@@ -13,12 +13,15 @@ config_version=5
 config/name="freestyle-dangan-trial"
 run/main_scene="uid://cf6h777ockpp2"
 config/features=PackedStringArray("4.5", "Mobile")
+run/max_fps=1000
 config/icon="res://icon.svg"
 
 [display]
 
-window/size/viewport_width=1280
-window/size/viewport_height=720
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/mode=2
+window/vsync/vsync_mode=0
 
 [dotnet]
 
@@ -30,7 +33,7 @@ import_gif_to_animated_texture={}
 
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=4
 lights_and_shadows/positional_shadow/soft_shadow_filter_quality=4

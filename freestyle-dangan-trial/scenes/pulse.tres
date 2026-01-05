@@ -5,5 +5,5 @@
 [resource]
 shader = ExtResource("1_5ld5j")
 shader_parameter/fade_speed = 5.0
-shader_parameter/min_opacity = 0.400000019
+shader_parameter/min_opacity = 0.4
 shader_parameter/max_opacity = 1.0

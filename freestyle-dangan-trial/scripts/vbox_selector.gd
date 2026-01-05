@@ -46,3 +46,7 @@ func apply_shader_to_button(index: int) -> void:
 
 func remove_shader_from_button(index: int) -> void:
 	buttons[index].material = null
+
+
+func _on_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/thh_trial_room_1.tscn")

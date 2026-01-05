@@ -20,7 +20,7 @@ function renderLogicDiveEditor(mg) {
   let html = `
     <div class="minigame-editor-section logic-dive-section">
       <h3>Logic Dive Questions</h3>
-      <p class="section-description">Create questions with 3-5 multiple choice answers.</p>
+      <p class="section-description">Create questions with 3-5 multiple choice answers. Select an answer in green to mark it as the correct answer.</p>
 
       <div class="logic-dive-questions-container">
         ${questions.length === 0 ? `

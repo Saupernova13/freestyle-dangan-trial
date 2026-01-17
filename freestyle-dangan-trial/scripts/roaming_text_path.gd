@@ -1,0 +1,215 @@
+extends Path2D
+## Dynamic roaming text that follows an oval path around the viewport
+##
+## This script creates an oval path that adapts to window size, loads text from a JSON file,
+## and animates individual characters along the curve. All characters are created as
+## PathFollow2D nodes with Label children.
+
+## Path to the JSON file containing configuration paths (paths.json)
+@export_file("*.json") var paths_config_file: String = "res://paths.json"
+
+## Spacing between characters as a percentage of the total path length (0.0 to 1.0)
+## Lower values bring letters closer together
+@export_range(0.001, 0.2, 0.001) var character_spacing: float = 0.015
+
+## Enable or disable the animation of text moving along the path
+@export var animate: bool = true
+
+## Duration in seconds for one complete loop around the path
+@export_range(1.0, 60.0, 0.1) var animation_speed: float = 5.0
+
+## Horizontal padding from the left and right edges of the viewport
+@export_range(0.0, 500.0, 1.0) var padding_x: float = 50.0
+
+## Vertical padding from the top and bottom edges of the viewport
+@export_range(0.0, 500.0, 1.0) var padding_y: float = 50.0
+
+## Font size for all character labels
+@export_range(8, 128, 1) var font_size: int = 32
+
+## Starting position on the path (0.0 = right, 0.25 = bottom, 0.5 = left, 0.75 = top)
+@export_range(0.0, 1.0, 0.01) var start_position: float = 0.25
+
+# Internal variables
+var character_nodes: Array[PathFollow2D] = []
+var tween: Tween
+var text_config_path: String = ""
+
+func _ready():
+	# Load the paths configuration to get the text config path
+	load_paths_config()
+
+	# Create the oval path
+	update_oval_path()
+
+	# Connect to viewport resize signal to update path dynamically
+	get_viewport().size_changed.connect(update_oval_path)
+
+	# Wait a frame for the curve to be set up
+	await get_tree().process_frame
+
+	# Generate the text characters
+	generate_curved_text()
+
+	# Start animation if enabled
+	if animate:
+		start_animation()
+
+## Loads the paths.json file to retrieve the text configuration path
+func load_paths_config():
+	var json_text = FileAccess.get_file_as_string(paths_config_file)
+	if json_text == null or json_text == "":
+		push_error("Failed to read paths config file: " + paths_config_file)
+		return
+
+	var json = JSON.new()
+	var parse_result = json.parse(json_text)
+
+	if parse_result != OK:
+		push_error("Failed to parse paths config file: " + paths_config_file)
+		return
+
+	var data = json.data
+	if data.has("text_config_path"):
+		text_config_path = data.text_config_path
+	else:
+		push_error("Paths config missing 'text_config_path' field")
+		# Fallback to default
+		text_config_path = "res://curved_text.json"
+
+## Creates or updates the oval path based on current viewport size
+## The path is created using bezier curves to form a smooth oval
+## Called on ready and whenever the viewport is resized
+func update_oval_path():
+	var viewport_size = get_viewport_rect().size
+	var center = viewport_size / 2
+	var radius_x = (viewport_size.x - padding_x * 2) / 2
+	var radius_y = (viewport_size.y - padding_y * 2) / 2
+
+	var new_curve = Curve2D.new()
+
+	# Magic number for circular bezier curves: 0.551915
+	# This creates smooth circular/oval arcs using cubic bezier curves
+	var handle_length = 0.551915
+
+	# Right point (0.0 on path)
+	new_curve.add_point(
+		Vector2(center.x + radius_x, center.y),
+		Vector2(0, -radius_y * handle_length),
+		Vector2(0, radius_y * handle_length)
+	)
+
+	# Bottom point (0.25 on path)
+	new_curve.add_point(
+		Vector2(center.x, center.y + radius_y),
+		Vector2(radius_x * handle_length, 0),
+		Vector2(-radius_x * handle_length, 0)
+	)
+
+	# Left point (0.5 on path)
+	new_curve.add_point(
+		Vector2(center.x - radius_x, center.y),
+		Vector2(0, radius_y * handle_length),
+		Vector2(0, -radius_y * handle_length)
+	)
+
+	# Top point (0.75 on path)
+	new_curve.add_point(
+		Vector2(center.x, center.y - radius_y),
+		Vector2(-radius_x * handle_length, 0),
+		Vector2(radius_x * handle_length, 0)
+	)
+
+	# Close the loop by returning to the right point
+	new_curve.add_point(
+		Vector2(center.x + radius_x, center.y),
+		Vector2(0, -radius_y * handle_length),
+		Vector2(0, radius_y * handle_length)
+	)
+
+	curve = new_curve
+
+## Generates PathFollow2D nodes for each character in the text
+## Loads text from the JSON file specified in paths.json
+## Creates a Label for each character and positions them along the path
+func generate_curved_text():
+	# Clear existing character nodes
+	for node in character_nodes:
+		node.queue_free()
+	character_nodes.clear()
+
+	# Load and parse text configuration JSON
+	if text_config_path == "":
+		push_error("Text config path not set. Check paths.json file.")
+		return
+
+	var json_text = FileAccess.get_file_as_string(text_config_path)
+	if json_text == null or json_text == "":
+		push_error("Failed to read JSON file: " + text_config_path)
+		return
+
+	var json = JSON.new()
+	var parse_result = json.parse(json_text)
+
+	if parse_result != OK:
+		push_error("Failed to parse JSON file: " + text_config_path)
+		return
+
+	var data = json.data
+	if not data.has("text"):
+		push_error("JSON file missing 'text' field")
+		return
+
+	var text: String = data.text
+	var char_count = text.length()
+
+	# Calculate starting position to center the text around the start_position
+	var total_width = char_count * character_spacing
+	var start_offset = start_position - (total_width / 2.0)
+
+	# Create a PathFollow2D and Label for each character
+	for i in range(char_count):
+		var char = text[i]
+
+		# Create PathFollow2D for this character
+		# This node will follow the path and position the label
+		var path_follow = PathFollow2D.new()
+		path_follow.rotates = true  # Rotate label to follow path tangent
+		path_follow.loop = false
+
+		# Create Label for the character
+		var label = Label.new()
+		label.text = char
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+		# Apply font size from export variable
+		label.add_theme_font_size_override("font_size", font_size)
+
+		# Build hierarchy - must add to scene tree BEFORE setting progress_ratio
+		path_follow.add_child(label)
+		add_child(path_follow)
+		character_nodes.append(path_follow)
+
+		# Set position along path (must be done AFTER adding to scene tree)
+		# wrapf ensures the value stays between 0.0 and 1.0
+		path_follow.progress_ratio = wrapf(start_offset + (i * character_spacing), 0.0, 1.0)
+
+## Starts the animation loop for all character nodes
+## All characters move together around the path, maintaining their spacing
+## The animation loops infinitely
+func start_animation():
+	# Kill any existing tween to prevent conflicts
+	if tween:
+		tween.kill()
+
+	# Create a new looping tween
+	tween = create_tween()
+	tween.set_loops()  # Loop forever
+
+	# Animate all characters together in parallel
+	# Each character maintains its relative position while moving along the path
+	for path_follow in character_nodes:
+		var start_progress = path_follow.progress_ratio
+		# parallel() allows multiple tweens to run simultaneously
+		tween.parallel().tween_property(path_follow, "progress_ratio", start_progress + 1.0, animation_speed).from(start_progress)

@@ -16,7 +16,7 @@ extends Path2D
 @export var animate: bool = true
 
 ## Duration in seconds for one complete loop around the path
-@export_range(1.0, 60.0, 0.1) var animation_speed: float = 5.0
+@export_range(1.0, 60.0, 0.1) var animation_speed: float = 20.0
 
 ## Padding from the left edge of the viewport (positive = inset, negative = expand beyond viewport)
 @export_range(-500.0, 500.0, 1.0) var padding_left: float = 185.0
@@ -25,7 +25,7 @@ extends Path2D
 @export_range(-500.0, 500.0, 1.0) var padding_right: float = 275.0
 
 ## Padding from the top edge of the viewport (positive = inset, negative = expand beyond viewport)
-@export_range(-500.0, 500.0, 1.0) var padding_top: float = -100.0
+@export_range(-500.0, 500.0, 1.0) var padding_top: float = -50.0
 
 ## Padding from the bottom edge of the viewport (positive = inset, negative = expand beyond viewport)
 @export_range(-500.0, 500.0, 1.0) var padding_bottom: float = -200.0
@@ -35,6 +35,9 @@ extends Path2D
 
 ## Starting position on the path (0.0 = right, 0.25 = bottom, 0.5 = left, 0.75 = top)
 @export_range(0.0, 1.0, 0.01) var start_position: float = 0.25
+
+## Z-index for rendering order (lower values render behind everything)
+@export_range(-1000, 1000, 1) var render_z_index: int = -1000
 
 ## Draw the path outline for visual debugging
 @export var draw_path: bool = false
@@ -51,6 +54,9 @@ var tween: Tween
 var text_config_path: String = ""
 
 func _ready():
+	# Set z-index to render on top of other elements
+	z_index = render_z_index
+
 	# Load the paths configuration to get the text config path
 	load_paths_config()
 
@@ -220,6 +226,9 @@ func generate_curved_text():
 		path_follow.add_child(label)
 		add_child(path_follow)
 		character_nodes.append(path_follow)
+
+		# Ensure labels also render on top
+		label.z_index = render_z_index
 
 		# Set position along path (must be done AFTER adding to scene tree)
 		# wrapf ensures the value stays between 0.0 and 1.0

@@ -18,17 +18,32 @@ extends Path2D
 ## Duration in seconds for one complete loop around the path
 @export_range(1.0, 60.0, 0.1) var animation_speed: float = 5.0
 
-## Horizontal padding from the left and right edges of the viewport
-@export_range(0.0, 500.0, 1.0) var padding_x: float = 50.0
+## Padding from the left edge of the viewport (positive = inset, negative = expand beyond viewport)
+@export_range(-500.0, 500.0, 1.0) var padding_left: float = 185.0
 
-## Vertical padding from the top and bottom edges of the viewport
-@export_range(0.0, 500.0, 1.0) var padding_y: float = 50.0
+## Padding from the right edge of the viewport (positive = inset, negative = expand beyond viewport)
+@export_range(-500.0, 500.0, 1.0) var padding_right: float = 275.0
+
+## Padding from the top edge of the viewport (positive = inset, negative = expand beyond viewport)
+@export_range(-500.0, 500.0, 1.0) var padding_top: float = -100.0
+
+## Padding from the bottom edge of the viewport (positive = inset, negative = expand beyond viewport)
+@export_range(-500.0, 500.0, 1.0) var padding_bottom: float = -200.0
 
 ## Font size for all character labels
 @export_range(8, 128, 1) var font_size: int = 32
 
 ## Starting position on the path (0.0 = right, 0.25 = bottom, 0.5 = left, 0.75 = top)
 @export_range(0.0, 1.0, 0.01) var start_position: float = 0.25
+
+## Draw the path outline for visual debugging
+@export var draw_path: bool = false
+
+## Color of the drawn path outline
+@export var path_color: Color = Color(1.0, 1.0, 1.0, 0.3)
+
+## Width of the drawn path outline in pixels
+@export_range(1.0, 10.0, 0.5) var path_width: float = 2.0
 
 # Internal variables
 var character_nodes: Array[PathFollow2D] = []
@@ -81,10 +96,22 @@ func load_paths_config():
 ## The path is created using bezier curves to form a smooth oval
 ## Called on ready and whenever the viewport is resized
 func update_oval_path():
+	# Ensure the Path2D is at origin so curve coordinates match viewport space
+	position = Vector2.ZERO
+
 	var viewport_size = get_viewport_rect().size
-	var center = viewport_size / 2
-	var radius_x = (viewport_size.x - padding_x * 2) / 2
-	var radius_y = (viewport_size.y - padding_y * 2) / 2
+
+	# Calculate the bounding box for the oval using individual padding values
+	var left_edge = padding_left
+	var right_edge = viewport_size.x - padding_right
+	var top_edge = padding_top
+	var bottom_edge = viewport_size.y - padding_bottom
+
+	# Calculate center and radii from the bounding box
+	var center_x = (left_edge + right_edge) / 2
+	var center_y = (top_edge + bottom_edge) / 2
+	var radius_x = (right_edge - left_edge) / 2
+	var radius_y = (bottom_edge - top_edge) / 2
 
 	var new_curve = Curve2D.new()
 
@@ -94,40 +121,43 @@ func update_oval_path():
 
 	# Right point (0.0 on path)
 	new_curve.add_point(
-		Vector2(center.x + radius_x, center.y),
+		Vector2(center_x + radius_x, center_y),
 		Vector2(0, -radius_y * handle_length),
 		Vector2(0, radius_y * handle_length)
 	)
 
 	# Bottom point (0.25 on path)
 	new_curve.add_point(
-		Vector2(center.x, center.y + radius_y),
+		Vector2(center_x, center_y + radius_y),
 		Vector2(radius_x * handle_length, 0),
 		Vector2(-radius_x * handle_length, 0)
 	)
 
 	# Left point (0.5 on path)
 	new_curve.add_point(
-		Vector2(center.x - radius_x, center.y),
+		Vector2(center_x - radius_x, center_y),
 		Vector2(0, radius_y * handle_length),
 		Vector2(0, -radius_y * handle_length)
 	)
 
 	# Top point (0.75 on path)
 	new_curve.add_point(
-		Vector2(center.x, center.y - radius_y),
+		Vector2(center_x, center_y - radius_y),
 		Vector2(-radius_x * handle_length, 0),
 		Vector2(radius_x * handle_length, 0)
 	)
 
 	# Close the loop by returning to the right point
 	new_curve.add_point(
-		Vector2(center.x + radius_x, center.y),
+		Vector2(center_x + radius_x, center_y),
 		Vector2(0, -radius_y * handle_length),
 		Vector2(0, radius_y * handle_length)
 	)
 
 	curve = new_curve
+
+	# Trigger redraw to show the new path
+	queue_redraw()
 
 ## Generates PathFollow2D nodes for each character in the text
 ## Loads text from the JSON file specified in paths.json
@@ -175,7 +205,7 @@ func generate_curved_text():
 		# This node will follow the path and position the label
 		var path_follow = PathFollow2D.new()
 		path_follow.rotates = true  # Rotate label to follow path tangent
-		path_follow.loop = false
+		path_follow.loop = true  # Enable looping so progress wraps smoothly
 
 		# Create Label for the character
 		var label = Label.new()
@@ -208,8 +238,27 @@ func start_animation():
 	tween.set_loops()  # Loop forever
 
 	# Animate all characters together in parallel
-	# Each character maintains its relative position while moving along the path
+	# Each character moves continuously, and PathFollow2D.loop handles wrapping
 	for path_follow in character_nodes:
 		var start_progress = path_follow.progress_ratio
-		# parallel() allows multiple tweens to run simultaneously
-		tween.parallel().tween_property(path_follow, "progress_ratio", start_progress + 1.0, animation_speed).from(start_progress)
+		# Animate from current position to one full loop ahead
+		# The loop property ensures smooth wrapping at 1.0 -> 0.0
+		tween.parallel().tween_property(path_follow, "progress_ratio", start_progress + 1.0, animation_speed)
+
+## Draws the path outline if draw_path is enabled
+## This provides a visual reference for the oval path the text follows
+func _draw():
+	if not draw_path or curve == null:
+		return
+
+	# Sample points along the curve to draw it
+	var points: PackedVector2Array = []
+	var sample_count = 100  # Number of points to sample for smooth curve
+
+	for i in range(sample_count + 1):
+		var offset = (float(i) / sample_count) * curve.get_baked_length()
+		points.append(curve.sample_baked(offset))
+
+	# Draw the path as a polyline
+	if points.size() > 1:
+		draw_polyline(points, path_color, path_width, true)

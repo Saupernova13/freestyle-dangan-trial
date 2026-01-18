@@ -263,6 +263,18 @@ header h1 {
   color: var(--text-primary);
 }
 
+.btn-success {
+  background: #10b981;
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #059669;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

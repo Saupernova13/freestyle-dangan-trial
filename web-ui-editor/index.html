@@ -27,6 +27,9 @@
       <button class="btn btn-primary" onclick="chooseTrialDir()">
         📁 Choose Folder
       </button>
+      <button class="btn btn-success" onclick="exportToPlayableFile()" id="exportBtn" disabled title="Export trial to .drtrial file">
+        📦 Export to Playable File
+      </button>
       <span id="dirDisplay"></span>
     </div>
   </div>
@@ -61,6 +64,9 @@
     <div class="spinner"></div>
   </div>
 
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <!-- Core (no dependencies) -->
   <script src="js/core/constants.js"></script>
   <script src="js/core/state.js"></script>
@@ -77,6 +83,9 @@
 
   <!-- Storage (depends on state, utils) -->
   <script src="js/core/storage.js"></script>
+
+  <!-- Export (depends on storage, JSZip) -->
+  <script src="js/export.js"></script>
 
   <!-- Views (depend on state, models) -->
   <script src="js/views/castView.js"></script>

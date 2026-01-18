@@ -64,6 +64,11 @@ async function chooseTrialDir() {
 
     showLoader(false);
     renderActiveView();
+
+    // Enable export button now that we have a directory
+    if (typeof updateExportButtonState === 'function') {
+      updateExportButtonState();
+    }
   } catch (err) {
     console.log(err);
     showLoader(false);

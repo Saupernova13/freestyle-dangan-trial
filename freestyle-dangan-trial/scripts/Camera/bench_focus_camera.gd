@@ -331,6 +331,11 @@ func focus_on_bench(index: int, animate: bool):
 	# Debug output
 	print("Focused on bench %d: %s" % [index + 1, target_marker.name])
 
+	# Notify TrialRoomManager of bench focus change
+	var trial_manager = get_node_or_null("../TrialRoom")  # TrialRoom sibling node
+	if trial_manager and trial_manager.has_method("on_bench_focused"):
+		trial_manager.on_bench_focused(index)
+
 ## Get the currently focused bench marker index (0-based)
 func get_current_index() -> int:
 	return current_index

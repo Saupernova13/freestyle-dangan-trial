@@ -13,7 +13,7 @@ extends Camera3D
 ## - Hold and drag: Free-look (camera springs back on release)
 
 ## Duration in seconds for smooth camera rotation transitions
-@export_range(0.1, 2.0, 0.1) var transition_duration: float = 0.5
+@export_range(0.1, 2.0, 0.1) var transition_duration: float = 0.2
 
 ## Enable or disable swipe gesture input for touch devices
 @export var enable_swipe_input: bool = true
@@ -21,14 +21,11 @@ extends Camera3D
 ## Minimum swipe distance in pixels to trigger navigation (prevents accidental taps)
 @export_range(10.0, 200.0, 5.0) var swipe_threshold: float = 50.0
 
-## Distance from center point (zoom level)
-@export_range(2.0, 10.0, 0.1) var camera_distance: float = 5.0
-
-## Minimum zoom distance
-@export var min_distance: float = 2.0
-
-## Maximum zoom distance
-@export var max_distance: float = 10.0
+## Camera Field of View (zoom level)
+## Lower values = Zoomed In (close-up)
+## Higher values = Zoomed Out (wide angle)
+## Suggested: 30-60 (close), 70 (normal), 80-90 (wide)
+@export_range(30.0, 120.0, 1.0) var camera_fov: float = 30.0
 
 ## Default up/down tilt offset in degrees
 @export_range(-45.0, 45.0, 1.0) var default_pitch_offset: float = 0.0
@@ -51,6 +48,12 @@ extends Camera3D
 ## Minimum distance for navigation swipe (prevents free-look from triggering navigation)
 @export_range(10.0, 200.0, 5.0) var swipe_distance_threshold: float = 50.0
 
+## Initial delay before hold-to-repeat starts (in seconds)
+@export_range(0.1, 1.0, 0.05) var hold_repeat_initial_delay: float = 0.4
+
+## Time between repeats when holding (in seconds)
+@export_range(0.05, 0.5, 0.05) var hold_repeat_interval: float = 0.15
+
 # Internal variables
 var bench_markers: Array[Marker3D] = []
 var current_index: int = 0
@@ -68,6 +71,12 @@ var mouse_button_pressed: bool = false
 var active_touch_index: int = -1
 var touch_start_time: float = 0.0
 var touch_moved: bool = false
+
+# Hold-to-repeat tracking
+var hold_direction: int = 0  # -1 = left/next, 1 = right/previous, 0 = none
+var hold_start_time: float = 0.0
+var last_repeat_time: float = 0.0
+var is_holding_touch: bool = false
 
 func _ready():
 	# Get reference to Trial_Benches parent node
@@ -99,6 +108,39 @@ func _ready():
 	focus_on_bench(0, false)
 
 func _process(delta):
+	# Handle hold-to-repeat navigation
+	if not is_transitioning:
+		# Check for keyboard hold
+		var current_hold_direction = 0
+		if Input.is_action_pressed("ui_left"):
+			current_hold_direction = -1
+		elif Input.is_action_pressed("ui_right"):
+			current_hold_direction = 1
+		elif is_holding_touch:
+			current_hold_direction = hold_direction
+
+		# If direction changed, reset timing
+		if current_hold_direction != hold_direction:
+			hold_direction = current_hold_direction
+			hold_start_time = Time.get_ticks_msec() / 1000.0
+			last_repeat_time = hold_start_time
+
+		# Process hold-to-repeat
+		if hold_direction != 0:
+			var current_time = Time.get_ticks_msec() / 1000.0
+			var time_held = current_time - hold_start_time
+
+			# Check if we should repeat
+			if time_held >= hold_repeat_initial_delay:
+				var time_since_last = current_time - last_repeat_time
+				if time_since_last >= hold_repeat_interval:
+					# Execute repeat navigation
+					if hold_direction == -1:
+						navigate_to_next()
+					elif hold_direction == 1:
+						navigate_to_previous()
+					last_repeat_time = current_time
+
 	# Don't apply free-look during transitions
 	if is_transitioning:
 		return
@@ -181,33 +223,38 @@ func _input(event):
 				touch_start_time = Time.get_ticks_msec() / 1000.0
 				touch_moved = false
 				is_dragging = true
+
+				# Check if touch is in navigation zone
+				var viewport_width = get_viewport().get_visible_rect().size.x
+				var tap_x = event.position.x
+				if tap_x < viewport_width / 3.0:
+					# Left navigation zone
+					is_holding_touch = true
+					hold_direction = -1
+					navigate_to_next()
+					get_viewport().set_input_as_handled()
+				elif tap_x > (viewport_width * 2.0 / 3.0):
+					# Right navigation zone
+					is_holding_touch = true
+					hold_direction = 1
+					navigate_to_previous()
+					get_viewport().set_input_as_handled()
 			elif not event.pressed and event.index == active_touch_index:
-				# Touch ended
-				var touch_duration = (Time.get_ticks_msec() / 1000.0) - touch_start_time
-				var touch_distance = event.position.distance_to(drag_start_position)
-
-				# Check if this was a quick tap (short duration, minimal movement)
-				if touch_duration < 0.3 and touch_distance < 20.0:
-					# This was a tap - check screen position for navigation
-					var viewport_width = get_viewport().get_visible_rect().size.x
-					var tap_x = drag_start_position.x
-
-					# Left third of screen = navigate left (next bench)
-					if tap_x < viewport_width / 3.0:
-						navigate_to_next()
-						get_viewport().set_input_as_handled()
-					# Right third of screen = navigate right (previous bench)
-					elif tap_x > (viewport_width * 2.0 / 3.0):
-						navigate_to_previous()
-						get_viewport().set_input_as_handled()
-
-				# Reset touch state
+				# Touch ended - reset all states
 				is_dragging = false
+				is_holding_touch = false
+				hold_direction = 0
 				active_touch_index = -1
 
 		elif event is InputEventScreenDrag and event.index == active_touch_index and enable_free_look and not is_transitioning:
 			# Touch drag - apply free-look offset (like mouse drag)
 			touch_moved = true
+
+			# Cancel hold-to-repeat if user starts dragging
+			if is_holding_touch and event.relative.length() > 10.0:
+				is_holding_touch = false
+				hold_direction = 0
+
 			var delta = event.relative
 			current_free_look_offset.x -= delta.x * free_look_sensitivity  # Yaw (inverted to match drag direction)
 			current_free_look_offset.y -= delta.y * free_look_sensitivity  # Pitch (inverted)
@@ -229,21 +276,6 @@ func navigate_to_previous():
 	current_index = (current_index - 1 + bench_markers.size()) % bench_markers.size()
 	focus_on_bench(current_index, true)
 
-## Update camera position and FOV based on zoom distance
-func update_camera_position():
-	# Keep camera at center position (fixed)
-	global_position = Vector3(0, 0.275, 0)
-
-	# Map camera_distance to FOV
-	# Lower distance = zoomed in (narrow FOV)
-	# Higher distance = zoomed out (wide FOV)
-	# Distance 2.0 (min) = FOV 50 (narrow, zoomed in)
-	# Distance 5.0 (default) = FOV 70 (default)
-	# Distance 10.0 (max) = FOV 90 (wide, zoomed out)
-	var fov_range = 40.0  # Range of FOV adjustment (50 to 90)
-	var normalized_distance = (camera_distance - min_distance) / (max_distance - min_distance)
-	fov = 50.0 + (normalized_distance * fov_range)
-
 ## Focus camera on specified bench marker
 ## @param index: Index of the bench marker to focus on (0-based)
 ## @param animate: Whether to smoothly tween the camera or snap instantly
@@ -255,8 +287,9 @@ func focus_on_bench(index: int, animate: bool):
 	# Reset free-look offset when changing bench
 	current_free_look_offset = Vector2.ZERO
 
-	# Update camera position based on zoom distance
-	update_camera_position()
+	# Set camera position and FOV
+	global_position = Vector3(0, 0.275, 0)
+	fov = camera_fov
 
 	# Get target bench marker's global position
 	var target_marker = bench_markers[index]

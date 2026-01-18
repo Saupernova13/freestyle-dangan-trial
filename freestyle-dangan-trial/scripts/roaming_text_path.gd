@@ -31,7 +31,16 @@ extends Path2D
 @export_range(-500.0, 500.0, 1.0) var padding_bottom: float = -200.0
 
 ## Font size for all character labels
-@export_range(8, 128, 1) var font_size: int = 32
+@export_range(8, 128, 1) var font_size: int = 74
+
+## Font file to use for character labels
+@export_file("*.ttf") var font_file: String = "res://Font/LexendMega-Regular.ttf"
+
+## Color of the text (supports hex codes with transparency)
+@export var text_color: Color = Color(1.0, 1.0, 1.0, 0.2)
+
+## Direction of rotation (true = clockwise, false = counter-clockwise)
+@export var clockwise: bool = false
 
 ## Starting position on the path (0.0 = right, 0.25 = bottom, 0.5 = left, 0.75 = top)
 @export_range(0.0, 1.0, 0.01) var start_position: float = 0.25
@@ -219,8 +228,17 @@ func generate_curved_text():
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
+		# Apply font from export variable
+		if font_file != "" and FileAccess.file_exists(font_file):
+			var font = load(font_file)
+			if font:
+				label.add_theme_font_override("font", font)
+
 		# Apply font size from export variable
 		label.add_theme_font_size_override("font_size", font_size)
+
+		# Apply text color from export variable
+		label.add_theme_color_override("font_color", text_color)
 
 		# Build hierarchy - must add to scene tree BEFORE setting progress_ratio
 		path_follow.add_child(label)
@@ -250,9 +268,10 @@ func start_animation():
 	# Each character moves continuously, and PathFollow2D.loop handles wrapping
 	for path_follow in character_nodes:
 		var start_progress = path_follow.progress_ratio
-		# Animate from current position to one full loop ahead
-		# The loop property ensures smooth wrapping at 1.0 -> 0.0
-		tween.parallel().tween_property(path_follow, "progress_ratio", start_progress + 1.0, animation_speed)
+		# Animate from current position to one full loop ahead (or behind for counter-clockwise)
+		# The loop property ensures smooth wrapping at 1.0 -> 0.0 (or 0.0 -> 1.0)
+		var end_progress = start_progress + 1.0 if clockwise else start_progress - 1.0
+		tween.parallel().tween_property(path_follow, "progress_ratio", end_progress, animation_speed)
 
 ## Draws the path outline if draw_path is enabled
 ## This provides a visual reference for the oval path the text follows

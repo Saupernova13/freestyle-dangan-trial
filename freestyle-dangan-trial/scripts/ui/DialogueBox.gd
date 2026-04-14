@@ -97,17 +97,11 @@ func _start_typewriter():
 	if not _rich_label:
 		return
 
-	match text_speed:
-		TextSpeed.INSTANT:
-			_rich_label.visible_characters = -1
-			ScriptDirector.notify_typewriter_finished()
-			return
-		TextSpeed.SLOW:
-			_typewriter_speed = 15.0
-		TextSpeed.NORMAL:
-			_typewriter_speed = 30.0
-		TextSpeed.FAST:
-			_typewriter_speed = 60.0
+	_typewriter_speed = Settings.get_typewriter_speed()
+	if _typewriter_speed >= 999.0:
+		_rich_label.visible_characters = -1
+		ScriptDirector.notify_typewriter_finished()
+		return
 
 	_rich_label.visible_characters = 0
 	_target_visible_chars = _rich_label.get_total_character_count()

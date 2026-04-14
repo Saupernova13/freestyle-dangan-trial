@@ -131,8 +131,23 @@ func notify_typewriter_started():
 
 func notify_typewriter_finished():
 	is_typewriter_active = false
+	_auto_advance_timer = 0.0
+
+var _settings_menu: Node = null
 
 func _input(event):
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		_toggle_settings_menu()
+		get_viewport().set_input_as_handled()
+		return
+
+	if event is InputEventKey and event.keycode == KEY_CTRL:
+		_skip_held = event.pressed
+		_skip_timer = 0.0
+		if event.pressed:
+			_auto_advance_timer = 0.0
+		return
+
 	if current_state == State.PAUSED:
 		return
 
@@ -172,3 +187,43 @@ func get_progress() -> float:
 	if script_lines.is_empty():
 		return 0.0
 	return float(current_line_index + 1) / float(script_lines.size())
+
+var _auto_advance_timer: float = 0.0
+var _pre_pause_state: State = State.IDLE
+var _skip_held: bool = false
+var _skip_timer: float = 0.0
+const SKIP_INTERVAL: float = 0.05
+
+func _process(delta):
+	if _skip_held and current_state == State.WAITING_FOR_ADVANCE:
+		_skip_timer += delta
+		if _skip_timer >= SKIP_INTERVAL:
+			_skip_timer = 0.0
+			if is_typewriter_active:
+				typewriter_skip_requested.emit()
+			else:
+				advance_to_next_line()
+		return
+
+	if Settings and Settings.auto_advance and current_state == State.WAITING_FOR_ADVANCE and not is_typewriter_active:
+		_auto_advance_timer += delta
+		if _auto_advance_timer >= Settings.auto_advance_delay:
+			_auto_advance_timer = 0.0
+			advance_to_next_line()
+
+func _toggle_settings_menu():
+	if _settings_menu:
+		return
+
+	_pre_pause_state = current_state
+	if current_state != State.IDLE and current_state != State.TRIAL_COMPLETE:
+		_transition_to(State.PAUSED)
+
+	_settings_menu = preload("res://scripts/ui/SettingsMenu.gd").new()
+	add_child(_settings_menu)
+	_settings_menu.open()
+	_settings_menu.closed.connect(func():
+		_settings_menu = null
+		if current_state == State.PAUSED:
+			_transition_to(_pre_pause_state)
+	)

@@ -43,8 +43,14 @@ func _ready():
 	ScriptDirector.narrator_displayed.connect(_on_narrator_displayed)
 	ScriptDirector.minigame_requested.connect(_on_minigame_requested)
 	ScriptDirector.trial_ended.connect(_on_trial_ended)
+	InfluenceGauge.influence_depleted.connect(_on_game_over)
 
 func load_and_display_trial():
+	# Check if a file was selected from the picker
+	if TrialLoader.has_meta("pending_trial_path"):
+		trial_file_path = TrialLoader.get_meta("pending_trial_path")
+		TrialLoader.remove_meta("pending_trial_path")
+
 	print("Loading trial from: ", trial_file_path)
 
 	var success = TrialLoader.load_trial(trial_file_path)
@@ -215,18 +221,29 @@ func _on_minigame_requested(minigame_data: Dictionary):
 			ScriptDirector.on_minigame_finished(true)
 			return
 
+	if dialogue_label:
+		dialogue_label.text = ""
+
+	# Show title card before starting
+	var title_card = preload("res://scripts/ui/MinigameTitleCard.gd").new()
+	add_child(title_card)
+	title_card.show_title(game_type, minigame_data.get("name", ""))
+	await title_card.card_finished
+
 	add_child(minigame)
 	minigame.initialize(minigame_data)
 	minigame.minigame_completed.connect(func(success, _data):
 		minigame.cleanup()
 		minigame.queue_free()
+		# Show result card
+		var result_card = preload("res://scripts/ui/MinigameTitleCard.gd").new()
+		add_child(result_card)
+		result_card.show_result(success)
+		await result_card.card_finished
 		ScriptDirector.on_minigame_finished(success)
 	)
 	ScriptDirector.on_minigame_started(minigame)
 	minigame.start()
-
-	if dialogue_label:
-		dialogue_label.text = ""
 
 func _on_trial_ended():
 	if dialogue_label:
@@ -275,3 +292,22 @@ func update_character_sprite(position_index: int, character_id: String, sprite_i
 		mesh_instance.material_override = material
 
 	update_character_portrait(position_index)
+
+func _on_game_over():
+	ScriptDirector.pause_trial()
+	if dialogue_label:
+		dialogue_label.text = ""
+	update_character_name_label("")
+
+	var game_over_screen = preload("res://scripts/ui/GameOverScreen.gd").new()
+	add_child(game_over_screen)
+	game_over_screen.show_game_over()
+
+	game_over_screen.retry_requested.connect(func():
+		InfluenceGauge.reset()
+		get_tree().reload_current_scene()
+	)
+	game_over_screen.return_to_menu.connect(func():
+		InfluenceGauge.reset()
+		get_tree().change_scene_to_file("res://scenes/start_menu.tscn")
+	)

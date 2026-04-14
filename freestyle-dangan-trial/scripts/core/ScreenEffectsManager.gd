@@ -78,6 +78,9 @@ func _play_single_effect(effect_type: String, intensity: float):
 func screen_shake(duration: float, intensity: float = 0.02):
 	if not _camera:
 		return
+	intensity *= Settings.screen_shake_intensity if Settings else 1.0
+	if intensity <= 0.0:
+		return
 	var original_pos = _camera.global_position
 	var elapsed = 0.0
 	while elapsed < duration:

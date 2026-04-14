@@ -22,6 +22,8 @@ TrialLoader="*res://scripts/TrialLoader.gd"
 ScriptDirector="*res://scripts/core/ScriptDirector.gd"
 AudioManager="*res://scripts/core/AudioManager.gd"
 InputManager="*res://scripts/core/InputManager.gd"
+InfluenceGauge="*res://scripts/core/InfluenceGauge.gd"
+TruthBulletManager="*res://scripts/core/TruthBulletManager.gd"
 
 [display]
 

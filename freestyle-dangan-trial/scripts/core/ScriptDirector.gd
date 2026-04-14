@@ -72,6 +72,11 @@ func _handle_speaking_line(line: Dictionary):
 	_transition_to(State.DIALOGUE)
 	var character_id = line.get("characterId", "")
 	var dialogue_text = line.get("dialogue", "")
+
+	var audio_file = line.get("audioFile", "")
+	if not audio_file.is_empty():
+		AudioManager.play_voice_line(audio_file)
+
 	dialogue_displayed.emit(character_id, dialogue_text)
 	_transition_to(State.WAITING_FOR_ADVANCE)
 

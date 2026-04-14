@@ -24,9 +24,12 @@ func _ready():
 	await get_tree().process_frame
 	load_and_display_trial()
 
+	add_to_group("trial_room")
+
 	ScriptDirector.line_started.connect(_on_line_started)
 	ScriptDirector.dialogue_displayed.connect(_on_dialogue_displayed)
 	ScriptDirector.narrator_displayed.connect(_on_narrator_displayed)
+	ScriptDirector.minigame_requested.connect(_on_minigame_requested)
 	ScriptDirector.trial_ended.connect(_on_trial_ended)
 
 func load_and_display_trial():
@@ -166,6 +169,33 @@ func _on_narrator_displayed(text: String):
 	update_character_name_label("")
 	if dialogue_label:
 		dialogue_label.text = text
+
+func _on_minigame_requested(minigame_data: Dictionary):
+	var game_type = minigame_data.get("gameType", "")
+	var minigame: MinigameBase = null
+
+	match game_type:
+		"nonstop_debate":
+			minigame = preload("res://scripts/minigames/NonstopDebate.gd").new()
+		_:
+			print("TrialRoomManager: Unimplemented minigame type: ", game_type)
+			# Auto-succeed for unimplemented types
+			await get_tree().create_timer(1.0).timeout
+			ScriptDirector.on_minigame_finished(true)
+			return
+
+	add_child(minigame)
+	minigame.initialize(minigame_data)
+	minigame.minigame_completed.connect(func(success, _data):
+		minigame.cleanup()
+		minigame.queue_free()
+		ScriptDirector.on_minigame_finished(success)
+	)
+	ScriptDirector.on_minigame_started(minigame)
+	minigame.start()
+
+	if dialogue_label:
+		dialogue_label.text = ""
 
 func _on_trial_ended():
 	if dialogue_label:

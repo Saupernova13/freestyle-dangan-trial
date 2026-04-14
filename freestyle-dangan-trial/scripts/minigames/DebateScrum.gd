@@ -7,6 +7,7 @@ var opponent_score: int = 0
 
 var _overlay: CanvasLayer
 var _opposition_label: Label
+var _defense_label: Label
 var _defense_buttons: Array = []
 var _progress_bar: ColorRect
 var _progress_fill: ColorRect
@@ -22,15 +23,19 @@ func initialize(data: Dictionary):
 
 func start():
 	super.start()
+	if arguments.is_empty():
+		push_warning("DebateScrum: No arguments provided, auto-completing")
+		_on_correct_answer({"score": 0})
+		return
+
 	_build_overlay()
 	_setup_ui()
 	InfluenceGauge.reset()
 	InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
 	print("DebateScrum: ", arguments.size(), " arguments")
 
-	if not arguments.is_empty():
-		await get_tree().create_timer(0.5).timeout
-		_show_argument(0)
+	await get_tree().create_timer(0.5).timeout
+	_show_argument(0)
 
 func _build_overlay():
 	_overlay = CanvasLayer.new()
@@ -73,7 +78,7 @@ func _build_overlay():
 	_progress_fill.size = Vector2(200, 20)
 	bar_container.add_child(_progress_fill)
 
-	# Opposition statement (left side)
+	# Opposition statement (left side, red)
 	var opposition_panel = PanelContainer.new()
 	var opp_style = StyleBoxFlat.new()
 	opp_style.bg_color = Color(0.3, 0.1, 0.1, 0.8)
@@ -85,7 +90,7 @@ func _build_overlay():
 	opp_style.content_margin_bottom = 10
 	opposition_panel.add_theme_stylebox_override("panel", opp_style)
 	opposition_panel.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-	opposition_panel.position = Vector2(30, 0)
+	opposition_panel.position = Vector2(30, -60)
 	opposition_panel.custom_minimum_size = Vector2(350, 100)
 	_overlay.add_child(opposition_panel)
 
@@ -96,19 +101,42 @@ func _build_overlay():
 	_opposition_label.custom_minimum_size.x = 320
 	opposition_panel.add_child(_opposition_label)
 
-	# Defense keyword buttons (right side)
-	var defense_container = VBoxContainer.new()
-	defense_container.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	defense_container.position = Vector2(-300, -80)
-	defense_container.custom_minimum_size = Vector2(250, 200)
-	defense_container.add_theme_constant_override("separation", 10)
-	_overlay.add_child(defense_container)
+	# Defense statement (right side, blue)
+	var defense_panel = PanelContainer.new()
+	var def_style = StyleBoxFlat.new()
+	def_style.bg_color = Color(0.1, 0.1, 0.3, 0.8)
+	def_style.border_width_right = 3
+	def_style.border_color = Color(0.3, 0.5, 1.0)
+	def_style.content_margin_left = 15
+	def_style.content_margin_right = 15
+	def_style.content_margin_top = 10
+	def_style.content_margin_bottom = 10
+	defense_panel.add_theme_stylebox_override("panel", def_style)
+	defense_panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+	defense_panel.position = Vector2(-380, -60)
+	defense_panel.custom_minimum_size = Vector2(350, 100)
+	_overlay.add_child(defense_panel)
 
-	var defense_header = Label.new()
-	defense_header.text = "SELECT YOUR REBUTTAL"
-	defense_header.add_theme_font_size_override("font_size", 14)
-	defense_header.add_theme_color_override("font_color", Color(0.3, 0.6, 1.0))
-	defense_container.add_child(defense_header)
+	_defense_label = Label.new()
+	_defense_label.add_theme_font_size_override("font_size", 18)
+	_defense_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1.0))
+	_defense_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_defense_label.custom_minimum_size.x = 320
+	defense_panel.add_child(_defense_label)
+
+	# Keyword buttons (center-bottom)
+	var keyword_container = VBoxContainer.new()
+	keyword_container.set_anchors_preset(Control.PRESET_CENTER)
+	keyword_container.position = Vector2(-120, 60)
+	keyword_container.custom_minimum_size = Vector2(250, 200)
+	keyword_container.add_theme_constant_override("separation", 10)
+	_overlay.add_child(keyword_container)
+
+	var keyword_header = Label.new()
+	keyword_header.text = "SELECT YOUR REBUTTAL"
+	keyword_header.add_theme_font_size_override("font_size", 14)
+	keyword_header.add_theme_color_override("font_color", Color(0.3, 0.6, 1.0))
+	keyword_container.add_child(keyword_header)
 
 	for i in range(5):
 		var btn = Button.new()
@@ -127,7 +155,7 @@ func _build_overlay():
 		style.corner_radius_bottom_right = 4
 		btn.add_theme_stylebox_override("normal", style)
 		btn.visible = false
-		defense_container.add_child(btn)
+		keyword_container.add_child(btn)
 		_defense_buttons.append(btn)
 
 	_score_label = Label.new()
@@ -152,7 +180,7 @@ func _setup_ui():
 
 func _show_argument(index: int):
 	if index >= arguments.size():
-		var success = player_score > opponent_score
+		var success = player_score >= opponent_score
 		if success:
 			_on_correct_answer({"score": player_score})
 		else:
@@ -162,7 +190,27 @@ func _show_argument(index: int):
 	current_argument_index = index
 	var arg = arguments[index]
 
-	_opposition_label.text = arg.get("oppositionStatement", "...")
+	var opp_text = arg.get("oppositionStatement", "...")
+	var opp_char_id = arg.get("oppositionCharacterId", "")
+	if not opp_char_id.is_empty():
+		var char_data = TrialLoader.load_character(opp_char_id)
+		if not char_data.is_empty():
+			var char_name = char_data.get("name", "") + " " + char_data.get("surname", "")
+			opp_text = char_name.strip_edges() + ":\n" + opp_text
+	_opposition_label.text = opp_text
+
+	var def_text = arg.get("defenseStatement", "")
+	var def_char_id = arg.get("defenseCharacterId", "")
+	if not def_char_id.is_empty():
+		var char_data = TrialLoader.load_character(def_char_id)
+		if not char_data.is_empty():
+			var char_name = char_data.get("name", "") + " " + char_data.get("surname", "")
+			def_text = char_name.strip_edges() + ":\n" + def_text
+	_defense_label.text = def_text
+
+	var opp_audio = arg.get("oppositionAudioFile", "")
+	if not opp_audio.is_empty():
+		AudioManager.play_voice_line(opp_audio)
 
 	var opp_keywords = arg.get("oppositionKeywords", [])
 	var def_keywords = arg.get("defenseKeywords", [])
@@ -198,6 +246,10 @@ func _on_keyword_selected(keyword: String, is_correct: bool, btn: Button):
 		btn.modulate = Color(0.3, 1.0, 0.5)
 		player_score += 1
 		AudioManager.play_sfx("correct_chime")
+		var arg = arguments[current_argument_index]
+		var def_audio = arg.get("defenseAudioFile", "")
+		if not def_audio.is_empty():
+			AudioManager.play_voice_line(def_audio)
 	else:
 		btn.modulate = Color(1.0, 0.3, 0.3)
 		opponent_score += 1

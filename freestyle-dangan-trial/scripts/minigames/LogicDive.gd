@@ -2,15 +2,12 @@ extends MinigameBase
 
 var questions: Array = []
 var current_question_index: int = 0
-var current_lane: int = 0
 
 var _overlay: CanvasLayer
 var _question_label: Label
 var _lanes_container: HBoxContainer
 var _lane_buttons: Array = []
-var _road_bg: ColorRect
-var _player_indicator: ColorRect
-var _scroll_offset: float = 0.0
+var _road_effect: Control
 
 var _influence_gauge_ui: Node
 var _timer_display: Node
@@ -38,11 +35,10 @@ func _build_overlay():
 	_overlay.layer = 5
 	add_child(_overlay)
 
-	_road_bg = ColorRect.new()
-	_road_bg.color = Color(0.05, 0.0, 0.15, 0.85)
-	_road_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_road_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(_road_bg)
+	_road_effect = RoadEffect.new()
+	_road_effect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_road_effect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay.add_child(_road_effect)
 
 	var title = Label.new()
 	title.text = "LOGIC DIVE"
@@ -104,6 +100,7 @@ func _show_question(index: int):
 
 	var q = questions[index]
 	_question_label.text = q.get("questionText", "???")
+	_question_label.modulate.a = 0.0
 
 	for btn in _lane_buttons:
 		btn.queue_free()
@@ -135,6 +132,7 @@ func _show_question(index: int):
 		style_hover.border_color = Color(0.5, 0.7, 1.0)
 		btn.add_theme_stylebox_override("hover", style_hover)
 
+		btn.modulate.a = 0.0
 		var is_correct = answer.get("isCorrect", false)
 		btn.pressed.connect(_on_answer_selected.bind(i, is_correct))
 		_lanes_container.add_child(btn)
@@ -143,6 +141,11 @@ func _show_question(index: int):
 	var progress = _overlay.get_node_or_null("ProgressLabel")
 	if progress:
 		progress.text = "Question %d / %d" % [index + 1, questions.size()]
+
+	var tween = create_tween()
+	tween.tween_property(_question_label, "modulate:a", 1.0, 0.3)
+	for i in range(_lane_buttons.size()):
+		tween.tween_property(_lane_buttons[i], "modulate:a", 1.0, 0.15)
 
 func _on_answer_selected(answer_index: int, is_correct: bool):
 	if not _showing_question:
@@ -179,9 +182,9 @@ func _on_answer_selected(answer_index: int, is_correct: bool):
 func _process(delta):
 	if not is_active:
 		return
-	_scroll_offset += delta * 100
-	if _road_bg:
-		_road_bg.material = null
+	if _road_effect:
+		_road_effect.scroll_offset += delta * 200
+		_road_effect.queue_redraw()
 
 func _on_influence_depleted():
 	_finish(false, {"reason": "influence_depleted"})
@@ -196,3 +199,22 @@ func cleanup():
 		InfluenceGauge.influence_depleted.disconnect(_on_influence_depleted)
 	if _overlay:
 		_overlay.queue_free()
+
+
+class RoadEffect extends Control:
+	var scroll_offset: float = 0.0
+
+	func _draw():
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.05, 0.0, 0.15, 0.85))
+
+		var cx = size.x / 2.0
+		var dash_length = 40.0
+		var gap_length = 30.0
+		var total = dash_length + gap_length
+		var y = fmod(scroll_offset, total) - total
+		while y < size.y + total:
+			draw_rect(Rect2(cx - 2, y, 4, dash_length), Color(0.3, 0.3, 0.5, 0.6))
+			y += total
+
+		draw_rect(Rect2(size.x * 0.25, 0, 2, size.y), Color(0.2, 0.2, 0.4, 0.3))
+		draw_rect(Rect2(size.x * 0.75, 0, 2, size.y), Color(0.2, 0.2, 0.4, 0.3))

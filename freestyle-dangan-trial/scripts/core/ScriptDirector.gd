@@ -18,6 +18,7 @@ signal minigame_requested(minigame_data: Dictionary)
 signal minigame_completed(success: bool)
 signal trial_ended
 signal state_changed(new_state: State)
+signal typewriter_skip_requested
 
 var current_state: State = State.IDLE
 var script_lines: Array = []
@@ -136,16 +137,22 @@ func _input(event):
 		return
 
 	if event is InputEventKey and event.pressed and event.keycode == KEY_SPACE:
-		if current_state == State.WAITING_FOR_ADVANCE and not is_typewriter_active:
-			advance_to_next_line()
+		if current_state == State.WAITING_FOR_ADVANCE:
+			if is_typewriter_active:
+				typewriter_skip_requested.emit()
+			else:
+				advance_to_next_line()
 			get_viewport().set_input_as_handled()
 
 	if event is InputEventScreenTouch and event.pressed:
-		if current_state == State.WAITING_FOR_ADVANCE and not is_typewriter_active:
+		if current_state == State.WAITING_FOR_ADVANCE:
 			var viewport_size = get_viewport().get_visible_rect().size
 			var tap_x = event.position.x
 			if tap_x > viewport_size.x / 3.0 and tap_x < viewport_size.x * 2.0 / 3.0:
-				advance_to_next_line()
+				if is_typewriter_active:
+					typewriter_skip_requested.emit()
+				else:
+					advance_to_next_line()
 				get_viewport().set_input_as_handled()
 
 func pause_trial():

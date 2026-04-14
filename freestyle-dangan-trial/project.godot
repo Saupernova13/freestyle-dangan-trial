@@ -24,6 +24,8 @@ AudioManager="*res://scripts/core/AudioManager.gd"
 InputManager="*res://scripts/core/InputManager.gd"
 InfluenceGauge="*res://scripts/core/InfluenceGauge.gd"
 TruthBulletManager="*res://scripts/core/TruthBulletManager.gd"
+CameraDirector="*res://scripts/camera/CameraDirector.gd"
+ScreenEffects="*res://scripts/core/ScreenEffectsManager.gd"
 
 [display]
 

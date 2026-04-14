@@ -20,8 +20,20 @@ var trial_file_path: String = "C:/Users/RaaViVi/Desktop/trial.drtrial"
 # Store character data for quick lookup
 var character_data: Array = []
 
+# Dialogue box controller
+var _dialogue_box: Node
+
 func _ready():
 	await get_tree().process_frame
+
+	_dialogue_box = preload("res://scripts/ui/DialogueBox.gd").new()
+	add_child(_dialogue_box)
+	_dialogue_box.setup(dialogue_label, name_label, portrait_rect)
+	ScriptDirector.typewriter_skip_requested.connect(func():
+		if _dialogue_box:
+			_dialogue_box.skip_typewriter()
+	)
+
 	load_and_display_trial()
 
 	add_to_group("trial_room")
@@ -106,7 +118,7 @@ func update_character_name_label(character_name: String):
 	if name_label:
 		name_label.text = character_name
 
-func update_character_portrait(bench_index: int):
+func update_character_portrait(bench_index: int, sprite_index: int = 1):
 	if not portrait_rect:
 		return
 	if bench_index < 0 or bench_index >= character_data.size():
@@ -120,7 +132,9 @@ func update_character_portrait(bench_index: int):
 	if character_id.is_empty():
 		return
 
-	var sprite_path = TrialLoader.get_character_sprite(character_id, 1)
+	var sprite_path = TrialLoader.get_character_sprite(character_id, sprite_index)
+	if sprite_path.is_empty():
+		sprite_path = TrialLoader.get_character_sprite(character_id, 1)
 	if sprite_path.is_empty():
 		return
 
@@ -151,24 +165,34 @@ func _on_line_started(line: Dictionary):
 		var character_position = find_character_position(character_id)
 
 		if character_position >= 0:
-			if camera and camera.has_method("jump_to_bench"):
+			var camera_motion = line.get("cameraMotion", {})
+			if not camera_motion.is_empty() and camera_motion.get("type", "none") != "none":
+				CameraDirector.execute_motion(camera_motion, character_position)
+			elif camera and camera.has_method("jump_to_bench"):
 				camera.jump_to_bench(character_position, true)
+
 			update_character_sprite(character_position, character_id, sprite_index)
 
 			var char_data = character_data[character_position]
 			if char_data:
 				var full_name = char_data.get("name", "") + " " + char_data.get("surname", "")
 				update_character_name_label(full_name.strip_edges())
-				update_character_portrait(character_position)
+				update_character_portrait(character_position, sprite_index)
 
-func _on_dialogue_displayed(character_id: String, text: String):
-	if dialogue_label:
-		dialogue_label.text = text
+	var special_effects = line.get("specialEffects", {})
+	if not special_effects.is_empty():
+		ScreenEffects.play_effects(special_effects)
 
-func _on_narrator_displayed(text: String):
+func _on_dialogue_displayed(_character_id: String, _text: String):
+	var line = ScriptDirector.get_current_line()
+	if _dialogue_box:
+		_dialogue_box.display_speaking_line(line)
+
+func _on_narrator_displayed(_text: String):
+	var line = ScriptDirector.get_current_line()
 	update_character_name_label("")
-	if dialogue_label:
-		dialogue_label.text = text
+	if _dialogue_box:
+		_dialogue_box.display_narrator_line(line)
 
 func _on_minigame_requested(minigame_data: Dictionary):
 	var game_type = minigame_data.get("gameType", "")

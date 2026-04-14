@@ -14,6 +14,9 @@ var _title_colors: Dictionary = {
 	"logic_dive": Color(0.2, 0.8, 1.0),
 	"debate_scrum": Color(1.0, 0.8, 0.1),
 	"mass_panic_debate": Color(1.0, 0.2, 0.2),
+	"rebuttal_showdown": Color(0.9, 0.4, 0.6),
+	"psyche_taxi": Color(0.2, 0.8, 0.6),
+	"closing_argument": Color(0.8, 0.7, 0.2),
 }
 
 var _title_names: Dictionary = {
@@ -22,6 +25,9 @@ var _title_names: Dictionary = {
 	"logic_dive": "LOGIC DIVE",
 	"debate_scrum": "DEBATE SCRUM",
 	"mass_panic_debate": "MASS PANIC DEBATE",
+	"rebuttal_showdown": "REBUTTAL SHOWDOWN",
+	"psyche_taxi": "PSYCHE TAXI",
+	"closing_argument": "CLOSING ARGUMENT",
 }
 
 func _ready():

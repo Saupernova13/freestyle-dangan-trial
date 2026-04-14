@@ -215,8 +215,14 @@ func _on_minigame_requested(minigame_data: Dictionary):
 			minigame = preload("res://scripts/minigames/DebateScrum.gd").new()
 		"mass_panic_debate":
 			minigame = preload("res://scripts/minigames/MassPanicDebate.gd").new()
+		"rebuttal_showdown":
+			minigame = preload("res://scripts/minigames/RebuttalShowdown.gd").new()
+		"psyche_taxi":
+			minigame = preload("res://scripts/minigames/PsycheTaxi.gd").new()
+		"closing_argument":
+			minigame = preload("res://scripts/minigames/ClosingArgument.gd").new()
 		_:
-			print("TrialRoomManager: Unimplemented minigame type: ", game_type)
+			print("TrialRoomManager: Unknown minigame type: ", game_type)
 			await get_tree().create_timer(1.0).timeout
 			ScriptDirector.on_minigame_finished(true)
 			return

@@ -153,6 +153,12 @@ func _switch_focus(new_row: int):
 	var tween = create_tween()
 	tween.tween_property(_focus_indicator, "position:y", row_starts[focused_row] - 10, 0.15)
 
+	for entry in _panels_on_screen:
+		var panel: DebateTextPanel = entry.panel
+		var row: int = entry.row
+		if is_instance_valid(panel) and panel.has_answer():
+			panel.set_shootable(row == focused_row)
+
 func _process(delta):
 	if not is_active or _solved:
 		return
@@ -189,6 +195,13 @@ func _spawn_group():
 
 		_row_containers[i].add_child(panel)
 		_panels_on_screen.append({"panel": panel, "row": i, "data": line_data})
+
+		if i == focused_row:
+			var voice_file = speaker_data.get("voiceLineFile", "")
+			if not voice_file.is_empty():
+				AudioManager.play_voice_line(voice_file)
+			if not speaker_ids[i].is_empty():
+				_trigger_spotlight(speaker_ids[i])
 
 		if speaker_data.get("isLoudAssertion", false):
 			ScreenEffects.screen_shake(0.2, 0.01)
@@ -253,6 +266,15 @@ func _on_panel_exited(panel: DebateTextPanel):
 func _on_influence_depleted():
 	if not _solved:
 		_finish(false, {"reason": "influence_depleted"})
+
+func _trigger_spotlight(char_id: String):
+	var trial_room = get_tree().get_first_node_in_group("trial_room")
+	if trial_room and trial_room.has_method("find_character_position"):
+		var pos = trial_room.find_character_position(char_id)
+		if pos >= 0:
+			var cam = get_viewport().get_camera_3d()
+			if cam and cam.has_method("jump_to_bench"):
+				cam.jump_to_bench(pos, true)
 
 func cleanup():
 	super.cleanup()

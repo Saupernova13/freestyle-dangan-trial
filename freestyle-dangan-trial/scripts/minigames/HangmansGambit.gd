@@ -21,6 +21,10 @@ func initialize(data: Dictionary):
 	_revealed_letters.resize(answer_key.length())
 	_revealed_letters.fill(false)
 
+	for i in range(answer_key.length()):
+		if answer_key[i] == " ":
+			_revealed_letters[i] = true
+
 	match difficulty:
 		"easy":
 			_spawn_interval = 2.0
@@ -74,21 +78,32 @@ func _build_overlay():
 	for i in range(answer_key.length()):
 		var slot = PanelContainer.new()
 		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.15, 0.1, 0.25, 0.9)
-		style.border_width_bottom = 2
-		style.border_color = Color(0.6, 0.3, 0.8)
-		style.content_margin_left = 8
-		style.content_margin_right = 8
 		style.content_margin_top = 4
 		style.content_margin_bottom = 4
-		slot.add_theme_stylebox_override("panel", style)
 
 		var lbl = Label.new()
-		lbl.text = "_"
 		lbl.add_theme_font_size_override("font_size", 32)
-		lbl.add_theme_color_override("font_color", Color(0.8, 0.8, 0.9))
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.custom_minimum_size.x = 36
+
+		if answer_key[i] == " ":
+			style.bg_color = Color(0, 0, 0, 0)
+			style.border_width_bottom = 0
+			style.content_margin_left = 4
+			style.content_margin_right = 4
+			lbl.text = " "
+			lbl.custom_minimum_size.x = 18
+			lbl.add_theme_color_override("font_color", Color(0, 0, 0, 0))
+		else:
+			style.bg_color = Color(0.15, 0.1, 0.25, 0.9)
+			style.border_width_bottom = 2
+			style.border_color = Color(0.6, 0.3, 0.8)
+			style.content_margin_left = 8
+			style.content_margin_right = 8
+			lbl.text = "_"
+			lbl.custom_minimum_size.x = 36
+			lbl.add_theme_color_override("font_color", Color(0.8, 0.8, 0.9))
+
+		slot.add_theme_stylebox_override("panel", style)
 		slot.add_child(lbl)
 
 		_answer_display.add_child(slot)
@@ -142,8 +157,17 @@ func _spawn_letter():
 		randf_range(-50, -30) if randf() < 0.5 else randf_range(viewport_size.x + 30, viewport_size.x + 50),
 		randf_range(120, viewport_size.y - 200)
 	)
+	var speed_base: float = 60.0
+	var speed_range: float = 60.0
+	match difficulty:
+		"easy":
+			speed_base = 40.0
+			speed_range = 40.0
+		"hard":
+			speed_base = 80.0
+			speed_range = 80.0
 	floating.velocity = Vector2(
-		randf_range(60, 120) * (1 if floating.position.x < 0 else -1),
+		randf_range(speed_base, speed_base + speed_range) * (1 if floating.position.x < 0 else -1),
 		randf_range(-20, 20)
 	)
 	floating.clicked.connect(_on_letter_clicked)

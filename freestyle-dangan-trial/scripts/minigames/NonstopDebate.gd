@@ -118,8 +118,13 @@ func _spawn_next_line():
 	panel.setup(line_data, speed_mult)
 
 	var viewport_height = get_viewport().get_visible_rect().size.y
-	var y_position = 80 + (current_debate_line_index % 6) * 65
-	panel.position.y = clamp(y_position, 60, viewport_height - 120)
+	var safe_top = 100
+	var safe_bottom = 180
+	var usable_height = viewport_height - safe_top - safe_bottom
+	var num_rows = 5
+	var row_height = usable_height / num_rows
+	var y_position = safe_top + (current_debate_line_index % num_rows) * row_height
+	panel.position.y = clamp(y_position, safe_top, viewport_height - safe_bottom)
 
 	panel.panel_exited_screen.connect(_on_panel_exited)
 	_panels_container.add_child(panel)
@@ -207,6 +212,10 @@ func _on_wrong_hit(panel: DebateTextPanel):
 	tween.tween_property(flash, "color:a", 0.0, 0.3)
 	tween.finished.connect(func(): flash.queue_free())
 
+	var wrong_comment = panel.line_data.get("userWrongAnswerComment", "")
+	if not wrong_comment.is_empty():
+		_show_feedback_comment(wrong_comment, Color(1.0, 0.4, 0.4))
+
 func _on_panel_exited(panel: DebateTextPanel):
 	_panels_on_screen.erase(panel)
 	if is_instance_valid(panel):
@@ -218,6 +227,12 @@ func _on_influence_depleted():
 
 func _on_time_expired():
 	if not _solved:
+		for panel in _panels_on_screen:
+			if is_instance_valid(panel) and panel.is_shootable:
+				var fail_comment = panel.line_data.get("userFailedComment", "")
+				if not fail_comment.is_empty():
+					_show_feedback_comment(fail_comment, Color(0.8, 0.8, 0.3))
+				break
 		_finish(false, {"reason": "time_expired"})
 
 func _trigger_spotlight(char_id: String):
@@ -229,6 +244,24 @@ func _trigger_spotlight(char_id: String):
 			var cam = get_viewport().get_camera_3d()
 			if cam and cam.has_method("jump_to_bench"):
 				cam.jump_to_bench(pos, true)
+
+func _show_feedback_comment(text: String, color: Color):
+	var label = Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_color_override("font_color", color)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.set_anchors_preset(Control.PRESET_CENTER)
+	label.position.y = 80
+	label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	label.modulate.a = 0.0
+	_overlay.add_child(label)
+
+	var tween = create_tween()
+	tween.tween_property(label, "modulate:a", 1.0, 0.2)
+	tween.tween_interval(1.5)
+	tween.tween_property(label, "modulate:a", 0.0, 0.3)
+	tween.finished.connect(func(): label.queue_free())
 
 func cleanup():
 	super.cleanup()

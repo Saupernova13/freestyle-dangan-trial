@@ -62,7 +62,7 @@ func _on_correct_answer(data: Dictionary = {}):
 
 func _on_wrong_answer():
 	AudioManager.play_sfx("wrong_buzzer")
-	# Damage influence gauge -- InfluenceGauge handles the amount based on difficulty
+	InfluenceGauge.take_damage(difficulty)
 
 func _finish(success: bool, data: Dictionary = {}):
 	is_active = false

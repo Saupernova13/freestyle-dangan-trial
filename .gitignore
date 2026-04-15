@@ -32,3 +32,7 @@ mono_crash.*.json
 /freestyle-dangan-trial/textures
 *.uid
 /freestyle-dangan-trial/Trial
+
+# Scripter
+scripter/node_modules/
+scripter/dist/

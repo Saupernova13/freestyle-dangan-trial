@@ -4,7 +4,6 @@ signal closed
 
 var _bg: ColorRect
 var _panel: PanelContainer
-var _updating: bool = false
 
 func _ready():
 	layer = 28

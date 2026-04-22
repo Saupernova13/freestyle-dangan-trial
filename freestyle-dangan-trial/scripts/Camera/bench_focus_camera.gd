@@ -107,14 +107,18 @@ func _ready():
 	# Focus on first bench marker immediately (no animation)
 	focus_on_bench(0, false)
 
+func _is_nav_blocked() -> bool:
+	var s = ScriptDirector.current_state
+	return s == ScriptDirector.State.DIALOGUE or s == ScriptDirector.State.WAITING_FOR_ADVANCE
+
 func _process(delta):
 	# Handle hold-to-repeat navigation
-	if not is_transitioning:
+	if not is_transitioning and not _is_nav_blocked():
 		# Check for keyboard hold
 		var current_hold_direction = 0
-		if Input.is_action_pressed("ui_left"):
+		if Input.get_action_strength("ui_left") > 0.75:
 			current_hold_direction = -1
-		elif Input.is_action_pressed("ui_right"):
+		elif Input.get_action_strength("ui_right") > 0.75:
 			current_hold_direction = 1
 		elif is_holding_touch:
 			current_hold_direction = hold_direction
@@ -183,15 +187,14 @@ func _input(event):
 	if is_transitioning:
 		return
 
-	# Arrow key navigation (swapped to match visual direction)
-	# Right arrow = previous index (clockwise around circle = visually rightward)
-	# Left arrow = next index (counter-clockwise = visually leftward)
-	if event.is_action_pressed("ui_right"):
-		navigate_to_previous()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left"):
-		navigate_to_next()
-		get_viewport().set_input_as_handled()
+	# Arrow key navigation blocked during dialogue
+	if not _is_nav_blocked():
+		if event.is_action_pressed("ui_right"):
+			navigate_to_previous()
+			get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_left"):
+			navigate_to_next()
+			get_viewport().set_input_as_handled()
 
 	# Mouse input for free-look only (PC)
 	if event is InputEventMouseButton:
@@ -224,21 +227,22 @@ func _input(event):
 				touch_moved = false
 				is_dragging = true
 
-				# Check if touch is in navigation zone
-				var viewport_width = get_viewport().get_visible_rect().size.x
-				var tap_x = event.position.x
-				if tap_x < viewport_width / 3.0:
-					# Left navigation zone
-					is_holding_touch = true
-					hold_direction = -1
-					navigate_to_next()
-					get_viewport().set_input_as_handled()
-				elif tap_x > (viewport_width * 2.0 / 3.0):
-					# Right navigation zone
-					is_holding_touch = true
-					hold_direction = 1
-					navigate_to_previous()
-					get_viewport().set_input_as_handled()
+				# Check if touch is in navigation zone (blocked during dialogue)
+				if not _is_nav_blocked():
+					var viewport_width = get_viewport().get_visible_rect().size.x
+					var tap_x = event.position.x
+					if tap_x < viewport_width / 3.0:
+						# Left navigation zone
+						is_holding_touch = true
+						hold_direction = -1
+						navigate_to_next()
+						get_viewport().set_input_as_handled()
+					elif tap_x > (viewport_width * 2.0 / 3.0):
+						# Right navigation zone
+						is_holding_touch = true
+						hold_direction = 1
+						navigate_to_previous()
+						get_viewport().set_input_as_handled()
 			elif not event.pressed and event.index == active_touch_index:
 				# Touch ended - reset all states
 				is_dragging = false

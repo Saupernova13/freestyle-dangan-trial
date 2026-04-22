@@ -29,7 +29,8 @@ const DEFAULT_BORDER_COLOR: Color = Color(0.3, 0.3, 0.5, 0.5)
 func setup(data: Dictionary, speed_multiplier: float = 1.0):
 	line_data = data
 	is_shootable = data.get("isShootable", false)
-	answer_bullet_id = data.get("answerBulletId", "")
+	var raw_bullet_id = data.get("answerBulletId", "")
+	answer_bullet_id = raw_bullet_id if raw_bullet_id != null else ""
 	use_negative_bullet = data.get("useNegativeBullet", false)
 	movement_direction = data.get("textMovementDirection", "left_to_right")
 	character_id = data.get("characterId", "")
@@ -72,9 +73,12 @@ func _rebuild_bbcode():
 	if not _rich_label:
 		return
 
-	var sentence_begin = line_data.get("sentenceBeginning", "")
-	var target = line_data.get("target", "")
-	var sentence_end = line_data.get("sentenceEnd", "")
+	var raw_begin = line_data.get("sentenceBeginning", "")
+	var sentence_begin: String = raw_begin if raw_begin != null else ""
+	var raw_target = line_data.get("target", "")
+	var target: String = raw_target if raw_target != null else ""
+	var raw_end = line_data.get("sentenceEnd", "")
+	var sentence_end: String = raw_end if raw_end != null else ""
 
 	var bbcode = ""
 	if not sentence_begin.is_empty():

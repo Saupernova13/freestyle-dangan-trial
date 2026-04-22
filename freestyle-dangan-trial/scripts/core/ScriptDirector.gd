@@ -75,7 +75,9 @@ func _handle_speaking_line(line: Dictionary):
 	var dialogue_text = line.get("dialogue", "")
 
 	var audio_file = line.get("audioFile", "")
-	if not audio_file.is_empty():
+	if audio_file is String and not audio_file.is_empty():
+		if AudioManager.is_voice_playing():
+			AudioManager.stop_voice()
 		AudioManager.play_voice_line(audio_file)
 
 	dialogue_displayed.emit(character_id, dialogue_text)

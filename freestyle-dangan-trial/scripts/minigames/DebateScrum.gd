@@ -194,22 +194,22 @@ func _show_argument(index: int):
 	var opp_char_id = arg.get("oppositionCharacterId", "")
 	if not opp_char_id.is_empty():
 		var char_data = TrialLoader.load_character(opp_char_id)
-		if not char_data.is_empty():
+		if char_data != null and not char_data.is_empty():
 			var char_name = char_data.get("name", "") + " " + char_data.get("surname", "")
 			opp_text = char_name.strip_edges() + ":\n" + opp_text
 	_opposition_label.text = opp_text
 
 	var def_text = arg.get("defenseStatement", "")
 	var def_char_id = arg.get("defenseCharacterId", "")
-	if not def_char_id.is_empty():
+	if def_char_id:
 		var char_data = TrialLoader.load_character(def_char_id)
-		if not char_data.is_empty():
+		if char_data != null and not char_data.is_empty():
 			var char_name = char_data.get("name", "") + " " + char_data.get("surname", "")
 			def_text = char_name.strip_edges() + ":\n" + def_text
 	_defense_label.text = def_text
 
 	var opp_audio = arg.get("oppositionAudioFile", "")
-	if not opp_audio.is_empty():
+	if opp_audio:
 		AudioManager.play_voice_line(opp_audio)
 
 	var opp_keywords = arg.get("oppositionKeywords", [])
@@ -238,7 +238,7 @@ func _show_argument(index: int):
 
 	_update_score_display()
 
-func _on_keyword_selected(keyword: String, is_correct: bool, btn: Button):
+func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
 	for b in _defense_buttons:
 		b.disabled = true
 

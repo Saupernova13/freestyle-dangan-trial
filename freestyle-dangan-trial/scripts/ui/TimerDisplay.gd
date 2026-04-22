@@ -63,7 +63,7 @@ func _process(delta):
 
 	_update_display()
 
-	var pct = _time_remaining / _initial_time if _initial_time > 0 else 0
+	var pct = _time_remaining / _initial_time if _initial_time > 0 else 0.0
 	if pct < 0.25:
 		time_label.add_theme_color_override("font_color", Color(1.0, 0.2, 0.2))
 		if not _pulse_tween or not _pulse_tween.is_running():
@@ -94,6 +94,7 @@ func get_remaining() -> float:
 	return _time_remaining
 
 func _update_display():
+	@warning_ignore("integer_division")
 	var mins = int(_time_remaining) / 60
 	var secs = int(_time_remaining) % 60
 	time_label.text = "%02d:%02d" % [mins, secs]

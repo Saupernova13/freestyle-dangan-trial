@@ -65,14 +65,14 @@ func _scan_directory(path: String, results: Array, depth: int = 0):
 	if not dir:
 		return
 	dir.list_dir_begin()
-	var name = dir.get_next()
-	while name != "":
-		var full_path = path + "/" + name
-		if dir.current_is_dir() and not name.begins_with("."):
+	var entry_name = dir.get_next()
+	while entry_name != "":
+		var full_path = path + "/" + entry_name
+		if dir.current_is_dir() and not entry_name.begins_with("."):
 			_scan_directory(full_path, results, depth + 1)
-		elif name.ends_with(".drtrial"):
+		elif entry_name.ends_with(".drtrial"):
 			results.append(full_path)
-		name = dir.get_next()
+		entry_name = dir.get_next()
 	dir.list_dir_end()
 
 func _show_mobile_file_list(files: Array):

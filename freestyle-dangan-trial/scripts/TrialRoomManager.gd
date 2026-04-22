@@ -64,9 +64,11 @@ func load_and_display_trial():
 
 	for i in range(17):
 		var position_index = i + 1
-		var character_id = character_ids[i] if i < character_ids.size() else null
+		var character_id: String = ""
+		if i < character_ids.size() and character_ids[i] is String:
+			character_id = character_ids[i]
 
-		if character_id and character_id != "null":
+		if not character_id.is_empty() and character_id != "null":
 			populate_character_position(position_index, character_id)
 		else:
 			print("No character at position ", position_index)
@@ -114,9 +116,10 @@ func populate_character_position(position_index: int, character_id: String):
 	var material = StandardMaterial3D.new()
 	material.albedo_texture = texture
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	material.cull_mode = BaseMaterial3D.CULL_BACK
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mesh_instance.material_override = material
+	_ensure_black_backplane(mesh_instance)
 
 	print("Loaded character: ", char_data.get("name", ""), " at position ", position_index)
 
@@ -171,11 +174,12 @@ func _on_line_started(line: Dictionary):
 		var character_position = find_character_position(character_id)
 
 		if character_position >= 0:
+			# Always hard-cut to the speaking character first (no smooth pan)
+			if camera and camera.has_method("jump_to_bench"):
+				camera.jump_to_bench(character_position, false)
 			var camera_motion = line.get("cameraMotion", {})
 			if not camera_motion.is_empty() and camera_motion.get("type", "none") != "none":
 				CameraDirector.execute_motion(camera_motion, character_position)
-			elif camera and camera.has_method("jump_to_bench"):
-				camera.jump_to_bench(character_position, true)
 
 			update_character_sprite(character_position, character_id, sprite_index)
 
@@ -293,11 +297,26 @@ func update_character_sprite(position_index: int, character_id: String, sprite_i
 		var material = StandardMaterial3D.new()
 		material.albedo_texture = texture
 		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		material.cull_mode = BaseMaterial3D.CULL_BACK
 		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mesh_instance.material_override = material
+	_ensure_black_backplane(mesh_instance)
 
 	update_character_portrait(position_index)
+
+func _ensure_black_backplane(mesh_instance: MeshInstance3D):
+	if mesh_instance.get_node_or_null("BackPlane"):
+		return
+	var back = MeshInstance3D.new()
+	back.name = "BackPlane"
+	back.mesh = mesh_instance.mesh
+	back.rotation_degrees.y = 180.0
+	var black_mat = StandardMaterial3D.new()
+	black_mat.albedo_color = Color.BLACK
+	black_mat.cull_mode = BaseMaterial3D.CULL_BACK
+	black_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	back.material_override = black_mat
+	mesh_instance.add_child(back)
 
 func _on_game_over():
 	ScriptDirector.pause_trial()
@@ -310,10 +329,12 @@ func _on_game_over():
 	game_over_screen.show_game_over()
 
 	game_over_screen.retry_requested.connect(func():
+		Engine.time_scale = 1.0
 		InfluenceGauge.reset()
 		get_tree().reload_current_scene()
 	)
 	game_over_screen.return_to_menu.connect(func():
+		Engine.time_scale = 1.0
 		InfluenceGauge.reset()
 		get_tree().change_scene_to_file("res://scenes/start_menu.tscn")
 	)

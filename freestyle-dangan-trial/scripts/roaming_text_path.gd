@@ -214,7 +214,7 @@ func generate_curved_text():
 
 	# Create a PathFollow2D and Label for each character
 	for i in range(char_count):
-		var char = text[i]
+		var character = text[i]
 
 		# Create PathFollow2D for this character
 		# This node will follow the path and position the label
@@ -224,7 +224,7 @@ func generate_curved_text():
 
 		# Create Label for the character
 		var label = Label.new()
-		label.text = char
+		label.text = character
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 

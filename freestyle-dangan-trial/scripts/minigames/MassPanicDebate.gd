@@ -73,7 +73,6 @@ func _build_overlay():
 	title.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_overlay.add_child(title)
 
-	var viewport_height = 720
 	var row_height = 65
 	var row_starts = [100, 250, 400]
 
@@ -187,7 +186,8 @@ func _spawn_group():
 		var panel = DebateTextPanel.new()
 		var line_data = speaker_data.duplicate()
 		line_data["characterId"] = speaker_ids[i]
-		line_data["isShootable"] = (i == focused_row) and not line_data.get("answerBulletId", "").is_empty()
+		var answer_bullet_id = line_data.get("answerBulletId", "")
+		line_data["isShootable"] = (i == focused_row) and answer_bullet_id is String and not answer_bullet_id.is_empty()
 
 		panel.setup(line_data, get_difficulty_multiplier())
 		panel.position.y = 0
@@ -198,7 +198,7 @@ func _spawn_group():
 
 		if i == focused_row:
 			var voice_file = speaker_data.get("voiceLineFile", "")
-			if not voice_file.is_empty():
+			if voice_file is String and not voice_file.is_empty():
 				AudioManager.play_voice_line(voice_file)
 			if not speaker_ids[i].is_empty():
 				_trigger_spotlight(speaker_ids[i])

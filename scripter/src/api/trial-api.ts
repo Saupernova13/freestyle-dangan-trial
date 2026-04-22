@@ -1,4 +1,4 @@
-import { CAST_SLOTS, TRIAL_FORMAT_VERSION } from '../domain/constants.js';
+import { CAST_SLOTS, STUDENT_COUNT, TRIAL_FORMAT_VERSION } from '../domain/constants.js';
 import type {
   Character,
   ScriptLine,
@@ -212,6 +212,8 @@ export class TrialAPI {
       metadata: {
         version: TRIAL_FORMAT_VERSION,
         lastModified: now,
+        studentCount: STUDENT_COUNT,
+        headmasterCount: CAST_SLOTS - STUDENT_COUNT,
         totalCharacters: characterIds.filter(id => id !== null).length,
         scriptLineCount: this.state.scriptLines.length,
         minigameCount: this.state.minigames.length,

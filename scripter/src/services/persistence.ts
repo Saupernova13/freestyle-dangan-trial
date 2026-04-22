@@ -182,7 +182,7 @@ export class PersistenceService {
   }
 
   async saveCharacter(character: Character, sprites: (SpriteData | null)[]): Promise<void> {
-    const folderName = `${character.surname}_${character.name}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const folderName = `${character.name}_${character.surname}`.replace(/[^a-zA-Z0-9_\- ]/g, '_');
     const charPath = `Characters/${folderName}`;
 
     await this.fs.ensureDirectory(charPath);

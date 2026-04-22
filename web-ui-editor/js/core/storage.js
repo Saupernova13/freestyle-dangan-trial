@@ -253,6 +253,11 @@ async function autoSaveTrial() {
   // Create minimal ID-only references
   let characterIds = cast.map(c => c ? c.id : null);
 
+  const RUNTIME_FIELDS = new Set(['voiceLineBlob', 'oppositionAudioBlob', 'defenseAudioBlob']);
+  let minigamesForSave = JSON.parse(JSON.stringify(minigames, (k, v) =>
+    RUNTIME_FIELDS.has(k) ? undefined : v
+  ));
+
   let trialJs = {
     trialName,
     characters: characterIds, // Just an array of IDs or nulls
@@ -263,7 +268,7 @@ async function autoSaveTrial() {
       imageFile: b.imageFile,
       inversedLieBulletName: b.inversedLieBulletName
     })),
-    minigames: minigames,
+    minigames: minigamesForSave,
     script: {
       lines: scriptLines,
       lastModified: new Date().toISOString()

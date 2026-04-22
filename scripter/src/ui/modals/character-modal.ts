@@ -136,8 +136,8 @@ export class DrCharacterModal extends LitElement {
           surname: char.surname,
           heightM: char.heightM,
           heightCM: char.heightCM,
-          weight: char.weight,
-          chest: char.chest,
+          weight: String(char.weight),
+          chest: String(char.chest),
           blood: char.blood,
           dob: char.dob,
           likes: char.likes,
@@ -196,12 +196,12 @@ export class DrCharacterModal extends LitElement {
           <input type="number" class="form-input" .value=${String(f.heightCM)} min="0" max="99" @input=${(e: Event) => (this.fields = { ...f, heightCM: Number((e.target as HTMLInputElement).value) })} />
         </div>
         <div class="form-group flex">
-          <label>Weight</label>
-          <input class="form-input" .value=${f.weight} @input=${(e: Event) => (this.fields = { ...f, weight: (e.target as HTMLInputElement).value })} placeholder="e.g., 65kg" />
+          <label>Weight (kg)</label>
+          <input type="number" min="0" max="300" class="form-input" .value=${f.weight} @input=${(e: Event) => (this.fields = { ...f, weight: (e.target as HTMLInputElement).value })} />
         </div>
         <div class="form-group flex">
-          <label>Chest</label>
-          <input class="form-input" .value=${f.chest} @input=${(e: Event) => (this.fields = { ...f, chest: (e.target as HTMLInputElement).value })} placeholder="e.g., 80cm" />
+          <label>Chest (cm)</label>
+          <input type="number" min="0" max="200" class="form-input" .value=${f.chest} @input=${(e: Event) => (this.fields = { ...f, chest: (e.target as HTMLInputElement).value })} />
         </div>
       </div>
 
@@ -257,8 +257,8 @@ export class DrCharacterModal extends LitElement {
       surname: f.surname,
       heightM: f.heightM,
       heightCM: f.heightCM,
-      weight: f.weight,
-      chest: f.chest,
+      weight: parseInt(f.weight, 10),
+      chest: parseInt(f.chest, 10),
       blood: f.blood,
       dob: f.dob,
       likes: f.likes,

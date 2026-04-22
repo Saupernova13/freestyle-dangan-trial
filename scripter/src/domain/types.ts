@@ -16,8 +16,8 @@ export interface Character {
   surname: string;
   heightM: number;
   heightCM: number;
-  weight: string;
-  chest: string;
+  weight: number;
+  chest: number;
   blood: BloodType;
   dob: string;
   likes: string;

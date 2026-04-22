@@ -74,9 +74,16 @@ func check_bullet_match(bullet_id: String, requires_lie: bool) -> bool:
 
 func get_bullet_image_path(bullet: Dictionary) -> String:
 	var image_file = bullet.get("imageFile", "")
-	if image_file.is_empty():
+	if image_file == null or image_file.is_empty():
 		return ""
-	return TrialLoader.get_truth_bullet_image(image_file)
+	var result = TrialLoader.get_truth_bullet_image(image_file)
+	return result if result != null else ""
 
 func get_bullet_count() -> int:
 	return active_bullets.size()
+
+func get_bullet_name(bullet_id: String) -> String:
+	for bullet in all_bullets:
+		if bullet.get("bulletId", "") == bullet_id:
+			return bullet.get("name", "Unknown Evidence")
+	return "Unknown Evidence"

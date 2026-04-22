@@ -19,6 +19,7 @@ func initialize(data: Dictionary):
 
 func start():
 	is_active = true
+	AudioManager.play_minigame_bgm(minigame_data.get("gameType", ""))
 	if time_limit > 0:
 		_start_timer()
 
@@ -68,6 +69,7 @@ func _finish(success: bool, data: Dictionary = {}):
 	is_active = false
 	if _timer_node:
 		_timer_node.stop()
+	AudioManager.stop_minigame_bgm(0.6)
 	if success:
 		AudioManager.play_sfx("correct_chime")
 	minigame_completed.emit(success, data)

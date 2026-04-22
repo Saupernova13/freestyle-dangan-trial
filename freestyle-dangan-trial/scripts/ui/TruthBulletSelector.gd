@@ -68,12 +68,12 @@ func _ready():
 	vbox.add_child(nav_label)
 
 	var anchor_control = Control.new()
-	anchor_control.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	anchor_control.anchor_left = 1.0
+	anchor_control.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	anchor_control.anchor_left = 0.0
 	anchor_control.anchor_top = 1.0
-	anchor_control.offset_left = -160
+	anchor_control.offset_left = 10
 	anchor_control.offset_top = -200
-	anchor_control.offset_right = -10
+	anchor_control.offset_right = 160
 	anchor_control.offset_bottom = -10
 	add_child(anchor_control)
 	anchor_control.add_child(panel)

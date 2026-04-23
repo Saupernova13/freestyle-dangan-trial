@@ -323,19 +323,19 @@ func _on_shoot(click_pos: Vector2):
 		return
 
 	var hit_panel: DebateTextPanel = null
+	var hit_zone: String = ""
 	for panel in _panels_on_screen:
 		if is_instance_valid(panel):
-			var zone = panel.get_hit_zone(click_pos)
-			if zone != "":
+			var z = panel.get_hit_zone(click_pos)
+			if z != "":
 				hit_panel = panel
+				hit_zone = z
 				break
 
 	if hit_panel == null:
 		return
 
-	var zone = hit_panel.get_hit_zone(click_pos)
-
-	match zone:
+	match hit_zone:
 		"white_noise":
 			_on_white_noise_hit(hit_panel, click_pos)
 		"prefix", "suffix":

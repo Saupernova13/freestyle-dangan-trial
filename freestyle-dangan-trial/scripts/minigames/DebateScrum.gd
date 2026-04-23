@@ -176,7 +176,7 @@ func _build_overlay():
 	_turn_timer_label.add_theme_font_size_override("font_size", 20)
 	_turn_timer_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
 	_turn_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_turn_timer_label.set_anchors_preset(Control.PRESET_TOP_CENTER)
+	_turn_timer_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_turn_timer_label.position.y = 60
 	_turn_timer_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_overlay.add_child(_turn_timer_label)

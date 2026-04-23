@@ -39,11 +39,11 @@ func initialize(data: Dictionary):
 
 	match difficulty:
 		"easy":
-			_main_spawn_interval = 3.5
+			_main_spawn_interval = 2.8
 		"hard":
-			_main_spawn_interval = 2.0
+			_main_spawn_interval = 1.5
 		_:
-			_main_spawn_interval = 2.5
+			_main_spawn_interval = 2.0
 
 	_split_dialogue_lines()
 

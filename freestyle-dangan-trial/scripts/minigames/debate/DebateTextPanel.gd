@@ -50,7 +50,7 @@ func setup(data: Dictionary, speed_multiplier: float = 1.0):
 	text_font = data.get("textFont", "default")
 	is_white_noise = data.get("isWhiteNoise", false)
 
-	_move_speed = 150.0 * speed_multiplier
+	_move_speed = 200.0 * speed_multiplier
 	_build_panel()
 
 func _build_panel():

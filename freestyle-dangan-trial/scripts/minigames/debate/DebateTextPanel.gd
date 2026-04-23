@@ -15,16 +15,27 @@ var text_font: String = "default"
 
 var _panel: PanelContainer
 var _panel_style: StyleBoxFlat
-var _rich_label: RichTextLabel
+var _hbox: HBoxContainer
+var _prefix_label: RichTextLabel
+var _weak_label: RichTextLabel
+var _suffix_label: RichTextLabel
 var _move_speed: float = 150.0
 var _is_active: bool = true
 var _fade_timer: float = 0.0
+var is_white_noise: bool = false
 
-const PANEL_HEIGHT: float = 50.0
 const WEAK_POINT_COLOR: String = "#FF8800"
 const NORMAL_TEXT_COLOR: String = "#FFFFFF"
 const SHOOTABLE_BORDER_COLOR: Color = Color(1.0, 0.5, 0.0, 0.7)
 const DEFAULT_BORDER_COLOR: Color = Color(0.3, 0.3, 0.5, 0.5)
+
+const MAIN_FONT_SIZE: int = 20
+const MAIN_PANEL_HEIGHT: float = 54.0
+const MAIN_MIN_WIDTH: float = 350.0
+
+const WHITE_NOISE_FONT_SIZE: int = 13
+const WHITE_NOISE_PANEL_HEIGHT: float = 36.0
+const WHITE_NOISE_MIN_WIDTH: float = 150.0
 
 func setup(data: Dictionary, speed_multiplier: float = 1.0):
 	line_data = data
@@ -37,6 +48,7 @@ func setup(data: Dictionary, speed_multiplier: float = 1.0):
 	has_spotlight = data.get("characterSpotlight", false)
 	text_effect = data.get("textEffect", "normal")
 	text_font = data.get("textFont", "default")
+	is_white_noise = data.get("isWhiteNoise", false)
 
 	_move_speed = 150.0 * speed_multiplier
 	_build_panel()
@@ -44,7 +56,13 @@ func setup(data: Dictionary, speed_multiplier: float = 1.0):
 func _build_panel():
 	_panel = PanelContainer.new()
 	_panel_style = StyleBoxFlat.new()
-	_panel_style.bg_color = Color(0.1, 0.1, 0.2, 0.75)
+
+	var font_size = WHITE_NOISE_FONT_SIZE if is_white_noise else MAIN_FONT_SIZE
+	var panel_height = WHITE_NOISE_PANEL_HEIGHT if is_white_noise else MAIN_PANEL_HEIGHT
+	var min_width = WHITE_NOISE_MIN_WIDTH if is_white_noise else MAIN_MIN_WIDTH
+	var bg_alpha = 0.45 if is_white_noise else 0.75
+
+	_panel_style.bg_color = Color(0.1, 0.1, 0.2, bg_alpha)
 	_panel_style.border_width_bottom = 1
 	_panel_style.border_width_top = 1
 	_panel_style.border_width_left = 1
@@ -57,20 +75,36 @@ func _build_panel():
 	_panel.add_theme_stylebox_override("panel", _panel_style)
 	add_child(_panel)
 
-	_rich_label = RichTextLabel.new()
-	_rich_label.bbcode_enabled = true
-	_rich_label.fit_content = true
-	_rich_label.scroll_active = false
-	_rich_label.add_theme_font_size_override("normal_font_size", 18)
-	_panel.add_child(_rich_label)
+	_hbox = HBoxContainer.new()
+	_hbox.add_theme_constant_override("separation", 0)
+	_panel.add_child(_hbox)
 
-	_rebuild_bbcode()
+	_prefix_label = _create_rich_label(font_size)
+	_hbox.add_child(_prefix_label)
 
-	custom_minimum_size.y = PANEL_HEIGHT
+	_weak_label = _create_rich_label(font_size)
+	_hbox.add_child(_weak_label)
+
+	_suffix_label = _create_rich_label(font_size)
+	_hbox.add_child(_suffix_label)
+
+	_rebuild_text()
+
+	custom_minimum_size = Vector2(min_width, panel_height)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-func _rebuild_bbcode():
-	if not _rich_label:
+func _create_rich_label(font_size: int) -> RichTextLabel:
+	var label = RichTextLabel.new()
+	label.bbcode_enabled = true
+	label.fit_content = true
+	label.scroll_active = false
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.add_theme_font_size_override("normal_font_size", font_size)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return label
+
+func _rebuild_text():
+	if not _prefix_label or not _weak_label or not _suffix_label:
 		return
 
 	var raw_begin = line_data.get("sentenceBeginning", "")
@@ -80,23 +114,38 @@ func _rebuild_bbcode():
 	var raw_end = line_data.get("sentenceEnd", "")
 	var sentence_end: String = raw_end if raw_end != null else ""
 
-	var bbcode = ""
-	if not sentence_begin.is_empty():
-		bbcode += "[color=%s]%s[/color]" % [NORMAL_TEXT_COLOR, sentence_begin]
+	var has_weak = not target.is_empty()
 
-	if not target.is_empty():
+	var prefix_text = sentence_begin
+	if has_weak and not sentence_begin.is_empty() and not sentence_begin.ends_with(" "):
+		prefix_text += " "
+	var prefix_bbcode = ""
+	if not prefix_text.is_empty():
+		prefix_bbcode = "[color=%s]%s[/color]" % [NORMAL_TEXT_COLOR, prefix_text]
+	prefix_bbcode = _apply_font_wrap(prefix_bbcode)
+	prefix_bbcode = _apply_effect_wrap(prefix_bbcode)
+	_prefix_label.text = prefix_bbcode
+
+	var weak_bbcode = ""
+	if has_weak:
 		if is_shootable:
-			bbcode += "[color=%s][b]%s[/b][/color]" % [WEAK_POINT_COLOR, target]
+			weak_bbcode = "[color=%s][b]%s[/b][/color]" % [WEAK_POINT_COLOR, target]
 		else:
-			bbcode += "[color=%s]%s[/color]" % [NORMAL_TEXT_COLOR, target]
+			weak_bbcode = "[color=%s]%s[/color]" % [NORMAL_TEXT_COLOR, target]
+	weak_bbcode = _apply_font_wrap(weak_bbcode)
+	weak_bbcode = _apply_effect_wrap(weak_bbcode)
+	_weak_label.text = weak_bbcode
+	_weak_label.visible = has_weak
 
-	if not sentence_end.is_empty():
-		bbcode += "[color=%s]%s[/color]" % [NORMAL_TEXT_COLOR, sentence_end]
-
-	bbcode = _apply_font_wrap(bbcode)
-	bbcode = _apply_effect_wrap(bbcode)
-
-	_rich_label.text = bbcode
+	var suffix_text = sentence_end
+	if has_weak and not sentence_end.is_empty() and not sentence_end.begins_with(" "):
+		suffix_text = " " + suffix_text
+	var suffix_bbcode = ""
+	if not suffix_text.is_empty():
+		suffix_bbcode = "[color=%s]%s[/color]" % [NORMAL_TEXT_COLOR, suffix_text]
+	suffix_bbcode = _apply_font_wrap(suffix_bbcode)
+	suffix_bbcode = _apply_effect_wrap(suffix_bbcode)
+	_suffix_label.text = suffix_bbcode
 
 func _apply_font_wrap(bbcode: String) -> String:
 	match text_font:
@@ -123,7 +172,22 @@ func set_shootable(value: bool):
 	is_shootable = value
 	if _panel_style:
 		_panel_style.border_color = SHOOTABLE_BORDER_COLOR if is_shootable else DEFAULT_BORDER_COLOR
-	_rebuild_bbcode()
+	_rebuild_text()
+
+func get_hit_zone(click_pos: Vector2) -> String:
+	if not _is_active:
+		return ""
+	if is_white_noise:
+		if Rect2(global_position, size).has_point(click_pos):
+			return "white_noise"
+		return ""
+	if _prefix_label.visible and Rect2(_prefix_label.global_position, _prefix_label.size).has_point(click_pos):
+		return "prefix"
+	if _weak_label.visible and Rect2(_weak_label.global_position, _weak_label.size).has_point(click_pos):
+		return "weakpoint"
+	if _suffix_label.visible and Rect2(_suffix_label.global_position, _suffix_label.size).has_point(click_pos):
+		return "suffix"
+	return ""
 
 func _ready():
 	var viewport_width = get_viewport_rect().size.x
@@ -154,14 +218,7 @@ func _process(delta):
 			panel_exited_screen.emit(self)
 
 func check_hit(click_pos: Vector2) -> bool:
-	if not is_shootable or not _is_active:
-		return false
-
-	var panel_rect = Rect2(global_position, _panel.size if _panel else Vector2(200, 50))
-	return panel_rect.has_point(click_pos)
-
-func get_weak_point_rect() -> Rect2:
-	return Rect2(global_position, _panel.size if _panel else Vector2.ZERO)
+	return get_hit_zone(click_pos) != ""
 
 func destroy_with_effect():
 	_is_active = false

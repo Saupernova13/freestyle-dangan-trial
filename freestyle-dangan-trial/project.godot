@@ -27,6 +27,7 @@ TruthBulletManager="*res://scripts/core/TruthBulletManager.gd"
 CameraDirector="*res://scripts/Camera/CameraDirector.gd"
 ScreenEffects="*res://scripts/core/ScreenEffectsManager.gd"
 Settings="*res://scripts/core/Settings.gd"
+ConcentrateGauge="*res://scripts/core/ConcentrateGauge.gd"
 
 [display]
 

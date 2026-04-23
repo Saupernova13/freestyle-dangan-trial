@@ -12,9 +12,14 @@ var _defense_buttons: Array = []
 var _progress_bar: ColorRect
 var _progress_fill: ColorRect
 var _score_label: Label
+var _turn_timer_label: Label
 
 var _influence_gauge_ui: Node
 var _timer_display: Node
+
+var _turn_timer: float = 0.0
+const TURN_TIME_LIMIT: float = 5.0
+var _turn_active: bool = false
 
 func initialize(data: Dictionary):
 	super.initialize(data)
@@ -167,6 +172,33 @@ func _build_overlay():
 	_score_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_overlay.add_child(_score_label)
 
+	_turn_timer_label = Label.new()
+	_turn_timer_label.add_theme_font_size_override("font_size", 20)
+	_turn_timer_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
+	_turn_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_turn_timer_label.set_anchors_preset(Control.PRESET_TOP_CENTER)
+	_turn_timer_label.position.y = 60
+	_turn_timer_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_overlay.add_child(_turn_timer_label)
+
+func _process(delta):
+	if not is_active or not _turn_active:
+		return
+
+	_turn_timer += delta
+	var time_left = maxf(TURN_TIME_LIMIT - _turn_timer, 0.0)
+	_turn_timer_label.text = "%.1f" % time_left
+
+	var color = Color(0.2, 1.0, 0.4)
+	if time_left < 2.0:
+		color = Color(1.0, 0.2, 0.2)
+	elif time_left < 3.5:
+		color = Color(1.0, 0.8, 0.2)
+	_turn_timer_label.add_theme_color_override("font_color", color)
+
+	if _turn_timer >= TURN_TIME_LIMIT:
+		_auto_advance_turn()
+
 func _setup_ui():
 	_influence_gauge_ui = preload("res://scripts/ui/InfluenceGaugeUI.gd").new()
 	add_child(_influence_gauge_ui)
@@ -187,6 +219,8 @@ func _show_argument(index: int):
 			_finish(false, {"reason": "outscored", "score": player_score})
 		return
 
+	_turn_timer = 0.0
+	_turn_active = true
 	current_argument_index = index
 	var arg = arguments[index]
 
@@ -239,6 +273,7 @@ func _show_argument(index: int):
 	_update_score_display()
 
 func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
+	_turn_active = false
 	for b in _defense_buttons:
 		b.disabled = true
 
@@ -276,6 +311,16 @@ func _update_score_display():
 		player_score, opponent_score,
 		current_argument_index + 1, arguments.size()
 	]
+
+func _auto_advance_turn():
+	_turn_active = false
+	for b in _defense_buttons:
+		b.disabled = true
+	opponent_score += 1
+	_update_progress_bar()
+	_update_score_display()
+	await get_tree().create_timer(1.0).timeout
+	_show_argument(current_argument_index + 1)
 
 func _on_influence_depleted():
 	_finish(false, {"reason": "influence_depleted"})

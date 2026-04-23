@@ -93,6 +93,10 @@ func hide_timer():
 func get_remaining() -> float:
 	return _time_remaining
 
+func add_time(seconds: float):
+	_time_remaining = clamp(_time_remaining + seconds, 0.0, _initial_time * 2.0)
+	_update_display()
+
 func _update_display():
 	@warning_ignore("integer_division")
 	var mins = int(_time_remaining) / 60

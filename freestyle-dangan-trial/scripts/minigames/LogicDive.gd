@@ -23,7 +23,8 @@ func start():
 	_build_overlay()
 	_setup_ui()
 	InfluenceGauge.reset()
-	InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
+	if not InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
+		InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
 	print("LogicDive: ", questions.size(), " questions")
 
 	if not questions.is_empty():

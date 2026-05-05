@@ -38,7 +38,8 @@ func start():
 	_build_overlay()
 	_setup_ui()
 	InfluenceGauge.reset()
-	InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
+	if not InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
+		InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
 	print("HangmansGambit: Answer is '", answer_key, "' (", answer_key.length(), " letters)")
 
 func _build_overlay():

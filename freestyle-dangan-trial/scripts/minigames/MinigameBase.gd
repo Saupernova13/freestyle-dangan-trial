@@ -10,6 +10,7 @@ var time_remaining: float = 60.0
 var is_active: bool = false
 
 var _timer_node: Timer
+var _has_finished: bool = false
 
 func initialize(data: Dictionary):
 	minigame_data = data
@@ -66,6 +67,9 @@ func _on_wrong_answer():
 	InfluenceGauge.take_damage(difficulty)
 
 func _finish(success: bool, data: Dictionary = {}):
+	if _has_finished:
+		return
+	_has_finished = true
 	is_active = false
 	if _timer_node:
 		_timer_node.stop()

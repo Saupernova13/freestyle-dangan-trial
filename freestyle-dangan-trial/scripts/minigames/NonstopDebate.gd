@@ -66,14 +66,16 @@ func start():
 	_setup_ui_systems()
 
 	InfluenceGauge.reset()
-	InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
+	if not InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
+		InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
 	ConcentrateGauge.reset()
 
 	TruthBulletManager.load_bullets()
 	if not selected_bullets.is_empty():
 		TruthBulletManager.set_active_bullets(selected_bullets)
 
-	InputManager.shoot_pressed.connect(_on_shoot)
+	if not InputManager.shoot_pressed.is_connected(_on_shoot):
+		InputManager.shoot_pressed.connect(_on_shoot)
 
 	await _show_bullet_preview()
 

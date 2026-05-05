@@ -46,9 +46,11 @@ func start():
 	_setup_ui()
 
 	InfluenceGauge.reset()
-	InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
+	if not InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
+		InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
 	TruthBulletManager.load_bullets()
-	InputManager.shoot_pressed.connect(_on_shoot)
+	if not InputManager.shoot_pressed.is_connected(_on_shoot):
+		InputManager.shoot_pressed.connect(_on_shoot)
 
 	print("MassPanicDebate: ", line_groups.size(), " groups, 3 speakers")
 

@@ -174,11 +174,12 @@ func _input(event):
 
 func pause_trial():
 	if current_state != State.IDLE and current_state != State.TRIAL_COMPLETE:
+		_pre_pause_state = current_state
 		_transition_to(State.PAUSED)
 
 func resume_trial():
 	if current_state == State.PAUSED:
-		_transition_to(State.WAITING_FOR_ADVANCE)
+		_transition_to(_pre_pause_state)
 
 func get_current_line() -> Dictionary:
 	if current_line_index >= 0 and current_line_index < script_lines.size():

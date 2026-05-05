@@ -8,14 +8,9 @@ extends Node3D
 @onready var name_label = get_node("../UI/Conversation_UI/Control_Center_Name_Label/Label_Center_Name")
 @onready var portrait_rect = get_node("../UI/Conversation_UI/Panel_Top_Left/Control_Top_Left/TextureRect_Speaker_Portrait")
 @onready var dialogue_label = get_node("../UI/Conversation_UI/RichTextLabel_Bottom_Speech")
-@onready var camera = get_node("../Camera3D")
+@onready var camera = get_node_or_null("../Camera3D")
 
-# Hardcoded trial path - change this to point to your exported .drtrial file
-# Options:
-#   - "user://trial.drtrial" (AppData folder)
-#   - "res://trial.drtrial" (project folder)
-#   - "C:/Users/YourName/Desktop/trial.drtrial" (absolute path)
-var trial_file_path: String = "C:/Users/RaaViVi/Desktop/trial.drtrial"
+var trial_file_path: String = "user://trial.drtrial"
 
 # Store character data for quick lookup
 var character_data: Array = []

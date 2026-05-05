@@ -211,7 +211,7 @@ func _parse_ease(easing_str: String) -> Tween.EaseType:
 		"ease-in-out":
 			return Tween.EASE_IN_OUT
 		"linear":
-			return Tween.EASE_IN
+			return Tween.EASE_IN_OUT
 		_:
 			return Tween.EASE_IN_OUT
 

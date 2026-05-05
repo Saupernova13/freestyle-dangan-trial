@@ -116,9 +116,9 @@ func _process(delta):
 	if not is_transitioning and not _is_nav_blocked():
 		# Check for keyboard hold
 		var current_hold_direction = 0
-		if Input.get_action_strength("ui_left") > 0.75:
+		if Input.get_action_strength("ui_left") > 0.5:
 			current_hold_direction = -1
-		elif Input.get_action_strength("ui_right") > 0.75:
+		elif Input.get_action_strength("ui_right") > 0.5:
 			current_hold_direction = 1
 		elif is_holding_touch:
 			current_hold_direction = hold_direction

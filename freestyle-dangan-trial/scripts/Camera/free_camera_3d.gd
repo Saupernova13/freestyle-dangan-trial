@@ -28,6 +28,7 @@ func _input(event):
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			is_rotating = event.pressed
 			last_mouse_position = event.position
+			get_viewport().set_input_as_handled()
 
 	# Mouse motion
 	elif event is InputEventMouseMotion:
@@ -42,6 +43,7 @@ func _input(event):
 			camera_pitch -= delta_mouse.y * rotation_speed * (1.0 if not invert_y else -1.0)
 
 			update_camera_rotation()
+			get_viewport().set_input_as_handled()
 
 func _unhandled_input(event):
 	if event is InputEventScreenTouch:

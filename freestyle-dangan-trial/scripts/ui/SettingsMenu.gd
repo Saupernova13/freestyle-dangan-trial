@@ -4,6 +4,7 @@ signal closed
 
 var _bg: ColorRect
 var _panel: PanelContainer
+var _is_closing: bool = false
 
 func _ready():
 	layer = 28
@@ -199,6 +200,9 @@ func _create_text_speed_control() -> HBoxContainer:
 	return hbox
 
 func _close():
+	if _is_closing:
+		return
+	_is_closing = true
 	var tween = create_tween()
 	tween.tween_property(_bg, "color:a", 0.0, 0.2)
 	tween.parallel().tween_property(_panel, "modulate:a", 0.0, 0.2)

@@ -88,7 +88,7 @@ func _ready():
 ## Loads the paths.json file to retrieve the text configuration path
 func load_paths_config():
 	var json_text = FileAccess.get_file_as_string(paths_config_file)
-	if json_text == null or json_text == "":
+	if json_text.is_empty():
 		push_error("Failed to read paths config file: " + paths_config_file)
 		return
 
@@ -189,7 +189,7 @@ func generate_curved_text():
 		return
 
 	var json_text = FileAccess.get_file_as_string(text_config_path)
-	if json_text == null or json_text == "":
+	if json_text.is_empty():
 		push_error("Failed to read JSON file: " + text_config_path)
 		return
 

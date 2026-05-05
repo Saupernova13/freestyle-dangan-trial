@@ -21,7 +21,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
 			KEY_UP:
-				current_index = (current_index - 1) % buttons.size()
+				current_index = (current_index - 1 + buttons.size()) % buttons.size()
 				update_shader()
 				get_tree().root.set_input_as_handled()
 			KEY_DOWN:
@@ -40,6 +40,8 @@ func update_shader() -> void:
 			remove_shader_from_button(i)
 
 func apply_shader_to_button(index: int) -> void:
+	if not pulse_shader:
+		return
 	var shader_material = ShaderMaterial.new()
 	shader_material.shader = pulse_shader
 	buttons[index].material = shader_material

@@ -36,3 +36,5 @@ mono_crash.*.json
 # Scripter
 scripter/node_modules/
 scripter/dist/
+scripter/output/
+scripter/scripts/

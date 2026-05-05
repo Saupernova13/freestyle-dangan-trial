@@ -283,6 +283,14 @@ function renderDialogueLineEditor(gameId, line, index) {
                 </div>
 
                 <div class="form-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" ${line.isWhiteNoise ? 'checked' : ''}
+                      onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'isWhiteNoise', this.checked)">
+                    White Noise
+                  </label>
+                </div>
+
+                <div class="form-group">
                   <label>Movement Direction</label>
                   <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textMovementDirection', this.value)">
                     <option value="left_to_right" ${line.textMovementDirection === 'left_to_right' ? 'selected' : ''}>Left to Right</option>
@@ -404,6 +412,7 @@ function addDialogueLine(gameId) {
     userFailedComment: "",
     userWrongAnswerComment: "",
     textFont: "default",
+    isWhiteNoise: false,
     characterSpotlight: false,
     characterId: "",
     voiceLineFile: null

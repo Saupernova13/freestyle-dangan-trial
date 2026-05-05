@@ -1,671 +1,223 @@
 # Freestyle Danganronpa Trial Creator
 
-A modular, browser-based tool for creating custom Danganronpa-style trials. This project allows creators to design their own cast of characters, manage character profiles and sprites, and eventually script complete trial sequences using an intuitive web interface.
+A comprehensive tool for creating custom Danganronpa-style trials, featuring both a browser-based authoring interface and a fully-implemented Godot 4.5 game engine. Design your cast, write scripts, and play interactive trials with minigame mechanics.
 
 ## Project Status
 
-**Web UI (Script Writer)**: 🟢 In Active Development
-**Trial Engine (Godot 4.4)**: 🔴 Not Started (Asset Modeling Phase)
-
-Currently, the focus is on the **Danganronpa Cast Manager**, a web-based interface for creating and managing trial casts, character profiles, and sprite collections. The game engine implementation will follow once the authoring tools are complete.
+| Component | Status | Details |
+|-----------|--------|---------|
+| **Web UI (Authoring)** | 🟢 Complete | Character management, script writing, minigame configuration, asset management |
+| **Trial Engine (Godot)** | 🟢 Feature-Complete | 6 playable minigames, dialogue system, camera/effects system, influence mechanics |
+| **Integration** | 🟡 In Progress | Supports .drtrial file export/import, playable trials |
 
 ---
 
-## Features
+## Key Features
 
-### Current Features (Web UI)
+### Web-Based Authoring Interface
 
-- **Workspace Management**
-  - File System Access API integration for local project storage
-  - Automatic directory structure creation
-  - Trial metadata management with auto-save
+#### Cast & Character Management
+- Create 16 students + 1 headmaster with detailed profiles
+- Character profiles: name, date of birth, blood type, physical attributes, personality
+- Sprite system: upload 1-100 character expressions (default 25)
+- Type-specific editing (students vs. headmaster)
+- Automatic character ID generation for tracking
 
-- **Character Management**
-  - Support for 17 character slots (16 students + 1 headmaster)
-  - Comprehensive character profiles with physical attributes, personality traits, and backstory
-  - Visual distinction between student and headmaster character types
-  - Unique ID generation for reliable character tracking
+#### Script Writing
+- Three line types: **Speaking** (character dialogue), **Narrator** (narration text), **Minigame** (trigger minigame)
+- Visual drag-and-drop editor with gap-based insertion
+- Arrow buttons for precise single-step reordering
+- Multi-select support for batch operations
+- Real-time auto-save to trial.json
 
-- **Sprite System**
-  - Individual sprite upload with preview
-  - Bulk import for all character sprites at once
-  - Configurable sprite count per character (1-100, default: 25)
-  - Automatic PNG conversion and standardized naming
-  - **Lazy loading optimization**: Only loads first sprite per character initially (~90% memory reduction)
-  - Remaining sprites load on-demand when editing a character
+#### Advanced Line Properties (Speaking Only)
+- 🎭 **Sprite Selection**: Choose character expression per line
+- 🔊 **Voice Acting**: Upload and preview audio files (MP3, WAV, OGG)
+- 🖍️ **Text Highlighting**: Drag-to-select highlighting with custom colors
+- 📹 **Camera Motion**: 17 motion types (pan, zoom, rotate, dolly, truck, pedestal, tilt)
+- ✨ **Screen Effects**: 11 effect types (shake, flash, fade, blur, distortion, sepia, grayscale, invert, vignette, scanlines)
 
-- **Script Editor** 🆕
-  - Visual script line editor with three line types:
-    - **Speaking**: Character selection + dialogue input
-    - **Narrator**: Pure narration text
-    - **Minigame Start**: Minigame type selection
-  - Clickable arrow buttons (▲▼) for precise single-step reordering
-  - Intuitive drag-and-drop reordering with gap-based insertion
-  - Pulsing blue highlight lines show where items will be inserted
-  - Multi-select support (Ctrl+Click) to move multiple lines at once
-  - Smooth CSS animations during reordering
-  - Ghost preview showing what's being dragged ("1 line" or "X lines")
-  - Auto-save to trial.json with complete script preservation
-  - **Advanced Script Line Properties** ✨ (for speaking lines):
-    - 🎭 Sprite selection for character expressions
-    - 🔊 Voice acting audio upload with browser playback
-    - 🖍️ Text highlighting with drag-to-select interface
-    - 📹 Camera motion configuration (17 types: pan, zoom, rotate, tilt, dolly, truck, pedestal)
-    - ✨ Special screen effects (11 types: shake, flash, fades, blur, filters, etc.)
+#### Additional Features
+- Dark/Light theme with persistent settings
+- Truth bullets management (evidence system)
+- Minigame configuration editors for each minigame type
+- Responsive grid layout optimized for all screen sizes
+- Settings configuration (max sprites per character, etc.)
 
-- **User Experience**
-  - Dark/Light theme toggle with localStorage persistence
-  - Responsive grid layout for all screen sizes
-  - Optimized scrolling container with proper overflow handling
-  - Full-width content utilization for script editor
-  - Real-time validation and error messaging
-  - Intuitive modal-based character editing
-  - Loading states for async operations
-  - Custom scrollbar styling for modern appearance
+### Game Engine (Godot 4.5)
+
+#### Implemented Minigames
+
+**1. Nonstop Debate**
+- Rapid-fire statements from opponents
+- Shoot truth bullets to find contradictions
+- Three-zone hit detection (weak point, prefix, suffix)
+- White noise statements for extra challenge
+- Influence and concentrate gauges
+
+**2. Debate Scrum**
+- Turn-based argument system
+- Per-turn countdown timer
+- Defense vs. opposition arguments
+- Zone-based hit detection with damage/heal mechanics
+- Color-coded timer (green → yellow → red)
+
+**3. Logic Dive**
+- Multiple-choice question format
+- Scrolling dashed-road visual effect
+- Question transitions with fade-ins and staggered animations
+- Answer selection feedback
+
+**4. Hangman's Gambit**
+- Fill-in-the-blanks letter puzzle
+- Auto-revealing spaces in answer key
+- Difficulty-based letter movement speed
+- Influence gauge depletion on wrong answers
+
+**5. Mass Panic Debate**
+- Three synchronized speakers per line group
+- Line-group based editing (all 3 speakers' lines together)
+- Single correct answer per minigame
+- Loud assertion toggle (one per group)
+- Full customization (audio, sprites, effects)
+
+**6. Rebuttal Showdown**
+- Head-to-head accusation system
+- Evidence presentation mechanics
+- Cross-examination dialogue
+
+#### Core Systems
+
+**Dialogue & Playback**
+- Script-based dialogue system with character sequencing
+- Typewriter effect for text display
+- Sprite-based character rendering with expression selection
+- Audio playback with synchronized dialogue timing
+
+**Camera System**
+- 17 distinct camera motion types
+- Smooth tweening animations
+- Configurable duration (0.1-10 seconds)
+- Multiple easing options (linear, ease-in, ease-out, ease-in-out)
+- Dynamic motion composition
+
+**Audio Management**
+- Voice acting playback during dialogue
+- Audio file organization (Audio/Minigames/ per minigame)
+- Background music support
+- Sound effect system
+
+**Game Mechanics**
+- **Influence Gauge**: Shared depletion on wrong answers (per trial)
+- **Concentrate Gauge**: Stamina bar for slow-time activation (Nonstop Debate)
+- **Slow-Time Mode**: 30% time acceleration with stamina drain
+- **Truth Bullets**: Evidence-based accusation system
+- **Turn System**: Per-minigame turn tracking and progression
+
+**Screen Effects**
+- Real-time visual effects (shake, flash, fade, blur)
+- Distortion, color filters (sepia, grayscale, invert)
+- Vignette and scanlines (retro effect)
+- Multi-effect composition
+
+**Input Management**
+- Keyboard and mouse controls
+- Touch support for mobile
+- Action binding system (debate actions, shoot, pause)
+- Camera free-look mode (bench navigation)
+
+#### Technical Architecture
+- ~5000 lines of GDScript
+- Modular component design with manager singletons
+- Scene-based minigame implementation
+- Signal-driven event system
+- Trial data loader from .drtrial files
 
 ---
 
 ## Getting Started
 
-### Prerequisites
+### Web UI (Authoring Trials)
 
-- A modern web browser
+#### Prerequisites
+- Modern Chromium-based browser (Chrome, Edge, Opera)
+- File System Access API support
 
-### Installation
+#### Installation & Usage
 
-1. Clone the repository:
+1. **Open the authoring tool**:
    ```bash
-   git clone https://github.com/yourusername/freestyle-dangan-trial.git
-   cd freestyle-dangan-trial
-   ```
-
-2. Open the web interface:
-   ```bash
+   # Navigate to web-ui-editor folder and open index.html in a browser
    cd web-ui-editor
-   # Open index.html in your browser
+   # Open index.html in Chrome/Edge/Opera
    ```
----
 
-## Usage Guide
+2. **Create a trial workspace**:
+   - Click "📁 Choose Folder"
+   - Select or create a directory for your trial
+   - Enter a trial name
 
-### Creating Your First Trial
+3. **Build your cast**:
+   - Click empty student/headmaster blocks
+   - Fill in character details and upload sprites
+   - Save characters to create directories
 
-1. **Open the Web Interface**
-   - Launch `web-ui-editor/index.html` in a supported browser
+4. **Write your script**:
+   - Switch to "📝 Script" view
+   - Add dialogue, narrator, and minigame lines
+   - Use drag-and-drop or arrow buttons to reorder
+   - Click edit (✏️) to configure advanced properties
+   - Add camera motions, effects, audio, highlighting
 
-2. **Select a Workspace Folder**
-   - Click the "📁 Choose Folder" button
-   - Select or create a new folder for your trial (e.g., `C:\Users\YourName\Desktop\Trials\MyTrial`)
-   - Grant read/write permissions when prompted
+5. **Configure minigames**:
+   - Switch to "🎮 Minigames" view
+   - Set up Nonstop Debate, Debate Scrum, Logic Dive, etc.
+   - Configure difficulty, audio, and answers
 
-3. **Name Your Trial**
-   - Enter a descriptive trial name in the "Trial Name" input field
-   - The trial metadata saves automatically
+6. **Manage evidence**:
+   - Switch to "💎 Truth Bullets" view
+   - Add evidence items with images and descriptions
 
-4. **Create Characters**
-   - Click on any empty cast block (Student 01-16 or Headmaster)
-   - Fill in the character details:
-     - **Personal Info**: Name, surname, date of birth, blood type
-     - **Physical**: Height (m/cm), weight (kg), chest measurement (cm)
-     - **Personality**: Likes, dislikes, character notes
+### Game Engine (Playing Trials)
 
-5. **Add Character Sprites**
-   - Switch to the "Sprites" tab in the character modal
-   - **Option A**: Click individual sprite slots to upload one at a time
-   - **Option B**: Use "📁 Bulk Import" to select all 25 sprites at once
-   - All sprites must be uploaded before saving
+#### Running a Trial in Godot
 
-6. **Save Your Character**
-   - Click "Save Student" or "Save Headmaster"
-   - The character folder and files are created automatically
+1. **Export a trial**:
+   - From the web UI, click "Export Trial" to generate a .drtrial file
+   - Or manually copy your trial folder structure
 
-### Managing Your Cast
-
-- **Edit a Character**: Click on any filled cast block to reopen the modal
-- **View Character Type**: Students have blue gradient backgrounds, headmasters have orange
-- **Theme Preference**: Click the 🌙/☀️ icon to toggle between dark and light modes
-- **Adjust Settings**: Click the ⚙️ icon to configure max sprites per character
-
-### Creating Trial Scripts 🆕
-
-1. **Switch to Script View**
-   - Click the "📝 Script" navigation item in the sidebar
-   - This switches from Cast management to Script editing mode
-
-2. **Add Script Lines**
-   - Click the "➕ Add Line" button to create a new script line
-   - Each line has up/down arrow buttons (▲▼), line number, content area, type selector, and delete button
-
-3. **Configure Line Types**
-   - Use the dropdown on the right side of each line to select the type:
-     - **Speaking**: Select a character from your cast and enter their dialogue
-     - **Narrator**: Enter narration text (no character selection)
-     - **Minigame Start**: Select which minigame to trigger (Truth Bullets, Hangman's Gambit, Rebuttal Showdown)
-
-4. **Reorder Script Lines**
-
-   **Method 1: Arrow Buttons (Precise Single-Step Movement)**
-   - Click the **▲** button to move a line up one position
-   - Click the **▼** button to move a line down one position
-   - Arrows change color on hover for visual feedback
-
-   **Method 2: Drag-and-Drop (Flexible Multi-Line Movement)**
-   - **Single line**: Click and drag any line (anywhere on the bar or the arrow area)
-   - **Multiple lines**: Hold Ctrl (Cmd on Mac) and click lines to select them, then drag to move all at once
-   - **Drop target**: Drag to the **gap between two lines** (not onto a line itself)
-   - Visual feedback:
-     - Dragged lines become semi-transparent with dashed borders
-     - A **pulsing blue highlight line** appears in the gap where you're hovering
-     - The gap expands slightly to make targeting easier
-     - Ghost preview shows "1 line" or "X lines" being dragged
-     - Smooth animations when lines reorder
-
-5. **Edit Script Content**
-   - Click into any input field to edit dialogue or narration text
-   - Use character dropdowns to change who is speaking
-   - All changes auto-save to trial.json
-
-6. **Delete Script Lines**
-   - Click the 🗑️ button on any line to remove it
-   - Remaining lines automatically renumber
-
-### Script Line Advanced Properties ✨
-
-Each speaking dialogue line can be enhanced with advanced properties via the edit button (✏️):
-
-#### 🎭 Sprite Selection
-- Choose which character sprite expression displays during the line
-- Visual grid of all uploaded character sprites
-- Selected sprite shown with checkmark indicator
-
-#### 🔊 Audio
-- Upload audio file for voice acting (supports MP3, WAV, OGG)
-- Play/pause audio preview in browser (▶️/⏸️ toggle)
-- Audio files stored in `Audio/` directory with line ID naming
-
-#### 🖍️ Text Highlighting
-- Highlight portions of dialogue text with custom colors
-- **Drag-to-select interface**: Click and drag across text to select range
-- Multiple highlight ranges supported
-- 3 preset colors (yellow, red, green) + custom color picker
-- Live preview of highlights
-- Real-time selection feedback without page scrolling
-
-#### 📹 Camera Motion
-Configure camera animations during dialogue:
-
-**Available Motions**:
-- **Pan** (Left, Right, Up, Down)
-- **Zoom** (In, Out)
-- **Rotate** (Clockwise, Counter-Clockwise)
-- **Tilt** (Up, Down)
-- **Dolly** (In, Out) - move on track forward/back
-- **Truck** (Left, Right) - move on track side-to-side
-- **Pedestal** (Up, Down) - move vertically
-
-**Settings**:
-- Duration: 0.1-10 seconds
-- Easing: Linear, Ease-In, Ease-Out, Ease-In-Out
-
-#### ✨ Special Effects
-Add visual screen effects when dialogue appears:
-
-**Available Effects**:
-- 📳 **Screen Shake** (with intensity)
-- ⚡ **Flash** (white or custom color)
-- ⬛ **Fade to Black**
-- ⬜ **Fade to White**
-- 💨 **Background Blur** (with intensity)
-- 🌀 **Distortion/Ripple** (with intensity)
-- 🟫 **Sepia Filter**
-- ⚫ **Grayscale**
-- 🔄 **Color Invert**
-- ◉ **Vignette** (with intensity)
-- 📺 **Scanlines** (retro effect)
-
-Multiple effects can be active simultaneously. Click effect tiles to toggle on/off.
-
----
-
-## CLI Tool - Batch Character Creation
-
-For advanced users who need to create multiple characters quickly, we provide a **Node.js CLI tool** that replicates the web UI's character creation functionality with batch processing capabilities.
-
-### Features
-
-- **Batch Processing**: Create multiple characters from JSON or CSV files
-- **Auto Sprite Discovery**: Automatically finds and copies sprites from source folders
-- **Web UI Compatible**: Creates identical file structures and uses the same ID generation algorithm
-- **Flexible Input**: Supports both JSON and CSV batch formats
-- **Error Resilient**: Continues processing on errors, logs detailed information
-- **Minimal Validation**: Validates required fields and auto-fills defaults
-
-### Prerequisites
-
-- Node.js 18+ installed on your system
-
-### Installation
-
-1. Navigate to the CLI directory:
+2. **Load the Godot project**:
    ```bash
-   cd cli
+   cd freestyle-dangan-trial
+   # Open in Godot 4.5+
    ```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+3. **Select a trial to play**:
+   - Click "Choose Trial Folder" on startup
+   - Select your exported .drtrial file or trial directory
+   - Click "Load Trial"
 
-### Quick Start
-
-1. **Prepare your batch file** with character data (JSON or CSV format)
-2. **Organize sprites** in a source directory (e.g., `D:\SpritePa\CharacterName\`)
-3. **Run the tool**:
-   ```bash
-   node create-character.js --batch characters.json --dest "C:\Path\To\Trial"
-   ```
-
-### Usage Examples
-
-**Batch Mode (JSON):**
-```bash
-node create-character.js --batch characters.json --dest "C:\Users\YourName\Desktop\Trials\MyTrial"
-```
-
-**Batch Mode (CSV):**
-```bash
-node create-character.js --batch characters.csv --dest "C:\Users\YourName\Desktop\Trials\MyTrial"
-```
-
-**Single Character Mode:**
-```bash
-node create-character.js \
-  --dest "C:\Path\To\Trial" \
-  --name "John" \
-  --surname "Doe" \
-  --dob "1992-03-15" \
-  --blood "A" \
-  --heightM 1.75 \
-  --weight 68 \
-  --chest 92 \
-  --likes "Mystery novels" \
-  --dislikes "Dishonesty" \
-  --notes "Ultimate Detective" \
-  --position 0 \
-  --spriteFolderName "John Doe"
-```
-
-### Batch File Formats
-
-**JSON Format** (`characters.json`):
-```json
-{
-  "spriteSourceRoot": "D:\\SpritePa",
-  "characters": [
-    {
-      "name": "John",
-      "surname": "Doe",
-      "dob": "1992-03-15",
-      "blood": "A",
-      "heightM": 1.75,
-      "heightCM": 0,
-      "weight": 68,
-      "chest": 92,
-      "likes": "Mystery novels, coffee",
-      "dislikes": "Dishonesty, loud noises",
-      "notes": "Ultimate Detective with analytical mind",
-      "position": 0,
-      "spriteFolderName": "John Doe"
-    }
-  ]
-}
-```
-
-**CSV Format** (`characters.csv`):
-```csv
-name,surname,dob,blood,heightM,heightCM,weight,chest,likes,dislikes,notes,position,spriteFolderName
-John,Doe,1992-03-15,A,1.75,0,68,92,"Mystery novels","Dishonesty","Ultimate Detective",0,John Doe
-```
-
-### Required Fields
-
-- `name`, `surname`, `dob`
-- `weight`, `chest`
-- `likes`, `dislikes`, `notes`
-- `position` (0-16: positions 0-15 are students, position 16 is headmaster)
-- `spriteFolderName` (name of sprite folder in sprite source root)
-
-### Optional Fields (with defaults)
-
-- `blood`: Default "A"
-- `heightM`: Default 1.75
-- `heightCM`: Default 0
-
-### Sprite Discovery
-
-The CLI automatically finds sprites:
-1. Looks for folder at `[spriteSourceRoot]/[spriteFolderName]`
-2. Finds all PNG files in the folder
-3. Sorts alphabetically
-4. Takes the first 25 PNG files
-5. Copies them as `sprite_01.png` through `sprite_25.png`
-
-### Output Example
-
-```
-ℹ Created new trial: MyTrial
-ℹ Loading batch file: characters.json
-ℹ Found 17 characters to process
-✓ Created character: John Doe (position 0)
-  ID: DJ_19920315_A1B2C3
-  Copied 25 sprites from D:\SpritePa\John Doe
-✓ Created character: Jane Smith (position 1)
-  ID: SJ_19930822_D4E5F6
-  Copied 25 sprites from D:\SpritePa\Jane Smith
-✓ Updated trial.json with 2 character(s)
-
-ℹ Summary: 2 created, 0 skipped
-```
-
-### Complete Documentation
-
-For detailed documentation including all command-line options, error handling, and advanced usage, see:
-- **[CLI README.md](cli/README.md)** - Complete CLI documentation
-- **[Example JSON batch file](cli/examples/characters.json)**
-- **[Example CSV batch file](cli/examples/characters.csv)**
+4. **Play the trial**:
+   - Navigate the bench with keyboard (arrow keys)
+   - Listen to dialogue and progress through script lines
+   - Engage with minigames as scripted
+   - Use truth bullets to find contradictions
 
 ---
 
-## Data Structure & JSON Schema
+## Command-Line Tools
 
-### Project Directory Structure
+### Batch Character Creation (CLI)
 
-When you select a workspace folder, the system creates the following structure:
+For rapid character setup, use the Node.js CLI tool to batch-create characters:
 
-```
-[Your Workspace Folder]/
-├── trial.json                    # Trial metadata and character references
-├── Audio/                        # Voice acting audio files (optional)
-│   ├── line_1733585420123.mp3
-│   ├── line_1733585430456.wav
-│   └── ...
-└── Characters/                   # Character data folder
-    ├── John_Doe/
-    │   ├── character.json        # Character profile data
-    │   ├── sprite_01.png         # Character sprites (25 by default)
-    │   ├── sprite_02.png
-    │   ├── sprite_03.png
-    │   └── ...
-    │   └── sprite_25.png
-    ├── Jane_Smith/
-    │   ├── character.json
-    │   └── [sprites...]
-    └── [Additional characters...]
+```bash
+cd cli
+npm install
+node create-character.js --batch characters.json --dest "C:\Path\To\Trial"
 ```
 
-### trial.json Schema
-
-The root trial metadata file that references all characters in the cast and contains the trial script:
-
-```json
-{
-  "trialName": "Investigation Room Case 1",
-  "characters": [
-    "JD_19920315_A1B2C3",           // Character ID or null
-    "JS_19930822_D4E5F6",
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    "MN_19700101_G7H8I9"            // Position 16: Headmaster
-  ],
-  "script": {
-    "lines": [
-      {
-        "id": "line_1733585420123",
-        "order": 0,
-        "type": "speaking",
-        "characterId": "JD_19920315_A1B2C3",
-        "dialogue": "Something doesn't add up here..."
-      },
-      {
-        "id": "line_1733585430456",
-        "order": 1,
-        "type": "narrator",
-        "text": "The room fell silent as everyone considered the evidence."
-      },
-      {
-        "id": "line_1733585440789",
-        "order": 2,
-        "type": "minigame",
-        "minigameId": "truth_bullets"
-      }
-    ],
-    "lastModified": "2025-12-07T15:30:00Z"
-  },
-  "metadata": {
-    "version": "3.0",
-    "lastModified": "2025-12-07T15:30:00Z",
-    "studentCount": 16,
-    "headmasterCount": 1,
-    "totalCharacters": 3,
-    "scriptLineCount": 3
-  }
-}
-```
-
-**Field Descriptions:**
-- `trialName` (string): User-defined trial name (max 60 characters)
-- `characters` (array[17]): Array of character IDs or null values
-  - Indices 0-15: Student slots
-  - Index 16: Headmaster slot
-- `script` (object): 🆕 Trial script data
-  - `lines` (array): Array of script line objects in sequence order
-  - `lastModified`: ISO 8601 timestamp of last script modification
-- `metadata` (object): System-generated metadata
-  - `version`: Data format version
-  - `lastModified`: ISO 8601 timestamp
-  - `studentCount`: Number of student slots (always 16)
-  - `headmasterCount`: Number of headmaster slots (always 1)
-  - `totalCharacters`: Count of non-null character entries
-  - `scriptLineCount`: 🆕 Total number of script lines
-
-### Script Line Schema 🆕
-
-Each script line object in the `script.lines` array has the following structure:
-
-**Speaking Line (with all advanced properties):**
-```json
-{
-  "id": "line_1733585420123",
-  "order": 0,
-  "type": "speaking",
-  "characterId": "JD_19920315_A1B2C3",
-  "dialogue": "Something doesn't add up here...",
-  "spriteIndex": 2,
-  "audioFile": "line_1733585420123.mp3",
-  "highlights": [
-    {
-      "startChar": 10,
-      "endChar": 15,
-      "color": "#FFFF00"
-    }
-  ],
-  "cameraMotion": {
-    "type": "zoom_in",
-    "duration": 1.5,
-    "easing": "ease-in-out"
-  },
-  "specialEffects": {
-    "effects": [
-      {
-        "type": "shake",
-        "intensity": 0.5,
-        "duration": 0.3
-      },
-      {
-        "type": "flash",
-        "color": "#FFFFFF",
-        "duration": 0.2
-      }
-    ]
-  }
-}
-```
-
-**Narrator Line:**
-```json
-{
-  "id": "line_1733585430456",
-  "order": 1,
-  "type": "narrator",
-  "text": "The room fell silent as everyone considered the evidence."
-}
-```
-
-**Minigame Line:**
-```json
-{
-  "id": "line_1733585440789",
-  "order": 2,
-  "type": "minigame",
-  "minigameId": "truth_bullets"
-}
-```
-
-**Field Descriptions:**
-- `id` (string): Unique line identifier (format: `line_[timestamp]`)
-- `order` (number): Zero-based position in script sequence
-- `type` (string): Line type - `"speaking"`, `"narrator"`, or `"minigame"`
-- `characterId` (string): Character ID reference (speaking lines only)
-- `dialogue` (string): Character dialogue text (speaking lines only)
-- `text` (string): Narration text (narrator lines only)
-- `minigameId` (string): Minigame type identifier (minigame lines only)
-  - Options: `"truth_bullets"`, `"hangmans_gambit"`, `"rebuttal_showdown"`
-
-**Advanced Properties (speaking lines only):**
-- `spriteIndex` (number, optional): Index of character sprite to display (0-24, or configured max)
-- `audioFile` (string, optional): Audio filename for voice acting (stored in `Audio/` directory)
-- `highlights` (array, optional): Text highlight ranges
-  - `startChar` (number): Starting character index (0-based)
-  - `endChar` (number): Ending character index (exclusive)
-  - `color` (string): Highlight color in hex format (e.g., `#FFFF00`)
-- `cameraMotion` (object, optional): Camera animation configuration
-  - `type` (string): Motion type - `"none"`, `"pan_left"`, `"pan_right"`, `"pan_up"`, `"pan_down"`, `"zoom_in"`, `"zoom_out"`, `"rotate_cw"`, `"rotate_ccw"`, `"tilt_up"`, `"tilt_down"`, `"dolly_in"`, `"dolly_out"`, `"truck_left"`, `"truck_right"`, `"pedestal_up"`, `"pedestal_down"`
-  - `duration` (number): Animation duration in seconds (0.1-10)
-  - `easing` (string): Easing function - `"linear"`, `"ease-in"`, `"ease-out"`, `"ease-in-out"`
-- `specialEffects` (object, optional): Screen effects configuration
-  - `effects` (array): Array of active effects
-    - `type` (string): Effect type - `"shake"`, `"flash"`, `"fade_black"`, `"fade_white"`, `"blur"`, `"distortion"`, `"sepia"`, `"grayscale"`, `"invert"`, `"vignette"`, `"scanlines"`
-    - `intensity` (number, optional): Effect intensity (0.0-1.0, for applicable effects)
-    - `color` (string, optional): Effect color (for flash effect)
-    - `duration` (number): Effect duration in seconds
-
-### character.json Schema
-
-Individual character profile stored in `Characters/[CharacterName]/character.json`:
-
-```json
-{
-  "id": "JD_19920315_A1B2C3",
-  "name": "John",
-  "surname": "Doe",
-  "heightM": 1,
-  "heightCM": 75,
-  "weight": 68,
-  "chest": 92,
-  "blood": "A",
-  "dob": "1992-03-15",
-  "likes": "Mystery novels, coffee, classical music, solving puzzles",
-  "dislikes": "Dishonesty, loud noises, injustice, being underestimated",
-  "notes": "Ultimate Detective. Analytical and observant with a calm demeanor. Has a strong sense of justice but can be overly serious at times.",
-  "isHeadmaster": false,
-  "position": 0,
-  "lastModified": "2025-12-07T15:30:00Z"
-}
-```
-
-**Field Descriptions:**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Unique identifier (format: `InitialsSurname_InitialsName_YYYYMMDD_Random6`) |
-| `name` | string | Character's first name |
-| `surname` | string | Character's last name |
-| `heightM` | number | Height in meters (0.9-2.5) |
-| `heightCM` | number | Additional centimeters (0-99) |
-| `weight` | number | Weight in kilograms (0-300) |
-| `chest` | number | Chest measurement in centimeters (0-200) |
-| `blood` | string | Blood type (`A`, `B`, `O`, `AB`, `Unknown`) |
-| `dob` | string | Date of birth in YYYY-MM-DD format |
-| `likes` | string | Character's likes and interests |
-| `dislikes` | string | Character's dislikes and aversions |
-| `notes` | string | Character backstory, personality, or ultimate talent |
-| `isHeadmaster` | boolean | `true` for headmaster, `false` for student |
-| `position` | number | Position in cast array (0-16) |
-| `lastModified` | string | ISO 8601 timestamp of last modification |
-
-### Character ID Format
-
-Character IDs are generated using a human-readable format for easier debugging and reference:
-
-```
-Format: [First Letter Surname][First Letter Name]_[YYYYMMDD]_[Random 6-char]
-Example: JD_19920315_A1B2C3
-
-Components:
-- JD: John Doe's initials (surname first, then name)
-- 19920315: Date of birth (March 15, 1992)
-- A1B2C3: Random alphanumeric string for uniqueness
-```
-
-### Sprite Naming Convention
-
-Character sprites are saved with zero-padded sequential numbering:
-
-```
-sprite_01.png
-sprite_02.png
-sprite_03.png
-...
-sprite_25.png
-```
-
-All sprites are automatically converted to PNG format regardless of the original upload format.
-
----
-
-## Technology Stack
-
-### Web Interface
-
-- **HTML5**: Semantic structure and File System Access API
-- **CSS3**: Custom properties (variables) for theming, Grid/Flexbox layouts, optimized overflow handling
-- **Vanilla JavaScript**: Modular ES5+ with no framework dependencies
-- **Google Fonts**: Inter font family for clean typography
-
-### APIs & Standards
-
-- **File System Access API**: Local directory read/write operations
-- **LocalStorage API**: Theme and settings persistence
-- **FileReader API**: Image processing and data URL generation
-- **Canvas API**: (Future) Image manipulation and sprite processing
-
-### Game Engine (Planned)
-
-- **Godot 4.4**: Open-source game engine for trial execution
-- **GDScript**: Scripting language for game logic
-- **3D Assets**: Custom models for trial room environment
+Supports JSON and CSV batch files with automatic sprite discovery.
 
 ---
 
@@ -673,316 +225,179 @@ All sprites are automatically converted to PNG format regardless of the original
 
 ```
 freestyle-dangan-trial/
-├── cli/                            # 🆕 CLI tool for batch character creation
-│   ├── package.json                # Node.js dependencies and metadata
-│   ├── .gitignore                  # Ignore node_modules
-│   ├── README.md                   # Complete CLI documentation
-│   ├── create-character.js         # Main CLI entry point
-│   ├── lib/                        # Shared modules
-│   │   ├── character-generator.js  # ID generation (ported from web UI)
-│   │   ├── validator.js            # Field validation
-│   │   ├── sprite-processor.js     # Sprite discovery and copying
-│   │   ├── trial-updater.js        # trial.json read/write
-│   │   └── logger.js               # Colored console output
-│   └── examples/                   # Example batch files
-│       ├── characters.json         # JSON batch file example
-│       └── characters.csv          # CSV batch file example
-│
-├── web-ui-editor/                  # Web-based authoring tool (CURRENT FOCUS)
+├── web-ui-editor/                  # Browser-based authoring tool
 │   ├── index.html                  # Main entry point
-│   ├── css/
-│   │   └── styles.css              # Complete styling system with theming
+│   ├── css/styles.css              # Complete styling system with theming
 │   └── js/
-│       ├── core/                   # Core system files
-│       │   ├── constants.js        # Application constants
-│       │   ├── state.js            # Global state management
-│       │   └── storage.js          # File system operations and data persistence
-│       ├── models/                 # Data models
-│       │   └── characterModel.js   # Character data structure and utilities
-│       ├── views/                  # View rendering logic
-│       │   ├── castView.js         # Character cast grid rendering
-│       │   ├── minigameView.js     # Minigame editor coordinator (245 lines)
-│       │   ├── truthBulletsView.js # Truth bullets management view
-│       │   ├── viewManager.js      # View switching and navigation
-│       │   └── minigames/          # Modular minigame editors
-│       │       ├── nonstopDebateEditor.js      # (440 lines)
-│       │       ├── logicDiveEditor.js          # (380 lines)
-│       │       ├── debateScrumEditor.js        # (520 lines)
-│       │       ├── massPanicDebateEditor.js    # (480 lines)
-│       │       └── hangmansGambitEditor.js     # (35 lines)
-│       ├── modals/                 # Modal dialog components
-│       │   ├── modalCoordinator.js # Shared modal utilities (30 lines)
-│       │   ├── characterModal.js   # Character editing modal (400 lines)
-│       │   ├── truthBulletModal.js # Truth bullet editing modal (235 lines)
-│       │   └── scriptLineModal.js  # Script line properties modal (1175 lines)
-│       ├── ui/                     # UI utilities
-│       │   └── theme.js            # Theme management (dark/light mode)
-│       ├── app.js                  # Application initialization
-│       ├── settings.js             # Application settings management
-│       └── utils.js                # Common utility functions
+│       ├── core/                   # State management, storage, constants
+│       ├── models/                 # Data structures (character, etc.)
+│       ├── views/                  # UI rendering and controllers
+│       ├── modals/                 # Dialog components
+│       ├── ui/                     # Theme management
+│       └── app.js, settings.js, utils.js
 │
-├── freestyle-dangan-trial/         # Godot 4.4 game engine project (NOT STARTED)
-│   ├── models/                     # 3D models for trial room
-│   │   ├── Bench.blend             # Student seating
-│   │   ├── Floor.blend
-│   │   ├── Headmaster_Podium.blend
-│   │   └── Walls.blend
-│   ├── scenes/                     # Godot scene files
-│   │   ├── HighlightShader.gdshader
-│   │   └── trial_env.tscn
-│   ├── scripts/                    # GDScript files (empty - awaiting development)
-│   ├── textures/                   # 3D texture assets
-│   │   ├── Bench_Textures/
-│   │   ├── Floor_Textures/
-│   │   ├── Podium_Textures/
-│   │   └── Wall_Textures/
-│   └── project.godot               # Godot project configuration
+├── cli/                            # Node.js batch character creation
+│   ├── create-character.js         # CLI entry point
+│   ├── lib/                        # Character generator, validators, sprite processor
+│   └── examples/                   # Sample batch files (JSON, CSV)
 │
-├── .gitattributes                  # Git LFS configuration
-├── .gitignore                      # Git ignore rules
-└── README.md                       # This file
+├── freestyle-dangan-trial/         # Godot 4.5 game engine
+│   ├── scripts/
+│   │   ├── core/                   # System managers (ScriptDirector, AudioManager, InputManager, etc.)
+│   │   ├── minigames/              # Minigame implementations (6 types)
+│   │   ├── Camera/                 # Camera systems and controllers
+│   │   ├── ui/                     # UI components (gauges, crosshair, etc.)
+│   │   └── [other scripts]
+│   ├── scenes/                     # Godot scene files (.tscn)
+│   ├── models/                     # 3D model assets (.blend)
+│   ├── textures/                   # Texture and material files
+│   ├── shaders/                    # Godot shader files (.gdshader)
+│   ├── project.godot               # Godot project configuration
+│   └── .godot/                     # Godot cache (ignored)
+│
+├── .gitignore
+├── .gitattributes
+└── README.md
 ```
-
-### Module Responsibilities
-
-#### Core Modules
-
-**app.js** (Application Initialization)
-- Application bootstrap and startup
-- Global event handler setup
-- View initialization coordinator
-
-**core/constants.js** (Constants)
-- Application-wide constant definitions
-- Configuration defaults
-
-**core/state.js** (State Management)
-- Global state variables (cast, minigames, truthBullets, script, etc.)
-- Shared state for all modules
-
-**core/storage.js** (File System & Persistence)
-- File System Access API integration
-- Trial metadata loading and auto-saving
-- Character data loading from directories with lazy sprite loading
-- **Performance optimization**: Only loads first sprite per character initially (~90% memory reduction)
-- Lazy loading function for remaining sprites on-demand
-- Minigame data persistence
-- Truth bullets data persistence
-- Audio file loading and management
-
-**models/characterModel.js** (Character Data)
-- Character data structure and validation
-- Character ID generation (human-readable format)
-- Character type utilities (student/headmaster)
-
-#### View Modules
-
-**views/castView.js** (Character Cast View)
-- Cast grid rendering (17 character slots)
-- Character card display
-- Cast view event handlers
-
-**views/minigameView.js** (Minigame Coordinator - 245 lines)
-- Minigame list rendering
-- Common minigame settings (name, order)
-- Delegates to specialized minigame editors
-- **90% code reduction** from original 2397 lines
-
-**views/minigames/nonstopDebateEditor.js** (440 lines)
-- Truth bullet selection for debates
-- Dialogue line configuration
-- Audio upload with playback preview
-- Seek bar and audio controls
-- Voice line file I/O (Audio/Minigames/{gameId}/)
-
-**views/minigames/logicDiveEditor.js** (380 lines)
-- Multiple choice question editor
-- Answer selection with correct answer marking
-- Drag-and-drop question reordering
-
-**views/minigames/debateScrumEditor.js** (520 lines)
-- Opposition vs. Defense paired arguments
-- Side-by-side argument layout
-- Audio upload for both sides
-- Keywords management (array-based)
-
-**views/minigames/massPanicDebateEditor.js** (480 lines)
-- 3-speaker synchronized line groups
-- Enforces equal lines across all speakers
-- Single correct answer per minigame
-- Loud assertion toggle (one per group)
-- Full customization (audio, sprite, etc.)
-
-**views/minigames/hangmansGambitEditor.js** (35 lines)
-- Simple answer key configuration
-
-**views/truthBulletsView.js** (Truth Bullets View)
-- Truth bullets grid rendering
-- Bullet card display
-- Add/edit/delete truth bullets
-
-**views/viewManager.js** (View Switching)
-- Navigation between Cast/Script/Truth Bullets/Minigames views
-- View state management
-
-#### Modal Modules
-
-**modals/modalCoordinator.js** (Modal Utilities - 30 lines)
-- Shared modal utilities
-- Generic closeModal() dispatcher
-- Shared error state variables (bulletModalErr, bulletModalMsg)
-
-**modals/characterModal.js** (Character Editor - 400 lines)
-- Character modal lifecycle (open/close/render)
-- Async opening with lazy sprite loading integration
-- Details tab: Profile form with validation
-- Sprites tab: Upload interface (individual/bulk)
-- Character data validation and saving
-- Sprite file writing with error handling
-
-**modals/truthBulletModal.js** (Truth Bullet Editor - 235 lines)
-- Truth bullet editing modal
-- Name, description, inversed lie bullet name
-- Image upload with preview
-- File I/O to TruthBullets/ directory
-
-**modals/scriptLineModal.js** (Script Line Properties - 1175 lines)
-- Script line advanced properties modal
-- Sprite selection tab with visual grid
-- Audio upload tab with HTML5 playback preview
-- Text highlighting tab with drag-to-select interface
-- Camera motion tab (17 motion types)
-- Special effects tab (11 effect types)
-- Audio cleanup on modal close
-
-#### UI & Utilities
-
-**ui/theme.js** (Theme Management)
-- Dark/Light theme toggle
-- LocalStorage persistence
-- Theme initialization
-
-**settings.js** (Configuration)
-- Application settings management
-- Max sprites per character (1-100)
-- Settings modal UI
-
-**utils.js** (Common Utilities)
-- Loading overlay display
-- File to data URL conversion
-- Directory display rendering
-- Common helper functions
-
-**styles.css** (Presentation)
-- CSS custom properties for theming
-- Responsive grid layouts
-- Modal styling with animations
-- Script editor layout and line styling
-- Minigame editor styles (Logic Dive, Debate Scrum, Mass Panic)
-- Drag-and-drop visual states
-- Custom scrollbar styling
-
-### Modular Architecture Benefits
-
-The codebase has been refactored into a highly modular architecture for improved maintainability and scalability:
-
-#### Code Organization Improvements
-- **Minigame Modules**: Reduced from single 2397-line file to 6 focused modules (245-line coordinator + 5 type-specific editors)
-- **Modal Modules**: Split 1747-line modal.js into 4 specialized components (30-line coordinator + 3 modal types)
-- **Total Refactoring**: ~4000 lines reorganized into 12 logical, single-responsibility modules
-
-#### Key Benefits
-1. **Maintainability**: Each module focuses on a single minigame type or modal, making bugs easier to locate and fix
-2. **Scalability**: Adding new minigame types only requires creating a new editor file and registering it in the coordinator
-3. **Readability**: Individual files are manageable in size (35-520 lines vs. 2397 lines)
-4. **Collaboration**: Multiple developers can work on different minigame types without merge conflicts
-5. **Testing**: Isolated modules are easier to test individually
-6. **Load Performance**: Browser can parse smaller files more efficiently
-
-#### Module Pattern
-The architecture uses a **coordinator pattern**:
-- Lightweight coordinator files handle common functionality and delegation
-- Specialized modules handle type-specific logic
-- Shared state managed through core/state.js
-- Clean separation of concerns between rendering, data management, and file I/O
 
 ---
 
-## Default Trial Storage Location
+## Data Structure
 
-By default, trials created with this tool are saved to:
+### Trial File Format (.drtrial)
+
+Trials are stored as directories with the following structure:
 
 ```
-C:\Users\Sauraav\Desktop\Trials\
+trial-folder/
+├── trial.json                      # Trial metadata and script
+├── Characters/
+│   ├── CharacterName/
+│   │   ├── character.json          # Profile data
+│   │   ├── sprite_01.png           # Character expressions
+│   │   └── ...
+│   └── ...
+├── Audio/                          # Voice acting files
+│   ├── line_1733585420123.mp3
+│   └── ...
+└── TruthBullets/                   # Evidence items
+    ├── bullet_ID/
+    │   ├── bullet.json             # Evidence metadata
+    │   └── image.png               # Evidence image
+    └── ...
 ```
 
-You can choose any folder on your system when prompted by the "Choose Folder" dialog.
+### trial.json Schema
+
+```json
+{
+  "trialName": "Investigation Room Case 1",
+  "characters": ["JD_19920315_A1B2C3", "JS_19930822_D4E5F6", ...],
+  "script": {
+    "lines": [
+      {
+        "id": "line_1733585420123",
+        "type": "speaking",
+        "characterId": "JD_19920315_A1B2C3",
+        "dialogue": "Something doesn't add up here...",
+        "spriteIndex": 2,
+        "audioFile": "line_1733585420123.mp3",
+        "cameraMotion": {"type": "zoom_in", "duration": 1.5},
+        "specialEffects": {"effects": [{"type": "shake", "intensity": 0.5}]}
+      },
+      {
+        "id": "line_1733585430456",
+        "type": "minigame",
+        "minigameId": "truth_bullets"
+      }
+    ]
+  },
+  "minigames": {...},
+  "truthBullets": {...}
+}
+```
+
+---
+
+## Technology Stack
+
+### Web Interface
+- **HTML5**: Semantic structure, File System Access API
+- **CSS3**: Custom properties, Grid/Flexbox, responsive design
+- **JavaScript**: Modular ES6+, no framework dependencies
+- **APIs**: LocalStorage, FileReader, Canvas
+
+### Game Engine
+- **Godot 4.5**: Open-source game engine
+- **GDScript**: Native Godot scripting language
+- **GLSL**: Shaders for visual effects
+- **3D Assets**: Blender models
+
+### CLI Tool
+- **Node.js 18+**: Runtime
+- **JavaScript**: Batch processing
 
 ---
 
 ## Roadmap
 
-### Phase 1: Web UI (Current)
-- [x] Character cast management system
-- [x] Character profile creation and editing
-- [x] Sprite upload and management
-- [x] Student/Headmaster type support
-- [x] Dark/Light theme system
-- [x] Settings configuration
-- [x] Lazy loading sprite optimization (~90% memory reduction)
-- [x] CLI tool for batch character creation 🆕
-- [ ] Character deletion functionality
-- [ ] Character reordering/swapping
-- [ ] Export/Import trial packages
+### Complete ✅
+- [x] Web UI character management
+- [x] Web UI script writing
+- [x] Godot trial engine with 6 minigames
+- [x] Camera motion system (17 types)
+- [x] Screen effects system (11 types)
+- [x] Dialogue playback with typewriter effect
+- [x] Audio management
+- [x] Influence and concentrate gauges
+- [x] Truth bullet system
+- [x] CLI batch character tool
+- [x] Input management and controls
+- [x] Free-look bench camera
 
-### Phase 2: Script Writer (In Progress)
-- [x] Dialogue scripting interface with speaking/narrator/minigame lines
-- [x] Gap-based drag-and-drop reordering with pulsing highlight lines
-- [x] Arrow button navigation for precise single-step reordering
-- [x] Multi-select support for batch operations
-- [x] Visual feedback and animations
-- [x] Auto-save script to trial.json
-- [x] Character expression/sprite mapping per line
-- [x] Voice acting audio upload with browser preview
-- [x] Text highlighting with drag-to-select interface
-- [x] Camera motion configuration (17 motion types)
-- [x] Special screen effects (11 effect types)
-- [ ] Evidence management
-- [ ] Truth bullets system
-- [ ] Scene sequence editor
-- [ ] Music and sound effect assignment
-- [ ] Background selection
+### In Progress
+- [ ] Full integration testing
+- [ ] Example trial creation
+- [ ] Tutorial documentation
 
-### Phase 3: Trial Engine (Godot)
-- [ ] 3D trial room environment
-- [ ] Character positioning and animations
-- [ ] Dialogue system with typewriter effect
-- [ ] Evidence presentation mechanics
-- [ ] Truth bullet shooting gameplay
-- [ ] Contradiction detection
-- [ ] Trial progression logic
-- [ ] Save/Load system
-
-### Phase 4: Integration
-- [ ] Web UI to Godot data pipeline
-- [ ] Trial package import in engine
-- [ ] Playtest mode
-- [ ] Export standalone executables
+### Future
+- [ ] Character deletion/reordering UI
+- [ ] Evidence cross-examination system
+- [ ] Scene transitions
+- [ ] Particle effects
+- [ ] Mobile app version
+- [ ] Multiplayer trial creation
 
 ---
 
 ## Browser Compatibility
 
-### Fully Supported
+**Fully Supported** (File System Access API):
 - Chrome 86+
 - Edge 86+
 - Opera 72+
 
-### Not Supported (File System Access API Unavailable)
-- Firefox (all versions)
-- Safari (all versions)
+**Not Supported**:
+- Firefox (no File System Access API)
+- Safari (no File System Access API)
 
-For unsupported browsers, consider using a Chromium-based alternative or implementing a fallback with traditional file downloads.
+---
+
+## Controls (Game Engine)
+
+### Bench Navigation
+- **Arrow Keys**: Move camera around bench
+- **Mouse Drag**: Free-look camera rotation (left-click + drag)
+- **Scroll**: Zoom in/out
+
+### Minigames
+- **Left Mouse**: Shoot truth bullet / Select answer
+- **Space**: Trigger minigame action (context-dependent)
+- **Escape**: Pause/Resume
+
+### Free Camera
+- **Mouse Left-Click + Drag**: Rotate camera
+- **Mouse Scroll**: Adjust distance
 
 ---
 
@@ -990,81 +405,75 @@ For unsupported browsers, consider using a Chromium-based alternative or impleme
 
 ### Running Locally
 
-1. Clone the repository
-2. Open `web-ui-editor/index.html` in a supported browser
-3. No build process required - pure HTML/CSS/JS
+**Web UI**:
+```bash
+cd web-ui-editor
+# Open index.html in Chrome/Edge/Opera
+# Or use VS Code Live Server extension
+```
 
-### Recommended Development Tools
-
-- **VS Code** with Live Server extension
-- **Chrome DevTools** for debugging File System Access API calls
-- **Git LFS** for managing large 3D assets
+**Game Engine**:
+```bash
+cd freestyle-dangan-trial
+# Open with Godot 4.5+
+# Press F5 to run
+```
 
 ### Code Style
+- GDScript: 4-space indentation, snake_case for functions/variables
+- JavaScript: 2-space indentation, camelCase for functions/variables
+- Comments for complex logic only
 
-- ES5+ JavaScript with modern syntax
-- Consistent 2-space indentation
-- Descriptive variable and function names
-- Comments for complex logic
-- Modular file organization
+### Key Files to Know
 
-### Layout Architecture
+**Web UI**:
+- `web-ui-editor/js/core/storage.js` — File I/O and persistence
+- `web-ui-editor/js/views/minigameView.js` — Minigame coordinator
+- `web-ui-editor/js/modals/scriptLineModal.js` — Advanced properties editor
 
-The application uses a carefully structured CSS layout hierarchy to ensure proper scrolling behavior:
+**Game Engine**:
+- `freestyle-dangan-trial/scripts/core/ScriptDirector.gd` — Script playback & progression
+- `freestyle-dangan-trial/scripts/minigames/NonstopDebate.gd` — Nonstop debate implementation
+- `freestyle-dangan-trial/scripts/Camera/CameraDirector.gd` — Camera motion system
 
-```
-body (max-height: 100vh, overflow: hidden)
-└─ header (sticky positioning)
-└─ trialbar
-└─ main (flex: 1, overflow: hidden)
-   └─ nav (sidebar, fixed width: 280px)
-   └─ #mainGrid (overflow-y: auto, height: 100%) ← Scrollable container
-      └─ Cast blocks (grid-auto-rows: min-content)
-      └─ Script container (grid-column: 1 / -1)
-```
+---
 
-**Key Design Decisions:**
-- Body has `overflow: hidden` to prevent whole-page scrolling
-- `#mainGrid` is the scrollable container with `overflow-y: auto`
-- Grid uses `grid-auto-rows: min-content` to size rows based on content
-- Script container spans all grid columns with `grid-column: 1 / -1`
-- This architecture keeps the gradient background hidden and maintains fixed header/sidebar positions
+## Known Limitations
+
+- Web UI only works in Chromium browsers (File System Access API limitation)
+- Trial file picker in Godot requires manual folder selection
+- Multi-language text support is limited to English
+- No built-in audio editing (use external tools)
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Areas where help is needed:
-
-- **UI/UX Improvements**: Enhanced character management workflows
-- **Feature Additions**: Character deletion, reordering, search/filter
-- **Browser Support**: Fallback implementations for non-Chromium browsers
-- **Documentation**: Tutorial videos, screenshots, usage examples
-- **Testing**: Cross-browser testing, edge case identification
-- **Godot Development**: Trial engine implementation
-
-Please open an issue to discuss major changes before submitting a pull request.
+Contributions welcome! Areas of interest:
+- Bug reports and fixes
+- UI/UX improvements
+- Additional minigame types
+- Documentation and tutorials
+- Testing on different systems
 
 ---
 
 ## License
 
-This project is open source. License details to be determined.
+Open source. License details to be finalized.
 
 ---
 
 ## Acknowledgments
 
-- Inspired by the Danganronpa series by Spike Chunsoft
-- Built with modern web standards and open-source technologies
-- 3D assets created with Blender
+- Inspired by Danganronpa series by Spike Chunsoft
+- Built with Godot Engine and web standards
+- 3D assets created in Blender
 
 ---
 
 ## Contact
 
-For questions, suggestions, or collaboration inquiries, please open an issue on GitHub.
+For questions or collaboration: Open an issue on GitHub.
 
----
-
-**Note**: This project is a fan creation and is not affiliated with or endorsed by Spike Chunsoft Co., Ltd.
+**Note**: This is a fan creation, not affiliated with Spike Chunsoft Co., Ltd.

@@ -6,9 +6,9 @@ A comprehensive tool for creating custom Danganronpa-style trials, featuring bot
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| **Web UI (Authoring)** | 🟢 Complete | Character management, script writing, minigame configuration, asset management |
-| **Trial Engine (Godot)** | 🟢 Feature-Complete | 6 playable minigames, dialogue system, camera/effects system, influence mechanics |
-| **Integration** | 🟡 In Progress | Supports .drtrial file export/import, playable trials |
+| **Web UI (Authoring)** | 🟢 Stable | Character management, script writing, minigame configuration, asset management |
+| **Trial Engine (Godot)** | 🟡 Proof-of-Concept | 6 minigame POCs (no animations), basic dialogue/camera/effects, many parameters not yet interpreted from scripter |
+| **Integration** | 🔴 WIP | Trial loading works, but parameter interpretation and full feature support missing |
 
 ---
 
@@ -44,94 +44,70 @@ A comprehensive tool for creating custom Danganronpa-style trials, featuring bot
 - Responsive grid layout optimized for all screen sizes
 - Settings configuration (max sprites per character, etc.)
 
-### Game Engine (Godot 4.5)
+### Game Engine (Godot 4.5) — Work in Progress
 
-#### Implemented Minigames
+**Status**: POC implementations for core systems. Many parameters from the web UI scripter are not yet interpreted by the engine. Minigames are functional but lack animations and polish.
 
-**1. Nonstop Debate**
-- Rapid-fire statements from opponents
-- Shoot truth bullets to find contradictions
-- Three-zone hit detection (weak point, prefix, suffix)
-- White noise statements for extra challenge
-- Influence and concentrate gauges
+#### Minigames (POC Status)
 
-**2. Debate Scrum**
-- Turn-based argument system
-- Per-turn countdown timer
-- Defense vs. opposition arguments
-- Zone-based hit detection with damage/heal mechanics
-- Color-coded timer (green → yellow → red)
+1. **Nonstop Debate** — Rapid-fire statements with truth bullet shooting (basic hit detection, no character animations)
+2. **Debate Scrum** — Turn-based arguments with timer system (POC, minimal UI)
+3. **Logic Dive** — Multiple-choice questions (basic implementation)
+4. **Hangman's Gambit** — Letter puzzle mechanic (working state)
+5. **Mass Panic Debate** — Three-speaker line groups (structural WIP)
+6. **Rebuttal Showdown** — Stub implementation
 
-**3. Logic Dive**
-- Multiple-choice question format
-- Scrolling dashed-road visual effect
-- Question transitions with fade-ins and staggered animations
-- Answer selection feedback
+#### Partially Implemented Systems
 
-**4. Hangman's Gambit**
-- Fill-in-the-blanks letter puzzle
-- Auto-revealing spaces in answer key
-- Difficulty-based letter movement speed
-- Influence gauge depletion on wrong answers
-
-**5. Mass Panic Debate**
-- Three synchronized speakers per line group
-- Line-group based editing (all 3 speakers' lines together)
-- Single correct answer per minigame
-- Loud assertion toggle (one per group)
-- Full customization (audio, sprites, effects)
-
-**6. Rebuttal Showdown**
-- Head-to-head accusation system
-- Evidence presentation mechanics
-- Cross-examination dialogue
-
-#### Core Systems
-
-**Dialogue & Playback**
-- Script-based dialogue system with character sequencing
-- Typewriter effect for text display
-- Sprite-based character rendering with expression selection
-- Audio playback with synchronized dialogue timing
+**Dialogue & Script Playback**
+- Basic script-based progression through dialogue lines
+- Character selection and sprite display (static, no animations)
+- Audio playback (not always synchronized with script timing)
+- Many advanced properties (highlighting, effects, camera motion) not yet interpreted
 
 **Camera System**
-- 17 distinct camera motion types
-- Smooth tweening animations
-- Configurable duration (0.1-10 seconds)
-- Multiple easing options (linear, ease-in, ease-out, ease-in-out)
-- Dynamic motion composition
+- 17 motion types defined in code
+- Basic motion types working (pan, zoom)
+- Missing: smooth animations, easing implementation, proper duration handling
+- Free-look bench camera functional
 
 **Audio Management**
-- Voice acting playback during dialogue
-- Audio file organization (Audio/Minigames/ per minigame)
-- Background music support
-- Sound effect system
+- Voice file playback for dialogue
+- Basic audio management
+- Missing: Background music, proper file path resolution
 
 **Game Mechanics**
-- **Influence Gauge**: Shared depletion on wrong answers (per trial)
-- **Concentrate Gauge**: Stamina bar for slow-time activation (Nonstop Debate)
-- **Slow-Time Mode**: 30% time acceleration with stamina drain
-- **Truth Bullets**: Evidence-based accusation system
-- **Turn System**: Per-minigame turn tracking and progression
+- Influence gauge (tracks damage)
+- Concentrate gauge (Nonstop Debate)
+- Slow-time mode (partial implementation)
+- Truth bullet manager (structure in place, not fully integrated)
 
 **Screen Effects**
-- Real-time visual effects (shake, flash, fade, blur)
-- Distortion, color filters (sepia, grayscale, invert)
-- Vignette and scanlines (retro effect)
-- Multi-effect composition
+- Framework in place for shake, flash, fade effects
+- Missing: Animations, proper timing, effect composition
 
 **Input Management**
-- Keyboard and mouse controls
-- Touch support for mobile
-- Action binding system (debate actions, shoot, pause)
-- Camera free-look mode (bench navigation)
+- Keyboard and mouse controls working
+- Free-look camera with mouse rotation
+- Action bindings partially implemented
 
-#### Technical Architecture
+#### Known Issues & WIP Items
+
+- Camera motion duration and easing not properly applied
+- Text highlighting from scripter not rendered
+- Special effects parameters not interpreted
+- Character animations missing (static sprites only)
+- Typewriter effect not implemented
+- Many dialogue parameters ignored
+- Some signal connection issues under restart conditions
+- Trial loading path configuration problematic
+
+#### Technical Stack
 - ~5000 lines of GDScript
-- Modular component design with manager singletons
-- Scene-based minigame implementation
+- Godot 4.5 engine
+- Modular manager singletons (ScriptDirector, AudioManager, InputManager, etc.)
 - Signal-driven event system
-- Trial data loader from .drtrial files
+- Trial data loader from directory structure
 
 ---
 
@@ -178,30 +154,39 @@ A comprehensive tool for creating custom Danganronpa-style trials, featuring bot
    - Switch to "💎 Truth Bullets" view
    - Add evidence items with images and descriptions
 
-### Game Engine (Playing Trials)
+### Game Engine (Playing Trials) — Early POC
+
+⚠️ **Warning**: The engine is in early POC stage. Many features are non-functional or incomplete. Expect bugs and missing functionality.
 
 #### Running a Trial in Godot
 
-1. **Export a trial**:
-   - From the web UI, click "Export Trial" to generate a .drtrial file
-   - Or manually copy your trial folder structure
+1. **Prepare a trial**:
+   - Create a trial using the web UI (character, script, minigames)
+   - Or manually create a trial directory with the correct structure
 
 2. **Load the Godot project**:
    ```bash
    cd freestyle-dangan-trial
-   # Open in Godot 4.5+
+   # Open in Godot 4.5 or later
+   # Press F5 to run
    ```
 
-3. **Select a trial to play**:
-   - Click "Choose Trial Folder" on startup
-   - Select your exported .drtrial file or trial directory
+3. **Load a trial**:
+   - Click "Choose Trial Folder" button
+   - Select your trial directory
    - Click "Load Trial"
 
-4. **Play the trial**:
-   - Navigate the bench with keyboard (arrow keys)
-   - Listen to dialogue and progress through script lines
-   - Engage with minigames as scripted
-   - Use truth bullets to find contradictions
+4. **Play** (limited functionality):
+   - Navigate bench with arrow keys (basic free-look works)
+   - Dialogue progresses through script lines
+   - Minigames trigger but lack polish and animations
+   - **Not working**: Camera motions, most text effects, highlighting, proper audio sync
+
+#### Current Limitations
+- Script parameters (camera motion, effects, highlighting) mostly ignored
+- No character animations
+- Minigames are functional but lack visual polish
+- Some trial loading issues with absolute paths
 
 ---
 
@@ -339,34 +324,48 @@ trial-folder/
 
 ---
 
-## Roadmap
+## Development Roadmap
 
-### Complete ✅
-- [x] Web UI character management
-- [x] Web UI script writing
-- [x] Godot trial engine with 6 minigames
-- [x] Camera motion system (17 types)
-- [x] Screen effects system (11 types)
-- [x] Dialogue playback with typewriter effect
-- [x] Audio management
-- [x] Influence and concentrate gauges
-- [x] Truth bullet system
+### Web UI (Stable) ✅
+- [x] Character management (create, edit, delete)
+- [x] Script writing (dialogue, narrator, minigame lines)
+- [x] Sprite management with lazy loading
+- [x] Advanced line properties (highlighting, camera, effects)
+- [x] Minigame configuration editors
+- [x] Truth bullets management
+- [x] Dark/Light theme
+- [x] Auto-save to JSON
 - [x] CLI batch character tool
-- [x] Input management and controls
-- [x] Free-look bench camera
 
-### In Progress
-- [ ] Full integration testing
-- [ ] Example trial creation
-- [ ] Tutorial documentation
+### Game Engine — Priority Order
 
-### Future
-- [ ] Character deletion/reordering UI
-- [ ] Evidence cross-examination system
-- [ ] Scene transitions
+**High Priority** (Core gameplay)
+- [ ] Interpret camera motion parameters (duration, easing, type)
+- [ ] Implement character animations (walk, idle, react)
+- [ ] Render text highlighting from scripter
+- [ ] Apply screen effects from script data
+- [ ] Proper audio synchronization with dialogue timing
+- [ ] Typewriter/text reveal effect
+
+**Medium Priority** (Polish)
+- [ ] Minigame animations (panel movement, bullet effects, transitions)
+- [ ] Scene transitions and fades
+- [ ] Background image support
+- [ ] Music and ambient audio
+- [ ] Visual feedback for player actions
+
+**Lower Priority** (Extended features)
+- [ ] Cross-examination system
+- [ ] Evidence presentation mechanics
+- [ ] Alternative trial paths/branching
 - [ ] Particle effects
-- [ ] Mobile app version
-- [ ] Multiplayer trial creation
+- [ ] Mobile optimization
+
+### Known Blockers
+- Many scripter parameters not yet passed to engine
+- No animation system for characters
+- Camera motion system framework incomplete
+- Effect timing and composition not working
 
 ---
 

@@ -24,9 +24,13 @@ func _open_desktop_picker():
 	_file_dialog.size = Vector2(800, 500)
 	_file_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_MAIN_WINDOW_SCREEN
 
-	var desktop_path = OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
-	if not desktop_path.is_empty():
-		_file_dialog.current_dir = desktop_path
+	var scripter_output = "C:/Users/RaaViVi/Documents/GitHub/freestyle-dangan-trial/scripter/output"
+	if DirAccess.dir_exists_absolute(scripter_output):
+		_file_dialog.current_dir = scripter_output
+	else:
+		var desktop_path = OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
+		if not desktop_path.is_empty():
+			_file_dialog.current_dir = desktop_path
 
 	_file_dialog.file_selected.connect(_on_file_chosen)
 	_file_dialog.canceled.connect(_on_cancelled)

@@ -3,7 +3,7 @@ extends TextureButton
 var _picker: Node
 
 func _on_pressed() -> void:
-	_picker = preload("res://scripts/TrialFilePicker.gd").new()
+	_picker = preload("res://scripts/tools/TrialFilePicker.gd").new()
 	add_child(_picker)
 	_picker.file_selected.connect(_on_trial_file_selected)
 	_picker.cancelled.connect(_on_picker_cancelled)

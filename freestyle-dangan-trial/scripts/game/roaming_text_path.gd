@@ -6,7 +6,7 @@ extends Path2D
 ## PathFollow2D nodes with Label children.
 
 ## Path to the JSON file containing configuration paths (paths.json)
-@export_file("*.json") var paths_config_file: String = "res://paths.json"
+@export_file("*.json") var paths_config_file: String = "res://data/paths.json"
 
 ## Spacing between characters as a percentage of the total path length (0.0 to 1.0)
 ## Lower values bring letters closer together
@@ -34,7 +34,7 @@ extends Path2D
 @export_range(8, 128, 1) var font_size: int = 74
 
 ## Font file to use for character labels
-@export_file("*.ttf") var font_file: String = "res://Font/LexendMega-Regular.ttf"
+@export_file("*.ttf") var font_file: String = "res://fonts/LexendMega-Regular.ttf"
 
 ## Color of the text (supports hex codes with transparency)
 @export var text_color: Color = Color(1.0, 1.0, 1.0, 0.2)
@@ -105,7 +105,7 @@ func load_paths_config():
 	else:
 		push_error("Paths config missing 'text_config_path' field")
 		# Fallback to default
-		text_config_path = "res://curved_text.json"
+		text_config_path = "res://data/curved_text.json"
 
 ## Creates or updates the oval path based on current viewport size
 ## The path is created using bezier curves to form a smooth oval

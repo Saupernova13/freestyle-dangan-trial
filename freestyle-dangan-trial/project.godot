@@ -18,13 +18,13 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-TrialLoader="*res://scripts/TrialLoader.gd"
+TrialLoader="*res://scripts/core/TrialLoader.gd"
 ScriptDirector="*res://scripts/core/ScriptDirector.gd"
 AudioManager="*res://scripts/core/AudioManager.gd"
 InputManager="*res://scripts/core/InputManager.gd"
 InfluenceGauge="*res://scripts/core/InfluenceGauge.gd"
 TruthBulletManager="*res://scripts/core/TruthBulletManager.gd"
-CameraDirector="*res://scripts/Camera/CameraDirector.gd"
+CameraDirector="*res://scripts/camera/CameraDirector.gd"
 ScreenEffects="*res://scripts/core/ScreenEffectsManager.gd"
 Settings="*res://scripts/core/Settings.gd"
 ConcentrateGauge="*res://scripts/core/ConcentrateGauge.gd"

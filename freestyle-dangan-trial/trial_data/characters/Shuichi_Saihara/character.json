@@ -1,0 +1,17 @@
+{
+  "id": "SS_20000907_V7KTUV",
+  "name": "Shuichi",
+  "surname": "Saihara",
+  "heightM": 1.7,
+  "heightCM": 0,
+  "weight": 58,
+  "chest": 81,
+  "blood": "AB",
+  "dob": "2000-09-07",
+  "likes": "Novels",
+  "dislikes": "Cars",
+  "notes": "Ultimate Detective",
+  "isHeadmaster": false,
+  "position": 8,
+  "lastModified": "2025-12-31T13:38:14.405Z"
+}

@@ -1,0 +1,17 @@
+{
+  "id": "HR_20000701_O7WQAJ",
+  "name": "Ryoma",
+  "surname": "Hoshi",
+  "heightM": 1.04,
+  "heightCM": 0,
+  "weight": 40,
+  "chest": 61,
+  "blood": "O",
+  "dob": "2000-07-01",
+  "likes": "Russian blues",
+  "dislikes": "Whitefin reef sharks",
+  "notes": "Ultimate Tennis Pro",
+  "isHeadmaster": false,
+  "position": 10,
+  "lastModified": "2025-12-31T13:38:14.521Z"
+}

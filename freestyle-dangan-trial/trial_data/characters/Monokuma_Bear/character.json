@@ -1,0 +1,17 @@
+{
+  "id": "BM_20101125_SOUP1V",
+  "name": "Monokuma",
+  "surname": "Bear",
+  "heightM": 0.75,
+  "heightCM": 0,
+  "weight": 10,
+  "chest": 40,
+  "blood": "Unknown",
+  "dob": "2010-11-25",
+  "likes": "Despair, punishment, watching students suffer",
+  "dislikes": "Hope, optimism, students breaking rules",
+  "notes": "The headmaster of Hope's Peak Academy and mastermind behind the killing game. A sadistic robotic bear who delights in chaos and despair.",
+  "isHeadmaster": true,
+  "position": 16,
+  "lastModified": "2025-12-31T13:38:14.834Z"
+}

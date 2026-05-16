@@ -1,0 +1,332 @@
+{
+  "trialName": "Trial_3",
+  "characters": [
+    "AK_20000326_EJBPMB",
+    "TK_20000510_I1EUDC",
+    "YH_20001203_64EVQS",
+    "HM_20000202_C4WPU8",
+    "CT_20000109_WOFW5K",
+    "ST_20000815_PRAAUI",
+    "YA_20000418_KHE816",
+    "IM_20001116_7Y8JMH",
+    "SS_20000907_V7KTUV",
+    "MK_20000412_JPIYF0",
+    "HR_20000701_O7WQAJ",
+    "AR_20001003_5WTEHK",
+    "GG_20000123_ACP7QY",
+    "OK_20000621_ZTQDRF",
+    "SK_20000731_XCHFGA",
+    "KK_20001029_MXEP9E",
+    "BM_20101125_SOUP1V"
+  ],
+  "truthBullets": [
+    {
+      "bulletId": "tb_1767189849902_y2vdfi",
+      "name": "Monokuma File #1 ",
+      "description": "The victim was Sayaka Maizono. The time of death is estimated to be around 1:30 a.m. The body was discovered in Makoto's room, in the dormitory.\nThe death took place in the bathroom. The cause of death was a stab wound to the abdomen, and her right wrist appears to have been fractured.",
+      "imageFile": "tb_1767189849902_y2vdfi.png",
+      "inversedLieBulletName": "Monokuma Phobic #1 "
+    },
+    {
+      "bulletId": "tb_1767190002406_mcftfg",
+      "name": "Evidence of a Struggle",
+      "description": "There are a number of scratches and gouges on the bed and walls in Makoto's room.",
+      "imageFile": "tb_1767190002406_mcftfg.png",
+      "inversedLieBulletName": "Evidence of a Relaxation"
+    },
+    {
+      "bulletId": "tb_1767191898830_13qt1k",
+      "name": "Dying Message",
+      "description": "A series of numbers had been written in blood on Makoto's bathroom wall—11037. It is assumed that Sayaka wrote these numbers while leaned up against the wall, as she lay dying.",
+      "imageFile": "tb_1767191898830_13qt1k.png",
+      "inversedLieBulletName": "Living Silence"
+    },
+    {
+      "bulletId": "tb_1767221266351_0bg2mc",
+      "name": "Loves This Game",
+      "description": "He loves the game",
+      "imageFile": "tb_1767221266351_0bg2mc.gif",
+      "inversedLieBulletName": "He Hates The Game"
+    }
+  ],
+  "minigames": [
+    {
+      "gameId": "mg_1767190033084_6uniet",
+      "name": "Did he do it tho?",
+      "gameType": "logic_dive",
+      "difficulty": "easy",
+      "timeLimit": 30,
+      "typeSpecific": {
+        "questions": [
+          {
+            "questionId": "q_1767272915737_1ftkgk",
+            "order": 0,
+            "questionText": "whodunnit",
+            "answers": [
+              {
+                "answerId": "a_1767272915737_1",
+                "answerText": "grampa",
+                "isCorrect": true
+              },
+              {
+                "answerId": "a_1767272915737_2",
+                "answerText": "mamna",
+                "isCorrect": false
+              },
+              {
+                "answerId": "a_1767272915737_3",
+                "answerText": "sasa",
+                "isCorrect": false
+              },
+              {
+                "answerId": "a_1767272915737_4",
+                "answerText": "vds",
+                "isCorrect": false
+              },
+              {
+                "answerId": "a_1767272915737_5",
+                "answerText": "sge",
+                "isCorrect": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "gameId": "mg_1767221394972_3cwgrx",
+      "name": "WHodunnit?",
+      "gameType": "debate_scrum",
+      "difficulty": "medium",
+      "timeLimit": 60,
+      "typeSpecific": {
+        "arguments": [
+          {
+            "argumentId": "arg_1767273236558_m9h12b",
+            "order": 0,
+            "oppositionStatement": "",
+            "oppositionCharacterId": "",
+            "oppositionAudioFile": null,
+            "oppositionAudioBlob": null,
+            "oppositionKeywords": [],
+            "defenseStatement": "",
+            "defenseCharacterId": "",
+            "defenseAudioFile": null,
+            "defenseAudioBlob": null,
+            "defenseKeywords": []
+          }
+        ]
+      }
+    },
+    {
+      "gameId": "mg_1767221952008_29uhww",
+      "name": "",
+      "gameType": "nonstop_debate",
+      "difficulty": "medium",
+      "timeLimit": 60,
+      "typeSpecific": {
+        "lineGroups": [
+          {
+            "groupId": "panic_group_1767229186555_wl6zta",
+            "order": 0,
+            "speaker1": {
+              "sentenceBeginning": "",
+              "target": "",
+              "sentenceEnd": "",
+              "isLoudAssertion": false,
+              "answerBulletId": null,
+              "textEffect": "normal",
+              "textMovementDirection": "left_to_right",
+              "textFont": "default",
+              "voiceLineFile": null,
+              "voiceLineBlob": null
+            },
+            "speaker2": {
+              "sentenceBeginning": "",
+              "target": "",
+              "sentenceEnd": "",
+              "isLoudAssertion": false,
+              "answerBulletId": null,
+              "textEffect": "normal",
+              "textMovementDirection": "left_to_right",
+              "textFont": "default",
+              "voiceLineFile": null,
+              "voiceLineBlob": null
+            },
+            "speaker3": {
+              "sentenceBeginning": "",
+              "target": "",
+              "sentenceEnd": "",
+              "isLoudAssertion": false,
+              "answerBulletId": null,
+              "textEffect": "normal",
+              "textMovementDirection": "left_to_right",
+              "textFont": "default",
+              "voiceLineFile": null,
+              "voiceLineBlob": null
+            }
+          }
+        ],
+        "speaker1CharacterId": "",
+        "speaker2CharacterId": "",
+        "speaker3CharacterId": "",
+        "dialogueLines": [
+          {
+            "lineId": "dl_1767229202016_yjfleq",
+            "order": 0,
+            "sentenceBeginning": "",
+            "target": "",
+            "sentenceEnd": "",
+            "isShootable": false,
+            "answerBulletId": null,
+            "useNegativeBullet": false,
+            "textEffect": "normal",
+            "textMovementDirection": "left_to_right",
+            "userFailedComment": "",
+            "userWrongAnswerComment": "",
+            "textFont": "default",
+            "characterSpotlight": false,
+            "characterId": "",
+            "voiceLineFile": null
+          },
+          {
+            "lineId": "dl_1767229205588_56bvlu",
+            "order": 1,
+            "sentenceBeginning": "",
+            "target": "",
+            "sentenceEnd": "",
+            "isShootable": false,
+            "answerBulletId": null,
+            "useNegativeBullet": false,
+            "textEffect": "normal",
+            "textMovementDirection": "left_to_right",
+            "userFailedComment": "",
+            "userWrongAnswerComment": "",
+            "textFont": "default",
+            "characterSpotlight": false,
+            "characterId": "",
+            "voiceLineFile": null
+          }
+        ]
+      }
+    }
+  ],
+  "script": {
+    "lines": [
+      {
+        "id": "line_1767189366781",
+        "order": 0,
+        "type": "speaking",
+        "characterId": "AK_20000326_EJBPMB",
+        "dialogue": "I have a better plan...",
+        "spriteIndex": 4,
+        "cameraMotion": {
+          "type": "none",
+          "duration": 1,
+          "easing": "ease-in-out"
+        },
+        "highlights": [],
+        "specialEffects": {
+          "effects": []
+        },
+        "dialogueBoxStyle": {
+          "style": "default",
+          "borderColor": "#FFFFFF",
+          "bgOpacity": 0.9,
+          "borderThickness": 2
+        },
+        "audioFile": "line_1767189366781.mp3"
+      },
+      {
+        "id": "line_1767189489662",
+        "order": 1,
+        "type": "speaking",
+        "characterId": "SS_20000907_V7KTUV",
+        "dialogue": "I'll marry a wealthy man...",
+        "spriteIndex": 7,
+        "cameraMotion": {
+          "type": "none",
+          "duration": 1,
+          "easing": "ease-in-out"
+        },
+        "highlights": [],
+        "specialEffects": {
+          "effects": []
+        },
+        "dialogueBoxStyle": {
+          "style": "default",
+          "borderColor": "#FFFFFF",
+          "bgOpacity": 0.9,
+          "borderThickness": 2
+        }
+      },
+      {
+        "id": "line_1767189516958",
+        "order": 2,
+        "type": "speaking",
+        "characterId": "IM_20001116_7Y8JMH",
+        "dialogue": "Wouldn't that make you, gay?",
+        "spriteIndex": 17,
+        "cameraMotion": {
+          "type": "none",
+          "duration": 1,
+          "easing": "ease-in-out"
+        },
+        "highlights": [],
+        "specialEffects": {
+          "effects": []
+        },
+        "dialogueBoxStyle": {
+          "style": "default",
+          "borderColor": "#FFFFFF",
+          "bgOpacity": 0.9,
+          "borderThickness": 2
+        }
+      },
+      {
+        "id": "line_1767189534458",
+        "order": 3,
+        "type": "speaking",
+        "characterId": "KK_20001029_MXEP9E",
+        "dialogue": "Not necessarily"
+      },
+      {
+        "id": "line_1767192005341",
+        "order": 4,
+        "type": "speaking",
+        "characterId": "HM_20000202_C4WPU8",
+        "dialogue": "I don't care if you're gay, I care if you killed him and left a message"
+      },
+      {
+        "id": "line_1767195503387",
+        "order": 5,
+        "type": "speaking",
+        "characterId": "SK_20000731_XCHFGA",
+        "dialogue": "Let's discuss the message on the wall"
+      },
+      {
+        "id": "line_1767189556950",
+        "order": 6,
+        "type": "minigame",
+        "minigameId": "mg_1767190033084_6uniet"
+      },
+      {
+        "id": "line_1767221159890",
+        "order": 7,
+        "type": "minigame",
+        "minigameId": ""
+      }
+    ],
+    "lastModified": "2026-01-01T13:13:56.559Z"
+  },
+  "metadata": {
+    "version": "4.0",
+    "lastModified": "2026-01-01T13:13:56.559Z",
+    "studentCount": 16,
+    "headmasterCount": 1,
+    "totalCharacters": 17,
+    "scriptLineCount": 8,
+    "minigameCount": 3,
+    "truthBulletCount": 4
+  }
+}

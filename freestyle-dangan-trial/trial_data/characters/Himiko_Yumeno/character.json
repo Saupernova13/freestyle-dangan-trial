@@ -1,0 +1,17 @@
+{
+  "id": "YH_20001203_64EVQS",
+  "name": "Himiko",
+  "surname": "Yumeno",
+  "heightM": 1.5,
+  "heightCM": 0,
+  "weight": 39,
+  "chest": 79,
+  "blood": "O",
+  "dob": "2000-12-03",
+  "likes": "Small spaces",
+  "dislikes": "The ocean",
+  "notes": "Ultimate Magician",
+  "isHeadmaster": false,
+  "position": 2,
+  "lastModified": "2025-12-31T13:38:14.099Z"
+}

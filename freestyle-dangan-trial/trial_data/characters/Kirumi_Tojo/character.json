@@ -1,0 +1,17 @@
+{
+  "id": "TK_20000510_I1EUDC",
+  "name": "Kirumi",
+  "surname": "Tojo",
+  "heightM": 1.75,
+  "heightCM": 0,
+  "weight": 52,
+  "chest": 84,
+  "blood": "A",
+  "dob": "2000-05-10",
+  "likes": "Cleaning",
+  "dislikes": "Taking days off",
+  "notes": "Ultimate Maid",
+  "isHeadmaster": false,
+  "position": 1,
+  "lastModified": "2025-12-31T13:38:14.052Z"
+}

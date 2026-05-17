@@ -21,6 +21,11 @@ var _direction: Vector2
 var _trail_points: Array = []
 
 func fire(from: Vector2, to: Vector2):
+	# Ensure the Control has a size before computing position (custom_minimum_size
+	# from the scene is the floor, but explicit size avoids edge cases when
+	# instantiated outside a layout container).
+	if size.x <= 0 or size.y <= 0:
+		size = Vector2(16, 16)
 	_start_pos = from
 	_target_pos = to
 	position = from - size / 2

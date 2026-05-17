@@ -6,7 +6,6 @@ extends CanvasLayer
 
 @export var bar_width: float = 130.0
 
-@onready var _label: Label = %Label
 @onready var _bar_fill: ColorRect = %BarFill
 @onready var _anim: AnimationPlayer = %AnimationPlayer
 

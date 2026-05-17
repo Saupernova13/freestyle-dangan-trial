@@ -351,13 +351,20 @@ func _fire_bullet_at_panel(panel: DebateTextPanel, click_pos: Vector2):
 		panel.use_negative_bullet
 	)
 
+	# Capture a WeakRef so the lambda doesn't strong-hold the panel — it may be
+	# queue_free()'d during cleanup() before the projectile lands.
+	var panel_ref = weakref(panel)
 	if is_correct:
 		projectile.hit_target.connect(func():
-			_on_correct_hit(panel)
+			var p = panel_ref.get_ref()
+			if p and is_instance_valid(p):
+				_on_correct_hit(p)
 		)
 	else:
 		projectile.hit_target.connect(func():
-			_on_wrong_hit(panel)
+			var p = panel_ref.get_ref()
+			if p and is_instance_valid(p):
+				_on_wrong_hit(p)
 		)
 
 func _on_correct_hit(panel: DebateTextPanel):

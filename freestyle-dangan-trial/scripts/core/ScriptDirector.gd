@@ -222,7 +222,7 @@ func _toggle_settings_menu():
 	if current_state != State.IDLE and current_state != State.TRIAL_COMPLETE:
 		_transition_to(State.PAUSED)
 
-	_settings_menu = preload("res://scripts/ui/SettingsMenu.gd").new()
+	_settings_menu = preload("res://scenes/ui/settings_menu.tscn").instantiate()
 	add_child(_settings_menu)
 	_settings_menu.open()
 	_settings_menu.closed.connect(func():

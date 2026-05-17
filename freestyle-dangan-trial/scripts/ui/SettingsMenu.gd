@@ -1,107 +1,47 @@
 extends CanvasLayer
 
+## Settings overlay. Scene-driven shell — see scenes/ui/settings_menu.tscn.
+## The static panel (background, title, button styling, open/close animations)
+## is editable in the editor. Dynamic option rows are still built in script
+## because they bind to Settings autoload values, but they're parented into
+## the named %OptionsContainer node so their position in the tree is visible.
+
 signal closed
 
-var _bg: ColorRect
-var _panel: PanelContainer
+@onready var _options_container: VBoxContainer = %OptionsContainer
+@onready var _close_btn: Button = %CloseButton
+@onready var _anim: AnimationPlayer = %AnimationPlayer
+
 var _is_closing: bool = false
 
 func _ready():
-	layer = 28
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	_close_btn.pressed.connect(_close)
+	_build_options()
 
 func open():
-	_build_ui()
+	if _anim and _anim.has_animation("open"):
+		_anim.play("open")
 
-func _build_ui():
-	_bg = ColorRect.new()
-	_bg.color = Color(0, 0, 0, 0.7)
-	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_bg)
+func _build_options():
+	_add_option_row("Text Speed", _create_text_speed_control())
+	_add_slider_row("Voice Volume", Settings.voice_volume, func(val): Settings.voice_volume = val)
+	_add_slider_row("SFX Volume", Settings.sfx_volume, func(val): Settings.sfx_volume = val)
+	_add_slider_row("BGM Volume", Settings.bgm_volume, func(val): Settings.bgm_volume = val)
+	_add_separator()
+	_add_toggle_row("Auto-Advance", Settings.auto_advance, func(val): Settings.auto_advance = val)
+	_add_slider_row("Auto Delay (s)", Settings.auto_advance_delay, func(val): Settings.auto_advance_delay = val, 0.5, 6.0, 0.5)
+	_add_slider_row("Screen Shake", Settings.screen_shake_intensity, func(val): Settings.screen_shake_intensity = val, 0.0, 2.0, 0.1)
 
-	var center = CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-
-	_panel = PanelContainer.new()
-	_panel.custom_minimum_size = Vector2(500, 450)
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.1, 0.1, 0.15, 0.95)
-	style.border_width_bottom = 2
-	style.border_width_top = 2
-	style.border_width_left = 2
-	style.border_width_right = 2
-	style.border_color = Color(0.5, 0.5, 0.6)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
-	style.content_margin_left = 24
-	style.content_margin_right = 24
-	style.content_margin_top = 20
-	style.content_margin_bottom = 20
-	_panel.add_theme_stylebox_override("panel", style)
-	center.add_child(_panel)
-
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 14)
-	_panel.add_child(vbox)
-
-	var title = Label.new()
-	title.text = "SETTINGS"
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color(0.9, 0.9, 1.0))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-
-	_add_separator(vbox)
-
-	_add_option_row(vbox, "Text Speed", _create_text_speed_control())
-	_add_slider_row(vbox, "Voice Volume", Settings.voice_volume, func(val): Settings.voice_volume = val)
-	_add_slider_row(vbox, "SFX Volume", Settings.sfx_volume, func(val): Settings.sfx_volume = val)
-	_add_slider_row(vbox, "BGM Volume", Settings.bgm_volume, func(val): Settings.bgm_volume = val)
-
-	_add_separator(vbox)
-
-	_add_toggle_row(vbox, "Auto-Advance", Settings.auto_advance, func(val): Settings.auto_advance = val)
-	_add_slider_row(vbox, "Auto Delay (s)", Settings.auto_advance_delay, func(val): Settings.auto_advance_delay = val, 0.5, 6.0, 0.5)
-	_add_slider_row(vbox, "Screen Shake", Settings.screen_shake_intensity, func(val): Settings.screen_shake_intensity = val, 0.0, 2.0, 0.1)
-
-	_add_separator(vbox)
-
-	var btn_row = HBoxContainer.new()
-	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_child(btn_row)
-
-	var close_btn = Button.new()
-	close_btn.text = "Close"
-	close_btn.custom_minimum_size = Vector2(150, 40)
-	close_btn.add_theme_font_size_override("font_size", 18)
-	var btn_style = StyleBoxFlat.new()
-	btn_style.bg_color = Color(0.2, 0.2, 0.3, 0.9)
-	btn_style.border_width_bottom = 1
-	btn_style.border_width_top = 1
-	btn_style.border_width_left = 1
-	btn_style.border_width_right = 1
-	btn_style.border_color = Color(0.5, 0.5, 0.6)
-	btn_style.corner_radius_top_left = 4
-	btn_style.corner_radius_top_right = 4
-	btn_style.corner_radius_bottom_left = 4
-	btn_style.corner_radius_bottom_right = 4
-	close_btn.add_theme_stylebox_override("normal", btn_style)
-	close_btn.pressed.connect(_close)
-	btn_row.add_child(close_btn)
-
-func _add_separator(parent: VBoxContainer):
+func _add_separator():
 	var sep = HSeparator.new()
 	sep.add_theme_constant_override("separation", 4)
 	sep.add_theme_stylebox_override("separator", StyleBoxLine.new())
-	parent.add_child(sep)
+	_options_container.add_child(sep)
 
-func _add_option_row(parent: VBoxContainer, label_text: String, control: Control):
+func _add_option_row(label_text: String, control: Control):
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	parent.add_child(row)
+	_options_container.add_child(row)
 
 	var label = Label.new()
 	label.text = label_text
@@ -113,10 +53,10 @@ func _add_option_row(parent: VBoxContainer, label_text: String, control: Control
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(control)
 
-func _add_slider_row(parent: VBoxContainer, label_text: String, initial: float, callback: Callable, min_val: float = 0.0, max_val: float = 1.0, step: float = 0.05):
+func _add_slider_row(label_text: String, initial: float, callback: Callable, min_val: float = 0.0, max_val: float = 1.0, step: float = 0.05):
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	parent.add_child(row)
+	_options_container.add_child(row)
 
 	var label = Label.new()
 	label.text = label_text
@@ -150,10 +90,10 @@ func _format_value(val: float, max_val: float) -> String:
 		return str(int(val * 100)) + "%"
 	return str(snapped(val, 0.1))
 
-func _add_toggle_row(parent: VBoxContainer, label_text: String, initial: bool, callback: Callable):
+func _add_toggle_row(label_text: String, initial: bool, callback: Callable):
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	parent.add_child(row)
+	_options_container.add_child(row)
 
 	var label = Label.new()
 	label.text = label_text
@@ -203,13 +143,11 @@ func _close():
 	if _is_closing:
 		return
 	_is_closing = true
-	var tween = create_tween()
-	tween.tween_property(_bg, "color:a", 0.0, 0.2)
-	tween.parallel().tween_property(_panel, "modulate:a", 0.0, 0.2)
-	tween.finished.connect(func():
-		closed.emit()
-		queue_free()
-	)
+	if _anim and _anim.has_animation("close"):
+		_anim.play("close")
+		await _anim.animation_finished
+	closed.emit()
+	queue_free()
 
 func _unhandled_input(event: InputEvent):
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:

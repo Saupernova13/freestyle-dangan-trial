@@ -121,7 +121,7 @@ func _setup_ui():
 	add_child(_influence_gauge_ui)
 	_influence_gauge_ui.show_gauge()
 
-	_truth_bullet_selector = preload("res://scripts/ui/TruthBulletSelector.gd").new()
+	_truth_bullet_selector = preload("res://scenes/ui/truth_bullet_selector.tscn").instantiate()
 	add_child(_truth_bullet_selector)
 	_truth_bullet_selector.show_selector()
 

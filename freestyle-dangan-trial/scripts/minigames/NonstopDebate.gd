@@ -127,13 +127,7 @@ func _setup_ui_systems():
 	add_child(_concentrate_gauge_ui)
 	_concentrate_gauge_ui.show_gauge()
 
-	# Prefer the scene wrapper if it exists (allows editing defaults in the inspector),
-	# otherwise fall back to instantiating the script directly.
-	var selector_scene_path = "res://scenes/ui/truth_bullet_selector.tscn"
-	if ResourceLoader.exists(selector_scene_path):
-		_truth_bullet_selector = load(selector_scene_path).instantiate()
-	else:
-		_truth_bullet_selector = preload("res://scripts/ui/TruthBulletSelector.gd").new()
+	_truth_bullet_selector = preload("res://scenes/ui/truth_bullet_selector.tscn").instantiate()
 	add_child(_truth_bullet_selector)
 	_truth_bullet_selector.show_selector()
 

@@ -243,7 +243,7 @@ func _on_minigame_requested(minigame_data: Dictionary):
 	_hide_conversation_ui_for_minigame()
 
 	# Show title card before starting
-	var title_card = preload("res://scripts/ui/MinigameTitleCard.gd").new()
+	var title_card = preload("res://scenes/ui/minigame_title_card.tscn").instantiate()
 	add_child(title_card)
 	title_card.show_title(game_type, minigame_data.get("name", ""))
 	await title_card.card_finished
@@ -254,7 +254,7 @@ func _on_minigame_requested(minigame_data: Dictionary):
 		minigame.cleanup()
 		minigame.queue_free()
 		# Show result card
-		var result_card = preload("res://scripts/ui/MinigameTitleCard.gd").new()
+		var result_card = preload("res://scenes/ui/minigame_title_card.tscn").instantiate()
 		add_child(result_card)
 		result_card.show_result(success)
 		await result_card.card_finished
@@ -354,7 +354,7 @@ func _on_game_over():
 		dialogue_label.text = ""
 	update_character_name_label("")
 
-	var game_over_screen = preload("res://scripts/ui/GameOverScreen.gd").new()
+	var game_over_screen = preload("res://scenes/ui/game_over_screen.tscn").instantiate()
 	add_child(game_over_screen)
 	game_over_screen.show_game_over()
 

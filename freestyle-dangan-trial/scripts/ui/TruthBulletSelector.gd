@@ -1,82 +1,104 @@
 extends CanvasLayer
 
-var panel: PanelContainer
-var bullet_name_label: Label
-var bullet_image_rect: TextureRect
-var lie_indicator: Label
-var nav_label: Label
+const CHAMBER_ROT_SPEED = 1.2
+const DECAL_ROT_SPEED = 0.7
+
+var _anchor: Control
+var _decal_a: TextureRect
+var _decal_b: TextureRect
+var _chamber_rect: TextureRect
+var _slant_pivot: Control
+var _bullet_name_label: Label
+var _bullet_rect: TextureRect
+var _nav_label: Label
 
 func _ready():
 	layer = 10
 
-	panel = PanelContainer.new()
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.05, 0.1, 0.85)
-	style.border_width_bottom = 2
-	style.border_width_top = 2
-	style.border_width_left = 2
-	style.border_width_right = 2
-	style.border_color = Color(0.4, 0.7, 1.0, 0.8)
-	style.corner_radius_top_left = 4
-	style.corner_radius_top_right = 4
-	style.corner_radius_bottom_left = 4
-	style.corner_radius_bottom_right = 4
-	style.content_margin_left = 10
-	style.content_margin_right = 10
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
-	panel.add_theme_stylebox_override("panel", style)
+	var chamber_tex = load("res://textures/ui/lower_res/Bullet_Chamber.png")
+	var decal_tex = load("res://textures/ui/lower_res/rotating_white_lines_decal.png")
+	var bullet_tex = load("res://textures/ui/lower_res/Truth_Bullet.png")
 
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-	panel.add_child(vbox)
+	if not chamber_tex or not decal_tex or not bullet_tex:
+		push_error("Failed to load truth bullet textures")
+		queue_free()
+		return
 
-	var header = Label.new()
-	header.text = "TRUTH BULLET"
-	header.add_theme_font_size_override("font_size", 10)
-	header.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0))
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(header)
+	_anchor = Control.new()
+	_anchor.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_anchor.anchor_left = 0.0
+	_anchor.anchor_top = 1.0
+	_anchor.offset_left = 10
+	_anchor.offset_top = -200
+	_anchor.offset_right = 180
+	_anchor.offset_bottom = -10
+	_anchor.custom_minimum_size = Vector2(170, 190)
+	_anchor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_anchor)
 
-	bullet_image_rect = TextureRect.new()
-	bullet_image_rect.custom_minimum_size = Vector2(80, 60)
-	bullet_image_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	bullet_image_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	vbox.add_child(bullet_image_rect)
+	_decal_b = TextureRect.new()
+	_decal_b.texture = decal_tex
+	_decal_b.custom_minimum_size = Vector2(110, 110)
+	_decal_b.position = Vector2(0, 55)
+	_decal_b.pivot_offset = Vector2(55, 55)
+	_decal_b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_anchor.add_child(_decal_b)
 
-	bullet_name_label = Label.new()
-	bullet_name_label.text = "No Evidence"
-	bullet_name_label.add_theme_font_size_override("font_size", 14)
-	bullet_name_label.add_theme_color_override("font_color", Color.WHITE)
-	bullet_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	bullet_name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	bullet_name_label.custom_minimum_size.x = 120
-	vbox.add_child(bullet_name_label)
+	_decal_a = TextureRect.new()
+	_decal_a.texture = decal_tex
+	_decal_a.custom_minimum_size = Vector2(110, 110)
+	_decal_a.position = Vector2(0, 55)
+	_decal_a.pivot_offset = Vector2(55, 55)
+	_decal_a.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_anchor.add_child(_decal_a)
 
-	lie_indicator = Label.new()
-	lie_indicator.text = ""
-	lie_indicator.add_theme_font_size_override("font_size", 11)
-	lie_indicator.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
-	lie_indicator.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(lie_indicator)
+	_chamber_rect = TextureRect.new()
+	_chamber_rect.texture = chamber_tex
+	_chamber_rect.custom_minimum_size = Vector2(70, 70)
+	_chamber_rect.position = Vector2(20, 75)
+	_chamber_rect.pivot_offset = Vector2(35, 35)
+	_chamber_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_anchor.add_child(_chamber_rect)
 
-	nav_label = Label.new()
-	nav_label.text = "Q/E or Scroll"
-	nav_label.add_theme_font_size_override("font_size", 9)
-	nav_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
-	nav_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(nav_label)
+	_slant_pivot = Control.new()
+	_slant_pivot.position = Vector2(55, 110)
+	_slant_pivot.pivot_offset = Vector2(0, 0)
+	_slant_pivot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_anchor.add_child(_slant_pivot)
 
-	var anchor_control = Control.new()
-	anchor_control.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	anchor_control.anchor_left = 0.0
-	anchor_control.anchor_top = 1.0
-	anchor_control.offset_left = 10
-	anchor_control.offset_top = -200
-	anchor_control.offset_right = 160
-	anchor_control.offset_bottom = -10
-	add_child(anchor_control)
-	anchor_control.add_child(panel)
+	var slant_line = ColorRect.new()
+	slant_line.color = Color.WHITE
+	slant_line.size = Vector2(160, 3)
+	slant_line.position = Vector2(0, -2)
+	slant_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_slant_pivot.add_child(slant_line)
+
+	_bullet_rect = TextureRect.new()
+	_bullet_rect.texture = bullet_tex
+	_bullet_rect.custom_minimum_size = Vector2(80, 40)
+	_bullet_rect.position = Vector2(90, -20)
+	_bullet_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_slant_pivot.add_child(_bullet_rect)
+
+	_bullet_name_label = Label.new()
+	_bullet_name_label.text = "No Evidence"
+	_bullet_name_label.add_theme_font_size_override("font_size", 14)
+	_bullet_name_label.add_theme_color_override("font_color", Color.WHITE)
+	_bullet_name_label.position = Vector2(120, 20)
+	_bullet_name_label.custom_minimum_size.x = 160
+	_bullet_name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_bullet_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_anchor.add_child(_bullet_name_label)
+
+	_nav_label = Label.new()
+	_nav_label.text = "Q/E or Scroll"
+	_nav_label.add_theme_font_size_override("font_size", 9)
+	_nav_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
+	_nav_label.position = Vector2(10, 155)
+	_nav_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_anchor.add_child(_nav_label)
+
+	_slant_pivot.rotation_degrees = -30
 
 	TruthBulletManager.bullet_selected.connect(_on_bullet_selected)
 	TruthBulletManager.lie_mode_changed.connect(_on_lie_mode_changed)
@@ -91,22 +113,22 @@ func show_selector():
 func hide_selector():
 	visible = false
 
+func _process(delta):
+	if visible:
+		_chamber_rect.rotation += CHAMBER_ROT_SPEED * delta
+		_decal_a.rotation += DECAL_ROT_SPEED * delta
+		_decal_b.rotation -= DECAL_ROT_SPEED * delta
+
 func _on_bullet_selected(bullet: Dictionary):
-	bullet_name_label.text = TruthBulletManager.get_current_display_name()
-	_load_bullet_image(bullet)
+	var bullet_name = TruthBulletManager.get_current_display_name()
+	_bullet_name_label.text = bullet_name
+	if TruthBulletManager.lie_mode:
+		_bullet_name_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+	else:
+		_bullet_name_label.add_theme_color_override("font_color", Color.WHITE)
 
 func _on_lie_mode_changed(enabled: bool):
-	lie_indicator.text = "LIE BULLET" if enabled else ""
-	bullet_name_label.text = TruthBulletManager.get_current_display_name()
-
-func _load_bullet_image(bullet: Dictionary):
-	var img_path = TruthBulletManager.get_bullet_image_path(bullet)
-	if img_path.is_empty():
-		bullet_image_rect.texture = null
-		return
-
-	var image = Image.load_from_file(img_path)
-	if image:
-		bullet_image_rect.texture = ImageTexture.create_from_image(image)
+	if enabled:
+		_bullet_name_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
 	else:
-		bullet_image_rect.texture = null
+		_bullet_name_label.add_theme_color_override("font_color", Color.WHITE)

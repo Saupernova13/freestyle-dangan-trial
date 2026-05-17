@@ -109,7 +109,9 @@ func _ready():
 
 func _is_nav_blocked() -> bool:
 	var s = ScriptDirector.current_state
-	return s == ScriptDirector.State.DIALOGUE or s == ScriptDirector.State.WAITING_FOR_ADVANCE
+	return s == ScriptDirector.State.DIALOGUE \
+		or s == ScriptDirector.State.WAITING_FOR_ADVANCE \
+		or s == ScriptDirector.State.MINIGAME_ACTIVE
 
 func _process(delta):
 	# Handle hold-to-repeat navigation

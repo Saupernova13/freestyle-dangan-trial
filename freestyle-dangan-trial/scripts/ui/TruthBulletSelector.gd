@@ -17,7 +17,6 @@ extends CanvasLayer
 @export var inner_decal_size: Vector2 = Vector2(180, 180)
 @export var outer_decal_size: Vector2 = Vector2(230, 230)
 @export var slant_degrees: float = -25.0
-@export var slant_line_length: float = 240.0
 @export var bullet_size: Vector2 = Vector2(220, 70)
 @export var bullet_offset_from_hub: float = 90.0
 
@@ -31,7 +30,6 @@ extends CanvasLayer
 @export_group("Colors")
 @export var inner_decal_modulate: Color = Color(1, 1, 1, 0.95)
 @export var outer_decal_modulate: Color = Color(1, 1, 1, 0.55)
-@export var slant_line_color: Color = Color(1, 1, 1, 0.85)
 @export var lie_color: Color = Color(1.0, 0.3, 0.3)
 
 @export_group("Textures")
@@ -102,13 +100,6 @@ func _build_ui():
 	_slant_pivot.rotation_degrees = slant_degrees
 	_slant_pivot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_anchor.add_child(_slant_pivot)
-
-	var slant_line = ColorRect.new()
-	slant_line.color = slant_line_color
-	slant_line.size = Vector2(slant_line_length, 2)
-	slant_line.position = Vector2(0, -1)
-	slant_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_slant_pivot.add_child(slant_line)
 
 	_bullet_rect = TextureRect.new()
 	_bullet_rect.texture = bullet_texture

@@ -1,28 +1,13 @@
 class_name DebateTextPanel
 extends Control
 
+## A scrolling debate-statement panel. Scene-driven —
+## see scenes/minigames/debate_text_panel.tscn.
+## The scene supplies Panel + HBox + 3 RichTextLabels. The script handles
+## per-instance configuration (text, styling, white-noise/main sizing,
+## scrolling animation).
+
 signal panel_exited_screen(panel: DebateTextPanel)
-
-var line_data: Dictionary = {}
-var is_shootable: bool = false
-var answer_bullet_id: String = ""
-var use_negative_bullet: bool = false
-var movement_direction: String = "left_to_right"
-var character_id: String = ""
-var has_spotlight: bool = false
-var text_effect: String = "normal"
-var text_font: String = "default"
-
-var _panel: PanelContainer
-var _panel_style: StyleBoxFlat
-var _hbox: HBoxContainer
-var _prefix_label: RichTextLabel
-var _weak_label: RichTextLabel
-var _suffix_label: RichTextLabel
-var _move_speed: float = 150.0
-var _is_active: bool = true
-var _fade_timer: float = 0.0
-var is_white_noise: bool = false
 
 const WEAK_POINT_COLOR: String = "#FF8800"
 const NORMAL_TEXT_COLOR: String = "#FFFFFF"
@@ -37,7 +22,49 @@ const WHITE_NOISE_FONT_SIZE: int = 13
 const WHITE_NOISE_PANEL_HEIGHT: float = 36.0
 const WHITE_NOISE_MIN_WIDTH: float = 150.0
 
+@onready var _panel: PanelContainer = %Panel
+@onready var _prefix_label: RichTextLabel = %PrefixLabel
+@onready var _weak_label: RichTextLabel = %WeakLabel
+@onready var _suffix_label: RichTextLabel = %SuffixLabel
+
+var line_data: Dictionary = {}
+var is_shootable: bool = false
+var answer_bullet_id: String = ""
+var use_negative_bullet: bool = false
+var movement_direction: String = "left_to_right"
+var character_id: String = ""
+var has_spotlight: bool = false
+var text_effect: String = "normal"
+var text_font: String = "default"
+var is_white_noise: bool = false
+
+var _panel_style: StyleBoxFlat
+var _move_speed: float = 150.0
+var _is_active: bool = true
+var _fade_timer: float = 0.0
+var _pending_setup_data: Dictionary
+var _pending_speed_multiplier: float = 1.0
+var _setup_pending: bool = false
+
 func setup(data: Dictionary, speed_multiplier: float = 1.0):
+	_pending_setup_data = data
+	_pending_speed_multiplier = speed_multiplier
+	_setup_pending = true
+	if is_node_ready():
+		_apply_setup()
+
+func _ready():
+	if _setup_pending:
+		_apply_setup()
+	var viewport_width = get_viewport_rect().size.x
+	if movement_direction == "left_to_right":
+		position.x = -400
+	else:
+		position.x = viewport_width + 50
+
+func _apply_setup():
+	_setup_pending = false
+	var data = _pending_setup_data
 	line_data = data
 	is_shootable = data.get("isShootable", false)
 	var raw_bullet_id = data.get("answerBulletId", "")
@@ -50,12 +77,15 @@ func setup(data: Dictionary, speed_multiplier: float = 1.0):
 	text_font = data.get("textFont", "default")
 	is_white_noise = data.get("isWhiteNoise", false)
 
-	_move_speed = 200.0 * speed_multiplier
-	_build_panel()
+	_move_speed = 200.0 * _pending_speed_multiplier
+	_apply_sizing()
+	_rebuild_text()
 
-func _build_panel():
-	_panel = PanelContainer.new()
-	_panel_style = StyleBoxFlat.new()
+func _apply_sizing():
+	# Duplicate the scene's StyleBox so we can mutate per-instance without
+	# affecting other panels sharing the same scene resource.
+	_panel_style = _panel.get_theme_stylebox("panel").duplicate() as StyleBoxFlat
+	_panel.add_theme_stylebox_override("panel", _panel_style)
 
 	var font_size = WHITE_NOISE_FONT_SIZE if is_white_noise else MAIN_FONT_SIZE
 	var panel_height = WHITE_NOISE_PANEL_HEIGHT if is_white_noise else MAIN_PANEL_HEIGHT
@@ -63,45 +93,13 @@ func _build_panel():
 	var bg_alpha = 0.45 if is_white_noise else 0.75
 
 	_panel_style.bg_color = Color(0.1, 0.1, 0.2, bg_alpha)
-	_panel_style.border_width_bottom = 1
-	_panel_style.border_width_top = 1
-	_panel_style.border_width_left = 1
-	_panel_style.border_width_right = 1
 	_panel_style.border_color = SHOOTABLE_BORDER_COLOR if is_shootable else DEFAULT_BORDER_COLOR
-	_panel_style.content_margin_left = 12
-	_panel_style.content_margin_right = 12
-	_panel_style.content_margin_top = 6
-	_panel_style.content_margin_bottom = 6
-	_panel.add_theme_stylebox_override("panel", _panel_style)
-	add_child(_panel)
 
-	_hbox = HBoxContainer.new()
-	_hbox.add_theme_constant_override("separation", 0)
-	_panel.add_child(_hbox)
-
-	_prefix_label = _create_rich_label(font_size)
-	_hbox.add_child(_prefix_label)
-
-	_weak_label = _create_rich_label(font_size)
-	_hbox.add_child(_weak_label)
-
-	_suffix_label = _create_rich_label(font_size)
-	_hbox.add_child(_suffix_label)
-
-	_rebuild_text()
+	for lbl in [_prefix_label, _weak_label, _suffix_label]:
+		lbl.add_theme_font_size_override("normal_font_size", font_size)
 
 	custom_minimum_size = Vector2(min_width, panel_height)
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-func _create_rich_label(font_size: int) -> RichTextLabel:
-	var label = RichTextLabel.new()
-	label.bbcode_enabled = true
-	label.fit_content = true
-	label.scroll_active = false
-	label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	label.add_theme_font_size_override("normal_font_size", font_size)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return label
+	size = custom_minimum_size
 
 func _rebuild_text():
 	if not _prefix_label or not _weak_label or not _suffix_label:
@@ -188,13 +186,6 @@ func get_hit_zone(click_pos: Vector2) -> String:
 	if _suffix_label.visible and Rect2(_suffix_label.global_position, _suffix_label.size).has_point(click_pos):
 		return "suffix"
 	return ""
-
-func _ready():
-	var viewport_width = get_viewport_rect().size.x
-	if movement_direction == "left_to_right":
-		position.x = -400
-	else:
-		position.x = viewport_width + 50
 
 func _process(delta):
 	if not _is_active:

@@ -136,7 +136,7 @@ func _spawn_group():
 		if speaker_data.is_empty():
 			continue
 
-		var panel = DebateTextPanel.new()
+		var panel: DebateTextPanel = preload("res://scenes/minigames/debate_text_panel.tscn").instantiate()
 		var line_data = speaker_data.duplicate()
 		line_data["characterId"] = speaker_ids[i]
 		var answer_bullet_id = line_data.get("answerBulletId", "")

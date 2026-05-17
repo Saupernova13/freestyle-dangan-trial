@@ -236,7 +236,7 @@ func _spawn_main_line():
 	if _turn_label:
 		_turn_label.text = "TURN %d" % _main_line_index
 
-	var panel = DebateTextPanel.new()
+	var panel: DebateTextPanel = preload("res://scenes/minigames/debate_text_panel.tscn").instantiate()
 	var speed_mult = get_difficulty_multiplier()
 	panel.setup(line_data, speed_mult)
 
@@ -268,7 +268,7 @@ func _spawn_noise_line():
 	var idx = randi() % _white_noise_lines.size()
 	var line_data = _white_noise_lines[idx]
 
-	var panel = DebateTextPanel.new()
+	var panel: DebateTextPanel = preload("res://scenes/minigames/debate_text_panel.tscn").instantiate()
 	var speed_mult = get_difficulty_multiplier()
 	panel.setup(line_data, speed_mult)
 
@@ -339,7 +339,7 @@ func _spawn_damage_popup(pos: Vector2, text: String, color: Color):
 	tween.finished.connect(func(): label.queue_free())
 
 func _fire_bullet_at_panel(panel: DebateTextPanel, click_pos: Vector2):
-	var projectile = BulletProjectile.new()
+	var projectile: BulletProjectile = preload("res://scenes/minigames/bullet_projectile.tscn").instantiate()
 	_overlay.add_child(projectile)
 
 	var target_center = panel.global_position + panel.size / 2

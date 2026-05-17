@@ -111,11 +111,11 @@ func _build_overlay():
 		_answer_labels.append(lbl)
 
 func _setup_ui():
-	_influence_gauge_ui = preload("res://scripts/ui/InfluenceGaugeUI.gd").new()
+	_influence_gauge_ui = preload("res://scenes/ui/influence_gauge.tscn").instantiate()
 	add_child(_influence_gauge_ui)
 	_influence_gauge_ui.show_gauge()
 
-	_timer_display = preload("res://scripts/ui/TimerDisplay.gd").new()
+	_timer_display = preload("res://scenes/ui/timer_display.tscn").instantiate()
 	add_child(_timer_display)
 	_timer_display.time_expired.connect(_on_time_expired)
 	if time_limit > 0:

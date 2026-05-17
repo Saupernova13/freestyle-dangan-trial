@@ -117,7 +117,7 @@ func _build_overlay():
 	_overlay.add_child(hint)
 
 func _setup_ui():
-	_influence_gauge_ui = preload("res://scripts/ui/InfluenceGaugeUI.gd").new()
+	_influence_gauge_ui = preload("res://scenes/ui/influence_gauge.tscn").instantiate()
 	add_child(_influence_gauge_ui)
 	_influence_gauge_ui.show_gauge()
 
@@ -125,11 +125,11 @@ func _setup_ui():
 	add_child(_truth_bullet_selector)
 	_truth_bullet_selector.show_selector()
 
-	_crosshair = preload("res://scripts/ui/Crosshair.gd").new()
+	_crosshair = preload("res://scenes/ui/crosshair.tscn").instantiate()
 	add_child(_crosshair)
 	_crosshair.show_crosshair()
 
-	_timer_display = preload("res://scripts/ui/TimerDisplay.gd").new()
+	_timer_display = preload("res://scenes/ui/timer_display.tscn").instantiate()
 	add_child(_timer_display)
 	_timer_display.time_expired.connect(_on_time_expired)
 	if time_limit > 0:

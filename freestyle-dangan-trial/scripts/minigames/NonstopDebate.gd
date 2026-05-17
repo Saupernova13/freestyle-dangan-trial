@@ -119,11 +119,11 @@ func _build_overlay():
 	_overlay.add_child(_wrong_label)
 
 func _setup_ui_systems():
-	_influence_gauge_ui = preload("res://scripts/ui/InfluenceGaugeUI.gd").new()
+	_influence_gauge_ui = preload("res://scenes/ui/influence_gauge.tscn").instantiate()
 	add_child(_influence_gauge_ui)
 	_influence_gauge_ui.show_gauge()
 
-	_concentrate_gauge_ui = preload("res://scripts/ui/ConcentrateGaugeUI.gd").new()
+	_concentrate_gauge_ui = preload("res://scenes/ui/concentrate_gauge.tscn").instantiate()
 	add_child(_concentrate_gauge_ui)
 	_concentrate_gauge_ui.show_gauge()
 
@@ -137,11 +137,11 @@ func _setup_ui_systems():
 	add_child(_truth_bullet_selector)
 	_truth_bullet_selector.show_selector()
 
-	_crosshair = preload("res://scripts/ui/Crosshair.gd").new()
+	_crosshair = preload("res://scenes/ui/crosshair.tscn").instantiate()
 	add_child(_crosshair)
 	_crosshair.show_crosshair()
 
-	_timer_display = preload("res://scripts/ui/TimerDisplay.gd").new()
+	_timer_display = preload("res://scenes/ui/timer_display.tscn").instantiate()
 	add_child(_timer_display)
 	_timer_display.time_expired.connect(_on_time_expired)
 
@@ -384,7 +384,7 @@ func _fire_bullet_at_panel(panel: DebateTextPanel, click_pos: Vector2):
 	_overlay.add_child(projectile)
 
 	var target_center = panel.global_position + panel.size / 2
-	var crosshair_pos = _crosshair.get_position() if _crosshair else click_pos
+	var crosshair_pos = _crosshair.get_aim_position() if _crosshair else click_pos
 	projectile.fire(crosshair_pos, target_center)
 
 	var is_correct = TruthBulletManager.check_bullet_match(

@@ -1,7 +1,14 @@
 extends Node
 
+## File picker for .drtrial files.
+## Desktop: uses Godot's FileDialog node.
+## Android: uses DisplayServer.file_dialog_show (native SAF picker, Godot 4.3+).
+## Falls back to a custom file-list browser only if the native dialog is unavailable.
+
 signal file_selected(path: String)
 signal cancelled
+
+const IMPORTED_TRIAL_PATH := "user://imported_trial.drtrial"
 
 var _file_dialog: FileDialog
 var _is_mobile: bool = false
@@ -24,7 +31,8 @@ func _open_desktop_picker():
 	_file_dialog.size = Vector2(800, 500)
 	_file_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_MAIN_WINDOW_SCREEN
 
-	var scripter_output = "C:/Users/RaaViVi/Documents/GitHub/freestyle-dangan-trial/scripter/output"
+	# Prefer the scripter/output directory if it exists (dev convenience), else desktop
+	var scripter_output = OS.get_user_data_dir().path_join("../../../scripter/output")
 	if DirAccess.dir_exists_absolute(scripter_output):
 		_file_dialog.current_dir = scripter_output
 	else:
@@ -39,6 +47,64 @@ func _open_desktop_picker():
 	_file_dialog.popup_centered()
 
 func _open_mobile_picker():
+	# Godot 4.3+ exposes the platform's native file dialog via DisplayServer.
+	# On Android this uses the Storage Access Framework — no permissions needed.
+	if DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):
+		var filters = PackedStringArray(["*.drtrial,*.json ; Trial Files"])
+		var err = DisplayServer.file_dialog_show(
+			"Open Trial File",
+			"",
+			"",
+			false,
+			DisplayServer.FILE_DIALOG_MODE_OPEN_FILE,
+			filters,
+			_on_native_file_selected
+		)
+		if err != OK:
+			push_error("DisplayServer.file_dialog_show failed: %d" % err)
+			cancelled.emit()
+		return
+
+	# Last-resort fallback: scan known directories. Likely returns nothing on
+	# Android 11+ due to scoped storage, but keeps older devices and other
+	# mobile targets working.
+	_open_legacy_directory_scan()
+
+func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, _filter_index: int):
+	if not status or selected_paths.is_empty():
+		cancelled.emit()
+		return
+
+	var picked = selected_paths[0]
+	var local_copy = _copy_to_user_dir(picked)
+	if local_copy.is_empty():
+		push_error("Failed to copy picked file to user dir: %s" % picked)
+		cancelled.emit()
+		return
+	file_selected.emit(local_copy)
+
+## Copies the picked file (which may be a content:// URI on Android) into
+## user://imported_trial.drtrial so subsequent reads work even if the original
+## URI permission expires. Returns the writable path, or "" on failure.
+func _copy_to_user_dir(source_path: String) -> String:
+	var src = FileAccess.open(source_path, FileAccess.READ)
+	if not src:
+		push_error("Could not open source file: %s (err %d)" % [source_path, FileAccess.get_open_error()])
+		return ""
+
+	var data = src.get_buffer(src.get_length())
+	src.close()
+
+	var dst = FileAccess.open(IMPORTED_TRIAL_PATH, FileAccess.WRITE)
+	if not dst:
+		push_error("Could not write to %s (err %d)" % [IMPORTED_TRIAL_PATH, FileAccess.get_open_error()])
+		return ""
+
+	dst.store_buffer(data)
+	dst.close()
+	return IMPORTED_TRIAL_PATH
+
+func _open_legacy_directory_scan():
 	var scan_dirs = [
 		OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS),
 		OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS),
@@ -52,7 +118,7 @@ func _open_mobile_picker():
 		_scan_directory(dir_path, found_files)
 
 	if found_files.is_empty():
-		push_warning("No .drtrial files found in Downloads/Documents")
+		push_warning("No .drtrial files found in Downloads/Documents and native picker unavailable")
 		cancelled.emit()
 		return
 

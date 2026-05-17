@@ -43,38 +43,12 @@ func start():
 	print("HangmansGambit: Answer is '", answer_key, "' (", answer_key.length(), " letters)")
 
 func _build_overlay():
-	_overlay = CanvasLayer.new()
-	_overlay.layer = 5
+	# Scene-driven — see scenes/minigames/hangmans_gambit_overlay.tscn for the
+	# static layout. Answer-letter slots are spawned dynamically below.
+	_overlay = preload("res://scenes/minigames/hangmans_gambit_overlay.tscn").instantiate()
 	add_child(_overlay)
-
-	var bg = ColorRect.new()
-	bg.color = Color(0.02, 0.0, 0.08, 0.7)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(bg)
-
-	var title = Label.new()
-	title.text = "HANGMAN'S GAMBIT"
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color(0.8, 0.3, 1.0))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	title.position.y = 20
-	title.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_overlay.add_child(title)
-
-	_letters_container = Control.new()
-	_letters_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_letters_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(_letters_container)
-
-	_answer_display = HBoxContainer.new()
-	_answer_display.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_answer_display.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_answer_display.position.y = -100
-	_answer_display.add_theme_constant_override("separation", 8)
-	_answer_display.alignment = BoxContainer.ALIGNMENT_CENTER
-	_overlay.add_child(_answer_display)
+	_letters_container = _overlay.get_node("%LettersContainer")
+	_answer_display = _overlay.get_node("%AnswerDisplay")
 
 	for i in range(answer_key.length()):
 		var slot = PanelContainer.new()

@@ -43,106 +43,18 @@ func start():
 	_show_argument(0)
 
 func _build_overlay():
-	_overlay = CanvasLayer.new()
-	_overlay.layer = 5
+	# Scene-driven — see scenes/minigames/debate_scrum_overlay.tscn.
+	# Defense (rebuttal) buttons are spawned dynamically into %KeywordContainer.
+	_overlay = preload("res://scenes/minigames/debate_scrum_overlay.tscn").instantiate()
 	add_child(_overlay)
+	_progress_bar = _overlay.get_node("%ProgressBar")
+	_progress_fill = _overlay.get_node("%ProgressFill")
+	_opposition_label = _overlay.get_node("%OppositionLabel")
+	_defense_label = _overlay.get_node("%DefenseLabel")
+	_score_label = _overlay.get_node("%ScoreLabel")
+	_turn_timer_label = _overlay.get_node("%TurnTimerLabel")
 
-	var bg = ColorRect.new()
-	bg.color = Color(0.05, 0.02, 0.08, 0.85)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(bg)
-
-	var title = Label.new()
-	title.text = "DEBATE SCRUM"
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	title.position.y = 15
-	title.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_overlay.add_child(title)
-
-	# Tug-of-war progress bar
-	var bar_container = Control.new()
-	bar_container.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	bar_container.position.y = 55
-	bar_container.custom_minimum_size = Vector2(400, 20)
-	bar_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_overlay.add_child(bar_container)
-
-	_progress_bar = ColorRect.new()
-	_progress_bar.color = Color(0.8, 0.2, 0.2, 0.8)
-	_progress_bar.position = Vector2(-200, 0)
-	_progress_bar.size = Vector2(400, 20)
-	bar_container.add_child(_progress_bar)
-
-	_progress_fill = ColorRect.new()
-	_progress_fill.color = Color(0.2, 0.5, 1.0, 0.9)
-	_progress_fill.position = Vector2(-200, 0)
-	_progress_fill.size = Vector2(200, 20)
-	bar_container.add_child(_progress_fill)
-
-	# Opposition statement (left side, red)
-	var opposition_panel = PanelContainer.new()
-	var opp_style = StyleBoxFlat.new()
-	opp_style.bg_color = Color(0.3, 0.1, 0.1, 0.8)
-	opp_style.border_width_left = 3
-	opp_style.border_color = Color(1.0, 0.3, 0.3)
-	opp_style.content_margin_left = 15
-	opp_style.content_margin_right = 15
-	opp_style.content_margin_top = 10
-	opp_style.content_margin_bottom = 10
-	opposition_panel.add_theme_stylebox_override("panel", opp_style)
-	opposition_panel.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-	opposition_panel.position = Vector2(30, -60)
-	opposition_panel.custom_minimum_size = Vector2(350, 100)
-	_overlay.add_child(opposition_panel)
-
-	_opposition_label = Label.new()
-	_opposition_label.add_theme_font_size_override("font_size", 18)
-	_opposition_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.8))
-	_opposition_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_opposition_label.custom_minimum_size.x = 320
-	opposition_panel.add_child(_opposition_label)
-
-	# Defense statement (right side, blue)
-	var defense_panel = PanelContainer.new()
-	var def_style = StyleBoxFlat.new()
-	def_style.bg_color = Color(0.1, 0.1, 0.3, 0.8)
-	def_style.border_width_right = 3
-	def_style.border_color = Color(0.3, 0.5, 1.0)
-	def_style.content_margin_left = 15
-	def_style.content_margin_right = 15
-	def_style.content_margin_top = 10
-	def_style.content_margin_bottom = 10
-	defense_panel.add_theme_stylebox_override("panel", def_style)
-	defense_panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	defense_panel.position = Vector2(-380, -60)
-	defense_panel.custom_minimum_size = Vector2(350, 100)
-	_overlay.add_child(defense_panel)
-
-	_defense_label = Label.new()
-	_defense_label.add_theme_font_size_override("font_size", 18)
-	_defense_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1.0))
-	_defense_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_defense_label.custom_minimum_size.x = 320
-	defense_panel.add_child(_defense_label)
-
-	# Keyword buttons (center-bottom)
-	var keyword_container = VBoxContainer.new()
-	keyword_container.set_anchors_preset(Control.PRESET_CENTER)
-	keyword_container.position = Vector2(-120, 60)
-	keyword_container.custom_minimum_size = Vector2(250, 200)
-	keyword_container.add_theme_constant_override("separation", 10)
-	_overlay.add_child(keyword_container)
-
-	var keyword_header = Label.new()
-	keyword_header.text = "SELECT YOUR REBUTTAL"
-	keyword_header.add_theme_font_size_override("font_size", 14)
-	keyword_header.add_theme_color_override("font_color", Color(0.3, 0.6, 1.0))
-	keyword_container.add_child(keyword_header)
-
+	var keyword_container = _overlay.get_node("%KeywordContainer")
 	for i in range(5):
 		var btn = Button.new()
 		btn.custom_minimum_size = Vector2(240, 40)
@@ -162,24 +74,6 @@ func _build_overlay():
 		btn.visible = false
 		keyword_container.add_child(btn)
 		_defense_buttons.append(btn)
-
-	_score_label = Label.new()
-	_score_label.add_theme_font_size_override("font_size", 16)
-	_score_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
-	_score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_score_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_score_label.position.y = -30
-	_score_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_overlay.add_child(_score_label)
-
-	_turn_timer_label = Label.new()
-	_turn_timer_label.add_theme_font_size_override("font_size", 20)
-	_turn_timer_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
-	_turn_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_turn_timer_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_turn_timer_label.position.y = 60
-	_turn_timer_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_overlay.add_child(_turn_timer_label)
 
 func _process(delta):
 	if not is_active or not _turn_active:

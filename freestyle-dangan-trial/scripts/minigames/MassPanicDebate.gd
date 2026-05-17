@@ -55,66 +55,17 @@ func start():
 	print("MassPanicDebate: ", line_groups.size(), " groups, 3 speakers")
 
 func _build_overlay():
-	_overlay = CanvasLayer.new()
-	_overlay.layer = 5
+	# Scene-driven — see scenes/minigames/mass_panic_debate_overlay.tscn.
+	# Text panels spawn dynamically into %Row0/Row1/Row2 containers.
+	_overlay = preload("res://scenes/minigames/mass_panic_debate_overlay.tscn").instantiate()
 	add_child(_overlay)
-
-	var bg = ColorRect.new()
-	bg.color = Color(0.08, 0.0, 0.05, 0.6)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(bg)
-
-	var title = Label.new()
-	title.text = "MASS PANIC DEBATE"
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	title.position.y = 10
-	title.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_overlay.add_child(title)
-
-	var row_height = 65
-	var row_starts = [100, 250, 400]
-
-	for i in range(3):
-		var row = Control.new()
-		row.set_anchors_preset(Control.PRESET_FULL_RECT)
-		row.position.y = row_starts[i]
-		row.custom_minimum_size.y = row_height
-		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_overlay.add_child(row)
-		_row_containers.append(row)
-
-	_focus_indicator = ColorRect.new()
-	_focus_indicator.color = Color(1.0, 1.0, 0.3, 0.08)
-	_focus_indicator.size = Vector2(1280, row_height + 20)
-	_focus_indicator.position = Vector2(0, row_starts[focused_row] - 10)
-	_focus_indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(_focus_indicator)
-
-	_break_label = Label.new()
-	_break_label.text = "BREAK!"
-	_break_label.add_theme_font_size_override("font_size", 72)
-	_break_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1))
-	_break_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_break_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_break_label.set_anchors_preset(Control.PRESET_CENTER)
-	_break_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_break_label.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_break_label.visible = false
-	_overlay.add_child(_break_label)
-
-	var hint = Label.new()
-	hint.text = "UP/DOWN to switch focus"
-	hint.add_theme_font_size_override("font_size", 12)
-	hint.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	hint.position.y = -15
-	hint.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_overlay.add_child(hint)
+	_row_containers = [
+		_overlay.get_node("%Row0"),
+		_overlay.get_node("%Row1"),
+		_overlay.get_node("%Row2"),
+	]
+	_focus_indicator = _overlay.get_node("%FocusIndicator")
+	_break_label = _overlay.get_node("%BreakLabel")
 
 func _setup_ui():
 	_influence_gauge_ui = preload("res://scenes/ui/influence_gauge.tscn").instantiate()

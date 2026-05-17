@@ -32,53 +32,13 @@ func start():
 		_show_question(0)
 
 func _build_overlay():
-	_overlay = CanvasLayer.new()
-	_overlay.layer = 5
+	# Scene-driven — see scenes/minigames/logic_dive_overlay.tscn.
+	# Lane buttons spawn dynamically into %LanesContainer per question.
+	_overlay = preload("res://scenes/minigames/logic_dive_overlay.tscn").instantiate()
 	add_child(_overlay)
-
-	_road_effect = RoadEffect.new()
-	_road_effect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_road_effect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(_road_effect)
-
-	var title = Label.new()
-	title.text = "LOGIC DIVE"
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color(0.2, 0.8, 1.0))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	title.position.y = 15
-	title.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_overlay.add_child(title)
-
-	_question_label = Label.new()
-	_question_label.add_theme_font_size_override("font_size", 24)
-	_question_label.add_theme_color_override("font_color", Color.WHITE)
-	_question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_question_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_question_label.position.y = 60
-	_question_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_question_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_question_label.custom_minimum_size.x = 600
-	_overlay.add_child(_question_label)
-
-	_lanes_container = HBoxContainer.new()
-	_lanes_container.set_anchors_preset(Control.PRESET_CENTER)
-	_lanes_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_lanes_container.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_lanes_container.add_theme_constant_override("separation", 20)
-	_lanes_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	_overlay.add_child(_lanes_container)
-
-	var progress_label = Label.new()
-	progress_label.name = "ProgressLabel"
-	progress_label.add_theme_font_size_override("font_size", 16)
-	progress_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
-	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	progress_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	progress_label.position.y = -40
-	progress_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_overlay.add_child(progress_label)
+	_road_effect = _overlay.get_node("%RoadEffect")
+	_question_label = _overlay.get_node("%QuestionLabel")
+	_lanes_container = _overlay.get_node("%LanesContainer")
 
 func _setup_ui():
 	_influence_gauge_ui = preload("res://scenes/ui/influence_gauge.tscn").instantiate()
@@ -139,7 +99,7 @@ func _show_question(index: int):
 		_lanes_container.add_child(btn)
 		_lane_buttons.append(btn)
 
-	var progress = _overlay.get_node_or_null("ProgressLabel")
+	var progress = _overlay.get_node_or_null("%ProgressLabel")
 	if progress:
 		progress.text = "Question %d / %d" % [index + 1, questions.size()]
 
@@ -200,22 +160,3 @@ func cleanup():
 		InfluenceGauge.influence_depleted.disconnect(_on_influence_depleted)
 	if _overlay:
 		_overlay.queue_free()
-
-
-class RoadEffect extends Control:
-	var scroll_offset: float = 0.0
-
-	func _draw():
-		draw_rect(Rect2(Vector2.ZERO, size), Color(0.05, 0.0, 0.15, 0.85))
-
-		var cx = size.x / 2.0
-		var dash_length = 40.0
-		var gap_length = 30.0
-		var total = dash_length + gap_length
-		var y = fmod(scroll_offset, total) - total
-		while y < size.y + total:
-			draw_rect(Rect2(cx - 2, y, 4, dash_length), Color(0.3, 0.3, 0.5, 0.6))
-			y += total
-
-		draw_rect(Rect2(size.x * 0.25, 0, 2, size.y), Color(0.2, 0.2, 0.4, 0.3))
-		draw_rect(Rect2(size.x * 0.75, 0, 2, size.y), Color(0.2, 0.2, 0.4, 0.3))

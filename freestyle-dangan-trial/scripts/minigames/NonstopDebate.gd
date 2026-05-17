@@ -85,38 +85,14 @@ func start():
 	print("NonstopDebate: Started with ", _main_lines.size(), " main lines, ", _white_noise_lines.size(), " white noise lines, ", time_limit, "s limit")
 
 func _build_overlay():
-	_overlay = CanvasLayer.new()
-	_overlay.layer = 5
+	# Scene-driven — see scenes/minigames/nonstop_debate_overlay.tscn for the
+	# static layout (panels container, break/wrong labels, turn label).
+	_overlay = preload("res://scenes/minigames/nonstop_debate_overlay.tscn").instantiate()
 	add_child(_overlay)
-
-	_panels_container = Control.new()
-	_panels_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_panels_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(_panels_container)
-
-	_break_label = Label.new()
-	_break_label.text = "BREAK!"
-	_break_label.add_theme_font_size_override("font_size", 72)
-	_break_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1))
-	_break_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_break_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_break_label.set_anchors_preset(Control.PRESET_CENTER)
-	_break_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_break_label.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_break_label.visible = false
-	_overlay.add_child(_break_label)
-
-	_wrong_label = Label.new()
-	_wrong_label.text = "NO THAT'S WRONG"
-	_wrong_label.add_theme_font_size_override("font_size", 64)
-	_wrong_label.add_theme_color_override("font_color", Color(1.0, 0.1, 0.1))
-	_wrong_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_wrong_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_wrong_label.set_anchors_preset(Control.PRESET_CENTER)
-	_wrong_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_wrong_label.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_wrong_label.visible = false
-	_overlay.add_child(_wrong_label)
+	_panels_container = _overlay.get_node("%PanelsContainer")
+	_break_label = _overlay.get_node("%BreakLabel")
+	_wrong_label = _overlay.get_node("%WrongLabel")
+	_turn_label = _overlay.get_node("%TurnLabel")
 
 func _setup_ui_systems():
 	_influence_gauge_ui = preload("res://scenes/ui/influence_gauge.tscn").instantiate()
@@ -139,18 +115,7 @@ func _setup_ui_systems():
 	add_child(_timer_display)
 	_timer_display.time_expired.connect(_on_time_expired)
 
-	var turn_canvas = CanvasLayer.new()
-	turn_canvas.layer = 10
-	add_child(turn_canvas)
-	_turn_label = Label.new()
-	_turn_label.text = "TURN 1"
-	_turn_label.add_theme_font_size_override("font_size", 14)
-	_turn_label.add_theme_color_override("font_color", Color.WHITE)
-	_turn_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_turn_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_turn_label.grow_vertical = Control.GROW_DIRECTION_END
-	_turn_label.position = Vector2(-140, 90)
-	turn_canvas.add_child(_turn_label)
+	# _turn_label is part of the overlay scene (built in _build_overlay)
 
 func _show_bullet_preview() -> void:
 	var bullets = TruthBulletManager.active_bullets

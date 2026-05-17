@@ -18,6 +18,17 @@ var character_data: Array = []
 # Dialogue box controller
 var _dialogue_box: Node
 
+## Conversation_UI child names that should be hidden while a minigame is running.
+## Edit this list in the inspector to add/remove UI panels.
+@export var conversation_ui_hide_during_minigame: Array[String] = [
+	"Panel_MiddleBottom_SpeechArea",
+	"Control_Center_Name_Label",
+	"Control_Top_Right",
+	"RichTextLabel_Bottom_Speech",
+	"Panel_Skip",
+]
+var _hidden_conv_ui_state: Dictionary = {}
+
 func _ready():
 	await get_tree().process_frame
 
@@ -229,6 +240,8 @@ func _on_minigame_requested(minigame_data: Dictionary):
 	if dialogue_label:
 		dialogue_label.text = ""
 
+	_hide_conversation_ui_for_minigame()
+
 	# Show title card before starting
 	var title_card = preload("res://scripts/ui/MinigameTitleCard.gd").new()
 	add_child(title_card)
@@ -245,10 +258,32 @@ func _on_minigame_requested(minigame_data: Dictionary):
 		add_child(result_card)
 		result_card.show_result(success)
 		await result_card.card_finished
+		_restore_conversation_ui_after_minigame()
 		ScriptDirector.on_minigame_finished(success)
 	)
 	ScriptDirector.on_minigame_started(minigame)
 	minigame.start()
+
+func _hide_conversation_ui_for_minigame():
+	var conversation_ui = get_node_or_null("../UI/Conversation_UI")
+	if not conversation_ui:
+		return
+	_hidden_conv_ui_state.clear()
+	for node_name in conversation_ui_hide_during_minigame:
+		var node = conversation_ui.get_node_or_null(node_name)
+		if node and node is CanvasItem:
+			_hidden_conv_ui_state[node_name] = node.visible
+			node.visible = false
+
+func _restore_conversation_ui_after_minigame():
+	var conversation_ui = get_node_or_null("../UI/Conversation_UI")
+	if not conversation_ui:
+		return
+	for node_name in _hidden_conv_ui_state.keys():
+		var node = conversation_ui.get_node_or_null(node_name)
+		if node and node is CanvasItem:
+			node.visible = _hidden_conv_ui_state[node_name]
+	_hidden_conv_ui_state.clear()
 
 func _on_trial_ended():
 	if dialogue_label:

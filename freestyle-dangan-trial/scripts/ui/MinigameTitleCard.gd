@@ -2,14 +2,36 @@ extends CanvasLayer
 
 signal card_finished
 
-var _bg: ColorRect
-var _mount: Control
-var _frame_rect: TextureRect
-var _bullet_rect: TextureRect
-var _title_label: Label
-var _subtitle_label: Label
+## Cinematic minigame title card. Frame + bullet fly in from the left, pause,
+## then fly out to the right. NonstopDebate uses the orange variant; all other
+## minigames use blue. Tweak timing and sizing in the inspector.
 
-var _title_colors: Dictionary = {
+@export_group("Animation")
+@export var fly_in_duration: float = 0.35
+@export var hold_duration: float = 1.2
+@export var fly_out_duration: float = 0.25
+@export var bg_fade_in_duration: float = 0.15
+@export var bg_fade_out_duration: float = 0.25
+@export var bg_max_alpha: float = 0.85
+
+@export_group("Layout")
+@export var title_font_size: int = 44
+@export var subtitle_font_size: int = 14
+@export var frame_height: float = 110.0
+@export var bullet_width: float = 220.0
+@export var bullet_overlap: float = 40.0
+@export var minimum_frame_width: float = 480.0
+@export var frame_text_padding: float = 140.0
+@export var vertical_offset: float = -20.0
+
+@export_group("Style")
+@export var subtitle_text: String = "CLASS TRIAL"
+@export var text_outline_color: Color = Color(0, 0, 0, 0.8)
+@export var title_outline_size: int = 4
+@export var subtitle_outline_size: int = 3
+
+@export_group("Title Colors")
+@export var title_colors: Dictionary = {
 	"nonstop_debate": Color(1.0, 0.5, 0.1),
 	"hangmans_gambit": Color(0.7, 0.3, 1.0),
 	"logic_dive": Color(0.2, 0.8, 1.0),
@@ -20,7 +42,7 @@ var _title_colors: Dictionary = {
 	"closing_argument": Color(0.8, 0.7, 0.2),
 }
 
-var _title_names: Dictionary = {
+@export var title_names: Dictionary = {
 	"nonstop_debate": "NONSTOP DEBATE",
 	"hangmans_gambit": "HANGMAN'S GAMBIT",
 	"logic_dive": "LOGIC DIVE",
@@ -31,12 +53,19 @@ var _title_names: Dictionary = {
 	"closing_argument": "CLOSING ARGUMENT",
 }
 
+var _bg: ColorRect
+var _mount: Control
+var _frame_rect: TextureRect
+var _bullet_rect: TextureRect
+var _title_label: Label
+var _subtitle_label: Label
+
 func _ready():
 	layer = 25
 
 func show_title(game_type: String, game_name: String = ""):
-	var color = _title_colors.get(game_type, Color(0.8, 0.8, 0.8))
-	var display_name = game_name if not game_name.is_empty() else _title_names.get(game_type, game_type.to_upper())
+	var color = title_colors.get(game_type, Color(0.8, 0.8, 0.8))
+	var display_name = game_name if not game_name.is_empty() else title_names.get(game_type, game_type.to_upper())
 	var use_orange = game_type == "nonstop_debate"
 
 	var frame_tex_path = "res://textures/ui/lower_res/minigame_name_frame_%s.png" % ("orange" if use_orange else "blue")
@@ -50,14 +79,10 @@ func show_title(game_type: String, game_name: String = ""):
 		queue_free()
 		return
 
-	# Measure text to size frame appropriately
-	var title_font_size = 44
+	# Measure text to size frame to fit the title
 	var font = ThemeDB.fallback_font
 	var text_size = font.get_string_size(display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, title_font_size)
-	var frame_height = 110.0
-	var frame_width = maxf(text_size.x + 140.0, 480.0)
-	var bullet_width = 220.0
-	var bullet_overlap = 40.0
+	var frame_width = maxf(text_size.x + frame_text_padding, minimum_frame_width)
 
 	_bg = ColorRect.new()
 	_bg.color = Color(0, 0, 0, 0)
@@ -91,52 +116,52 @@ func show_title(game_type: String, game_name: String = ""):
 	_title_label.text = display_name
 	_title_label.add_theme_font_size_override("font_size", title_font_size)
 	_title_label.add_theme_color_override("font_color", color)
-	_title_label.add_theme_constant_override("outline_size", 4)
-	_title_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_title_label.add_theme_constant_override("outline_size", title_outline_size)
+	_title_label.add_theme_color_override("font_outline_color", text_outline_color)
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_title_label.size = Vector2(frame_width, 70)
-	_title_label.position = Vector2(0, 10)
+	_title_label.size = Vector2(frame_width, frame_height * 0.65)
+	_title_label.position = Vector2(0, frame_height * 0.08)
 	_title_label.z_index = 10
 	_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_mount.add_child(_title_label)
 
 	_subtitle_label = Label.new()
-	_subtitle_label.text = "CLASS TRIAL"
-	_subtitle_label.add_theme_font_size_override("font_size", 14)
+	_subtitle_label.text = subtitle_text
+	_subtitle_label.add_theme_font_size_override("font_size", subtitle_font_size)
 	_subtitle_label.add_theme_color_override("font_color", Color(color, 0.9))
-	_subtitle_label.add_theme_constant_override("outline_size", 3)
-	_subtitle_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_subtitle_label.add_theme_constant_override("outline_size", subtitle_outline_size)
+	_subtitle_label.add_theme_color_override("font_outline_color", text_outline_color)
 	_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_subtitle_label.position = Vector2(0, 78)
+	_subtitle_label.position = Vector2(0, frame_height * 0.72)
 	_subtitle_label.size = Vector2(frame_width, 20)
 	_subtitle_label.z_index = 10
 	_subtitle_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_mount.add_child(_subtitle_label)
 
-	_animate(frame_width, bullet_width, bullet_overlap, frame_height)
+	_animate(frame_width)
 
-func _animate(frame_width: float, bullet_width: float, bullet_overlap: float, mount_height: float):
+func _animate(frame_width: float):
 	var viewport_size = get_viewport().get_visible_rect().size
 	var mount_width = frame_width + bullet_width - bullet_overlap
 
 	var start_x = -(mount_width + 200)
 	var center_x = (viewport_size.x - mount_width) / 2.0
 	var end_x = viewport_size.x + 200
-	var center_y = (viewport_size.y - mount_height) / 2.0 - 20
+	var center_y = (viewport_size.y - frame_height) / 2.0 + vertical_offset
 
 	_mount.position = Vector2(start_x, center_y)
 
 	var tween = create_tween()
 
-	tween.tween_property(_bg, "color:a", 0.85, 0.15)
+	tween.tween_property(_bg, "color:a", bg_max_alpha, bg_fade_in_duration)
 
-	tween.tween_property(_mount, "position:x", center_x, 0.35).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(_mount, "position:x", center_x, fly_in_duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
-	tween.tween_interval(1.2)
+	tween.tween_interval(hold_duration)
 
-	tween.tween_property(_mount, "position:x", end_x, 0.25).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
-	tween.parallel().tween_property(_bg, "color:a", 0.0, 0.25)
+	tween.tween_property(_mount, "position:x", end_x, fly_out_duration).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+	tween.parallel().tween_property(_bg, "color:a", 0.0, bg_fade_out_duration)
 
 	tween.finished.connect(func():
 		card_finished.emit()

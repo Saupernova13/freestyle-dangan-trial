@@ -50,6 +50,15 @@ func show_title(game_type: String, game_name: String = ""):
 		queue_free()
 		return
 
+	# Measure text to size frame appropriately
+	var title_font_size = 44
+	var font = ThemeDB.fallback_font
+	var text_size = font.get_string_size(display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, title_font_size)
+	var frame_height = 110.0
+	var frame_width = maxf(text_size.x + 140.0, 480.0)
+	var bullet_width = 220.0
+	var bullet_overlap = 40.0
+
 	_bg = ColorRect.new()
 	_bg.color = Color(0, 0, 0, 0)
 	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -62,48 +71,54 @@ func show_title(game_type: String, game_name: String = ""):
 
 	_frame_rect = TextureRect.new()
 	_frame_rect.texture = frame_tex
-	_frame_rect.expand_mode = TextureRect.EXPAND_FIT_HEIGHT_PROPORTIONAL
-	_frame_rect.custom_minimum_size = Vector2(320, 90)
+	_frame_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_frame_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	_frame_rect.size = Vector2(frame_width, frame_height)
 	_frame_rect.position = Vector2(0, 0)
 	_frame_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_mount.add_child(_frame_rect)
 
 	_bullet_rect = TextureRect.new()
 	_bullet_rect.texture = bullet_tex
-	_bullet_rect.expand_mode = TextureRect.EXPAND_FIT_HEIGHT_PROPORTIONAL
-	_bullet_rect.custom_minimum_size = Vector2(180, 90)
-	_bullet_rect.position.x = _frame_rect.custom_minimum_size.x - 30
-	_bullet_rect.position.y = 0
+	_bullet_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_bullet_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_bullet_rect.size = Vector2(bullet_width, frame_height)
+	_bullet_rect.position = Vector2(frame_width - bullet_overlap, 0)
 	_bullet_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_mount.add_child(_bullet_rect)
 
 	_title_label = Label.new()
 	_title_label.text = display_name
-	_title_label.add_theme_font_size_override("font_size", 44)
+	_title_label.add_theme_font_size_override("font_size", title_font_size)
 	_title_label.add_theme_color_override("font_color", color)
+	_title_label.add_theme_constant_override("outline_size", 4)
+	_title_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_title_label.custom_minimum_size = Vector2(300, 60)
-	_title_label.position = Vector2(10, 10)
+	_title_label.size = Vector2(frame_width, 70)
+	_title_label.position = Vector2(0, 10)
+	_title_label.z_index = 10
 	_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_mount.add_child(_title_label)
 
 	_subtitle_label = Label.new()
 	_subtitle_label.text = "CLASS TRIAL"
 	_subtitle_label.add_theme_font_size_override("font_size", 14)
-	_subtitle_label.add_theme_color_override("font_color", Color(color, 0.8))
+	_subtitle_label.add_theme_color_override("font_color", Color(color, 0.9))
+	_subtitle_label.add_theme_constant_override("outline_size", 3)
+	_subtitle_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_subtitle_label.position = Vector2(10, 60)
-	_subtitle_label.custom_minimum_size = Vector2(300, 20)
+	_subtitle_label.position = Vector2(0, 78)
+	_subtitle_label.size = Vector2(frame_width, 20)
+	_subtitle_label.z_index = 10
 	_subtitle_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_mount.add_child(_subtitle_label)
 
-	_animate()
+	_animate(frame_width, bullet_width, bullet_overlap, frame_height)
 
-func _animate():
+func _animate(frame_width: float, bullet_width: float, bullet_overlap: float, mount_height: float):
 	var viewport_size = get_viewport().get_visible_rect().size
-	var mount_width = _frame_rect.custom_minimum_size.x + _bullet_rect.custom_minimum_size.x - 30
-	var mount_height = 90.0
+	var mount_width = frame_width + bullet_width - bullet_overlap
 
 	var start_x = -(mount_width + 200)
 	var center_x = (viewport_size.x - mount_width) / 2.0

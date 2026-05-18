@@ -18,7 +18,16 @@ func _ready():
 	TruthBulletManager.lie_mode_changed.connect(_on_lie_mode_changed)
 	InputManager.bullet_next.connect(func(): TruthBulletManager.cycle_next())
 	InputManager.bullet_prev.connect(func(): TruthBulletManager.cycle_prev())
+	# Tap the selector itself to cycle on touch devices (backup to the
+	# dedicated prev/next buttons in MobileHud).
+	gui_input.connect(_on_gui_input)
 	visible = false
+
+func _on_gui_input(event: InputEvent) -> void:
+	var is_tap := (event is InputEventScreenTouch and event.pressed) \
+		or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
+	if is_tap:
+		TruthBulletManager.cycle_next()
 
 func show_selector():
 	visible = true

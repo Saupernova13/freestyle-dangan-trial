@@ -58,6 +58,24 @@ func _build_overlay():
 	]
 	_focus_indicator = _overlay.get_node("%FocusIndicator")
 	_break_label = _overlay.get_node("%BreakLabel")
+	# Touch path: each row container becomes its own focus target.
+	# A bare Container ignores input by default, so flip mouse_filter to STOP
+	# and listen for press/tap via _gui_input on each row.
+	for i in range(_row_containers.size()):
+		var row: Control = _row_containers[i]
+		if row == null:
+			continue
+		row.mouse_filter = Control.MOUSE_FILTER_STOP
+		var row_index := i
+		row.gui_input.connect(func(event: InputEvent): _on_row_tapped(event, row_index))
+
+func _on_row_tapped(event: InputEvent, row_index: int) -> void:
+	if not is_active or _solved:
+		return
+	var is_tap := (event is InputEventScreenTouch and event.pressed) \
+		or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
+	if is_tap and row_index != focused_row:
+		_switch_focus(row_index)
 
 func _input(event):
 	if not is_active or _solved:

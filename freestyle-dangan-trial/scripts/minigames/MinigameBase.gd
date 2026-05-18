@@ -33,6 +33,8 @@ var _has_finished: bool = false
 # (signal, callable) pairs registered via connect_managed(), auto-disconnected
 # in cleanup() so a forgotten teardown can't leak connections.
 var _managed_signal_connections: Array = []
+# Active mobile touch HUD, when one was spawned for this minigame.
+var _mobile_hud: Node = null
 
 # Backwards-compat read-only mirror of `state == ACTIVE`. Existing minigames
 # read `is_active` in _process(); keep the property name working.
@@ -93,7 +95,33 @@ func setup_standard_ui(components: Array) -> Dictionary:
 				_add_hud(component, "crosshair", "show_crosshair")
 			HudComponent.TRUTH_BULLET_SELECTOR:
 				_add_hud(component, "truth_bullet_selector", "show_selector")
+	_maybe_spawn_mobile_hud(components)
 	return hud
+
+## On mobile, spawn the touch HUD with buttons mirroring whatever keyboard /
+## mouse actions the requested components would otherwise need.
+##   - bullet_cycle: shown whenever the truth-bullet selector is active
+##   - focus: shown whenever the crosshair is active
+##   - slow_time: opted in by subclasses via wants_mobile_slow_time()
+func _maybe_spawn_mobile_hud(components: Array) -> void:
+	if not OS.has_feature("mobile"):
+		return
+	var script: GDScript = load("res://scripts/ui/MobileHud.gd")
+	if script == null:
+		return
+	_mobile_hud = script.new()
+	add_child(_mobile_hud)
+	_mobile_hud.setup({
+		"settings": true,
+		"bullet_cycle": HudComponent.TRUTH_BULLET_SELECTOR in components,
+		"focus": HudComponent.CROSSHAIR in components,
+		"slow_time": wants_mobile_slow_time(),
+	})
+
+## Override in subclasses that poll Input.is_action_pressed("debate_slow_time")
+## — currently just NonstopDebate.
+func wants_mobile_slow_time() -> bool:
+	return false
 
 func get_hud(component: int) -> Node:
 	return hud.get(component)
@@ -127,6 +155,9 @@ func _teardown_standard_ui():
 				if node.has_method("hide_selector"):
 					node.call("hide_selector")
 	hud.clear()
+	if _mobile_hud and is_instance_valid(_mobile_hud):
+		_mobile_hud.queue_free()
+	_mobile_hud = null
 
 # ---------------------------------------------------------------------------
 # Managed signal connections — auto-disconnected by cleanup().

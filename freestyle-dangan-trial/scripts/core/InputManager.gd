@@ -105,10 +105,12 @@ func _handle_touch(event: InputEvent) -> void:
 	else:
 		_set_focus(false)
 
-func _toggle_focus() -> void:
-	_set_focus(not is_focus_active)
+## Public API — used by MobileHud (and any future remote-control surface) to
+## drive focus mode through the same code path as right-click / F.
+func toggle_focus() -> void:
+	set_focus(not is_focus_active)
 
-func _set_focus(active: bool) -> void:
+func set_focus(active: bool) -> void:
 	if active == is_focus_active:
 		return
 	is_focus_active = active
@@ -116,6 +118,12 @@ func _set_focus(active: bool) -> void:
 		focus_started.emit()
 	else:
 		focus_ended.emit()
+
+func _toggle_focus() -> void:
+	toggle_focus()
+
+func _set_focus(active: bool) -> void:
+	set_focus(active)
 
 # ---------------------------------------------------------------------------
 # Query

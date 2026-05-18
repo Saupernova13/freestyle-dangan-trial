@@ -33,6 +33,9 @@ func initialize(data: Dictionary):
 	_main_spawn_interval = MinigameConfig.get_spawn_interval("nonstop_debate", difficulty)
 	_split_dialogue_lines()
 
+func wants_mobile_slow_time() -> bool:
+	return true
+
 func _split_dialogue_lines():
 	_main_lines.clear()
 	_white_noise_lines.clear()

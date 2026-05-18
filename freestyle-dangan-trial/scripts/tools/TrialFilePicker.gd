@@ -7,6 +7,7 @@ extends Node
 
 signal file_selected(path: String)
 signal cancelled
+signal load_failed(message: String)
 
 const IMPORTED_TRIAL_PATH := "user://imported_trial.drtrial"
 
@@ -62,6 +63,7 @@ func _open_mobile_picker():
 		)
 		if err != OK:
 			push_error("DisplayServer.file_dialog_show failed: %d" % err)
+			load_failed.emit("Could not open the file picker (error %d)." % err)
 			cancelled.emit()
 		return
 
@@ -78,7 +80,8 @@ func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, _
 	var picked = selected_paths[0]
 	var local_copy = _copy_to_user_dir(picked)
 	if local_copy.is_empty():
-		push_error("Failed to copy picked file to user dir: %s" % picked)
+		# Error reason was already set on the picker; surface it before bailing.
+		load_failed.emit("Could not read the selected file. Try a different location (Downloads usually works).")
 		cancelled.emit()
 		return
 	file_selected.emit(local_copy)
@@ -95,6 +98,10 @@ func _copy_to_user_dir(source_path: String) -> String:
 	var data = src.get_buffer(src.get_length())
 	src.close()
 
+	if data.is_empty():
+		push_error("Source file read returned 0 bytes: %s" % source_path)
+		return ""
+
 	var dst = FileAccess.open(IMPORTED_TRIAL_PATH, FileAccess.WRITE)
 	if not dst:
 		push_error("Could not write to %s (err %d)" % [IMPORTED_TRIAL_PATH, FileAccess.get_open_error()])
@@ -102,6 +109,23 @@ func _copy_to_user_dir(source_path: String) -> String:
 
 	dst.store_buffer(data)
 	dst.close()
+
+	# Verify the file is readable and non-empty after writing — protects against
+	# silent failures where the write reports success but the file ends up empty.
+	if not FileAccess.file_exists(IMPORTED_TRIAL_PATH):
+		push_error("Imported file missing after copy: %s" % IMPORTED_TRIAL_PATH)
+		return ""
+	var verify = FileAccess.open(IMPORTED_TRIAL_PATH, FileAccess.READ)
+	if not verify:
+		push_error("Imported file not readable after copy: %s" % IMPORTED_TRIAL_PATH)
+		return ""
+	var size = verify.get_length()
+	verify.close()
+	if size == 0:
+		push_error("Imported file is 0 bytes: %s" % IMPORTED_TRIAL_PATH)
+		return ""
+
+	print("TrialFilePicker: copied %d bytes from %s to %s" % [size, source_path, IMPORTED_TRIAL_PATH])
 	return IMPORTED_TRIAL_PATH
 
 func _open_legacy_directory_scan():
@@ -119,6 +143,7 @@ func _open_legacy_directory_scan():
 
 	if found_files.is_empty():
 		push_warning("No .drtrial files found in Downloads/Documents and native picker unavailable")
+		load_failed.emit("No .drtrial files found in Downloads or Documents.")
 		cancelled.emit()
 		return
 

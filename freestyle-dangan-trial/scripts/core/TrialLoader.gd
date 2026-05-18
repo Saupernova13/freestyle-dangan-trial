@@ -12,10 +12,14 @@ var current_trial: Dictionary = {}
 var current_trial_path: String = ""
 var extract_dir: String = "user://trials/extracted/"
 
-## Load a trial from a .drtrial file
-## Returns true if successful, false otherwise
+## Populated by load_trial() on failure so the caller (start menu, trial room)
+## can surface a useful message to the user. Empty when the last load succeeded.
+var last_load_error: String = ""
+
+## Load a trial from a .drtrial file. Sets last_load_error on failure.
 func load_trial(file_path: String) -> bool:
 	print("Loading trial from: ", file_path)
+	last_load_error = ""
 
 	# Clear previous trial data
 	current_trial = {}
@@ -23,18 +27,26 @@ func load_trial(file_path: String) -> bool:
 
 	# Verify file exists
 	if not FileAccess.file_exists(file_path):
-		push_error("Trial file not found: " + file_path)
+		last_load_error = "Trial file not found at %s" % file_path
+		push_error(last_load_error)
 		return false
+
+	# Wipe any leftover files from a previous trial so stale assets can't be
+	# resolved by name (Android repro: open trial A, then trial B, B referenced
+	# missing assets that A had — TrialLoader picked up A's leftover files).
+	_clear_extract_dir()
 
 	# Extract ZIP archive
 	if not extract_trial_archive(file_path, extract_dir):
-		push_error("Failed to extract trial archive")
+		last_load_error = "Trial archive could not be extracted. The file may be corrupt or unreadable on this device."
+		push_error(last_load_error)
 		return false
 
 	# Parse trial.json
 	var trial_data = parse_trial_data(extract_dir + "trial.json")
 	if trial_data.is_empty():
-		push_error("Failed to parse trial data")
+		last_load_error = "trial.json missing or invalid in the selected file."
+		push_error(last_load_error)
 		return false
 
 	# Store loaded trial data
@@ -235,6 +247,13 @@ func cleanup_extracted_files():
 
 	current_trial = {}
 	current_trial_path = ""
+
+## Wipe the extract dir so a fresh load can't pick up stale files from the
+## previous trial. Safe to call when the dir doesn't exist yet.
+func _clear_extract_dir() -> void:
+	if DirAccess.dir_exists_absolute(extract_dir):
+		_remove_directory_recursive(extract_dir)
+	DirAccess.make_dir_recursive_absolute(extract_dir)
 
 ## Recursively remove directory and all contents
 func _remove_directory_recursive(path: String):

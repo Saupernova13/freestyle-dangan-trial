@@ -61,7 +61,14 @@ func load_and_display_trial():
 
 	var success = TrialLoader.load_trial(trial_file_path)
 	if not success:
-		push_error("Failed to load trial file!")
+		var msg = TrialLoader.last_load_error if not TrialLoader.last_load_error.is_empty() else "Failed to load trial."
+		push_error(msg)
+		# Surface the error and return to the start menu — without this the user
+		# sees a blank trial room with no indication of what went wrong, which is
+		# the original Android-side complaint.
+		MobileToast.show(get_tree().root, msg, true, 5.0)
+		await get_tree().create_timer(1.0).timeout
+		get_tree().change_scene_to_file("res://scenes/start_menu.tscn")
 		return
 
 	var character_ids = TrialLoader.get_character_ids()

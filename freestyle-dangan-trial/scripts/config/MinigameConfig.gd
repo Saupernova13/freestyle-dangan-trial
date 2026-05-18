@@ -1,0 +1,103 @@
+class_name MinigameConfig
+extends RefCounted
+##
+## Centralized configuration for all minigame magic numbers.
+## Use static lookups instead of hardcoding values in minigame scripts.
+
+# ---------------------------------------------------------------------------
+# Spawn intervals (seconds between panel/letter/group spawns) per difficulty.
+# ---------------------------------------------------------------------------
+const SPAWN_INTERVALS := {
+	"nonstop_debate": {"easy": 2.8, "medium": 2.0, "hard": 1.5},
+	"hangmans_gambit": {"easy": 2.0, "medium": 1.5, "hard": 1.0},
+	"mass_panic_debate": {"easy": 3.5, "medium": 3.0, "hard": 2.0},
+}
+
+# Secondary spawn intervals (white noise lines, etc.).
+const NOISE_SPAWN_INTERVAL: float = 1.2
+
+# ---------------------------------------------------------------------------
+# Difficulty multipliers used for panel scroll speed, damage, etc.
+# ---------------------------------------------------------------------------
+const DIFFICULTY_MULTIPLIERS := {
+	"easy": 0.7,
+	"medium": 1.0,
+	"hard": 1.5,
+}
+
+# ---------------------------------------------------------------------------
+# Logic-Dive floating letter speeds per difficulty.
+# ---------------------------------------------------------------------------
+const FLOATING_LETTER_SPEEDS := {
+	"easy": {"base": 40.0, "range": 40.0},
+	"medium": {"base": 60.0, "range": 60.0},
+	"hard": {"base": 80.0, "range": 80.0},
+}
+
+# ---------------------------------------------------------------------------
+# Screen layout (debate panel safe areas and row counts).
+# ---------------------------------------------------------------------------
+const SCREEN_LAYOUT := {
+	"debate_safe_top": 100,
+	"debate_safe_bottom": 180,
+	"debate_rows": 5,
+	"mass_panic_row_y": [100, 250, 400],
+}
+
+# ---------------------------------------------------------------------------
+# Animation grid sizes used by shatter / break effects.
+# ---------------------------------------------------------------------------
+const SHATTER_GRID := {
+	"panel_rows": 3,
+	"panel_cols": 6,
+	"screen_rows": 5,
+	"screen_cols": 8,
+	"particle_count": 10,
+}
+
+# ---------------------------------------------------------------------------
+# Timing constants for break / shatter sequences.
+# ---------------------------------------------------------------------------
+const TIMING := {
+	"impact_frame": 0.05,
+	"shatter_to_wrong": 0.1,
+	"wrong_to_screen_shatter": 0.6,
+	"screen_shatter_to_break": 0.7,
+	"break_to_evidence": 0.25,
+	"evidence_hold": 1.2,
+	"evidence_fade": 0.4,
+	"result_pause": 1.0,
+}
+
+# ---------------------------------------------------------------------------
+# Concentrate gauge / slow-time tuning.
+# ---------------------------------------------------------------------------
+const SLOW_TIME_SCALE: float = 0.4
+const SLOW_VIGNETTE_ALPHA: float = 0.35
+const SLOW_VIGNETTE_FADE_IN: float = 0.15
+const SLOW_VIGNETTE_FADE_OUT: float = 0.2
+
+# ---------------------------------------------------------------------------
+# Debate scrum turn timing.
+# ---------------------------------------------------------------------------
+const SCRUM_TURN_TIME_LIMIT: float = 5.0
+const SCRUM_KEYWORD_BUTTON_COUNT: int = 5
+
+# ---------------------------------------------------------------------------
+# ScriptDirector skip / auto-advance.
+# ---------------------------------------------------------------------------
+const SKIP_INTERVAL: float = 0.05
+const MINIGAME_RESULT_PAUSE: float = 1.5
+
+# ---------------------------------------------------------------------------
+# Helper accessors with safe fallbacks.
+# ---------------------------------------------------------------------------
+static func get_spawn_interval(game: String, difficulty: String) -> float:
+	var per_game = SPAWN_INTERVALS.get(game, {})
+	return per_game.get(difficulty, per_game.get("medium", 2.0))
+
+static func get_difficulty_multiplier(difficulty: String) -> float:
+	return DIFFICULTY_MULTIPLIERS.get(difficulty, 1.0)
+
+static func get_floating_letter_speed(difficulty: String) -> Dictionary:
+	return FLOATING_LETTER_SPEEDS.get(difficulty, FLOATING_LETTER_SPEEDS["medium"])

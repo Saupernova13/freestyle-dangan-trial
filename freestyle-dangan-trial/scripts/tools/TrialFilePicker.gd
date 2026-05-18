@@ -19,9 +19,25 @@ func _ready():
 
 func open_picker():
 	if _is_mobile:
+		# Belt and suspenders: SAF normally grants per-URI temp permission
+		# without READ_EXTERNAL_STORAGE, but some Android versions/providers
+		# require the underlying permission to actually read the file. Ask
+		# every time the picker is opened — Android only re-prompts if the
+		# user hasn't already decided.
+		_request_storage_permissions()
 		_open_mobile_picker()
 	else:
 		_open_desktop_picker()
+
+func _request_storage_permissions() -> void:
+	# OS.request_permissions() asks for everything declared in the manifest
+	# that the app doesn't already have. Returns immediately; user response
+	# arrives via OS.request_permissions_result, which we don't need to
+	# block on — the picker dialog won't actually appear until any modal
+	# permission prompt is dismissed.
+	if OS.has_method("request_permissions"):
+		var granted = OS.request_permissions()
+		print("TrialFilePicker: requested permissions, granted=", granted)
 
 func _open_desktop_picker():
 	_file_dialog = FileDialog.new()
@@ -72,39 +88,58 @@ func _open_mobile_picker():
 	# mobile targets working.
 	_open_legacy_directory_scan()
 
+## Last error context set by _copy_to_user_dir() so the caller can surface a
+## specific diagnostic to the user (path attempted + Godot error code).
+var _last_copy_error_detail: String = ""
+
 func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, _filter_index: int):
 	if not status or selected_paths.is_empty():
 		cancelled.emit()
 		return
 
 	var picked = selected_paths[0]
+	print("TrialFilePicker: SAF returned path: ", picked)
 	var local_copy = _copy_to_user_dir(picked)
 	if local_copy.is_empty():
-		# Error reason was already set on the picker; surface it before bailing.
-		load_failed.emit("Could not read the selected file. Try a different location (Downloads usually works).")
+		var msg = "Could not read selected file. %s" % _last_copy_error_detail
+		load_failed.emit(msg.strip_edges())
 		cancelled.emit()
 		return
 	file_selected.emit(local_copy)
 
 ## Copies the picked file (which may be a content:// URI on Android) into
 ## user://imported_trial.drtrial so subsequent reads work even if the original
-## URI permission expires. Returns the writable path, or "" on failure.
+## URI permission expires. Returns the writable path, or "" on failure and
+## sets _last_copy_error_detail with a user-facing diagnostic.
 func _copy_to_user_dir(source_path: String) -> String:
-	var src = FileAccess.open(source_path, FileAccess.READ)
-	if not src:
-		push_error("Could not open source file: %s (err %d)" % [source_path, FileAccess.get_open_error()])
-		return ""
+	_last_copy_error_detail = ""
 
-	var data = src.get_buffer(src.get_length())
-	src.close()
+	# Primary path: get_file_as_bytes() handles Android content URIs cleanly
+	# in Godot 4.3+. Falls back to FileAccess.open() chunked-read if that
+	# returns empty (older drivers / non-standard providers).
+	var data := FileAccess.get_file_as_bytes(source_path)
+	var err := FileAccess.get_open_error()
+	if data.is_empty():
+		print("TrialFilePicker: get_file_as_bytes returned empty (err %d), trying FileAccess.open" % err)
+		var src := FileAccess.open(source_path, FileAccess.READ)
+		var open_err := FileAccess.get_open_error()
+		if src == null:
+			_last_copy_error_detail = "open err %d on %s" % [open_err, source_path]
+			push_error("Could not open source file: %s (err %d)" % [source_path, open_err])
+			return ""
+		data = src.get_buffer(src.get_length())
+		src.close()
 
 	if data.is_empty():
+		_last_copy_error_detail = "0-byte read from %s" % source_path
 		push_error("Source file read returned 0 bytes: %s" % source_path)
 		return ""
 
-	var dst = FileAccess.open(IMPORTED_TRIAL_PATH, FileAccess.WRITE)
-	if not dst:
-		push_error("Could not write to %s (err %d)" % [IMPORTED_TRIAL_PATH, FileAccess.get_open_error()])
+	var dst := FileAccess.open(IMPORTED_TRIAL_PATH, FileAccess.WRITE)
+	if dst == null:
+		var write_err := FileAccess.get_open_error()
+		_last_copy_error_detail = "write err %d at %s" % [write_err, IMPORTED_TRIAL_PATH]
+		push_error("Could not write to %s (err %d)" % [IMPORTED_TRIAL_PATH, write_err])
 		return ""
 
 	dst.store_buffer(data)
@@ -113,15 +148,18 @@ func _copy_to_user_dir(source_path: String) -> String:
 	# Verify the file is readable and non-empty after writing — protects against
 	# silent failures where the write reports success but the file ends up empty.
 	if not FileAccess.file_exists(IMPORTED_TRIAL_PATH):
+		_last_copy_error_detail = "imported file missing after copy"
 		push_error("Imported file missing after copy: %s" % IMPORTED_TRIAL_PATH)
 		return ""
-	var verify = FileAccess.open(IMPORTED_TRIAL_PATH, FileAccess.READ)
-	if not verify:
+	var verify := FileAccess.open(IMPORTED_TRIAL_PATH, FileAccess.READ)
+	if verify == null:
+		_last_copy_error_detail = "imported file not readable: err %d" % FileAccess.get_open_error()
 		push_error("Imported file not readable after copy: %s" % IMPORTED_TRIAL_PATH)
 		return ""
-	var size = verify.get_length()
+	var size := verify.get_length()
 	verify.close()
 	if size == 0:
+		_last_copy_error_detail = "imported file is 0 bytes"
 		push_error("Imported file is 0 bytes: %s" % IMPORTED_TRIAL_PATH)
 		return ""
 

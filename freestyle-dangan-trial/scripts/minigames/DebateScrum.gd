@@ -14,11 +14,7 @@ var _progress_fill: ColorRect
 var _score_label: Label
 var _turn_timer_label: Label
 
-var _influence_gauge_ui: Node
-var _timer_display: Node
-
 var _turn_timer: float = 0.0
-const TURN_TIME_LIMIT: float = 5.0
 var _turn_active: bool = false
 
 func initialize(data: Dictionary):
@@ -34,9 +30,9 @@ func start():
 		return
 
 	_build_overlay()
-	_setup_ui()
+	setup_standard_ui([HudComponent.INFLUENCE_GAUGE, HudComponent.TIMER_DISPLAY])
 	InfluenceGauge.reset()
-	InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
+	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
 	print("DebateScrum: ", arguments.size(), " arguments")
 
 	await get_tree().create_timer(0.5).timeout
@@ -45,7 +41,7 @@ func start():
 func _build_overlay():
 	# Scene-driven — see scenes/minigames/debate_scrum_overlay.tscn.
 	# Defense (rebuttal) buttons are spawned dynamically into %KeywordContainer.
-	_overlay = preload("res://scenes/minigames/debate_scrum_overlay.tscn").instantiate()
+	_overlay = ResourceRegistry.instantiate("debate_scrum_overlay")
 	add_child(_overlay)
 	_progress_bar = _overlay.get_node("%ProgressBar")
 	_progress_fill = _overlay.get_node("%ProgressFill")
@@ -55,22 +51,11 @@ func _build_overlay():
 	_turn_timer_label = _overlay.get_node("%TurnTimerLabel")
 
 	var keyword_container = _overlay.get_node("%KeywordContainer")
-	for i in range(5):
+	for i in range(MinigameConfig.SCRUM_KEYWORD_BUTTON_COUNT):
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(240, 40)
-		btn.add_theme_font_size_override("font_size", 16)
-		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.1, 0.15, 0.3, 0.9)
-		style.border_width_bottom = 1
-		style.border_width_top = 1
-		style.border_width_left = 1
-		style.border_width_right = 1
-		style.border_color = Color(0.3, 0.5, 0.8, 0.6)
-		style.corner_radius_top_left = 4
-		style.corner_radius_top_right = 4
-		style.corner_radius_bottom_left = 4
-		style.corner_radius_bottom_right = 4
-		btn.add_theme_stylebox_override("normal", style)
+		btn.custom_minimum_size = UITheme.KEYWORD_BUTTON_SIZE
+		btn.add_theme_font_size_override("font_size", UITheme.FONT_SIZE_KEYWORD)
+		btn.add_theme_stylebox_override("normal", UITheme.make_button_style())
 		btn.visible = false
 		keyword_container.add_child(btn)
 		_defense_buttons.append(btn)
@@ -80,29 +65,18 @@ func _process(delta):
 		return
 
 	_turn_timer += delta
-	var time_left = maxf(TURN_TIME_LIMIT - _turn_timer, 0.0)
+	var time_left = maxf(MinigameConfig.SCRUM_TURN_TIME_LIMIT - _turn_timer, 0.0)
 	_turn_timer_label.text = "%.1f" % time_left
 
-	var color = Color(0.2, 1.0, 0.4)
+	var color = UITheme.COLOR_CORRECT_BRIGHT
 	if time_left < 2.0:
-		color = Color(1.0, 0.2, 0.2)
+		color = UITheme.COLOR_WRONG_BRIGHT
 	elif time_left < 3.5:
-		color = Color(1.0, 0.8, 0.2)
+		color = UITheme.COLOR_WARN_YELLOW
 	_turn_timer_label.add_theme_color_override("font_color", color)
 
-	if _turn_timer >= TURN_TIME_LIMIT:
+	if _turn_timer >= MinigameConfig.SCRUM_TURN_TIME_LIMIT:
 		_auto_advance_turn()
-
-func _setup_ui():
-	_influence_gauge_ui = preload("res://scenes/ui/influence_gauge.tscn").instantiate()
-	add_child(_influence_gauge_ui)
-	_influence_gauge_ui.show_gauge()
-
-	_timer_display = preload("res://scenes/ui/timer_display.tscn").instantiate()
-	add_child(_timer_display)
-	_timer_display.time_expired.connect(_on_time_expired)
-	if time_limit > 0:
-		_timer_display.start_timer(time_limit)
 
 func _show_argument(index: int):
 	if index >= arguments.size():
@@ -118,23 +92,8 @@ func _show_argument(index: int):
 	current_argument_index = index
 	var arg = arguments[index]
 
-	var opp_text = arg.get("oppositionStatement", "...")
-	var opp_char_id = arg.get("oppositionCharacterId", "")
-	if not opp_char_id.is_empty():
-		var char_data = TrialLoader.load_character(opp_char_id)
-		if char_data != null and not char_data.is_empty():
-			var char_name = char_data.get("name", "") + " " + char_data.get("surname", "")
-			opp_text = char_name.strip_edges() + ":\n" + opp_text
-	_opposition_label.text = opp_text
-
-	var def_text = arg.get("defenseStatement", "")
-	var def_char_id = arg.get("defenseCharacterId", "")
-	if def_char_id:
-		var char_data = TrialLoader.load_character(def_char_id)
-		if char_data != null and not char_data.is_empty():
-			var char_name = char_data.get("name", "") + " " + char_data.get("surname", "")
-			def_text = char_name.strip_edges() + ":\n" + def_text
-	_defense_label.text = def_text
+	_opposition_label.text = _format_character_line(arg.get("oppositionStatement", "..."), arg.get("oppositionCharacterId", ""))
+	_defense_label.text = _format_character_line(arg.get("defenseStatement", ""), arg.get("defenseCharacterId", ""))
 
 	var opp_audio = arg.get("oppositionAudioFile", "")
 	if opp_audio:
@@ -166,13 +125,22 @@ func _show_argument(index: int):
 
 	_update_score_display()
 
+func _format_character_line(text: String, char_id: String) -> String:
+	if char_id.is_empty():
+		return text
+	var char_data = TrialLoader.load_character(char_id)
+	if char_data == null or char_data.is_empty():
+		return text
+	var char_name = char_data.get("name", "") + " " + char_data.get("surname", "")
+	return char_name.strip_edges() + ":\n" + text
+
 func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
 	_turn_active = false
 	for b in _defense_buttons:
 		b.disabled = true
 
 	if is_correct:
-		btn.modulate = Color(0.3, 1.0, 0.5)
+		btn.modulate = UITheme.COLOR_CORRECT
 		player_score += 1
 		AudioManager.play_sfx("correct_chime")
 		var arg = arguments[current_argument_index]
@@ -180,7 +148,7 @@ func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
 		if not def_audio.is_empty():
 			AudioManager.play_voice_line(def_audio)
 	else:
-		btn.modulate = Color(1.0, 0.3, 0.3)
+		btn.modulate = UITheme.COLOR_WRONG
 		opponent_score += 1
 		AudioManager.play_sfx("wrong_buzzer")
 		InfluenceGauge.take_damage(difficulty)
@@ -188,7 +156,7 @@ func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
 	_update_progress_bar()
 	_update_score_display()
 
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
 	_show_argument(current_argument_index + 1)
 
 func _update_progress_bar():
@@ -213,19 +181,13 @@ func _auto_advance_turn():
 	opponent_score += 1
 	_update_progress_bar()
 	_update_score_display()
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
 	_show_argument(current_argument_index + 1)
 
 func _on_influence_depleted():
 	_finish(false, {"reason": "influence_depleted"})
 
 func cleanup():
-	super.cleanup()
-	if _influence_gauge_ui:
-		_influence_gauge_ui.hide_gauge()
-	if _timer_display:
-		_timer_display.hide_timer()
-	if InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
-		InfluenceGauge.influence_depleted.disconnect(_on_influence_depleted)
 	if _overlay:
 		_overlay.queue_free()
+	super.cleanup()

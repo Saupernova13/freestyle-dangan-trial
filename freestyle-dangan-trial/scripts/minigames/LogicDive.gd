@@ -9,8 +9,6 @@ var _lanes_container: HBoxContainer
 var _lane_buttons: Array = []
 var _road_effect: RoadEffect
 
-var _influence_gauge_ui: Node
-var _timer_display: Node
 var _showing_question: bool = false
 
 func initialize(data: Dictionary):
@@ -21,10 +19,9 @@ func initialize(data: Dictionary):
 func start():
 	super.start()
 	_build_overlay()
-	_setup_ui()
+	setup_standard_ui([HudComponent.INFLUENCE_GAUGE, HudComponent.TIMER_DISPLAY])
 	InfluenceGauge.reset()
-	if not InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
-		InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
+	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
 	print("LogicDive: ", questions.size(), " questions")
 
 	if not questions.is_empty():
@@ -34,22 +31,11 @@ func start():
 func _build_overlay():
 	# Scene-driven — see scenes/minigames/logic_dive_overlay.tscn.
 	# Lane buttons spawn dynamically into %LanesContainer per question.
-	_overlay = preload("res://scenes/minigames/logic_dive_overlay.tscn").instantiate()
+	_overlay = ResourceRegistry.instantiate("logic_dive_overlay")
 	add_child(_overlay)
 	_road_effect = _overlay.get_node("%RoadEffect")
 	_question_label = _overlay.get_node("%QuestionLabel")
 	_lanes_container = _overlay.get_node("%LanesContainer")
-
-func _setup_ui():
-	_influence_gauge_ui = preload("res://scenes/ui/influence_gauge.tscn").instantiate()
-	add_child(_influence_gauge_ui)
-	_influence_gauge_ui.show_gauge()
-
-	_timer_display = preload("res://scenes/ui/timer_display.tscn").instantiate()
-	add_child(_timer_display)
-	_timer_display.time_expired.connect(_on_time_expired)
-	if time_limit > 0:
-		_timer_display.start_timer(time_limit)
 
 func _show_question(index: int):
 	if index >= questions.size():
@@ -72,25 +58,18 @@ func _show_question(index: int):
 		var answer = answers[i]
 		var btn = Button.new()
 		btn.text = answer.get("answerText", "?")
-		btn.custom_minimum_size = Vector2(180, 80)
-		btn.add_theme_font_size_override("font_size", 18)
+		btn.custom_minimum_size = UITheme.LANE_BUTTON_SIZE
+		btn.add_theme_font_size_override("font_size", UITheme.FONT_SIZE_BUTTON)
 
-		var style_normal = StyleBoxFlat.new()
-		style_normal.bg_color = Color(0.15, 0.1, 0.3, 0.9)
-		style_normal.border_width_bottom = 2
-		style_normal.border_width_top = 2
-		style_normal.border_width_left = 2
-		style_normal.border_width_right = 2
+		var style_normal = UITheme.make_button_style(
+			UITheme.COLOR_BG_BUTTON, UITheme.COLOR_BORDER_BUTTON, 8, 2
+		)
 		style_normal.border_color = Color(0.3, 0.5, 0.8, 0.7)
-		style_normal.corner_radius_top_left = 8
-		style_normal.corner_radius_top_right = 8
-		style_normal.corner_radius_bottom_left = 8
-		style_normal.corner_radius_bottom_right = 8
 		btn.add_theme_stylebox_override("normal", style_normal)
 
 		var style_hover = style_normal.duplicate()
-		style_hover.bg_color = Color(0.25, 0.2, 0.45, 0.95)
-		style_hover.border_color = Color(0.5, 0.7, 1.0)
+		style_hover.bg_color = UITheme.COLOR_BG_BUTTON_HOVER
+		style_hover.border_color = UITheme.COLOR_BORDER_BUTTON_HOVER
 		btn.add_theme_stylebox_override("hover", style_hover)
 
 		btn.modulate.a = 0.0
@@ -116,15 +95,12 @@ func _on_answer_selected(answer_index: int, is_correct: bool):
 	for i in range(_lane_buttons.size()):
 		var btn = _lane_buttons[i]
 		if i == answer_index:
-			if is_correct:
-				btn.modulate = Color(0.3, 1.0, 0.5)
-			else:
-				btn.modulate = Color(1.0, 0.3, 0.3)
+			btn.modulate = UITheme.COLOR_CORRECT if is_correct else UITheme.COLOR_WRONG
 		btn.disabled = true
 
 	if is_correct:
 		AudioManager.play_sfx("correct_chime")
-		await get_tree().create_timer(1.0).timeout
+		await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
 		_show_question(current_question_index + 1)
 	else:
 		AudioManager.play_sfx("wrong_buzzer")
@@ -135,7 +111,7 @@ func _on_answer_selected(answer_index: int, is_correct: bool):
 			var q = questions[current_question_index]
 			var answers = q.get("answers", [])
 			if i < answers.size() and answers[i].get("isCorrect", false):
-				btn.modulate = Color(0.3, 1.0, 0.5)
+				btn.modulate = UITheme.COLOR_CORRECT
 
 		await get_tree().create_timer(1.5).timeout
 		_show_question(current_question_index + 1)
@@ -151,12 +127,6 @@ func _on_influence_depleted():
 	_finish(false, {"reason": "influence_depleted"})
 
 func cleanup():
-	super.cleanup()
-	if _influence_gauge_ui:
-		_influence_gauge_ui.hide_gauge()
-	if _timer_display:
-		_timer_display.hide_timer()
-	if InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
-		InfluenceGauge.influence_depleted.disconnect(_on_influence_depleted)
 	if _overlay:
 		_overlay.queue_free()
+	super.cleanup()

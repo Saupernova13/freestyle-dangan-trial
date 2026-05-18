@@ -14,11 +14,6 @@ var _spawn_timer: float = 0.0
 var _spawn_interval: float = 3.0
 var _break_label: Label
 
-var _influence_gauge_ui: Node
-var _truth_bullet_selector: Node
-var _crosshair: Node
-var _timer_display: Node
-
 func initialize(data: Dictionary):
 	super.initialize(data)
 	var type_specific = data.get("typeSpecific", {})
@@ -29,13 +24,7 @@ func initialize(data: Dictionary):
 		type_specific.get("speaker3CharacterId", "")
 	]
 
-	match difficulty:
-		"easy":
-			_spawn_interval = 3.5
-		"hard":
-			_spawn_interval = 2.0
-		_:
-			_spawn_interval = 3.0
+	_spawn_interval = MinigameConfig.get_spawn_interval("mass_panic_debate", difficulty)
 
 func start():
 	super.start()
@@ -43,21 +32,24 @@ func start():
 	current_group_index = 0
 
 	_build_overlay()
-	_setup_ui()
+	setup_standard_ui([
+		HudComponent.INFLUENCE_GAUGE,
+		HudComponent.TRUTH_BULLET_SELECTOR,
+		HudComponent.CROSSHAIR,
+		HudComponent.TIMER_DISPLAY,
+	])
 
 	InfluenceGauge.reset()
-	if not InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
-		InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
+	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
 	TruthBulletManager.load_bullets()
-	if not InputManager.shoot_pressed.is_connected(_on_shoot):
-		InputManager.shoot_pressed.connect(_on_shoot)
+	connect_managed(InputManager.shoot_pressed, _on_shoot)
 
 	print("MassPanicDebate: ", line_groups.size(), " groups, 3 speakers")
 
 func _build_overlay():
 	# Scene-driven — see scenes/minigames/mass_panic_debate_overlay.tscn.
 	# Text panels spawn dynamically into %Row0/Row1/Row2 containers.
-	_overlay = preload("res://scenes/minigames/mass_panic_debate_overlay.tscn").instantiate()
+	_overlay = ResourceRegistry.instantiate("mass_panic_debate_overlay")
 	add_child(_overlay)
 	_row_containers = [
 		_overlay.get_node("%Row0"),
@@ -66,25 +58,6 @@ func _build_overlay():
 	]
 	_focus_indicator = _overlay.get_node("%FocusIndicator")
 	_break_label = _overlay.get_node("%BreakLabel")
-
-func _setup_ui():
-	_influence_gauge_ui = preload("res://scenes/ui/influence_gauge.tscn").instantiate()
-	add_child(_influence_gauge_ui)
-	_influence_gauge_ui.show_gauge()
-
-	_truth_bullet_selector = preload("res://scenes/ui/truth_bullet_selector.tscn").instantiate()
-	add_child(_truth_bullet_selector)
-	_truth_bullet_selector.show_selector()
-
-	_crosshair = preload("res://scenes/ui/crosshair.tscn").instantiate()
-	add_child(_crosshair)
-	_crosshair.show_crosshair()
-
-	_timer_display = preload("res://scenes/ui/timer_display.tscn").instantiate()
-	add_child(_timer_display)
-	_timer_display.time_expired.connect(_on_time_expired)
-	if time_limit > 0:
-		_timer_display.start_timer(time_limit)
 
 func _input(event):
 	if not is_active or _solved:
@@ -101,7 +74,7 @@ func _input(event):
 
 func _switch_focus(new_row: int):
 	focused_row = new_row
-	var row_starts = [100, 250, 400]
+	var row_starts = MinigameConfig.SCREEN_LAYOUT["mass_panic_row_y"]
 	var tween = create_tween()
 	tween.tween_property(_focus_indicator, "position:y", row_starts[focused_row] - 10, 0.15)
 
@@ -136,7 +109,7 @@ func _spawn_group():
 		if speaker_data.is_empty():
 			continue
 
-		var panel: DebateTextPanel = preload("res://scenes/minigames/debate_text_panel.tscn").instantiate()
+		var panel: DebateTextPanel = ResourceRegistry.instantiate("debate_text_panel")
 		var line_data = speaker_data.duplicate()
 		line_data["characterId"] = speaker_ids[i]
 		var answer_bullet_id = line_data.get("answerBulletId", "")
@@ -154,7 +127,7 @@ func _spawn_group():
 			if voice_file is String and not voice_file.is_empty():
 				AudioManager.play_voice_line(voice_file)
 			if not speaker_ids[i].is_empty():
-				_trigger_spotlight(speaker_ids[i])
+				trigger_spotlight(speaker_ids[i])
 
 		if speaker_data.get("isLoudAssertion", false):
 			ScreenEffects.screen_shake(0.2, 0.01)
@@ -192,18 +165,14 @@ func _on_correct_hit(panel: DebateTextPanel):
 	panel.destroy_with_effect()
 
 	_break_label.visible = true
-	_break_label.scale = Vector2(0.5, 0.5)
 	_break_label.modulate.a = 1.0
-	var tween = create_tween()
-	tween.tween_property(_break_label, "scale", Vector2(1.2, 1.2), 0.3).set_ease(Tween.EASE_OUT)
-	tween.tween_interval(1.0)
-	tween.tween_property(_break_label, "modulate:a", 0.0, 0.5)
-	tween.finished.connect(func():
-		_on_correct_answer({})
-	)
+	EffectBuilders.scale_pop(_break_label, Vector2(0.5, 0.5), Vector2(1.2, 1.2), Vector2(1.2, 1.2), 0.3, 0.01)
+	var fade = EffectBuilders.fade_out(_break_label, 0.5, false)
+	fade.tween_callback(func(): _on_correct_answer({}))
 
-	if _timer_display:
-		_timer_display.stop_timer()
+	var timer = get_hud(HudComponent.TIMER_DISPLAY)
+	if timer:
+		timer.stop_timer()
 
 func _on_wrong_hit():
 	AudioManager.play_sfx("wrong_buzzer")
@@ -220,28 +189,7 @@ func _on_influence_depleted():
 	if not _solved:
 		_finish(false, {"reason": "influence_depleted"})
 
-func _trigger_spotlight(char_id: String):
-	var trial_room = get_tree().get_first_node_in_group("trial_room")
-	if trial_room and trial_room.has_method("find_character_position"):
-		var pos = trial_room.find_character_position(char_id)
-		if pos >= 0:
-			var cam = get_viewport().get_camera_3d()
-			if cam and cam.has_method("jump_to_bench"):
-				cam.jump_to_bench(pos, true)
-
 func cleanup():
-	super.cleanup()
-	if _crosshair:
-		_crosshair.hide_crosshair()
-	if _influence_gauge_ui:
-		_influence_gauge_ui.hide_gauge()
-	if _truth_bullet_selector:
-		_truth_bullet_selector.hide_selector()
-	if _timer_display:
-		_timer_display.hide_timer()
-	if InputManager.shoot_pressed.is_connected(_on_shoot):
-		InputManager.shoot_pressed.disconnect(_on_shoot)
-	if InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
-		InfluenceGauge.influence_depleted.disconnect(_on_influence_depleted)
 	if _overlay:
 		_overlay.queue_free()
+	super.cleanup()

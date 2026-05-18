@@ -11,9 +11,6 @@ var _answer_labels: Array = []
 var _spawn_timer: float = 0.0
 var _spawn_interval: float = 1.5
 
-var _influence_gauge_ui: Node
-var _timer_display: Node
-
 func initialize(data: Dictionary):
 	super.initialize(data)
 	var type_specific = data.get("typeSpecific", {})
@@ -25,27 +22,20 @@ func initialize(data: Dictionary):
 		if answer_key[i] == " ":
 			_revealed_letters[i] = true
 
-	match difficulty:
-		"easy":
-			_spawn_interval = 2.0
-		"hard":
-			_spawn_interval = 1.0
-		_:
-			_spawn_interval = 1.5
+	_spawn_interval = MinigameConfig.get_spawn_interval("hangmans_gambit", difficulty)
 
 func start():
 	super.start()
 	_build_overlay()
-	_setup_ui()
+	setup_standard_ui([HudComponent.INFLUENCE_GAUGE, HudComponent.TIMER_DISPLAY])
 	InfluenceGauge.reset()
-	if not InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
-		InfluenceGauge.influence_depleted.connect(_on_influence_depleted)
+	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
 	print("HangmansGambit: Answer is '", answer_key, "' (", answer_key.length(), " letters)")
 
 func _build_overlay():
 	# Scene-driven — see scenes/minigames/hangmans_gambit_overlay.tscn for the
 	# static layout. Answer-letter slots are spawned dynamically below.
-	_overlay = preload("res://scenes/minigames/hangmans_gambit_overlay.tscn").instantiate()
+	_overlay = ResourceRegistry.instantiate("hangmans_gambit_overlay")
 	add_child(_overlay)
 	_letters_container = _overlay.get_node("%LettersContainer")
 	_answer_display = _overlay.get_node("%AnswerDisplay")
@@ -57,7 +47,7 @@ func _build_overlay():
 		style.content_margin_bottom = 4
 
 		var lbl = Label.new()
-		lbl.add_theme_font_size_override("font_size", 32)
+		lbl.add_theme_font_size_override("font_size", UITheme.FONT_SIZE_LARGE)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 		if answer_key[i] == " ":
@@ -66,34 +56,23 @@ func _build_overlay():
 			style.content_margin_left = 4
 			style.content_margin_right = 4
 			lbl.text = " "
-			lbl.custom_minimum_size.x = 18
+			lbl.custom_minimum_size.x = UITheme.HANGMAN_SPACE_MIN_WIDTH
 			lbl.add_theme_color_override("font_color", Color(0, 0, 0, 0))
 		else:
-			style.bg_color = Color(0.15, 0.1, 0.25, 0.9)
+			style.bg_color = UITheme.COLOR_HANGMAN_SLOT_BG
 			style.border_width_bottom = 2
-			style.border_color = Color(0.6, 0.3, 0.8)
+			style.border_color = UITheme.COLOR_HANGMAN_SLOT_BORDER
 			style.content_margin_left = 8
 			style.content_margin_right = 8
 			lbl.text = "_"
-			lbl.custom_minimum_size.x = 36
-			lbl.add_theme_color_override("font_color", Color(0.8, 0.8, 0.9))
+			lbl.custom_minimum_size.x = UITheme.HANGMAN_LETTER_MIN_WIDTH
+			lbl.add_theme_color_override("font_color", UITheme.COLOR_HANGMAN_BLANK)
 
 		slot.add_theme_stylebox_override("panel", style)
 		slot.add_child(lbl)
 
 		_answer_display.add_child(slot)
 		_answer_labels.append(lbl)
-
-func _setup_ui():
-	_influence_gauge_ui = preload("res://scenes/ui/influence_gauge.tscn").instantiate()
-	add_child(_influence_gauge_ui)
-	_influence_gauge_ui.show_gauge()
-
-	_timer_display = preload("res://scenes/ui/timer_display.tscn").instantiate()
-	add_child(_timer_display)
-	_timer_display.time_expired.connect(_on_time_expired)
-	if time_limit > 0:
-		_timer_display.start_timer(time_limit)
 
 func _process(delta):
 	if not is_active:
@@ -125,6 +104,10 @@ func _spawn_letter():
 		letter = alphabet[randi() % alphabet.length()]
 		is_correct = letter in answer_key and not _all_instances_revealed(letter)
 
+	var speeds = MinigameConfig.get_floating_letter_speed(difficulty)
+	var speed_base: float = speeds["base"]
+	var speed_range: float = speeds["range"]
+
 	var floating = FloatingLetter.new()
 	floating.letter = letter
 	floating.is_answer_letter = is_correct
@@ -132,15 +115,6 @@ func _spawn_letter():
 		randf_range(-50, -30) if randf() < 0.5 else randf_range(viewport_size.x + 30, viewport_size.x + 50),
 		randf_range(120, viewport_size.y - 200)
 	)
-	var speed_base: float = 60.0
-	var speed_range: float = 60.0
-	match difficulty:
-		"easy":
-			speed_base = 40.0
-			speed_range = 40.0
-		"hard":
-			speed_base = 80.0
-			speed_range = 80.0
 	floating.velocity = Vector2(
 		randf_range(speed_base, speed_base + speed_range) * (1 if floating.position.x < 0 else -1),
 		randf_range(-20, 20)
@@ -162,7 +136,7 @@ func _on_letter_clicked(floating: FloatingLetter):
 		if answer_key[i] == letter and not _revealed_letters[i]:
 			_revealed_letters[i] = true
 			_answer_labels[i].text = letter
-			_answer_labels[i].add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
+			_answer_labels[i].add_theme_color_override("font_color", UITheme.COLOR_CORRECT)
 			found = true
 			break
 
@@ -203,15 +177,9 @@ func _on_influence_depleted():
 	_finish(false, {"reason": "influence_depleted"})
 
 func cleanup():
-	super.cleanup()
-	if _influence_gauge_ui:
-		_influence_gauge_ui.hide_gauge()
-	if _timer_display:
-		_timer_display.hide_timer()
-	if InfluenceGauge.influence_depleted.is_connected(_on_influence_depleted):
-		InfluenceGauge.influence_depleted.disconnect(_on_influence_depleted)
 	if _overlay:
 		_overlay.queue_free()
+	super.cleanup()
 
 
 class FloatingLetter extends Control:

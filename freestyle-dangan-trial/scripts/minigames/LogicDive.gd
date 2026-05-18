@@ -7,7 +7,7 @@ var _overlay: CanvasLayer
 var _question_label: Label
 var _lanes_container: HBoxContainer
 var _lane_buttons: Array = []
-var _road_effect: Control
+var _road_effect: RoadEffect
 
 var _influence_gauge_ui: Node
 var _timer_display: Node

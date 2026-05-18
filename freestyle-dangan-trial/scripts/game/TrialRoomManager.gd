@@ -210,32 +210,34 @@ func _on_narrator_displayed(_text: String):
 	if _dialogue_box:
 		_dialogue_box.display_narrator_line(line)
 
+## Map minigame `gameType` → script path. Used by _instantiate_minigame() to
+## resolve the right MinigameBase subclass without a giant match statement.
+const MINIGAME_SCRIPTS := {
+	"nonstop_debate": "res://scripts/minigames/NonstopDebate.gd",
+	"hangmans_gambit": "res://scripts/minigames/HangmansGambit.gd",
+	"logic_dive": "res://scripts/minigames/LogicDive.gd",
+	"debate_scrum": "res://scripts/minigames/DebateScrum.gd",
+	"mass_panic_debate": "res://scripts/minigames/MassPanicDebate.gd",
+	"rebuttal_showdown": "res://scripts/minigames/RebuttalShowdown.gd",
+	"psyche_taxi": "res://scripts/minigames/PsycheTaxi.gd",
+	"closing_argument": "res://scripts/minigames/ClosingArgument.gd",
+}
+
+func _instantiate_minigame(game_type: String) -> MinigameBase:
+	if not MINIGAME_SCRIPTS.has(game_type):
+		return null
+	var script: GDScript = load(MINIGAME_SCRIPTS[game_type])
+	return script.new() as MinigameBase
+
 func _on_minigame_requested(minigame_data: Dictionary):
 	var game_type = minigame_data.get("gameType", "")
-	var minigame: MinigameBase = null
+	var minigame: MinigameBase = _instantiate_minigame(game_type)
 
-	match game_type:
-		"nonstop_debate":
-			minigame = preload("res://scripts/minigames/NonstopDebate.gd").new()
-		"hangmans_gambit":
-			minigame = preload("res://scripts/minigames/HangmansGambit.gd").new()
-		"logic_dive":
-			minigame = preload("res://scripts/minigames/LogicDive.gd").new()
-		"debate_scrum":
-			minigame = preload("res://scripts/minigames/DebateScrum.gd").new()
-		"mass_panic_debate":
-			minigame = preload("res://scripts/minigames/MassPanicDebate.gd").new()
-		"rebuttal_showdown":
-			minigame = preload("res://scripts/minigames/RebuttalShowdown.gd").new()
-		"psyche_taxi":
-			minigame = preload("res://scripts/minigames/PsycheTaxi.gd").new()
-		"closing_argument":
-			minigame = preload("res://scripts/minigames/ClosingArgument.gd").new()
-		_:
-			print("TrialRoomManager: Unknown minigame type: ", game_type)
-			await get_tree().create_timer(1.0).timeout
-			ScriptDirector.on_minigame_finished(true)
-			return
+	if minigame == null:
+		print("TrialRoomManager: Unknown minigame type: ", game_type)
+		await get_tree().create_timer(1.0).timeout
+		ScriptDirector.on_minigame_finished(true)
+		return
 
 	if dialogue_label:
 		dialogue_label.text = ""
@@ -243,7 +245,7 @@ func _on_minigame_requested(minigame_data: Dictionary):
 	_hide_conversation_ui_for_minigame()
 
 	# Show title card before starting
-	var title_card = preload("res://scenes/ui/minigame_title_card.tscn").instantiate()
+	var title_card = ResourceRegistry.instantiate("minigame_title_card")
 	add_child(title_card)
 	title_card.show_title(game_type, minigame_data.get("name", ""))
 	await title_card.card_finished
@@ -254,7 +256,7 @@ func _on_minigame_requested(minigame_data: Dictionary):
 		minigame.cleanup()
 		minigame.queue_free()
 		# Show result card
-		var result_card = preload("res://scenes/ui/minigame_title_card.tscn").instantiate()
+		var result_card = ResourceRegistry.instantiate("minigame_title_card")
 		add_child(result_card)
 		result_card.show_result(success)
 		await result_card.card_finished
@@ -354,7 +356,7 @@ func _on_game_over():
 		dialogue_label.text = ""
 	update_character_name_label("")
 
-	var game_over_screen = preload("res://scenes/ui/game_over_screen.tscn").instantiate()
+	var game_over_screen = ResourceRegistry.instantiate("game_over_screen")
 	add_child(game_over_screen)
 	game_over_screen.show_game_over()
 

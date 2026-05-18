@@ -1,4 +1,9 @@
 extends Node
+##
+## Drives the trial script: walks through dialogue/narrator/minigame lines,
+## tracks high-level state, and coordinates pause / settings menu / auto-skip.
+## Input is delegated to InputManager — this node reacts to its signals
+## instead of running its own _input().
 
 enum State {
 	IDLE,
@@ -26,9 +31,16 @@ var current_line_index: int = -1
 var is_typewriter_active: bool = false
 
 var _active_minigame: Node = null
+var _settings_menu: Node = null
+var _auto_advance_timer: float = 0.0
+var _pre_pause_state: State = State.IDLE
+var _skip_held: bool = false
+var _skip_timer: float = 0.0
 
 func _ready():
-	set_process_input(true)
+	InputManager.advance_pressed.connect(_on_advance_input)
+	InputManager.settings_toggle_requested.connect(_on_settings_toggle_requested)
+	InputManager.skip_held_changed.connect(_on_skip_held_changed)
 
 func start_trial():
 	script_lines = TrialLoader.get_script_lines()
@@ -120,7 +132,7 @@ func on_minigame_finished(success: bool):
 	_transition_to(State.MINIGAME_RESULT)
 	minigame_completed.emit(success)
 	# Brief pause for result display, then advance
-	await get_tree().create_timer(1.5).timeout
+	await get_tree().create_timer(MinigameConfig.MINIGAME_RESULT_PAUSE).timeout
 	_transition_to(State.DIALOGUE)
 	advance_to_next_line()
 
@@ -135,43 +147,33 @@ func notify_typewriter_finished():
 	is_typewriter_active = false
 	_auto_advance_timer = 0.0
 
-var _settings_menu: Node = null
-
-func _input(event):
-	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		_toggle_settings_menu()
-		get_viewport().set_input_as_handled()
-		return
-
-	if event is InputEventKey and event.keycode == KEY_CTRL:
-		_skip_held = event.pressed
-		_skip_timer = 0.0
-		if event.pressed:
-			_auto_advance_timer = 0.0
-		return
-
+# ---------------------------------------------------------------------------
+# Input reactions
+# ---------------------------------------------------------------------------
+func _on_advance_input() -> void:
 	if current_state == State.PAUSED:
 		return
+	if current_state != State.WAITING_FOR_ADVANCE:
+		return
+	if is_typewriter_active:
+		typewriter_skip_requested.emit()
+	else:
+		advance_to_next_line()
+	get_viewport().set_input_as_handled()
 
-	if event is InputEventKey and event.pressed and event.keycode == KEY_SPACE:
-		if current_state == State.WAITING_FOR_ADVANCE:
-			if is_typewriter_active:
-				typewriter_skip_requested.emit()
-			else:
-				advance_to_next_line()
-			get_viewport().set_input_as_handled()
+func _on_settings_toggle_requested() -> void:
+	_toggle_settings_menu()
+	get_viewport().set_input_as_handled()
 
-	if event is InputEventScreenTouch and event.pressed:
-		if current_state == State.WAITING_FOR_ADVANCE:
-			var viewport_size = get_viewport().get_visible_rect().size
-			var tap_x = event.position.x
-			if tap_x > viewport_size.x / 3.0 and tap_x < viewport_size.x * 2.0 / 3.0:
-				if is_typewriter_active:
-					typewriter_skip_requested.emit()
-				else:
-					advance_to_next_line()
-				get_viewport().set_input_as_handled()
+func _on_skip_held_changed(held: bool) -> void:
+	_skip_held = held
+	_skip_timer = 0.0
+	if held:
+		_auto_advance_timer = 0.0
 
+# ---------------------------------------------------------------------------
+# Pause / settings
+# ---------------------------------------------------------------------------
 func pause_trial():
 	if current_state != State.IDLE and current_state != State.TRIAL_COMPLETE:
 		_pre_pause_state = current_state
@@ -191,16 +193,10 @@ func get_progress() -> float:
 		return 0.0
 	return float(current_line_index + 1) / float(script_lines.size())
 
-var _auto_advance_timer: float = 0.0
-var _pre_pause_state: State = State.IDLE
-var _skip_held: bool = false
-var _skip_timer: float = 0.0
-const SKIP_INTERVAL: float = 0.05
-
 func _process(delta):
 	if _skip_held and current_state == State.WAITING_FOR_ADVANCE:
 		_skip_timer += delta
-		if _skip_timer >= SKIP_INTERVAL:
+		if _skip_timer >= MinigameConfig.SKIP_INTERVAL:
 			_skip_timer = 0.0
 			if is_typewriter_active:
 				typewriter_skip_requested.emit()
@@ -222,7 +218,7 @@ func _toggle_settings_menu():
 	if current_state != State.IDLE and current_state != State.TRIAL_COMPLETE:
 		_transition_to(State.PAUSED)
 
-	_settings_menu = preload("res://scenes/ui/settings_menu.tscn").instantiate()
+	_settings_menu = ResourceRegistry.instantiate("settings_menu")
 	add_child(_settings_menu)
 	_settings_menu.open()
 	_settings_menu.closed.connect(func():

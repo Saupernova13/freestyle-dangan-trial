@@ -38,7 +38,7 @@ func load_trial(file_path: String) -> bool:
 
 	# Extract ZIP archive
 	if not extract_trial_archive(file_path, extract_dir):
-		last_load_error = "Trial archive could not be extracted. The file may be corrupt or unreadable on this device."
+		last_load_error = "Trial archive could not be extracted. The file may be corrupt, unreadable, or you may lack storage permissions on this device."
 		push_error(last_load_error)
 		return false
 
@@ -74,7 +74,10 @@ func extract_trial_archive(zip_path: String, extract_to: String) -> bool:
 		return false
 
 	# Ensure extraction directory exists
-	DirAccess.make_dir_recursive_absolute(extract_to)
+	var mkdir_err = DirAccess.make_dir_recursive_absolute(extract_to)
+	if mkdir_err != OK:
+		push_error("Failed to create extraction directory %s (err %d: %s)" % [extract_to, mkdir_err, error_string(mkdir_err)])
+		return false
 
 	# Get list of files in archive
 	var files = reader.get_files()
@@ -105,7 +108,8 @@ func extract_trial_archive(zip_path: String, extract_to: String) -> bool:
 			file.store_buffer(data)
 			file.close()
 		else:
-			push_warning("Failed to write file: " + output_path)
+			var write_err = FileAccess.get_open_error()
+			push_error("Failed to write file %s (err %d: %s)" % [output_path, write_err, error_string(write_err)])
 
 	reader.close()
 	print("Extraction complete")

@@ -44,6 +44,8 @@ func display_narrator_line(line: Dictionary):
 
 	if _name_label:
 		_name_label.text = ""
+	if _portrait_rect:
+		_portrait_rect.texture = null
 
 	_start_typewriter()
 

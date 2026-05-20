@@ -198,6 +198,10 @@ func _spawn_main_line():
 	if _main_lines.is_empty() or _current_main_panel != null:
 		return
 
+	# Nonstop debate loops its statements until the player shoots the right one.
+	if _main_line_index >= _main_lines.size():
+		_main_line_index = 0
+
 	var line_data = _main_lines[_main_line_index]
 	_main_line_index += 1
 

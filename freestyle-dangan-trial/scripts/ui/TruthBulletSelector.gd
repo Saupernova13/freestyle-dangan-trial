@@ -1,4 +1,4 @@
-extends CanvasLayer
+extends Control
 
 ## Spinning truth-bullet HUD shown in the bottom-left during minigames.
 ## Scene-driven — see scenes/ui/truth_bullet_selector.tscn.
@@ -20,11 +20,11 @@ func _ready():
 	InputManager.bullet_prev.connect(func(): TruthBulletManager.cycle_prev())
 	# Tap the selector itself to cycle on touch devices (backup to the
 	# dedicated prev/next buttons in MobileHud).
-	gui_input.connect(_on_gui_input)
+	%Anchor.gui_input.connect(_on_gui_input)
 	visible = false
 
 func _on_gui_input(event: InputEvent) -> void:
-	var is_tap := (event is InputEventScreenTouch and event.pressed) \
+	var is_tap: bool = (event is InputEventScreenTouch and event.pressed) \
 		or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
 	if is_tap:
 		TruthBulletManager.cycle_next()

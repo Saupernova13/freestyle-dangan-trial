@@ -19,6 +19,7 @@ var character_data: Array = []
 var _dialogue_box: Node
 
 var _conversation_ui_was_visible: bool = true
+var _roaming_text_was_visible: bool = true
 
 func _ready():
 	await get_tree().process_frame
@@ -265,17 +266,24 @@ func _on_minigame_requested(minigame_data: Dictionary):
 	minigame.start()
 
 func _hide_conversation_ui_for_minigame():
+	# The roaming background text is part of the dialogue presentation — hide it
+	# alongside the conversation UI so minigames get a clean screen.
 	var conversation_ui = get_node_or_null("../UI/Conversation_UI")
-	if not conversation_ui:
-		return
-	_conversation_ui_was_visible = conversation_ui.visible
-	conversation_ui.visible = false
+	if conversation_ui:
+		_conversation_ui_was_visible = conversation_ui.visible
+		conversation_ui.visible = false
+	var roaming_text = get_node_or_null("../Path2D_RoamingText")
+	if roaming_text:
+		_roaming_text_was_visible = roaming_text.visible
+		roaming_text.visible = false
 
 func _restore_conversation_ui_after_minigame():
 	var conversation_ui = get_node_or_null("../UI/Conversation_UI")
-	if not conversation_ui:
-		return
-	conversation_ui.visible = _conversation_ui_was_visible
+	if conversation_ui:
+		conversation_ui.visible = _conversation_ui_was_visible
+	var roaming_text = get_node_or_null("../Path2D_RoamingText")
+	if roaming_text:
+		roaming_text.visible = _roaming_text_was_visible
 
 func _on_trial_ended():
 	if dialogue_label:

@@ -230,9 +230,8 @@ func _instantiate_minigame(game_type: String) -> MinigameBase:
 
 func _on_minigame_requested(minigame_data: Dictionary):
 	var game_type = minigame_data.get("gameType", "")
-	var minigame: MinigameBase = _instantiate_minigame(game_type)
 
-	if minigame == null:
+	if not MINIGAME_SCRIPTS.has(game_type):
 		print("TrialRoomManager: Unknown minigame type: ", game_type)
 		await get_tree().create_timer(1.0).timeout
 		ScriptDirector.on_minigame_finished(true)
@@ -243,24 +242,40 @@ func _on_minigame_requested(minigame_data: Dictionary):
 
 	_hide_conversation_ui_for_minigame()
 
-	# Show title card before starting
+	# Title card plays once; each attempt then gets its own result card.
 	var title_card = ResourceRegistry.instantiate("minigame_title_card")
 	add_child(title_card)
 	title_card.show_title(game_type, minigame_data.get("name", ""))
 	await title_card.card_finished
 
+	_start_minigame_attempt(minigame_data)
+
+## Run one attempt of the minigame. A wrong answer or running out of time
+## replays the minigame after showing its failure dialog; only success advances
+## the trial. An emptied influence gauge hands off to the game-over screen.
+func _start_minigame_attempt(minigame_data: Dictionary):
+	var minigame: MinigameBase = _instantiate_minigame(minigame_data.get("gameType", ""))
 	add_child(minigame)
 	minigame.initialize(minigame_data)
-	minigame.minigame_completed.connect(func(success, _data):
+	minigame.minigame_completed.connect(func(success, data):
 		minigame.cleanup()
 		minigame.queue_free()
-		# Show result card
+
+		# An emptied influence gauge is a hard fail — the game-over screen
+		# takes over, so skip the result card and the replay.
+		if not success and data.get("reason", "") == "influence_depleted":
+			return
+
 		var result_card = ResourceRegistry.instantiate("minigame_title_card")
 		add_child(result_card)
-		result_card.show_result(success)
+		result_card.show_result(success, data.get("failComment", ""))
 		await result_card.card_finished
-		_restore_conversation_ui_after_minigame()
-		ScriptDirector.on_minigame_finished(success)
+
+		if success:
+			_restore_conversation_ui_after_minigame()
+			ScriptDirector.on_minigame_finished(true)
+		else:
+			_start_minigame_attempt(minigame_data)
 	)
 	ScriptDirector.on_minigame_started(minigame)
 	minigame.start()

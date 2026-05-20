@@ -417,26 +417,20 @@ func _show_evidence_card(bullet_id: String) -> Control:
 	return card
 
 func _on_wrong_hit(panel: DebateTextPanel):
+	if _solved or _has_finished:
+		return
 	print("NonstopDebate: Wrong bullet!")
 	AudioManager.play_sfx("wrong_buzzer")
+	AudioManager.stop_voice()
 	InfluenceGauge.take_damage(difficulty)
 
-	EffectBuilders.screen_flash(_overlay, UITheme.COLOR_FLASH_RED, 0.3)
-
+	# End the attempt — TrialRoomManager shows this line's wrong-answer dialog
+	# and replays the minigame.
 	var wrong_comment = panel.line_data.get("userWrongAnswerComment", "")
-	if wrong_comment is String and not wrong_comment.is_empty():
-		EffectBuilders.spawn_centered_feedback(_overlay, wrong_comment, Color(1.0, 0.4, 0.4))
-
-	_reset_turn()
-
-func _reset_turn():
-	_main_line_index = 0
-	_current_main_panel = null
-	_main_spawn_timer = 0.0
-	for p in _panels_on_screen:
-		if is_instance_valid(p):
-			p.queue_free()
-	_panels_on_screen.clear()
+	_finish(false, {
+		"reason": "wrong_answer",
+		"failComment": wrong_comment if wrong_comment is String else "",
+	})
 
 func _on_panel_exited(panel: DebateTextPanel):
 	_panels_on_screen.erase(panel)
@@ -450,14 +444,17 @@ func _on_influence_depleted():
 		_finish(false, {"reason": "influence_depleted"})
 
 func _on_time_expired():
-	if not _solved:
-		for panel in _panels_on_screen:
-			if is_instance_valid(panel) and panel.is_shootable:
-				var fail_comment = panel.line_data.get("userFailedComment", "")
-				if fail_comment is String and not fail_comment.is_empty():
-					EffectBuilders.spawn_centered_feedback(_overlay, fail_comment, UITheme.COLOR_WARN_DIM)
-				break
-		_finish(false, {"reason": "time_expired"})
+	if _solved or _has_finished:
+		return
+	# Surface the out-of-time dialog for the shootable line still in play.
+	var fail_comment := ""
+	for panel in _panels_on_screen:
+		if is_instance_valid(panel) and panel.is_shootable:
+			var comment = panel.line_data.get("userFailedComment", "")
+			if comment is String:
+				fail_comment = comment
+			break
+	_finish(false, {"reason": "time_expired", "failComment": fail_comment})
 
 func cleanup():
 	if _is_slow_time:

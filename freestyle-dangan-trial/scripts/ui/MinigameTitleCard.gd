@@ -119,7 +119,7 @@ func _animate(frame_width: float):
 		queue_free()
 	)
 
-func show_result(success: bool):
+func show_result(success: bool, message: String = ""):
 	# Result card uses a simpler programmatic Label since it's a different
 	# style (full-screen ALL RIGHT / WRONG flash). Could be split into its
 	# own scene later if needed.
@@ -140,13 +140,40 @@ func show_result(success: bool):
 	result_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(result_label)
 
+	# Optional failure dialog (wrong-answer / out-of-time message) shown below
+	# the result word. Held longer so the player can read it before the replay.
+	var message_label: Label = null
+	if not message.is_empty():
+		message_label = Label.new()
+		message_label.text = message
+		message_label.add_theme_font_size_override("font_size", 28)
+		message_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.95))
+		message_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		message_label.add_theme_constant_override("outline_size", 4)
+		message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		message_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		message_label.custom_minimum_size = Vector2(760, 0)
+		message_label.set_anchors_preset(Control.PRESET_CENTER)
+		message_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		message_label.grow_vertical = Control.GROW_DIRECTION_BOTH
+		message_label.position.y = 80
+		message_label.modulate.a = 0.0
+		message_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(message_label)
+
+	var hold := 1.0 if message.is_empty() else 2.4
+
 	var tween = create_tween()
 	tween.tween_property(_bg, "color:a", 0.7, 0.15)
 	tween.parallel().tween_property(result_label, "modulate:a", 1.0, 0.1)
 	tween.parallel().tween_property(result_label, "scale", Vector2(1.0, 1.0), 0.2).from(Vector2(2.0, 2.0)).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	tween.tween_interval(1.0)
+	if message_label:
+		tween.parallel().tween_property(message_label, "modulate:a", 1.0, 0.25)
+	tween.tween_interval(hold)
 	tween.tween_property(_bg, "color:a", 0.0, 0.3)
 	tween.parallel().tween_property(result_label, "modulate:a", 0.0, 0.3)
+	if message_label:
+		tween.parallel().tween_property(message_label, "modulate:a", 0.0, 0.3)
 	tween.finished.connect(func():
 		card_finished.emit()
 		queue_free()

@@ -1,0 +1,99 @@
+[gd_scene format=3]
+
+[node name="MassPanicDebateOverlay" type="CanvasLayer"]
+layer = 5
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.08, 0, 0.05, 0.6)
+
+[node name="Title" type="Label" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 10.0
+offset_right = 200.0
+offset_bottom = 50.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 24
+text = "MASS PANIC DEBATE"
+horizontal_alignment = 1
+
+[node name="FocusIndicator" type="ColorRect" parent="."]
+unique_name_in_owner = true
+offset_top = 90.0
+offset_right = 1280.0
+offset_bottom = 175.0
+mouse_filter = 2
+color = Color(1, 1, 0.3, 0.08)
+
+[node name="Row0" type="Control" parent="."]
+unique_name_in_owner = true
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 100.0
+offset_bottom = 165.0
+mouse_filter = 2
+
+[node name="Row1" type="Control" parent="."]
+unique_name_in_owner = true
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 250.0
+offset_bottom = 315.0
+mouse_filter = 2
+
+[node name="Row2" type="Control" parent="."]
+unique_name_in_owner = true
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 400.0
+offset_bottom = 465.0
+mouse_filter = 2
+
+[node name="BreakLabel" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -60.0
+offset_right = 300.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.1, 1)
+theme_override_font_sizes/font_size = 72
+text = "BREAK!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HintLabel" type="Label" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -30.0
+offset_right = 200.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+text = "UP/DOWN to switch focus"
+horizontal_alignment = 1

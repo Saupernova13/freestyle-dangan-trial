@@ -1,0 +1,156 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" uid="uid://b868npcx3piq8" path="res://scripts/ui/ConcentrateGaugeUI.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Panel"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.05, 0.05, 0.1, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.8, 1, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="Animation" id="Anim_RESET"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Anchor/Panel/VBox/BarSlot/BarFill:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(0.2, 0.8, 1, 0.9)]
+}
+
+[sub_resource type="Animation" id="Anim_ColorHigh"]
+resource_name = "color_high"
+length = 0.15
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Anchor/Panel/VBox/BarSlot/BarFill:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 0.2, 0.2, 0.9), Color(0.2, 0.8, 1, 0.9)]
+}
+
+[sub_resource type="Animation" id="Anim_ColorMid"]
+resource_name = "color_mid"
+length = 0.15
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Anchor/Panel/VBox/BarSlot/BarFill:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(0.2, 0.8, 1, 0.9), Color(1, 0.8, 0.2, 0.9)]
+}
+
+[sub_resource type="Animation" id="Anim_ColorLow"]
+resource_name = "color_low"
+length = 0.15
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Anchor/Panel/VBox/BarSlot/BarFill:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 0.8, 0.2, 0.9), Color(1, 0.2, 0.2, 0.9)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimLib_Concentrate"]
+_data = {
+&"RESET": SubResource("Anim_RESET"),
+&"color_high": SubResource("Anim_ColorHigh"),
+&"color_mid": SubResource("Anim_ColorMid"),
+&"color_low": SubResource("Anim_ColorLow")
+}
+
+[node name="ConcentrateGaugeUI" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_script")
+
+[node name="Anchor" type="Control" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -150.0
+offset_top = 55.0
+offset_right = -20.0
+offset_bottom = 110.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Anchor"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_Panel")
+
+[node name="VBox" type="VBoxContainer" parent="Anchor/Panel"]
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Anchor/Panel/VBox"]
+unique_name_in_owner = true
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "FOCUS"
+horizontal_alignment = 1
+
+[node name="BarSlot" type="Control" parent="Anchor/Panel/VBox"]
+custom_minimum_size = Vector2(130, 12)
+mouse_filter = 2
+
+[node name="BarBG" type="ColorRect" parent="Anchor/Panel/VBox/BarSlot"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+mouse_filter = 2
+
+[node name="BarFill" type="ColorRect" parent="Anchor/Panel/VBox/BarSlot"]
+unique_name_in_owner = true
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -6.0
+offset_right = 130.0
+offset_bottom = 6.0
+grow_vertical = 2
+color = Color(0.2, 0.8, 1, 0.9)
+mouse_filter = 2
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+unique_name_in_owner = true
+libraries = {
+&"": SubResource("AnimLib_Concentrate")
+}

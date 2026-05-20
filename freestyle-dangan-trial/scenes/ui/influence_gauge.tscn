@@ -1,0 +1,84 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" uid="uid://cnflm0kty0rp0" path="res://scripts/ui/InfluenceGaugeUI.gd" id="1_script"]
+
+[sub_resource type="Animation" id="Anim_DamageFlash"]
+resource_name = "damage_flash"
+length = 0.3
+step = 0.05
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Container/BarDamageFlash:color:a")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.8, 0.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimLib_Influence"]
+_data = {
+&"damage_flash": SubResource("Anim_DamageFlash")
+}
+
+[node name="InfluenceGaugeUI" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_script")
+
+[node name="Container" type="Control" parent="."]
+anchors_preset = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 320.0
+offset_bottom = 60.0
+mouse_filter = 2
+
+[node name="BarBG" type="ColorRect" parent="Container"]
+unique_name_in_owner = true
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 320.0
+offset_bottom = 40.0
+color = Color(0.15, 0.05, 0.05, 0.8)
+mouse_filter = 2
+
+[node name="BarFill" type="ColorRect" parent="Container"]
+unique_name_in_owner = true
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 320.0
+offset_bottom = 40.0
+color = Color(0.9, 0.2, 0.5, 1)
+mouse_filter = 2
+
+[node name="BarDamageFlash" type="ColorRect" parent="Container"]
+unique_name_in_owner = true
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 320.0
+offset_bottom = 40.0
+color = Color(1, 1, 1, 0)
+mouse_filter = 2
+
+[node name="LabelInfluence" type="Label" parent="Container"]
+offset_left = 20.0
+offset_top = 42.0
+offset_right = 200.0
+offset_bottom = 62.0
+theme_override_colors/font_color = Color(0.9, 0.2, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "INFLUENCE"
+mouse_filter = 2
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+unique_name_in_owner = true
+libraries = {
+&"": SubResource("AnimLib_Influence")
+}

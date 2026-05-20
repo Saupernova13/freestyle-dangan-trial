@@ -17,7 +17,6 @@ mono_crash.*.json
 *.import
 *.exr
 *.blend
-*.tscn
 /.claude
 /cli
 /freestyle-dangan-trial/.stfolder
@@ -32,6 +31,10 @@ mono_crash.*.json
 /freestyle-dangan-trial/textures
 *.uid
 /freestyle-dangan-trial/Trial
+
+# Scene carries 500MB+ of embedded mesh data — exceeds GitHub's file size
+# limit. Track it only after extracting meshes to external resources.
+/freestyle-dangan-trial/scenes/thh_default_trial_room.tscn
 
 # Scripter
 scripter/node_modules/

@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/minigames/debate/BulletProjectile.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/minigames/debate/BulletDrawer.gd" id="2_drawer"]
+
+[node name="BulletProjectile" type="Control"]
+custom_minimum_size = Vector2(16, 16)
+offset_right = 16.0
+offset_bottom = 16.0
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="Drawer" type="Control" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_drawer")
+
+[node name="Trail" type="Line2D" parent="."]
+unique_name_in_owner = true
+width = 4.0
+default_color = Color(1, 0.855, 0.2, 0.6)
+begin_cap_mode = 2
+end_cap_mode = 2

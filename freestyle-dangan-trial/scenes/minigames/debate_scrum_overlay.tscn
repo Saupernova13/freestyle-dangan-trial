@@ -1,0 +1,174 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Opposition"]
+content_margin_left = 15.0
+content_margin_top = 10.0
+content_margin_right = 15.0
+content_margin_bottom = 10.0
+bg_color = Color(0.3, 0.1, 0.1, 0.8)
+border_width_left = 3
+border_color = Color(1, 0.3, 0.3, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Defense"]
+content_margin_left = 15.0
+content_margin_top = 10.0
+content_margin_right = 15.0
+content_margin_bottom = 10.0
+bg_color = Color(0.1, 0.1, 0.3, 0.8)
+border_width_right = 3
+border_color = Color(0.3, 0.5, 1, 1)
+
+[node name="DebateScrumOverlay" type="CanvasLayer"]
+layer = 5
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.05, 0.02, 0.08, 0.85)
+
+[node name="Title" type="Label" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 15.0
+offset_right = 200.0
+offset_bottom = 55.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 28
+text = "DEBATE SCRUM"
+horizontal_alignment = 1
+
+[node name="BarContainer" type="Control" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 55.0
+offset_right = 200.0
+offset_bottom = 75.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="ProgressBar" type="ColorRect" parent="BarContainer"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.8, 0.2, 0.2, 0.8)
+
+[node name="ProgressFill" type="ColorRect" parent="BarContainer"]
+unique_name_in_owner = true
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 200.0
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.5, 1, 0.9)
+
+[node name="OppositionPanel" type="PanelContainer" parent="."]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 30.0
+offset_top = -60.0
+offset_right = 380.0
+offset_bottom = 40.0
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_Opposition")
+
+[node name="OppositionLabel" type="Label" parent="OppositionPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 2
+
+[node name="DefensePanel" type="PanelContainer" parent="."]
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -380.0
+offset_top = -60.0
+offset_right = -30.0
+offset_bottom = 40.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_Defense")
+
+[node name="DefenseLabel" type="Label" parent="DefensePanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 2
+
+[node name="KeywordContainer" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = 60.0
+offset_right = 130.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="KeywordHeader" type="Label" parent="KeywordContainer"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.3, 0.6, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "SELECT YOUR REBUTTAL"
+
+[node name="ScoreLabel" type="Label" parent="."]
+unique_name_in_owner = true
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -50.0
+offset_right = 100.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+
+[node name="TurnTimerLabel" type="Label" parent="."]
+unique_name_in_owner = true
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -50.0
+offset_top = 60.0
+offset_right = 50.0
+offset_bottom = 90.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1

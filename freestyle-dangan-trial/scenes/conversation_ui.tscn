@@ -1,0 +1,230 @@
+[gd_scene load_steps=10 format=4 uid="uid://d15txppf4j9hq"]
+
+[ext_resource type="Texture2D" uid="uid://b6yjbov8i0l74" path="res://models/textures/1x/UV_Curtain_1x.jpg" id="1_0q5xb"]
+[ext_resource type="FontFile" uid="uid://cj7wnflnjmjyv" path="res://fonts/LexendMega-Regular.ttf" id="2_rh4x2"]
+[ext_resource type="Shader" uid="uid://bofaa3xotc3cq" path="res://shaders/text_wave.gdshader" id="3_g20o5"]
+[ext_resource type="Texture2D" uid="uid://cxhruslel1443" path="res://textures/ui/lower_res/Trial_Left_Face_View_Long.png" id="4_g20o5"]
+[ext_resource type="Texture2D" uid="uid://nt5q3t0htsga" path="res://textures/ui/lower_res/Trial_Left_Face_View_Long_Overlay.png" id="5_q5u86"]
+[ext_resource type="Texture2D" uid="uid://br2wxg8hvjoeo" path="res://textures/ui/lower_res/Trial_Right_Face_View_Long.png" id="6_0q5xb"]
+[ext_resource type="Texture2D" uid="uid://r16uq3claywy" path="res://textures/ui/lower_res/Middle_Name_Banner.png" id="7_8eapl"]
+[ext_resource type="Texture2D" uid="uid://dtlk8lg2l8oop" path="res://textures/ui/lower_res/Makoto.png" id="8_q5u86"]
+[ext_resource type="Texture2D" uid="uid://cumy4v0ecrqpf" path="res://textures/ui/lower_res/Skip_Banner.png" id="9_nyjxh"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_lecs0"]
+texture = ExtResource("9_nyjxh")
+region_rect = Rect2(0.11551094, 16.346449, 495.79404, 253.42519)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_q5u86"]
+shader = ExtResource("3_g20o5")
+shader_parameter/wave_amplitude = 30.0
+shader_parameter/wave_frequency = 140.0
+shader_parameter/movement_speed = 2.0
+shader_parameter/movement_amplitude = 5.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_0q5xb"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_q5u86"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8eapl"]
+bg_color = Color(0.19215687, 0.19215687, 0.19215687, 0.9411765)
+
+[node name="Conversation_UI" type="Node"]
+
+[node name="Panel_Skip" type="Panel" parent="."]
+z_index = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -244.0
+offset_top = -88.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_lecs0")
+
+[node name="Label_Skip" type="Label" parent="Panel_Skip"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -178.0
+offset_top = -30.0
+offset_right = -10.0
+offset_bottom = 30.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 7
+theme_override_fonts/font = ExtResource("2_rh4x2")
+theme_override_font_sizes/font_size = 48
+text = "AUTO"
+
+[node name="Label_Trial_Num" type="Label" parent="."]
+z_index = 1
+material = SubResource("ShaderMaterial_q5u86")
+offset_left = 180.76003
+offset_top = 214.76003
+offset_right = 400.09454
+offset_bottom = 283.49982
+rotation = -0.7853982
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("2_rh4x2")
+theme_override_font_sizes/font_size = 48
+text = "Trial 1"
+
+[node name="RichTextLabel_Bottom_Speech" type="RichTextLabel" parent="."]
+z_index = 5
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 41.0
+offset_top = -206.0
+offset_right = -41.0
+offset_bottom = -29.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/normal_font = ExtResource("2_rh4x2")
+theme_override_font_sizes/normal_font_size = 48
+bbcode_enabled = true
+text = "Colonel, they Dangan'ed my Ronpas..."
+
+[node name="Panel_Top_Left" type="Panel" parent="."]
+offset_right = 749.0
+offset_bottom = 803.0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_0q5xb")
+
+[node name="Control_Top_Left" type="Control" parent="Panel_Top_Left"]
+z_index = -1
+anchors_preset = 0
+offset_right = 422.0
+offset_bottom = 709.0909
+scale = Vector2(1.1, 2.2)
+
+[node name="TextureRect_TrialLeftFaceViewLong" type="TextureRect" parent="Panel_Top_Left/Control_Top_Left"]
+layout_mode = 0
+offset_top = -4.090909
+offset_right = 465.0
+offset_bottom = 630.9091
+texture = ExtResource("4_g20o5")
+expand_mode = 1
+
+[node name="TextureRect_Speaker_Portrait" type="TextureRect" parent="Panel_Top_Left/Control_Top_Left"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 147.27274
+offset_top = -623.63586
+offset_right = 244.54546
+offset_bottom = -78.635864
+grow_vertical = 0
+scale = Vector2(2, 1)
+texture = ExtResource("8_q5u86")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="TextureRect_TrialLeftFaceViewLongOverlay2" type="TextureRect" parent="Panel_Top_Left/Control_Top_Left"]
+z_index = 1
+layout_mode = 0
+offset_top = -4.090909
+offset_right = 465.0
+offset_bottom = 630.9091
+texture = ExtResource("5_q5u86")
+expand_mode = 1
+
+[node name="Control_Top_Right" type="Control" parent="."]
+z_index = -1
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -449.00012
+offset_right = -40.545532
+offset_bottom = 629.0909
+grow_horizontal = 0
+scale = Vector2(1.1, 2.2)
+
+[node name="Texture_Rect_TrialRightFaceViewLong" type="TextureRect" parent="Control_Top_Right"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -459.36353
+offset_top = -6.8181815
+offset_right = 7.0
+offset_bottom = 634.0909
+grow_horizontal = 0
+texture = ExtResource("6_0q5xb")
+expand_mode = 1
+
+[node name="Control_Center_Name_Label" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -305.0
+offset_right = 1920.0
+grow_vertical = 0
+
+[node name="Label_Center_Name" type="Label" parent="Control_Center_Name_Label"]
+z_index = 2
+layout_mode = 1
+offset_left = 16.0
+offset_right = 862.0
+offset_bottom = 62.00006
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("2_rh4x2")
+theme_override_font_sizes/font_size = 44
+text = "Makoto Naegi"
+
+[node name="Panel_MiddleBottom_SpeechArea" type="Panel" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -965.0
+offset_top = -351.0
+offset_right = 965.0
+offset_bottom = 235.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_q5u86")
+
+[node name="TextureRect_MiddleNameBanner" type="TextureRect" parent="Panel_MiddleBottom_SpeechArea"]
+z_index = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -2046.0
+offset_top = -597.0
+offset_right = 2072.0
+offset_bottom = -421.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("7_8eapl")
+expand_mode = 1
+
+[node name="Panel_Text_BG" type="Panel" parent="Panel_MiddleBottom_SpeechArea"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -2039.0
+offset_top = -531.0
+offset_right = 2039.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_8eapl")

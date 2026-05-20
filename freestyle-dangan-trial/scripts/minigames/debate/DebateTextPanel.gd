@@ -11,18 +11,17 @@ signal panel_exited_screen(panel: DebateTextPanel)
 
 const WEAK_POINT_COLOR: String = "#FF8800"
 const NORMAL_TEXT_COLOR: String = "#FFFFFF"
-const SHOOTABLE_BORDER_COLOR: Color = Color(1.0, 0.5, 0.0, 0.7)
-const DEFAULT_BORDER_COLOR: Color = Color(0.3, 0.3, 0.5, 0.5)
+const TEXT_OUTLINE_COLOR: Color = Color(0, 0, 0, 0.9)
+const TEXT_OUTLINE_SIZE: int = 6
 
-const MAIN_FONT_SIZE: int = 20
-const MAIN_PANEL_HEIGHT: float = 54.0
+const MAIN_FONT_SIZE: int = 42
+const MAIN_PANEL_HEIGHT: float = 84.0
 const MAIN_MIN_WIDTH: float = 350.0
 
-const WHITE_NOISE_FONT_SIZE: int = 13
-const WHITE_NOISE_PANEL_HEIGHT: float = 36.0
+const WHITE_NOISE_FONT_SIZE: int = 22
+const WHITE_NOISE_PANEL_HEIGHT: float = 44.0
 const WHITE_NOISE_MIN_WIDTH: float = 150.0
 
-@onready var _panel: PanelContainer = %Panel
 @onready var _prefix_label: RichTextLabel = %PrefixLabel
 @onready var _weak_label: RichTextLabel = %WeakLabel
 @onready var _suffix_label: RichTextLabel = %SuffixLabel
@@ -38,7 +37,6 @@ var text_effect: String = "normal"
 var text_font: String = "default"
 var is_white_noise: bool = false
 
-var _panel_style: StyleBoxFlat
 var _move_speed: float = 150.0
 var _is_active: bool = true
 var _fade_timer: float = 0.0
@@ -82,25 +80,17 @@ func _apply_setup():
 	_rebuild_text()
 
 func _apply_sizing():
-	# Duplicate the scene's StyleBox so we can mutate per-instance without
-	# affecting other panels sharing the same scene resource.
-	var existing = _panel.get_theme_stylebox("panel")
-	if existing is StyleBoxFlat:
-		_panel_style = existing.duplicate() as StyleBoxFlat
-	else:
-		_panel_style = StyleBoxFlat.new()
-	_panel.add_theme_stylebox_override("panel", _panel_style)
-
 	var font_size = WHITE_NOISE_FONT_SIZE if is_white_noise else MAIN_FONT_SIZE
 	var panel_height = WHITE_NOISE_PANEL_HEIGHT if is_white_noise else MAIN_PANEL_HEIGHT
 	var min_width = WHITE_NOISE_MIN_WIDTH if is_white_noise else MAIN_MIN_WIDTH
-	var bg_alpha = 0.45 if is_white_noise else 0.75
 
-	_panel_style.bg_color = Color(0.1, 0.1, 0.2, bg_alpha)
-	_panel_style.border_color = SHOOTABLE_BORDER_COLOR if is_shootable else DEFAULT_BORDER_COLOR
-
+	# No panel background or border — the text reads directly over the scene,
+	# so each label gets an outline to stay legible.
 	for lbl in [_prefix_label, _weak_label, _suffix_label]:
-		lbl.add_theme_font_size_override("normal_font_size", font_size)
+		for size_key in ["normal_font_size", "bold_font_size", "italic_font_size", "bold_italic_font_size"]:
+			lbl.add_theme_font_size_override(size_key, font_size)
+		lbl.add_theme_color_override("font_outline_color", TEXT_OUTLINE_COLOR)
+		lbl.add_theme_constant_override("outline_size", TEXT_OUTLINE_SIZE)
 
 	custom_minimum_size = Vector2(min_width, panel_height)
 	size = custom_minimum_size
@@ -172,8 +162,6 @@ func has_answer() -> bool:
 
 func set_shootable(value: bool):
 	is_shootable = value
-	if _panel_style:
-		_panel_style.border_color = SHOOTABLE_BORDER_COLOR if is_shootable else DEFAULT_BORDER_COLOR
 	_rebuild_text()
 
 func get_hit_zone(click_pos: Vector2) -> String:

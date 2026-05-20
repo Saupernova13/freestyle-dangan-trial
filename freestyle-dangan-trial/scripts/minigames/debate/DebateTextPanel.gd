@@ -84,7 +84,11 @@ func _apply_setup():
 func _apply_sizing():
 	# Duplicate the scene's StyleBox so we can mutate per-instance without
 	# affecting other panels sharing the same scene resource.
-	_panel_style = _panel.get_theme_stylebox("panel").duplicate() as StyleBoxFlat
+	var existing = _panel.get_theme_stylebox("panel")
+	if existing is StyleBoxFlat:
+		_panel_style = existing.duplicate() as StyleBoxFlat
+	else:
+		_panel_style = StyleBoxFlat.new()
 	_panel.add_theme_stylebox_override("panel", _panel_style)
 
 	var font_size = WHITE_NOISE_FONT_SIZE if is_white_noise else MAIN_FONT_SIZE

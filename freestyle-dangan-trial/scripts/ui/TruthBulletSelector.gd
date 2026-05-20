@@ -1,4 +1,4 @@
-extends Control
+extends CanvasLayer
 
 ## Spinning truth-bullet HUD shown in the bottom-left during minigames.
 ## Scene-driven — see scenes/ui/truth_bullet_selector.tscn.

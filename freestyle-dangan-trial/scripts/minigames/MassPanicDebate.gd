@@ -72,7 +72,7 @@ func _build_overlay():
 func _on_row_tapped(event: InputEvent, row_index: int) -> void:
 	if not is_active or _solved:
 		return
-	var is_tap := (event is InputEventScreenTouch and event.pressed) \
+	var is_tap: bool = (event is InputEventScreenTouch and event.pressed) \
 		or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
 	if is_tap and row_index != focused_row:
 		_switch_focus(row_index)

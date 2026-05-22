@@ -136,6 +136,7 @@ func populate_character_position(position_index: int, character_id: String):
 	material.cull_mode = BaseMaterial3D.CULL_BACK
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mesh_instance.material_override = material
+	_fit_quad_to_texture(mesh_instance, texture)
 	_ensure_black_backplane(mesh_instance)
 
 	print("Loaded character: ", char_data.get("name", ""), " at position ", position_index)
@@ -359,6 +360,7 @@ func update_character_sprite(position_index: int, character_id: String, sprite_i
 		material.cull_mode = BaseMaterial3D.CULL_BACK
 		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mesh_instance.material_override = material
+	_fit_quad_to_texture(mesh_instance, texture)
 	_ensure_black_backplane(mesh_instance)
 
 	update_character_portrait(position_index)
@@ -376,6 +378,36 @@ func _ensure_black_backplane(mesh_instance: MeshInstance3D):
 	black_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	back.material_override = black_mat
 	mesh_instance.add_child(back)
+
+## Resize a character's sprite plane so the texture keeps its native aspect
+## ratio instead of being stretched to the bench quad's fixed proportions.
+## Each bench bakes its own (often non-uniform) scale into its transform, so
+## the plane gets its own QuadMesh — never the shared bench mesh — and its
+## width is derived from the sprite while the bench's world height is kept.
+## The black backplane shares this QuadMesh by reference, so it tracks resizes.
+func _fit_quad_to_texture(mesh_instance: MeshInstance3D, texture: Texture2D) -> void:
+	if not texture:
+		return
+	var tex_w := float(texture.get_width())
+	var tex_h := float(texture.get_height())
+	if tex_w <= 0.0 or tex_h <= 0.0:
+		return
+
+	var quad: QuadMesh
+	if mesh_instance.has_meta("own_quad"):
+		quad = mesh_instance.mesh as QuadMesh
+	if not quad:
+		quad = QuadMesh.new()
+		mesh_instance.mesh = quad
+		mesh_instance.set_meta("own_quad", true)
+
+	# The bench transform applies a non-uniform scale; keep world height
+	# (size.y * sy) untouched and solve width so the on-screen quad matches
+	# the sprite: (size.x * sx) / (size.y * sy) == tex_w / tex_h.
+	var node_scale := mesh_instance.transform.basis.get_scale()
+	var sx := maxf(absf(node_scale.x), 0.0001)
+	var sy := maxf(absf(node_scale.y), 0.0001)
+	quad.size = Vector2((tex_w / tex_h) * sy / sx, 1.0)
 
 func _on_game_over():
 	ScriptDirector.pause_trial()

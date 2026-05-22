@@ -115,6 +115,7 @@ func populate_character_position(position_index: int, character_id: String):
 		push_warning("Character data not found for ID: ", character_id)
 		return
 
+	char_data["_bench_index"] = position_index - 1
 	character_data.append(char_data)
 
 	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, 1)
@@ -320,10 +321,9 @@ func _on_trial_ended():
 	update_character_name_label("")
 
 func find_character_position(character_id: String) -> int:
-	for i in range(character_data.size()):
-		var char_data = character_data[i]
+	for char_data in character_data:
 		if char_data and char_data.get("id", "") == character_id:
-			return i
+			return char_data.get("_bench_index", -1)
 	return -1
 
 func update_character_sprite(position_index: int, character_id: String, sprite_index: int):

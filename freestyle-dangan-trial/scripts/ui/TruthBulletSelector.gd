@@ -16,12 +16,18 @@ extends CanvasLayer
 func _ready():
 	TruthBulletManager.bullet_selected.connect(_on_bullet_selected)
 	TruthBulletManager.lie_mode_changed.connect(_on_lie_mode_changed)
-	InputManager.bullet_next.connect(func(): TruthBulletManager.cycle_next())
-	InputManager.bullet_prev.connect(func(): TruthBulletManager.cycle_prev())
+	InputManager.bullet_next.connect(TruthBulletManager.cycle_next)
+	InputManager.bullet_prev.connect(TruthBulletManager.cycle_prev)
 	# Tap the selector itself to cycle on touch devices (backup to the
 	# dedicated prev/next buttons in MobileHud).
 	%Anchor.gui_input.connect(_on_gui_input)
 	visible = false
+
+func _exit_tree():
+	if InputManager.bullet_next.is_connected(TruthBulletManager.cycle_next):
+		InputManager.bullet_next.disconnect(TruthBulletManager.cycle_next)
+	if InputManager.bullet_prev.is_connected(TruthBulletManager.cycle_prev):
+		InputManager.bullet_prev.disconnect(TruthBulletManager.cycle_prev)
 
 func _on_gui_input(event: InputEvent) -> void:
 	var is_tap: bool = (event is InputEventScreenTouch and event.pressed) \

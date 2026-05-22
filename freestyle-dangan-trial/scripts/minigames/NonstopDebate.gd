@@ -208,8 +208,15 @@ func _spawn_main_line():
 	if _turn_label:
 		_turn_label.text = "TURN %d" % _main_line_index
 
+	var voice_file = line_data.get("voiceLineFile", "")
+	var audio_duration := -1.0
+	if voice_file is String and not voice_file.is_empty():
+		audio_duration = AudioManager.get_voice_line_duration(voice_file)
+	if audio_duration < 0.0:
+		audio_duration = randf_range(4.0, 6.0)
+
 	var panel: DebateTextPanel = ResourceRegistry.instantiate("debate_text_panel")
-	panel.setup(line_data, get_difficulty_multiplier())
+	panel.setup(line_data, get_difficulty_multiplier(), audio_duration)
 	panel.position.y = _row_y_for(_main_line_index)
 	panel.panel_exited_screen.connect(_on_panel_exited)
 	_panels_container.add_child(panel)
@@ -219,7 +226,6 @@ func _spawn_main_line():
 	if panel.has_spotlight:
 		trigger_spotlight(panel.character_id)
 
-	var voice_file = line_data.get("voiceLineFile", "")
 	if voice_file is String and not voice_file.is_empty():
 		AudioManager.play_voice_line(voice_file)
 

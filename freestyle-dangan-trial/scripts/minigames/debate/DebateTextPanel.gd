@@ -22,6 +22,8 @@ const WHITE_NOISE_FONT_SIZE: int = 22
 const WHITE_NOISE_PANEL_HEIGHT: float = 44.0
 const WHITE_NOISE_MIN_WIDTH: float = 150.0
 
+const VOICE_EXIT_BUFFER: float = 0.5
+
 @onready var _prefix_label: RichTextLabel = %PrefixLabel
 @onready var _weak_label: RichTextLabel = %WeakLabel
 @onready var _suffix_label: RichTextLabel = %SuffixLabel
@@ -42,11 +44,13 @@ var _is_active: bool = true
 var _fade_timer: float = 0.0
 var _pending_setup_data: Dictionary
 var _pending_speed_multiplier: float = 1.0
+var _pending_audio_duration: float = -1.0
 var _setup_pending: bool = false
 
-func setup(data: Dictionary, speed_multiplier: float = 1.0):
+func setup(data: Dictionary, speed_multiplier: float = 1.0, audio_duration: float = -1.0):
 	_pending_setup_data = data
 	_pending_speed_multiplier = speed_multiplier
+	_pending_audio_duration = audio_duration
 	_setup_pending = true
 	if is_node_ready():
 		_apply_setup()
@@ -75,7 +79,13 @@ func _apply_setup():
 	text_font = data.get("textFont", "default")
 	is_white_noise = data.get("isWhiteNoise", false)
 
-	_move_speed = 200.0 * _pending_speed_multiplier
+	if _pending_audio_duration > 0.0:
+		var viewport_width = get_viewport_rect().size.x
+		var total_distance = viewport_width + 500.0
+		_move_speed = total_distance / (_pending_audio_duration + VOICE_EXIT_BUFFER)
+	else:
+		_move_speed = 200.0 * _pending_speed_multiplier
+
 	_apply_sizing()
 	_rebuild_text()
 

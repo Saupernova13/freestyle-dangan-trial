@@ -202,16 +202,17 @@ func _input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				# Mouse button pressed - start free-look drag
-				mouse_button_pressed = true
-				is_dragging = true
-				drag_start_position = event.position
+				# Mouse button pressed - start free-look drag (only if not in minigame)
+				if not _is_nav_blocked():
+					mouse_button_pressed = true
+					is_dragging = true
+					drag_start_position = event.position
 			else:
 				# Mouse button released - end drag and spring back
 				mouse_button_pressed = false
 				is_dragging = false
 
-	elif event is InputEventMouseMotion and mouse_button_pressed and enable_free_look and not is_transitioning:
+	elif event is InputEventMouseMotion and mouse_button_pressed and enable_free_look and not is_transitioning and not _is_nav_blocked():
 		# Mouse drag - apply free-look offset
 		var delta = event.relative
 		current_free_look_offset.x -= delta.x * free_look_sensitivity  # Yaw (inverted to match drag direction)
@@ -252,7 +253,7 @@ func _input(event):
 				hold_direction = 0
 				active_touch_index = -1
 
-		elif event is InputEventScreenDrag and event.index == active_touch_index and enable_free_look and not is_transitioning:
+		elif event is InputEventScreenDrag and event.index == active_touch_index and enable_free_look and not is_transitioning and not _is_nav_blocked():
 			# Touch drag - apply free-look offset (like mouse drag)
 			touch_moved = true
 

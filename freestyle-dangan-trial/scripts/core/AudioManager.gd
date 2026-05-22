@@ -51,6 +51,17 @@ func stop_voice():
 func is_voice_playing() -> bool:
 	return voice_player.playing
 
+func get_voice_line_duration(audio_filename: String) -> float:
+	if audio_filename.is_empty():
+		return -1.0
+	var audio_path = TrialLoader.get_audio_path(audio_filename)
+	if audio_path.is_empty():
+		return -1.0
+	var stream = _load_audio_from_file(audio_path)
+	if stream == null:
+		return -1.0
+	return stream.get_length()
+
 func play_sfx(sfx_name: String):
 	var stream = _get_builtin_sfx(sfx_name)
 	if stream:

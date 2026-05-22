@@ -266,10 +266,25 @@ func get_audio_path(audio_filename: String) -> String:
 	if audio_filename.is_empty():
 		return ""
 
-	var audio_path = extract_dir + "Audio/" + audio_filename
+	# Primary: flat Audio/ directory (used by script lines)
+	var flat_path = extract_dir + "Audio/" + audio_filename
+	if FileAccess.file_exists(flat_path):
+		return flat_path
 
-	if FileAccess.file_exists(audio_path):
-		return audio_path
+	# Fallback: scan Audio/Minigames/<gameId>/ subdirectories for nonstop debate voices
+	var minigames_dir = extract_dir + "Audio/Minigames/"
+	var dir = DirAccess.open(minigames_dir)
+	if dir:
+		dir.list_dir_begin()
+		var subdir = dir.get_next()
+		while not subdir.is_empty():
+			if dir.current_is_dir():
+				var candidate = minigames_dir + subdir + "/" + audio_filename
+				if FileAccess.file_exists(candidate):
+					dir.list_dir_end()
+					return candidate
+			subdir = dir.get_next()
+		dir.list_dir_end()
 
 	return ""
 

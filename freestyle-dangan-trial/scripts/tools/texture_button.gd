@@ -19,7 +19,7 @@ func _on_trial_file_selected(path: String):
 
 	TrialLoader.set_meta("pending_trial_path", path)
 	_cleanup_picker()
-	get_tree().change_scene_to_file("res://scenes/thh_trial_room_1.tscn")
+	get_tree().change_scene_to_file("res://scenes/ui/loading_screen.tscn")
 
 func _is_valid_trial(path: String) -> bool:
 	if not FileAccess.file_exists(path):

@@ -32,10 +32,12 @@ func _ready():
 			_dialogue_box.skip_typewriter()
 	)
 
-	load_and_display_trial()
-
 	add_to_group("trial_room")
 
+	# Wire script signals BEFORE loading the trial. start_trial() emits
+	# line_started / dialogue_displayed for the first line synchronously, so the
+	# listeners must already be connected — otherwise line 0 is lost and the
+	# trial appears to open on a blank dialogue box one line early.
 	ScriptDirector.line_started.connect(_on_line_started)
 	ScriptDirector.dialogue_displayed.connect(_on_dialogue_displayed)
 	ScriptDirector.narrator_displayed.connect(_on_narrator_displayed)
@@ -43,32 +45,41 @@ func _ready():
 	ScriptDirector.trial_ended.connect(_on_trial_ended)
 	InfluenceGauge.influence_depleted.connect(_on_game_over)
 
+	load_and_display_trial()
+
 func load_and_display_trial():
-	# Check if a file was selected from the picker
+	if TrialLoader.loaded_async:
+		# Pre-loaded via loading screen — jump straight to scene setup
+		_setup_trial_room()
+		return
+
+	# Fallback synchronous path (direct launch from editor, etc.)
 	if TrialLoader.has_meta("pending_trial_path"):
 		trial_file_path = TrialLoader.get_meta("pending_trial_path")
 		TrialLoader.remove_meta("pending_trial_path")
 
 	print("Loading trial from: ", trial_file_path)
 
-	var success = TrialLoader.load_trial(trial_file_path)
+	var success := TrialLoader.load_trial(trial_file_path)
 	if not success:
-		var msg = TrialLoader.last_load_error if not TrialLoader.last_load_error.is_empty() else "Failed to load trial."
+		var msg := (TrialLoader.last_load_error
+			if not TrialLoader.last_load_error.is_empty()
+			else "Failed to load trial.")
 		push_error(msg)
-		# Surface the error and return to the start menu — without this the user
-		# sees a blank trial room with no indication of what went wrong, which is
-		# the original Android-side complaint.
 		MobileToast.show(get_tree().root, msg, true, 5.0)
 		await get_tree().create_timer(1.0).timeout
 		get_tree().change_scene_to_file("res://scenes/start_menu.tscn")
 		return
 
-	var character_ids = TrialLoader.get_character_ids()
+	_setup_trial_room()
+
+func _setup_trial_room() -> void:
+	var character_ids := TrialLoader.get_character_ids()
 	if character_ids.size() != 17:
 		push_warning("Expected 17 characters, got ", character_ids.size())
 
 	for i in range(17):
-		var position_index = i + 1
+		var position_index := i + 1
 		var character_id: String = ""
 		if i < character_ids.size() and character_ids[i] is String:
 			character_id = character_ids[i]
@@ -99,26 +110,27 @@ func populate_character_position(position_index: int, character_id: String):
 		push_warning("MeshInstance3D not found: ", mesh_name)
 		return
 
-	var char_data = TrialLoader.load_character(character_id)
+	var char_data := TrialLoader.load_character(character_id)
 	if char_data.is_empty():
 		push_warning("Character data not found for ID: ", character_id)
 		return
 
 	character_data.append(char_data)
 
-	var sprite_path = TrialLoader.get_character_sprite(character_id, 1)
-	if sprite_path.is_empty():
-		push_warning("Sprite not found for character: ", char_data.get("name", character_id))
-		return
+	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, 1)
+	if not texture:
+		var sprite_path := TrialLoader.get_character_sprite(character_id, 1)
+		if sprite_path.is_empty():
+			push_warning("Sprite not found for character: ", char_data.get("name", character_id))
+			return
+		var image := Image.load_from_file(sprite_path)
+		if not image:
+			push_error("Failed to load image: ", sprite_path)
+			return
+		texture = ImageTexture.create_from_image(image)
+		TrialLoader.cache_texture(character_id, 1, texture)
 
-	var image = Image.load_from_file(sprite_path)
-	if not image:
-		push_error("Failed to load image: ", sprite_path)
-		return
-
-	var texture = ImageTexture.create_from_image(image)
-
-	var material = StandardMaterial3D.new()
+	var material := StandardMaterial3D.new()
 	material.albedo_texture = texture
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.cull_mode = BaseMaterial3D.CULL_BACK
@@ -146,17 +158,18 @@ func update_character_portrait(bench_index: int, sprite_index: int = 1):
 	if character_id.is_empty():
 		return
 
-	var sprite_path = TrialLoader.get_character_sprite(character_id, sprite_index)
-	if sprite_path.is_empty():
-		sprite_path = TrialLoader.get_character_sprite(character_id, 1)
-	if sprite_path.is_empty():
-		return
-
-	var image = Image.load_from_file(sprite_path)
-	if not image:
-		return
-
-	var texture = ImageTexture.create_from_image(image)
+	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, sprite_index)
+	if not texture:
+		var sprite_path := TrialLoader.get_character_sprite(character_id, sprite_index)
+		if sprite_path.is_empty():
+			sprite_path = TrialLoader.get_character_sprite(character_id, 1)
+		if sprite_path.is_empty():
+			return
+		var image := Image.load_from_file(sprite_path)
+		if not image:
+			return
+		texture = ImageTexture.create_from_image(image)
+		TrialLoader.cache_texture(character_id, sprite_index, texture)
 	portrait_rect.texture = texture
 
 func on_bench_focused(bench_index: int):
@@ -313,9 +326,16 @@ func find_character_position(character_id: String) -> int:
 	return -1
 
 func update_character_sprite(position_index: int, character_id: String, sprite_index: int):
-	var sprite_path = TrialLoader.get_character_sprite(character_id, sprite_index)
-	if sprite_path.is_empty():
-		return
+	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, sprite_index)
+	if not texture:
+		var sprite_path := TrialLoader.get_character_sprite(character_id, sprite_index)
+		if sprite_path.is_empty():
+			return
+		var image := Image.load_from_file(sprite_path)
+		if not image:
+			return
+		texture = ImageTexture.create_from_image(image)
+		TrialLoader.cache_texture(character_id, sprite_index, texture)
 
 	var marker_name = "Bench_Marker3D_%03d" % (position_index + 1)
 	if position_index == 16:
@@ -330,16 +350,10 @@ func update_character_sprite(position_index: int, character_id: String, sprite_i
 	if not mesh_instance:
 		return
 
-	var image = Image.load_from_file(sprite_path)
-	if not image:
-		return
-
-	var texture = ImageTexture.create_from_image(image)
-
 	if mesh_instance.material_override:
 		mesh_instance.material_override.albedo_texture = texture
 	else:
-		var material = StandardMaterial3D.new()
+		var material := StandardMaterial3D.new()
 		material.albedo_texture = texture
 		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		material.cull_mode = BaseMaterial3D.CULL_BACK

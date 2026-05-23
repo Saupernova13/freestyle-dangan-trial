@@ -223,7 +223,7 @@ func _spawn_main_line():
 	_panels_on_screen.append(panel)
 	_current_main_panel = panel
 
-	if panel.has_spotlight:
+	if not panel.character_id.is_empty():
 		trigger_spotlight(panel.character_id)
 
 	if voice_file is String and not voice_file.is_empty():
@@ -266,8 +266,7 @@ func _on_shoot(click_pos: Vector2):
 		"prefix", "suffix":
 			_on_prefix_suffix_hit(click_pos)
 		"weakpoint":
-			if hit_panel.is_shootable:
-				_fire_bullet_at_panel(hit_panel, click_pos)
+			_fire_bullet_at_panel(hit_panel, click_pos)
 
 func _on_white_noise_hit(panel: DebateTextPanel, pos: Vector2):
 	var timer = get_hud(HudComponent.TIMER_DISPLAY)

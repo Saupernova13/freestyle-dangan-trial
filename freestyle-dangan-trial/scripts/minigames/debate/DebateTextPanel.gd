@@ -9,7 +9,7 @@ extends Control
 
 signal panel_exited_screen(panel: DebateTextPanel)
 
-const WEAK_POINT_COLOR: String = "#FF8800"
+const WEAK_POINT_COLOR: String = "#FFFF00"
 const NORMAL_TEXT_COLOR: String = "#FFFFFF"
 const TEXT_OUTLINE_COLOR: Color = Color(0, 0, 0, 0.9)
 const TEXT_OUTLINE_SIZE: int = 6
@@ -34,7 +34,6 @@ var answer_bullet_id: String = ""
 var use_negative_bullet: bool = false
 var movement_direction: String = "left_to_right"
 var character_id: String = ""
-var has_spotlight: bool = false
 var text_effect: String = "normal"
 var text_font: String = "default"
 var is_white_noise: bool = false
@@ -74,7 +73,6 @@ func _apply_setup():
 	use_negative_bullet = data.get("useNegativeBullet", false)
 	movement_direction = data.get("textMovementDirection", "left_to_right")
 	character_id = data.get("characterId", "")
-	has_spotlight = data.get("characterSpotlight", false)
 	text_effect = data.get("textEffect", "normal")
 	text_font = data.get("textFont", "default")
 	is_white_noise = data.get("isWhiteNoise", false)
@@ -130,12 +128,9 @@ func _rebuild_text():
 
 	var weak_bbcode = ""
 	if has_weak:
-		if is_shootable:
-			weak_bbcode = "[color=%s][b]%s[/b][/color]" % [WEAK_POINT_COLOR, target]
-		else:
-			weak_bbcode = "[color=%s]%s[/color]" % [NORMAL_TEXT_COLOR, target]
+		weak_bbcode = "[color=%s][b]%s[/b][/color]" % [WEAK_POINT_COLOR, target]
 	weak_bbcode = _apply_font_wrap(weak_bbcode)
-	weak_bbcode = _apply_effect_wrap(weak_bbcode)
+	weak_bbcode = _apply_effect_wrap(weak_bbcode, true)
 	_weak_label.text = weak_bbcode
 	_weak_label.visible = has_weak
 
@@ -159,7 +154,13 @@ func _apply_font_wrap(bbcode: String) -> String:
 			return "[shake rate=15 level=3]%s[/shake]" % bbcode
 	return bbcode
 
-func _apply_effect_wrap(bbcode: String) -> String:
+func _apply_effect_wrap(bbcode: String, preserve_color: bool = false) -> String:
+	if preserve_color:
+		match text_effect:
+			"shake":
+				return "[shake rate=10 level=5]%s[/shake]" % bbcode
+		return bbcode
+
 	match text_effect:
 		"shake":
 			return "[shake rate=10 level=5]%s[/shake]" % bbcode

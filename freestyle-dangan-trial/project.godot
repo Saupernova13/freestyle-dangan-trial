@@ -28,6 +28,7 @@ CameraDirector="*res://scripts/camera/CameraDirector.gd"
 ScreenEffects="*res://scripts/core/ScreenEffectsManager.gd"
 Settings="*res://scripts/core/Settings.gd"
 ConcentrateGauge="*res://scripts/core/ConcentrateGauge.gd"
+GameRandom="*res://scripts/core/GameRandom.gd"
 
 [display]
 

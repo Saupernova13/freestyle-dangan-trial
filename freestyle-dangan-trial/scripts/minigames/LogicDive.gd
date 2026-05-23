@@ -7,6 +7,7 @@ var _overlay: CanvasLayer
 var _question_label: Label
 var _lanes_container: HBoxContainer
 var _lane_buttons: Array = []
+var _button_original_indices: Array = []
 var _road_effect: RoadEffect
 
 var _showing_question: bool = false
@@ -52,10 +53,24 @@ func _show_question(index: int):
 	for btn in _lane_buttons:
 		btn.queue_free()
 	_lane_buttons.clear()
+	_button_original_indices.clear()
 
 	var answers = q.get("answers", [])
+	var filtered_answers: Array = []
+
 	for i in range(answers.size()):
 		var answer = answers[i]
+		var answer_text = answer.get("answerText", "").strip_edges()
+		if not answer_text.is_empty():
+			filtered_answers.append({"answer": answer, "original_index": i})
+
+	var rng = GameRandom.stream("logic_dive")
+	GameRandom.shuffle_with(filtered_answers, rng)
+
+	for i in range(filtered_answers.size()):
+		var entry = filtered_answers[i]
+		var answer = entry["answer"]
+		var original_index = entry["original_index"]
 		var btn = Button.new()
 		btn.text = answer.get("answerText", "?")
 		btn.custom_minimum_size = UITheme.LANE_BUTTON_SIZE
@@ -74,9 +89,10 @@ func _show_question(index: int):
 
 		btn.modulate.a = 0.0
 		var is_correct = answer.get("isCorrect", false)
-		btn.pressed.connect(_on_answer_selected.bind(i, is_correct))
+		btn.pressed.connect(_on_answer_selected.bind(original_index, is_correct))
 		_lanes_container.add_child(btn)
 		_lane_buttons.append(btn)
+		_button_original_indices.append(original_index)
 
 	var progress = _overlay.get_node_or_null("%ProgressLabel")
 	if progress:
@@ -87,16 +103,22 @@ func _show_question(index: int):
 	for i in range(_lane_buttons.size()):
 		tween.tween_property(_lane_buttons[i], "modulate:a", 1.0, 0.15)
 
-func _on_answer_selected(answer_index: int, is_correct: bool):
+func _on_answer_selected(original_index: int, is_correct: bool):
 	if not _showing_question:
 		return
 	_showing_question = false
 
+	var q = questions[current_question_index]
+	var answers = q.get("answers", [])
+
 	for i in range(_lane_buttons.size()):
 		var btn = _lane_buttons[i]
-		if i == answer_index:
-			btn.modulate = UITheme.COLOR_CORRECT if is_correct else UITheme.COLOR_WRONG
 		btn.disabled = true
+		var btn_original_idx = _button_original_indices[i]
+		if btn_original_idx == original_index:
+			btn.modulate = UITheme.COLOR_CORRECT if is_correct else UITheme.COLOR_WRONG
+		elif answers[btn_original_idx].get("isCorrect", false):
+			btn.modulate = UITheme.COLOR_CORRECT
 
 	if is_correct:
 		AudioManager.play_sfx("correct_chime")
@@ -105,14 +127,6 @@ func _on_answer_selected(answer_index: int, is_correct: bool):
 	else:
 		AudioManager.play_sfx("wrong_buzzer")
 		InfluenceGauge.take_damage(difficulty)
-
-		for i in range(_lane_buttons.size()):
-			var btn = _lane_buttons[i]
-			var q = questions[current_question_index]
-			var answers = q.get("answers", [])
-			if i < answers.size() and answers[i].get("isCorrect", false):
-				btn.modulate = UITheme.COLOR_CORRECT
-
 		await get_tree().create_timer(1.5).timeout
 		_show_question(current_question_index + 1)
 

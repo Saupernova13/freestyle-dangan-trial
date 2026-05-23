@@ -113,6 +113,10 @@ func _is_nav_blocked() -> bool:
 		or s == ScriptDirector.State.WAITING_FOR_ADVANCE \
 		or s == ScriptDirector.State.MINIGAME_ACTIVE
 
+func _is_free_look_blocked() -> bool:
+	var s = ScriptDirector.current_state
+	return s == ScriptDirector.State.MINIGAME_ACTIVE
+
 func _process(delta):
 	# Handle hold-to-repeat navigation
 	if not is_transitioning and not _is_nav_blocked():
@@ -202,8 +206,8 @@ func _input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				# Mouse button pressed - start free-look drag (only if not in minigame)
-				if not _is_nav_blocked():
+				# Mouse button pressed - start free-look drag (only if not blocked by minigame)
+				if not _is_free_look_blocked():
 					mouse_button_pressed = true
 					is_dragging = true
 					drag_start_position = event.position
@@ -212,7 +216,7 @@ func _input(event):
 				mouse_button_pressed = false
 				is_dragging = false
 
-	elif event is InputEventMouseMotion and mouse_button_pressed and enable_free_look and not is_transitioning and not _is_nav_blocked():
+	elif event is InputEventMouseMotion and mouse_button_pressed and enable_free_look and not is_transitioning and not _is_free_look_blocked():
 		# Mouse drag - apply free-look offset
 		var delta = event.relative
 		current_free_look_offset.x -= delta.x * free_look_sensitivity  # Yaw (inverted to match drag direction)
@@ -253,7 +257,7 @@ func _input(event):
 				hold_direction = 0
 				active_touch_index = -1
 
-		elif event is InputEventScreenDrag and event.index == active_touch_index and enable_free_look and not is_transitioning and not _is_nav_blocked():
+		elif event is InputEventScreenDrag and event.index == active_touch_index and enable_free_look and not is_transitioning and not _is_free_look_blocked():
 			# Touch drag - apply free-look offset (like mouse drag)
 			touch_moved = true
 

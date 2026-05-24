@@ -2,8 +2,6 @@ extends MinigameBase
 
 var arguments: Array = []
 var current_argument_index: int = 0
-var player_score: int = 0
-var opponent_score: int = 0
 
 var _overlay: CanvasLayer
 var _opposition_label: Label
@@ -26,7 +24,7 @@ func start():
 	super.start()
 	if arguments.is_empty():
 		push_warning("DebateScrum: No arguments provided, auto-completing")
-		_on_correct_answer({"score": 0})
+		_on_correct_answer({"rounds": 0})
 		return
 
 	_build_overlay()
@@ -80,16 +78,17 @@ func _process(delta):
 
 func _show_argument(index: int):
 	if index >= arguments.size():
-		var success = player_score >= opponent_score
-		if success:
-			_on_correct_answer({"score": player_score})
-		else:
-			_finish(false, {"reason": "outscored", "score": player_score})
+		# Reaching the end only happens after every round was answered
+		# correctly — wrong answers exit through _finish(false, ...) and the
+		# trial manager replays the whole minigame.
+		_update_progress_bar(1.0)
+		_on_correct_answer({"rounds": arguments.size()})
 		return
 
 	_turn_timer = 0.0
 	_turn_active = true
 	current_argument_index = index
+	_update_progress_bar(float(index) / float(arguments.size()))
 	var arg = arguments[index]
 
 	_opposition_label.text = _format_character_line(arg.get("oppositionStatement", "..."), arg.get("oppositionCharacterId", ""))
@@ -141,48 +140,38 @@ func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
 
 	if is_correct:
 		btn.modulate = UITheme.COLOR_CORRECT
-		player_score += 1
 		AudioManager.play_sfx("correct_chime")
 		var arg = arguments[current_argument_index]
 		var def_audio = arg.get("defenseAudioFile", "")
 		if not def_audio.is_empty():
 			AudioManager.play_voice_line(def_audio)
+		_update_score_display()
+		await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
+		_show_argument(current_argument_index + 1)
 	else:
+		# Match NonstopDebate: a wrong keyword ends the attempt and the trial
+		# manager replays the minigame. Player must clear every round to win.
 		btn.modulate = UITheme.COLOR_WRONG
-		opponent_score += 1
 		AudioManager.play_sfx("wrong_buzzer")
 		InfluenceGauge.take_damage(difficulty)
+		await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
+		_finish(false, {"reason": "wrong_answer"})
 
-	_update_progress_bar()
-	_update_score_display()
-
-	await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
-	_show_argument(current_argument_index + 1)
-
-func _update_progress_bar():
-	var total = player_score + opponent_score
-	if total <= 0:
-		return
-	var ratio = float(player_score) / float(total)
-	var target_width = 400.0 * ratio
+func _update_progress_bar(ratio: float):
+	var target_width = 400.0 * clampf(ratio, 0.0, 1.0)
 	var tween = create_tween()
 	tween.tween_property(_progress_fill, "size:x", target_width, 0.3)
 
 func _update_score_display():
-	_score_label.text = "Defense: %d  |  Opposition: %d  |  Round %d/%d" % [
-		player_score, opponent_score,
-		current_argument_index + 1, arguments.size()
-	]
+	_score_label.text = "Round %d / %d" % [current_argument_index + 1, arguments.size()]
 
 func _auto_advance_turn():
+	# Match NonstopDebate timeout: running out of time on a round ends the
+	# attempt and the trial manager replays the minigame.
 	_turn_active = false
 	for b in _defense_buttons:
 		b.disabled = true
-	opponent_score += 1
-	_update_progress_bar()
-	_update_score_display()
-	await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
-	_show_argument(current_argument_index + 1)
+	_finish(false, {"reason": "time_expired"})
 
 func _on_influence_depleted():
 	_finish(false, {"reason": "influence_depleted"})

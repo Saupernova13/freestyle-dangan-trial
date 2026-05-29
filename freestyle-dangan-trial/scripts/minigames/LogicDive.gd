@@ -121,14 +121,12 @@ func _on_answer_selected(original_index: int, is_correct: bool):
 			btn.modulate = UITheme.COLOR_CORRECT
 
 	if is_correct:
-		AudioManager.play_sfx("correct_chime")
 		await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
 		_show_question(current_question_index + 1)
 	else:
 		# Match NonstopDebate: a wrong answer ends the attempt and the trial
 		# manager replays the whole minigame. The player must answer every
 		# question correctly to advance.
-		AudioManager.play_sfx("wrong_buzzer")
 		InfluenceGauge.take_damage(difficulty)
 		await get_tree().create_timer(1.5).timeout
 		_finish(false, {"reason": "wrong_answer"})

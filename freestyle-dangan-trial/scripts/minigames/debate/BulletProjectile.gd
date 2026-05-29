@@ -35,8 +35,6 @@ func fire(from: Vector2, to: Vector2):
 	_is_moving = true
 	visible = true
 
-	AudioManager.play_sfx("bullet_fire")
-
 func _process(delta):
 	if not _is_moving:
 		return

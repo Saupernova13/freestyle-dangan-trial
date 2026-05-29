@@ -141,12 +141,10 @@ func _on_letter_clicked(floating: FloatingLetter):
 			break
 
 	if found:
-		AudioManager.play_sfx("correct_chime")
 		floating.destroy_correct()
 		if _check_complete():
 			_on_correct_answer({"answer": answer_key})
 	else:
-		AudioManager.play_sfx("wrong_buzzer")
 		InfluenceGauge.take_damage(difficulty)
 		floating.destroy_wrong()
 

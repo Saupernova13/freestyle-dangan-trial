@@ -26,7 +26,6 @@ func take_damage_raw(amount: float):
 	current_influence = max(0.0, current_influence - amount)
 	damage_taken.emit(amount)
 	influence_changed.emit(current_influence, max_influence)
-	AudioManager.play_sfx("influence_damage")
 
 	if current_influence <= 0:
 		influence_depleted.emit()

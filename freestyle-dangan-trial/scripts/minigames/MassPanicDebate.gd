@@ -179,7 +179,6 @@ func _on_shoot(click_pos: Vector2):
 
 func _on_correct_hit(panel: DebateTextPanel):
 	_solved = true
-	AudioManager.play_sfx("break_shatter")
 	panel.destroy_with_effect()
 
 	_break_label.visible = true
@@ -193,7 +192,6 @@ func _on_correct_hit(panel: DebateTextPanel):
 		timer.stop_timer()
 
 func _on_wrong_hit():
-	AudioManager.play_sfx("wrong_buzzer")
 	InfluenceGauge.take_damage(difficulty)
 
 func _on_panel_exited(panel: DebateTextPanel):

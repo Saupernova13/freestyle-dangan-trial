@@ -132,8 +132,6 @@ func _process(delta):
 		_rich_label.visible_characters = min(chars_to_show, _target_visible_chars)
 
 		_blip_counter += 1
-		if _blip_counter % 3 == 0:
-			AudioManager.play_sfx("text_blip")
 
 	if _rich_label.visible_characters >= _target_visible_chars:
 		_rich_label.visible_characters = -1

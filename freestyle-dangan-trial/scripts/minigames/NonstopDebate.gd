@@ -281,7 +281,6 @@ func _on_prefix_suffix_hit(pos: Vector2):
 	if timer:
 		timer.add_time(-10.0)
 	EffectBuilders.spawn_drift_popup(_overlay, pos, "-10", UITheme.COLOR_WRONG_BRIGHT, UITheme.FONT_SIZE_POPUP)
-	AudioManager.play_sfx("wrong_buzzer")
 
 func _fire_bullet_at_panel(panel: DebateTextPanel, click_pos: Vector2):
 	var projectile: BulletProjectile = ResourceRegistry.instantiate("bullet_projectile")
@@ -334,7 +333,6 @@ func _on_correct_hit(panel: DebateTextPanel):
 	ScreenEffects.impact_frame(MinigameConfig.TIMING["impact_frame"])
 	await get_tree().create_timer(MinigameConfig.TIMING["impact_frame"]).timeout
 
-	AudioManager.play_sfx("break_shatter")
 	ScreenEffects.white_flash(0.25)
 	_shatter_panel(panel)
 
@@ -425,7 +423,6 @@ func _on_wrong_hit(panel: DebateTextPanel):
 	if _solved or _has_finished:
 		return
 	print("NonstopDebate: Wrong bullet!")
-	AudioManager.play_sfx("wrong_buzzer")
 	AudioManager.stop_voice()
 	InfluenceGauge.take_damage(difficulty)
 

@@ -49,7 +49,6 @@ func initialize(data: Dictionary):
 
 func start():
 	_transition_to(State.ACTIVE)
-	AudioManager.play_minigame_bgm(minigame_data.get("gameType", ""))
 	if time_limit > 0:
 		_start_timer()
 
@@ -202,7 +201,6 @@ func _on_correct_answer(data: Dictionary = {}):
 	_finish(true, data)
 
 func _on_wrong_answer():
-	AudioManager.play_sfx("wrong_buzzer")
 	InfluenceGauge.take_damage(difficulty)
 
 func _finish(success: bool, data: Dictionary = {}):
@@ -212,9 +210,6 @@ func _finish(success: bool, data: Dictionary = {}):
 	_transition_to(State.COMPLETE)
 	if _timer_node:
 		_timer_node.stop()
-	AudioManager.stop_minigame_bgm(0.6)
-	if success:
-		AudioManager.play_sfx("correct_chime")
 	minigame_completed.emit(success, data)
 
 func _transition_to(new_state: State) -> void:

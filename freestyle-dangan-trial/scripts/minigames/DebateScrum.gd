@@ -140,7 +140,6 @@ func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
 
 	if is_correct:
 		btn.modulate = UITheme.COLOR_CORRECT
-		AudioManager.play_sfx("correct_chime")
 		var arg = arguments[current_argument_index]
 		var def_audio = arg.get("defenseAudioFile", "")
 		if not def_audio.is_empty():
@@ -152,7 +151,6 @@ func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
 		# Match NonstopDebate: a wrong keyword ends the attempt and the trial
 		# manager replays the minigame. Player must clear every round to win.
 		btn.modulate = UITheme.COLOR_WRONG
-		AudioManager.play_sfx("wrong_buzzer")
 		InfluenceGauge.take_damage(difficulty)
 		await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
 		_finish(false, {"reason": "wrong_answer"})

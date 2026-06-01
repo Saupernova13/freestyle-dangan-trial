@@ -5,10 +5,8 @@ var _name_label: Label
 var _portrait_rect: TextureRect
 
 var _typewriter_speed: float = 30.0
-var _typewriter_timer: float = 0.0
-var _target_visible_chars: int = 0
 var _is_typing: bool = false
-var _blip_counter: int = 0
+var _typewriter_tween: Tween = null
 
 enum TextSpeed { SLOW, NORMAL, FAST, INSTANT }
 var text_speed: TextSpeed = TextSpeed.NORMAL
@@ -105,38 +103,45 @@ func _start_typewriter():
 		ScriptDirector.notify_typewriter_finished()
 		return
 
+	var total_chars := _rich_label.get_total_character_count()
+	if total_chars <= 0:
+		_rich_label.visible_characters = -1
+		ScriptDirector.notify_typewriter_finished()
+		return
+
 	_rich_label.visible_characters = 0
-	_target_visible_chars = _rich_label.get_total_character_count()
-	_typewriter_timer = 0.0
-	_blip_counter = 0
 	_is_typing = true
 	ScriptDirector.notify_typewriter_started()
 
+	# Linear char-by-char reveal driven by a Tween instead of a per-frame loop.
+	# Duration is derived from chars/sec so reveal pacing matches the old timer.
+	var duration := float(total_chars) / _typewriter_speed
+	if _typewriter_tween and _typewriter_tween.is_valid():
+		_typewriter_tween.kill()
+	_typewriter_tween = create_tween()
+	_typewriter_tween.tween_property(_rich_label, "visible_characters", total_chars, duration)
+	_typewriter_tween.finished.connect(_on_typewriter_finished)
+
+func _on_typewriter_finished():
+	_typewriter_tween = null
+	if not _is_typing:
+		return
+	if _rich_label:
+		_rich_label.visible_characters = -1
+	_is_typing = false
+	ScriptDirector.notify_typewriter_finished()
+
 func skip_typewriter():
 	if _is_typing and _rich_label:
+		if _typewriter_tween and _typewriter_tween.is_valid():
+			_typewriter_tween.kill()
+		_typewriter_tween = null
 		_rich_label.visible_characters = -1
 		_is_typing = false
 		ScriptDirector.notify_typewriter_finished()
 
 func is_typing() -> bool:
 	return _is_typing
-
-func _process(delta):
-	if not _is_typing or not _rich_label:
-		return
-
-	_typewriter_timer += delta
-	var chars_to_show = int(_typewriter_timer * _typewriter_speed)
-
-	if chars_to_show > _rich_label.visible_characters:
-		_rich_label.visible_characters = min(chars_to_show, _target_visible_chars)
-
-		_blip_counter += 1
-
-	if _rich_label.visible_characters >= _target_visible_chars:
-		_rich_label.visible_characters = -1
-		_is_typing = false
-		ScriptDirector.notify_typewriter_finished()
 
 func set_text_speed(speed: TextSpeed):
 	text_speed = speed

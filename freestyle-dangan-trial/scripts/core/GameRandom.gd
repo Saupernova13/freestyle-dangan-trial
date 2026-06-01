@@ -30,6 +30,15 @@ func stream(label: String) -> RandomNumberGenerator:
 	rng.seed = hash("%d:%s:%d" % [seed_value, label, index])
 	return rng
 
+## A value-stable RNG for `label`, seeded only by the session seed (no per-call
+## index). Every call with the same label in one session yields the identical
+## sequence — use for session-wide "personality" values (e.g. how often an
+## effect occurs this run), not for distinct per-instance rolls.
+func session_stream(label: String) -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d:%s" % [seed_value, label])
+	return rng
+
 ## Force a specific seed (e.g. for testing). Resets all stream counters so the
 ## next stream() calls start fresh.
 func reseed(value: int) -> void:

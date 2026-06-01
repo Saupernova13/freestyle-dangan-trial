@@ -1,6 +1,19 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" uid="uid://brdohrwghxeuu" path="res://scripts/ui/MinigameTitleCard.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://kqvq8foqxt6l" path="res://textures/ui/lower_res/minigame_name_frame_blue.png" id="2_frame_blue"]
+[ext_resource type="Texture2D" uid="uid://dg1li3jewd5wo" path="res://textures/ui/lower_res/minigame_name_speed_bullet_blue.png" id="4_bullet_blue"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBox_Frame"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("2_frame_blue")
+texture_margin_left = 160.0
+texture_margin_top = 24.0
+texture_margin_right = 160.0
+texture_margin_bottom = 24.0
 
 [sub_resource type="Animation" id="Anim_BgFadeIn"]
 resource_name = "bg_fade_in"
@@ -54,23 +67,34 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
 
-[node name="Mount" type="Control" parent="."]
+[node name="Mount" type="HBoxContainer" parent="."]
 unique_name_in_owner = true
+offset_right = 480.0
+offset_bottom = 110.0
 mouse_filter = 2
+theme_override_constants/separation = -40
+alignment = 1
 
-[node name="Frame" type="TextureRect" parent="Mount"]
+[node name="Frame" type="PanelContainer" parent="Mount"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(480, 110)
 mouse_filter = 2
-expand_mode = 3
-stretch_mode = 1
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBox_Frame")
 
-[node name="Bullet" type="TextureRect" parent="Mount"]
-unique_name_in_owner = true
+[node name="Margin" type="MarginContainer" parent="Mount/Frame"]
 mouse_filter = 2
-expand_mode = 3
-stretch_mode = 5
+theme_override_constants/margin_left = 70
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 70
+theme_override_constants/margin_bottom = 12
 
-[node name="Title" type="Label" parent="Mount"]
+[node name="Labels" type="VBoxContainer" parent="Mount/Frame/Margin"]
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="Mount/Frame/Margin/Labels"]
 unique_name_in_owner = true
 z_index = 10
 mouse_filter = 2
@@ -78,11 +102,11 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 44
-text = ""
+text = "MINIGAME NAME"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Subtitle" type="Label" parent="Mount"]
+[node name="Subtitle" type="Label" parent="Mount/Frame/Margin/Labels"]
 unique_name_in_owner = true
 z_index = 10
 mouse_filter = 2
@@ -92,6 +116,15 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 14
 text = "CLASS TRIAL"
 horizontal_alignment = 1
+
+[node name="Bullet" type="TextureRect" parent="Mount"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 110)
+mouse_filter = 2
+size_flags_vertical = 4
+texture = ExtResource("4_bullet_blue")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 unique_name_in_owner = true

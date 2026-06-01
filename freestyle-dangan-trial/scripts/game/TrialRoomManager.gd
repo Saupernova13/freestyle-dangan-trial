@@ -281,7 +281,7 @@ func _start_minigame_attempt(minigame_data: Dictionary):
 		if not success and data.get("reason", "") == "influence_depleted":
 			return
 
-		var result_card = ResourceRegistry.instantiate("minigame_title_card")
+		var result_card = ResourceRegistry.instantiate("minigame_result_card")
 		add_child(result_card)
 		result_card.show_result(success, data.get("failComment", ""))
 		await result_card.card_finished

@@ -27,6 +27,7 @@ const SCENES := {
 	"settings_menu": "res://scenes/ui/settings_menu.tscn",
 	"game_over_screen": "res://scenes/ui/game_over_screen.tscn",
 	"minigame_title_card": "res://scenes/ui/minigame_title_card.tscn",
+	"minigame_result_card": "res://scenes/ui/minigame_result_card.tscn",
 }
 
 static var _cache: Dictionary = {}

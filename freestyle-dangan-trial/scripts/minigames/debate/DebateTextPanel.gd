@@ -32,6 +32,16 @@ const RAMP_CHANCE_CEIL: float = 0.90
 const SQUASH_CHANCE_FLOOR: float = 0.20
 const SQUASH_CHANCE_CEIL: float = 0.85
 
+# Ramp pacing — panels with a ramp rush in, ease through the readable middle,
+# then accelerate out. Lower powers keep the slow stretch brief (a high power
+# flattens velocity across a wide band, so the slow part drags). RAMP_MIN_SPEED
+# is the fraction of average speed kept at mid-crossing: the pure eased curve
+# dead-stops at centre, so we blend in this much constant drift to keep it
+# moving and blend the transitions smoothly.
+const RAMP_POWER_FLOOR: float = 1.4
+const RAMP_POWER_CEIL: float = 2.2
+const RAMP_MIN_SPEED: float = 0.35
+
 @onready var _prefix_label: RichTextLabel = %PrefixLabel
 @onready var _weak_label: RichTextLabel = %WeakLabel
 @onready var _suffix_label: RichTextLabel = %SuffixLabel
@@ -136,7 +146,7 @@ func _roll_variance():
 	_size_scale = rng.randf_range(1.0, 1.55)
 	_slant_rad = deg_to_rad(rng.randf_range(-18.0, 18.0))
 	_has_ramp = rng.randf() < ramp_chance
-	_ramp_power = rng.randf_range(1.6, 3.2)
+	_ramp_power = rng.randf_range(RAMP_POWER_FLOOR, RAMP_POWER_CEIL)
 	_has_squash = rng.randf() < squash_chance
 	_squash_amp = rng.randf_range(0.03, 0.11)
 	_squash_freq = rng.randf_range(1.5, 4.0)
@@ -287,13 +297,17 @@ func _process(delta):
 	var movement_dir = Vector2(cos(_slant_rad), sin(_slant_rad))
 	position = _start_pos + movement_dir * movement_distance
 
-# Remap normalised crossing time so the panel rushes in, lingers near centre to
-# read, then accelerates out — while still mapping [0,1] -> [0,1] (same total time).
+# Remap normalised crossing time so the panel rushes in, eases through the centre
+# to read, then accelerates out — while still mapping [0,1] -> [0,1] (same total
+# time). The eased curve alone halts dead at centre and lingers; blending in
+# RAMP_MIN_SPEED of linear drift keeps it gliding so the slow stretch stays short
+# and the speed transitions blend smoothly.
 func _ramp_remap(u: float) -> float:
 	if not _has_ramp:
 		return u
 	var s = 2.0 * u - 1.0
-	return 0.5 + 0.5 * signf(s) * pow(absf(s), _ramp_power)
+	var eased = 0.5 + 0.5 * signf(s) * pow(absf(s), _ramp_power)
+	return lerp(eased, u, RAMP_MIN_SPEED)
 
 func check_hit(click_pos: Vector2) -> bool:
 	return get_hit_zone(click_pos) != ""

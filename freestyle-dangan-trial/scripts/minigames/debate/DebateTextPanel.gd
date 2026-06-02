@@ -42,9 +42,42 @@ const RAMP_POWER_FLOOR: float = 1.4
 const RAMP_POWER_CEIL: float = 2.2
 const RAMP_MIN_SPEED: float = 0.35
 
+# --- Depth / parallax -------------------------------------------------------
+# Each panel is assigned a _depth in [0,1] (0 = far back, 1 = near). Depth drives
+# size, opacity, draw order and extrusion thickness so statements read as sitting
+# at different distances. White-noise chatter biases far (small, dim, behind);
+# the shootable main line biases near (big, bright, in front).
+const DEPTH_SIZE_FAR: float = 0.95
+const DEPTH_SIZE_NEAR: float = 1.55
+const DEPTH_ALPHA_FAR: float = 0.55
+const DEPTH_Z_FAR: int = -8
+const DEPTH_Z_NEAR: int = 8
+const NOISE_DEPTH_SPEED_FAR: float = 0.7  # far noise drifts slower (parallax)
+
+# --- Faux extrusion + bevel -------------------------------------------------
+# The scene stacks several dimmed copies of the text behind the front face; we
+# offset them along a fixed local light direction and darken with depth so the
+# glyphs read as solid blocks with a shaded side. The front face adds a light
+# top-edge highlight (built-in RichTextLabel shadow offset up-left) for a bevel.
+const EXTRUDE_DIR: Vector2 = Vector2(1.0, 1.2)  # local light/extrude direction
+const EXTRUDE_LAYERS_FAR: float = 2.0
+const EXTRUDE_LAYERS_NEAR: float = 4.0          # must be <= shadow layers in scene
+const EXTRUDE_STEP_FAR: float = 1.5             # px between layers when far
+const EXTRUDE_STEP_NEAR: float = 3.0            # px between layers when near
+const EXTRUDE_SHADE_TOP: float = 0.40           # closest layer brightness
+const EXTRUDE_SHADE_DEEP: float = 0.10          # deepest layer brightness
+const BEVEL_HIGHLIGHT_COLOR: Color = Color(1, 1, 1, 0.45)
+const BEVEL_HIGHLIGHT_OFFSET: int = -3
+
 @onready var _prefix_label: RichTextLabel = %PrefixLabel
 @onready var _weak_label: RichTextLabel = %WeakLabel
 @onready var _suffix_label: RichTextLabel = %SuffixLabel
+@onready var _shadow_root: Control = %ShadowLayers
+
+# Each entry mirrors the front [prefix, weak, suffix] trio for one extrusion layer,
+# closest-first. Gathered from the scene's ShadowLayers so the count is whatever
+# the .tscn provides — no UI is built in code.
+var _shadow_sets: Array = []
 
 var line_data: Dictionary = {}
 var is_shootable: bool = false
@@ -74,6 +107,8 @@ var _total_time: float = 0.0
 
 var _size_scale: float = 1.0
 var _slant_rad: float = 0.0
+var _depth: float = 1.0
+var _base_alpha: float = 1.0
 var _has_ramp: bool = false
 var _ramp_power: float = 1.0
 var _has_squash: bool = false
@@ -123,17 +158,21 @@ func _apply_setup():
 	_roll_variance()
 
 	if _pending_audio_duration > 0.0:
+		# Voice-synced lines keep their exact crossing time — don't parallax-scale.
 		var viewport_width = get_viewport_rect().size.x
 		var total_distance = viewport_width + 500.0
 		_move_speed = total_distance / (_pending_audio_duration + VOICE_EXIT_BUFFER)
 	else:
 		_move_speed = 200.0 * _pending_speed_multiplier
+		# Parallax: unvoiced chatter drifts slower the farther back it sits.
+		if is_white_noise:
+			_move_speed *= lerp(NOISE_DEPTH_SPEED_FAR, 1.0, _depth)
 
 	_apply_sizing()
 	_rebuild_text()
 
-# Roll all per-panel cosmetic variation from one seeded stream. The base size
-# is the smallest case (_size_scale starts at 1.0) and only ever grows.
+# Roll all per-panel cosmetic variation from one seeded stream, including the
+# parallax depth that then drives size, opacity, draw order and extrusion.
 func _roll_variance():
 	var rng := GameRandom.stream("debate_panel")
 
@@ -143,7 +182,12 @@ func _roll_variance():
 	var ramp_chance := session.randf_range(RAMP_CHANCE_FLOOR, RAMP_CHANCE_CEIL)
 	var squash_chance := session.randf_range(SQUASH_CHANCE_FLOOR, SQUASH_CHANCE_CEIL)
 
-	_size_scale = rng.randf_range(1.0, 1.55)
+	# Depth biases by role: noise sits back, the shootable main line comes forward.
+	if is_white_noise:
+		_depth = rng.randf_range(0.0, 0.55)
+	else:
+		_depth = rng.randf_range(0.45, 1.0)
+	_size_scale = lerp(DEPTH_SIZE_FAR, DEPTH_SIZE_NEAR, _depth)
 	_slant_rad = deg_to_rad(rng.randf_range(-18.0, 18.0))
 	_has_ramp = rng.randf() < ramp_chance
 	_ramp_power = rng.randf_range(RAMP_POWER_FLOOR, RAMP_POWER_CEIL)
@@ -152,7 +196,22 @@ func _roll_variance():
 	_squash_freq = rng.randf_range(1.5, 4.0)
 	_squash_phase = rng.randf() * TAU
 
+# Collect the scene's extrusion layers once (closest layer first). Each is an
+# HBox holding a [prefix, weak, suffix] trio that mirrors the front face.
+func _gather_shadows():
+	if not _shadow_sets.is_empty() or not _shadow_root:
+		return
+	for hbox in _shadow_root.get_children():
+		var labels: Array = []
+		for child in hbox.get_children():
+			if child is RichTextLabel:
+				labels.append(child)
+		if labels.size() == 3:
+			_shadow_sets.append(labels)
+
 func _apply_sizing():
+	_gather_shadows()
+
 	var base_font = WHITE_NOISE_FONT_SIZE if is_white_noise else MAIN_FONT_SIZE
 	var base_height = WHITE_NOISE_PANEL_HEIGHT if is_white_noise else MAIN_PANEL_HEIGHT
 	var base_width = WHITE_NOISE_MIN_WIDTH if is_white_noise else MAIN_MIN_WIDTH
@@ -161,13 +220,22 @@ func _apply_sizing():
 	var panel_height = base_height * _size_scale
 	var min_width = base_width * _size_scale
 
-	# No panel background or border — the text reads directly over the scene,
-	# so each label gets an outline to stay legible.
-	for lbl in [_prefix_label, _weak_label, _suffix_label]:
+	# Every layer (front + extrusion copies) needs the same glyph metrics so the
+	# stacked copies register exactly behind the front face.
+	for lbl in _all_labels():
 		for size_key in ["normal_font_size", "bold_font_size", "italic_font_size", "bold_italic_font_size"]:
 			lbl.add_theme_font_size_override(size_key, font_size)
+
+	# No panel background or border — the text reads directly over the scene, so
+	# the front face gets a dark outline for legibility plus a light top-edge
+	# highlight (built-in shadow offset up-left) to bevel against the extrusion.
+	for lbl in [_prefix_label, _weak_label, _suffix_label]:
 		lbl.add_theme_color_override("font_outline_color", TEXT_OUTLINE_COLOR)
 		lbl.add_theme_constant_override("outline_size", TEXT_OUTLINE_SIZE)
+		lbl.add_theme_color_override("font_shadow_color", BEVEL_HIGHLIGHT_COLOR)
+		lbl.add_theme_constant_override("shadow_offset_x", BEVEL_HIGHLIGHT_OFFSET)
+		lbl.add_theme_constant_override("shadow_offset_y", BEVEL_HIGHLIGHT_OFFSET)
+		lbl.add_theme_constant_override("shadow_outline_size", 0)
 
 	custom_minimum_size = Vector2(min_width, panel_height)
 	size = custom_minimum_size
@@ -175,9 +243,42 @@ func _apply_sizing():
 	pivot_offset = size / 2.0
 	rotation = _slant_rad
 
+	_apply_depth()
+
+func _all_labels() -> Array:
+	var labels: Array = [_prefix_label, _weak_label, _suffix_label]
+	for layer in _shadow_sets:
+		labels.append_array(layer)
+	return labels
+
+# Push the depth roll into the visible cues: opacity, draw order and how many
+# extrusion layers show + how far apart they sit (thicker block when near). The
+# layers are children, so EXTRUDE_DIR lives in local space and rotates with the
+# panel's slant automatically.
+func _apply_depth():
+	z_index = int(round(lerp(float(DEPTH_Z_FAR), float(DEPTH_Z_NEAR), _depth)))
+	_base_alpha = lerp(DEPTH_ALPHA_FAR, 1.0, _depth)
+	modulate.a = _base_alpha
+
+	var step = lerp(EXTRUDE_STEP_FAR, EXTRUDE_STEP_NEAR, _depth)
+	var visible_layers = int(round(lerp(EXTRUDE_LAYERS_FAR, EXTRUDE_LAYERS_NEAR, _depth)))
+	var dir = EXTRUDE_DIR.normalized()
+	for i in _shadow_sets.size():
+		var hbox: Control = _shadow_sets[i][0].get_parent()
+		if i < visible_layers:
+			hbox.visible = true
+			hbox.position = dir * step * float(i + 1)
+			# Closest layer brightest, deepest darkest — a shaded extruded side.
+			var t = float(i + 1) / float(maxi(visible_layers, 1))
+			var shade = lerp(EXTRUDE_SHADE_TOP, EXTRUDE_SHADE_DEEP, t)
+			hbox.modulate = Color(shade, shade, shade, 1.0)
+		else:
+			hbox.visible = false
+
 func _rebuild_text():
 	if not _prefix_label or not _weak_label or not _suffix_label:
 		return
+	_gather_shadows()
 
 	var raw_begin = line_data.get("sentenceBeginning", "")
 	var sentence_begin: String = raw_begin if raw_begin != null else ""
@@ -215,6 +316,14 @@ func _rebuild_text():
 	suffix_bbcode = _apply_font_wrap(suffix_bbcode)
 	suffix_bbcode = _apply_effect_wrap(suffix_bbcode)
 	_suffix_label.text = suffix_bbcode
+
+	# Mirror the rendered text into every extrusion layer. The dark per-layer
+	# modulate set in _apply_depth flattens the copies to a shaded silhouette.
+	for layer in _shadow_sets:
+		layer[0].text = prefix_bbcode
+		layer[1].text = weak_bbcode
+		layer[1].visible = has_weak
+		layer[2].text = suffix_bbcode
 
 func _apply_font_wrap(bbcode: String) -> String:
 	match text_font:
@@ -276,7 +385,8 @@ func _process(delta):
 
 	if text_effect == "fade":
 		_fade_timer += delta
-		modulate.a = 0.5 + 0.5 * sin(_fade_timer * 3.0)
+		# Pulse around the depth-based base alpha so far panels stay dimmer.
+		modulate.a = _base_alpha * (0.5 + 0.5 * sin(_fade_timer * 3.0))
 
 	# Mild, volume-preserving squash/stretch — x and y pulse in opposition.
 	if _has_squash:

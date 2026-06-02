@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://2fwtje3pdb4x"]
 
-[ext_resource type="Texture2D" uid="uid://ng0xhg2w730y" path="res://textures/UI/Bullet_Chamber.png" id="1_errlg"]
+[ext_resource type="Texture2D" uid="uid://ng0xhg2w730y" path="res://textures/ui/high/bullet_chamber.png" id="1_errlg"]
 
 [node name="Test" type="Node3D"]
 

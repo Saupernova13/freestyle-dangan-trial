@@ -1,8 +1,8 @@
 [gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" uid="uid://brdohrwghxeuu" path="res://scripts/ui/MinigameTitleCard.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://kqvq8foqxt6l" path="res://textures/ui/lower_res/minigame_name_frame_blue.png" id="2_frame_blue"]
-[ext_resource type="Texture2D" uid="uid://dg1li3jewd5wo" path="res://textures/ui/lower_res/minigame_name_speed_bullet_blue.png" id="4_bullet_blue"]
+[ext_resource type="Texture2D" uid="uid://kqvq8foqxt6l" path="res://textures/ui/low/minigame_name_frame_blue.png" id="2_frame_blue"]
+[ext_resource type="Texture2D" uid="uid://dg1li3jewd5wo" path="res://textures/ui/low/minigame_name_speed_bullet_blue.png" id="4_bullet_blue"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBox_Frame"]
 content_margin_left = 0.0

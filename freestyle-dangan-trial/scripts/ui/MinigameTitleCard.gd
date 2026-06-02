@@ -47,8 +47,8 @@ signal card_finished
 }
 
 # Orange textures are loaded on demand; the scene ships with the blue variants.
-const FRAME_ORANGE := "res://textures/ui/lower_res/minigame_name_frame_orange.png"
-const BULLET_ORANGE := "res://textures/ui/lower_res/minigame_name_speed_bullet_orange.png"
+const FRAME_ORANGE := "res://textures/ui/low/minigame_name_frame_orange.png"
+const BULLET_ORANGE := "res://textures/ui/low/minigame_name_speed_bullet_orange.png"
 
 @onready var _bg: ColorRect = %Background
 @onready var _mount: HBoxContainer = %Mount

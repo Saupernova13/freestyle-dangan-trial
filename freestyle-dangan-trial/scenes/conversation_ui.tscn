@@ -3,12 +3,12 @@
 [ext_resource type="Texture2D" uid="uid://b6yjbov8i0l74" path="res://models/textures/1x/UV_Curtain_1x.jpg" id="1_0q5xb"]
 [ext_resource type="FontFile" uid="uid://cj7wnflnjmjyv" path="res://fonts/LexendMega-Regular.ttf" id="2_rh4x2"]
 [ext_resource type="Shader" uid="uid://bofaa3xotc3cq" path="res://shaders/text_wave.gdshader" id="3_g20o5"]
-[ext_resource type="Texture2D" uid="uid://cxhruslel1443" path="res://textures/ui/lower_res/Trial_Left_Face_View_Long.png" id="4_g20o5"]
-[ext_resource type="Texture2D" uid="uid://nt5q3t0htsga" path="res://textures/ui/lower_res/Trial_Left_Face_View_Long_Overlay.png" id="5_q5u86"]
-[ext_resource type="Texture2D" uid="uid://br2wxg8hvjoeo" path="res://textures/ui/lower_res/Trial_Right_Face_View_Long.png" id="6_0q5xb"]
-[ext_resource type="Texture2D" uid="uid://r16uq3claywy" path="res://textures/ui/lower_res/Middle_Name_Banner.png" id="7_8eapl"]
-[ext_resource type="Texture2D" uid="uid://dtlk8lg2l8oop" path="res://textures/ui/lower_res/Makoto.png" id="8_q5u86"]
-[ext_resource type="Texture2D" uid="uid://cumy4v0ecrqpf" path="res://textures/ui/lower_res/Skip_Banner.png" id="9_nyjxh"]
+[ext_resource type="Texture2D" uid="uid://cxhruslel1443" path="res://textures/ui/low/trial_left_face_view_long.png" id="4_g20o5"]
+[ext_resource type="Texture2D" uid="uid://nt5q3t0htsga" path="res://textures/ui/low/trial_left_face_view_long_overlay.png" id="5_q5u86"]
+[ext_resource type="Texture2D" uid="uid://br2wxg8hvjoeo" path="res://textures/ui/low/trial_right_face_view_long.png" id="6_0q5xb"]
+[ext_resource type="Texture2D" uid="uid://r16uq3claywy" path="res://textures/ui/low/middle_name_banner.png" id="7_8eapl"]
+[ext_resource type="Texture2D" uid="uid://dtlk8lg2l8oop" path="res://textures/ui/low/makoto.png" id="8_q5u86"]
+[ext_resource type="Texture2D" uid="uid://cumy4v0ecrqpf" path="res://textures/ui/low/skip_banner.png" id="9_nyjxh"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_lecs0"]
 texture = ExtResource("9_nyjxh")

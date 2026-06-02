@@ -1,9 +1,9 @@
 [gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" uid="uid://bwckbs7t6w1lv" path="res://scripts/ui/TruthBulletSelector.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://d8jrnl3pmb0h" path="res://textures/ui/lower_res/Bullet_Chamber.png" id="2_chamber"]
-[ext_resource type="Texture2D" uid="uid://bq6xx5ac8nyvj" path="res://textures/ui/lower_res/rotating_white_lines_decal.png" id="3_decal"]
-[ext_resource type="Texture2D" uid="uid://gveb8wq41j3x" path="res://textures/ui/lower_res/Truth_Bullet.png" id="4_bullet"]
+[ext_resource type="Texture2D" uid="uid://d8jrnl3pmb0h" path="res://textures/ui/low/bullet_chamber.png" id="2_chamber"]
+[ext_resource type="Texture2D" uid="uid://bq6xx5ac8nyvj" path="res://textures/ui/low/rotating_white_lines_decal.png" id="3_decal"]
+[ext_resource type="Texture2D" uid="uid://gveb8wq41j3x" path="res://textures/ui/low/truth_bullet.png" id="4_bullet"]
 
 [sub_resource type="Animation" id="Anim_Idle"]
 resource_name = "idle"

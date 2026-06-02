@@ -57,7 +57,7 @@ var _setup_pending: bool = false
 # Per-panel seeded variation (size, slant, ramp-in pacing, squash/stretch).
 # All rolled from one GameRandom stream so a session seed reproduces it exactly.
 var _elapsed: float = 0.0
-var _start_x: float = 0.0
+var _start_pos: Vector2 = Vector2.ZERO
 var _end_x: float = 0.0
 var _travel_distance: float = 0.0
 var _total_time: float = 0.0
@@ -92,8 +92,8 @@ func _ready():
 
 	# Drive traversal by elapsed/total time so the ramp-in profile can redistribute
 	# speed across the crossing without changing how long it takes (keeps voice sync).
-	_start_x = position.x
-	_travel_distance = _end_x - _start_x
+	_start_pos = position
+	_travel_distance = _end_x - _start_pos.x
 	_total_time = abs(_travel_distance) / max(_move_speed, 1.0)
 
 func _apply_setup():
@@ -283,7 +283,9 @@ func _process(delta):
 		panel_exited_screen.emit(self)
 		return
 
-	position.x = _start_x + _travel_distance * _ramp_remap(u)
+	var movement_distance = _travel_distance * _ramp_remap(u)
+	var movement_dir = Vector2(cos(_slant_rad), sin(_slant_rad))
+	position = _start_pos + movement_dir * movement_distance
 
 # Remap normalised crossing time so the panel rushes in, lingers near centre to
 # read, then accelerates out — while still mapping [0,1] -> [0,1] (same total time).

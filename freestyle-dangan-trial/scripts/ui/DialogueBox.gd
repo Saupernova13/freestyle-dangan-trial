@@ -38,7 +38,13 @@ func display_narrator_line(line: Dictionary):
 		return
 
 	var text = line.get("text", line.get("dialogue", ""))
-	_rich_label.text = "[center][color=#AABBCC]" + text + "[/color][/center]"
+	# Narrator lines support the same highlight + box style data as speaking
+	# lines — the editor exposes both tabs for them.
+	var highlights = line.get("highlights", [])
+	var bbcode = _apply_highlights(text, highlights)
+	_rich_label.text = "[center][color=#AABBCC]" + bbcode + "[/color][/center]"
+
+	_apply_box_style(line.get("dialogueBoxStyle", {}))
 
 	if _name_label:
 		_name_label.text = ""

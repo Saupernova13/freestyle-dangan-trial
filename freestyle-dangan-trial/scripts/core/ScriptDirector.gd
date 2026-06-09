@@ -98,6 +98,14 @@ func _handle_speaking_line(line: Dictionary):
 func _handle_narrator_line(line: Dictionary):
 	_transition_to(State.DIALOGUE)
 	var text = line.get("text", line.get("dialogue", ""))
+
+	# Narrator lines can carry audio (SFX / narration VO) just like speaking lines.
+	var audio_file = line.get("audioFile", "")
+	if audio_file is String and not audio_file.is_empty():
+		if AudioManager.is_voice_playing():
+			AudioManager.stop_voice()
+		AudioManager.play_voice_line(audio_file)
+
 	narrator_displayed.emit(text)
 	_transition_to(State.WAITING_FOR_ADVANCE)
 

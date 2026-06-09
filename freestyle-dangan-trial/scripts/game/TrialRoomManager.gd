@@ -190,7 +190,12 @@ func _on_line_started(line: Dictionary):
 	var line_type = line.get("type", "")
 	if line_type == "speaking":
 		var character_id = line.get("characterId", "")
-		var sprite_index = line.get("spriteIndex", 1)
+		# spriteIndex is 1-based (sprite_NN.png). JSON null / legacy 0 / missing
+		# all fall back to the first sprite instead of erroring on a typed int.
+		var raw_sprite = line.get("spriteIndex", 1)
+		var sprite_index: int = int(raw_sprite) if (raw_sprite is int or raw_sprite is float) else 1
+		if sprite_index < 1:
+			sprite_index = 1
 		var character_position = find_character_position(character_id)
 
 		if character_position >= 0:

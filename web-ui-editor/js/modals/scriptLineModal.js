@@ -246,10 +246,12 @@ function renderSpriteSelectionTab(character) {
       `;
     }
 
-    const isSelected = scriptLineFields.spriteIndex === idx;
+    // spriteIndex is 1-based — it maps directly to sprite_NN.png on disk and
+    // to what the engine reads. The sprites array itself is 0-based.
+    const isSelected = scriptLineFields.spriteIndex === idx + 1;
     return `
       <div class="dr-sprslot ${isSelected ? 'selected-sprite' : ''}"
-           onclick="selectSprite(${idx})"
+           onclick="selectSprite(${idx + 1})"
            title="Sprite ${idx + 1}">
         <img src="${spr.dataURL}" alt="Sprite ${idx + 1}">
         ${isSelected ? '<div class="sprite-check">✓</div>' : ''}

@@ -6,6 +6,21 @@ var _fade_rect: ColorRect
 var _overlay_label: Label
 var _camera: Camera3D
 
+# Full-screen filter overlay (grayscale/sepia/invert/scanlines/distortion/blur)
+# driven by shaders/screen_filter.gdshader. One rect, mode-switched.
+var _filter_rect: ColorRect
+var _filter_material: ShaderMaterial
+var _filter_tween: Tween = null
+
+const FILTER_MODES := {
+	"grayscale": 0,
+	"sepia": 1,
+	"invert": 2,
+	"scanlines": 3,
+	"distortion": 4,
+	"blur": 5,
+}
+
 func _ready():
 	_canvas = CanvasLayer.new()
 	_canvas.layer = 20
@@ -33,6 +48,18 @@ func _ready():
 	_overlay_label.visible = false
 	_overlay_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_canvas.add_child(_overlay_label)
+
+	_filter_material = ShaderMaterial.new()
+	_filter_material.shader = load("res://shaders/screen_filter.gdshader")
+	_filter_material.set_shader_parameter("intensity", 0.0)
+	_filter_rect = ColorRect.new()
+	_filter_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_filter_rect.material = _filter_material
+	_filter_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_filter_rect.visible = false
+	# Render below flash/fade rects so those still read on top of filters.
+	_canvas.add_child(_filter_rect)
+	_canvas.move_child(_filter_rect, 0)
 
 	await get_tree().process_frame
 	_camera = get_viewport().get_camera_3d()
@@ -85,6 +112,8 @@ func _play_single_effect(effect_type: String, intensity: float, duration: float 
 			chromatic_flash(duration if duration > 0.0 else 0.4)
 		"impact_frame":
 			impact_frame(duration if duration > 0.0 else 0.3)
+		"grayscale", "sepia", "invert", "scanlines", "distortion", "blur":
+			play_filter(effect_type, intensity, duration if duration > 0.0 else 1.5)
 
 func screen_shake(duration: float, intensity: float = 0.02):
 	if not _camera:
@@ -196,6 +225,33 @@ func vignette_pulse(duration: float, intensity: float = 0.5):
 	var tween = create_tween()
 	tween.tween_property(_fade_rect, "color:a", peak, duration * 0.3)
 	tween.tween_property(_fade_rect, "color:a", 0.0, duration * 0.7)
+
+## Run a shader filter (grayscale/sepia/invert/scanlines/distortion/blur) as a
+## pulse: ease in 20%, hold 60%, ease out 20% of `duration`. Filters with
+## sensible binary looks (invert/scanlines) still respect intensity as strength.
+func play_filter(filter_name: String, intensity: float, duration: float):
+	if not _filter_material or not FILTER_MODES.has(filter_name):
+		return
+	var strength = clampf(intensity, 0.0, 1.0)
+	# Binary-look filters read badly when faint — give them a floor.
+	if filter_name in ["invert", "scanlines", "sepia", "grayscale"]:
+		strength = maxf(strength, 0.6)
+
+	if _filter_tween and _filter_tween.is_valid():
+		_filter_tween.kill()
+
+	_filter_material.set_shader_parameter("mode", FILTER_MODES[filter_name])
+	_filter_material.set_shader_parameter("intensity", 0.0)
+	_filter_rect.visible = true
+
+	_filter_tween = create_tween()
+	_filter_tween.tween_method(_set_filter_intensity, 0.0, strength, duration * 0.2)
+	_filter_tween.tween_interval(duration * 0.6)
+	_filter_tween.tween_method(_set_filter_intensity, strength, 0.0, duration * 0.2)
+	_filter_tween.tween_callback(func(): _filter_rect.visible = false)
+
+func _set_filter_intensity(value: float) -> void:
+	_filter_material.set_shader_parameter("intensity", value)
 
 func impact_frame(duration: float):
 	_flash_rect.color = Color(1, 1, 1, 1)

@@ -82,21 +82,46 @@ func _apply_highlights(text: String, highlights: Array) -> String:
 
 	return result
 
-func _apply_box_style(style: Dictionary):
-	if style.is_empty():
-		return
+var _default_panel_style: StyleBoxFlat = null
 
+func _apply_box_style(style: Dictionary):
 	var panel = _rich_label.get_parent()
 	if not panel or not panel is PanelContainer:
 		return
 
-	var stylebox = panel.get_theme_stylebox("panel")
-	if stylebox and stylebox is StyleBoxFlat:
+	# Cache the scene's pristine stylebox once; every line then styles a fresh
+	# duplicate of it, so one line's style can never leak into the next.
+	if _default_panel_style == null:
+		var base = panel.get_theme_stylebox("panel")
+		if base and base is StyleBoxFlat:
+			_default_panel_style = base.duplicate()
+	if _default_panel_style == null:
+		return
+
+	var stylebox: StyleBoxFlat = _default_panel_style.duplicate()
+
+	if not style.is_empty():
+		# Shape variants — StyleBoxFlat approximations of the editor presets.
+		match str(style.get("style", "default")):
+			"slant_left":
+				stylebox.skew = Vector2(-0.2, 0.0)
+			"slant_right":
+				stylebox.skew = Vector2(0.2, 0.0)
+			"spiky":
+				stylebox.skew = Vector2(0.15, 0.0)
+				stylebox.set_corner_radius_all(0)
+			"bubbly":
+				stylebox.set_corner_radius_all(28)
+			"rounded":
+				stylebox.set_corner_radius_all(14)
+			"sharp":
+				stylebox.set_corner_radius_all(0)
+
 		var border_color_str = style.get("borderColor", "")
-		if not border_color_str.is_empty():
+		if border_color_str is String and not border_color_str.is_empty():
 			stylebox.border_color = Color.from_string(border_color_str, Color.WHITE)
 
-		var bg_opacity = style.get("bgOpacity", -1.0)
+		var bg_opacity = float(style.get("bgOpacity", -1.0))
 		if bg_opacity >= 0:
 			stylebox.bg_color.a = bg_opacity
 
@@ -106,6 +131,8 @@ func _apply_box_style(style: Dictionary):
 			stylebox.border_width_bottom = border_thickness
 			stylebox.border_width_left = border_thickness
 			stylebox.border_width_right = border_thickness
+
+	panel.add_theme_stylebox_override("panel", stylebox)
 
 func _start_typewriter():
 	if not _rich_label:

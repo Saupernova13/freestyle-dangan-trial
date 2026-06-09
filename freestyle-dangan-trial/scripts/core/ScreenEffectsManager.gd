@@ -42,38 +42,49 @@ func play_effects(effects_data: Dictionary):
 	for effect in effects_array:
 		var effect_type = ""
 		var intensity = 0.5
+		var duration = -1.0
+		var color_str = ""
 		if effect is String:
 			effect_type = effect
 		elif effect is Dictionary:
 			effect_type = effect.get("type", "")
 			intensity = float(effect.get("intensity", 0.5))
+			duration = float(effect.get("duration", -1.0))
+			var raw_color = effect.get("color", "")
+			color_str = raw_color if raw_color is String else ""
 
-		_play_single_effect(effect_type, intensity)
+		_play_single_effect(effect_type, intensity, duration, color_str)
 
-func _play_single_effect(effect_type: String, intensity: float):
+## duration <= 0 means "use this effect's default". color_str is an editor hex
+## string like "#FFAA00" (flash only); empty falls back to the default color.
+func _play_single_effect(effect_type: String, intensity: float, duration: float = -1.0, color_str: String = ""):
 	match effect_type:
 		"screen_shake", "shake":
-			screen_shake(0.5, intensity * 0.04)
+			screen_shake(duration if duration > 0.0 else 0.5, intensity * 0.04)
 		"white_flash", "flash":
-			white_flash(0.3)
+			var flash_color = Color.from_string(color_str, Color.WHITE) if not color_str.is_empty() else Color.WHITE
+			color_flash(flash_color, duration if duration > 0.0 else 0.3)
 		"screen_fade_black", "fade_black":
-			fade_to_black(0.5)
+			# A per-line effect must resolve — fade out, hold, fade back in.
+			fade_pulse(Color.BLACK, duration if duration > 0.0 else 1.0)
 		"screen_fade_white", "fade_white":
-			fade_to_white(0.5)
+			fade_pulse(Color.WHITE, duration if duration > 0.0 else 1.0)
+		"pulse":
+			fov_pulse(intensity, duration if duration > 0.0 else 0.5)
 		"objection_overlay", "objection":
 			show_overlay_text("No, that's wrong!", Color(1.0, 0.3, 0.1), 1.5)
 		"blood_splatter":
-			red_flash(0.4)
+			red_flash(duration if duration > 0.0 else 0.4)
 		"evidence_popup":
 			show_overlay_text("Evidence!", Color(0.3, 0.7, 1.0), 1.0)
 		"glitch_effect", "glitch":
-			glitch_flash(0.3)
+			glitch_flash(duration if duration > 0.0 else 0.3)
 		"vignette":
-			vignette_pulse(1.0)
+			vignette_pulse(duration if duration > 0.0 else 1.0, intensity)
 		"chromatic_aberration":
-			chromatic_flash(0.4)
+			chromatic_flash(duration if duration > 0.0 else 0.4)
 		"impact_frame":
-			impact_frame(0.3)
+			impact_frame(duration if duration > 0.0 else 0.3)
 
 func screen_shake(duration: float, intensity: float = 0.02):
 	if not _camera:
@@ -95,9 +106,35 @@ func screen_shake(duration: float, intensity: float = 0.02):
 	_camera.global_position = original_pos
 
 func white_flash(duration: float):
-	_flash_rect.color = Color(1, 1, 1, 0.9)
+	color_flash(Color.WHITE, duration)
+
+## Flash the screen with an arbitrary color (editor "flash" effect color picker).
+func color_flash(color: Color, duration: float):
+	_flash_rect.color = Color(color.r, color.g, color.b, 0.9)
 	var tween = create_tween()
 	tween.tween_property(_flash_rect, "color:a", 0.0, duration)
+
+## Fade to a solid color, hold, then fade back. `duration` is the full cycle:
+## 40% out, 20% hold, 40% in — so the screen always recovers.
+func fade_pulse(color: Color, duration: float):
+	_fade_rect.color = Color(color.r, color.g, color.b, 0.0)
+	var tween = create_tween()
+	tween.tween_property(_fade_rect, "color:a", 1.0, duration * 0.4)
+	tween.tween_interval(duration * 0.2)
+	tween.tween_property(_fade_rect, "color:a", 0.0, duration * 0.4)
+
+## Quick camera FOV punch-in/out ("pulse" editor effect). Intensity 0..1 maps
+## to up to ~12 degrees of zoom punch.
+func fov_pulse(intensity: float, duration: float):
+	if not _camera:
+		return
+	var original_fov = _camera.fov
+	var punch = clampf(intensity, 0.0, 1.0) * 12.0
+	var tween = create_tween()
+	tween.tween_property(_camera, "fov", original_fov - punch, duration * 0.35) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(_camera, "fov", original_fov, duration * 0.65) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
 
 func red_flash(duration: float):
 	_flash_rect.color = Color(0.8, 0.0, 0.0, 0.6)
@@ -153,10 +190,11 @@ func chromatic_flash(duration: float):
 	tween.tween_property(_flash_rect, "color", Color(0.0, 1.0, 0.0, 0.1), duration * 0.3)
 	tween.tween_property(_flash_rect, "color:a", 0.0, duration * 0.4)
 
-func vignette_pulse(duration: float):
+func vignette_pulse(duration: float, intensity: float = 0.5):
 	_fade_rect.color = Color(0, 0, 0, 0)
+	var peak = clampf(0.15 + intensity * 0.5, 0.0, 0.8)
 	var tween = create_tween()
-	tween.tween_property(_fade_rect, "color:a", 0.4, duration * 0.3)
+	tween.tween_property(_fade_rect, "color:a", peak, duration * 0.3)
 	tween.tween_property(_fade_rect, "color:a", 0.0, duration * 0.7)
 
 func impact_frame(duration: float):

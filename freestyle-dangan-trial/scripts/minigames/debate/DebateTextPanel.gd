@@ -331,6 +331,8 @@ func _apply_font_wrap(bbcode: String) -> String:
 			return "[b]%s[/b]" % bbcode
 		"italic", "handwritten":
 			return "[i]%s[/i]" % bbcode
+		"monospace":
+			return "[code]%s[/code]" % bbcode
 		"glitch":
 			return "[shake rate=15 level=3]%s[/shake]" % bbcode
 	return bbcode
@@ -340,11 +342,15 @@ func _apply_effect_wrap(bbcode: String, preserve_color: bool = false) -> String:
 		match text_effect:
 			"shake":
 				return "[shake rate=10 level=5]%s[/shake]" % bbcode
+			"wave":
+				return "[wave amp=24 freq=4]%s[/wave]" % bbcode
 		return bbcode
 
 	match text_effect:
 		"shake":
 			return "[shake rate=10 level=5]%s[/shake]" % bbcode
+		"wave":
+			return "[wave amp=24 freq=4]%s[/wave]" % bbcode
 		"glow":
 			return "[rainbow freq=0.5 sat=0.3]%s[/rainbow]" % bbcode
 	return bbcode

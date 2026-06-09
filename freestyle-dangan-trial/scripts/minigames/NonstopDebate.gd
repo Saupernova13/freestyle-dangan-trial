@@ -119,10 +119,23 @@ func _show_bullet_preview() -> void:
 	container.add_child(grid)
 
 	for bullet in bullets:
+		var cell = VBoxContainer.new()
+		cell.add_theme_constant_override("separation", 2)
+
 		var name_lbl = UITheme.make_centered_label(bullet.get("name", "?"), UITheme.FONT_SIZE_LABEL, Color.WHITE)
 		name_lbl.custom_minimum_size.x = UITheme.PREVIEW_LABEL_MIN_WIDTH
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-		grid.add_child(name_lbl)
+		cell.add_child(name_lbl)
+
+		# Surface the editor-authored evidence description under the name.
+		var desc = bullet.get("description", "")
+		if desc is String and not desc.is_empty():
+			var desc_lbl = UITheme.make_centered_label(desc, UITheme.FONT_SIZE_TINY, Color(0.75, 0.75, 0.8))
+			desc_lbl.custom_minimum_size.x = UITheme.PREVIEW_LABEL_MIN_WIDTH
+			desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+			cell.add_child(desc_lbl)
+
+		grid.add_child(cell)
 
 	var tween = EffectBuilders.fade_in_hold_out(root, 0.2, 1.0, 0.3)
 	await tween.finished

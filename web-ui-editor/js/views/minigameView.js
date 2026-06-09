@@ -142,6 +142,15 @@ function renderMinigameEditor(mg) {
                  min="10" max="300">
         </div>
       </div>
+
+      <div class="form-group">
+        <label>Fail Comment</label>
+        <input type="text"
+               class="form-input"
+               value="${mg.failComment || ''}"
+               onchange="updateMinigameField('${mg.gameId}', 'failComment', this.value)"
+               placeholder="Shown on the result card when the player fails this minigame">
+      </div>
     </div>
   `;
 

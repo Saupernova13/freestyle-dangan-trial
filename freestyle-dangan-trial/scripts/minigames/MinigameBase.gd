@@ -207,6 +207,12 @@ func _finish(success: bool, data: Dictionary = {}):
 	if _has_finished:
 		return
 	_has_finished = true
+	# Fall back to the minigame-level fail comment when the subclass didn't
+	# supply a per-line one — so every minigame's result card can show text.
+	if not success and str(data.get("failComment", "")).is_empty():
+		var fallback = minigame_data.get("failComment", "")
+		if fallback is String and not fallback.is_empty():
+			data["failComment"] = fallback
 	_transition_to(State.COMPLETE)
 	if _timer_node:
 		_timer_node.stop()

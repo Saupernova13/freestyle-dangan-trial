@@ -603,7 +603,17 @@ function renderCameraMotionTab(line) {
     { value: "truck_left", label: "Truck Left", desc: "Camera moves left on track" },
     { value: "truck_right", label: "Truck Right", desc: "Camera moves right on track" },
     { value: "pedestal_up", label: "Pedestal Up", desc: "Camera moves up vertically" },
-    { value: "pedestal_down", label: "Pedestal Down", desc: "Camera moves down vertically" }
+    { value: "pedestal_down", label: "Pedestal Down", desc: "Camera moves down vertically" },
+    { value: "pan", label: "Pan to Speaker", desc: "Smooth pan to the speaking character" },
+    { value: "shake", label: "Camera Shake", desc: "Quick handheld-style shake" },
+    { value: "dramatic_zoom", label: "Dramatic Zoom", desc: "Punch-in zoom with shake" },
+    { value: "spin", label: "Spin", desc: "Full 360 spin around the room" },
+    { value: "overhead", label: "Overhead", desc: "Bird's-eye view from above" },
+    { value: "low_angle", label: "Low Angle", desc: "Drops low looking up at the speaker" },
+    { value: "dutch_tilt", label: "Dutch Tilt", desc: "Tilts sideways then rights itself" },
+    { value: "cross_dissolve", label: "Cross Dissolve", desc: "Fade through black transition" },
+    { value: "tracking", label: "Tracking", desc: "Smooth tracking move to the speaker" },
+    { value: "reset", label: "Reset", desc: "Return FOV and roll to defaults" }
   ];
 
   const easingTypes = [
@@ -697,7 +707,13 @@ function renderSpecialEffectsTab(line) {
     { type: "grayscale", label: "Grayscale", icon: "⚫" },
     { type: "invert", label: "Color Invert", icon: "🔄" },
     { type: "vignette", label: "Vignette", icon: "◉", hasIntensity: true },
-    { type: "scanlines", label: "Scanlines", icon: "📺" }
+    { type: "scanlines", label: "Scanlines", icon: "📺", hasIntensity: true },
+    { type: "objection", label: "Objection Overlay", icon: "❗" },
+    { type: "blood_splatter", label: "Blood Splatter", icon: "🩸" },
+    { type: "evidence_popup", label: "Evidence Popup", icon: "🔍" },
+    { type: "glitch", label: "Glitch", icon: "👾" },
+    { type: "chromatic_aberration", label: "Chromatic Aberration", icon: "🌈" },
+    { type: "impact_frame", label: "Impact Frame", icon: "💥" }
   ];
 
   // Render active effects list

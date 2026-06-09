@@ -56,6 +56,34 @@ func execute_motion(motion_data: Dictionary, target_bench_index: int = -1):
 			_execute_dolly(target_bench_index, -0.5, duration, ease_type, trans_type)
 		"dolly_out":
 			_execute_dolly(target_bench_index, 0.5, duration, ease_type, trans_type)
+		# --- Editor motion vocabulary (web-ui-editor camera tab) ---
+		# Pans/tilts rotate in place; trucks/pedestals translate in local space.
+		# They persist for the line — the next speaking line hard-cuts to its
+		# bench, which resets the camera anyway.
+		"pan_left":
+			_execute_rotate(Vector3(0, deg_to_rad(15.0), 0), duration, ease_type, trans_type)
+		"pan_right":
+			_execute_rotate(Vector3(0, deg_to_rad(-15.0), 0), duration, ease_type, trans_type)
+		"pan_up":
+			_execute_rotate(Vector3(deg_to_rad(10.0), 0, 0), duration, ease_type, trans_type)
+		"pan_down":
+			_execute_rotate(Vector3(deg_to_rad(-10.0), 0, 0), duration, ease_type, trans_type)
+		"tilt_up":
+			_execute_rotate(Vector3(deg_to_rad(18.0), 0, 0), duration, ease_type, trans_type)
+		"tilt_down":
+			_execute_rotate(Vector3(deg_to_rad(-18.0), 0, 0), duration, ease_type, trans_type)
+		"rotate_cw":
+			_execute_rotate(Vector3(0, 0, deg_to_rad(-12.0)), duration, ease_type, trans_type)
+		"rotate_ccw":
+			_execute_rotate(Vector3(0, 0, deg_to_rad(12.0)), duration, ease_type, trans_type)
+		"truck_left":
+			_execute_translate(Vector3(-0.4, 0, 0), duration, ease_type, trans_type)
+		"truck_right":
+			_execute_translate(Vector3(0.4, 0, 0), duration, ease_type, trans_type)
+		"pedestal_up":
+			_execute_translate(Vector3(0, 0.3, 0), duration, ease_type, trans_type)
+		"pedestal_down":
+			_execute_translate(Vector3(0, -0.3, 0), duration, ease_type, trans_type)
 		"cross_dissolve":
 			_execute_cross_dissolve(duration)
 		"split_screen":
@@ -148,6 +176,26 @@ func _execute_low_angle(duration: float, ease_type: Tween.EaseType, trans_type: 
 func _execute_dolly(_bench_index: int, distance: float, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType):
 	var forward = -_camera.global_transform.basis.z
 	var target_pos = _camera.global_position + forward * distance
+	var tween = _camera.create_tween()
+	tween.set_ease(ease_type)
+	tween.set_trans(trans_type)
+	tween.tween_property(_camera, "global_position", target_pos, duration)
+	tween.finished.connect(_finish_motion)
+
+## Rotate the camera by a relative delta (radians per axis) over duration.
+func _execute_rotate(delta_rot: Vector3, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType):
+	var target_rot = _camera.rotation + delta_rot
+	var tween = _camera.create_tween()
+	tween.set_ease(ease_type)
+	tween.set_trans(trans_type)
+	tween.tween_property(_camera, "rotation", target_rot, duration)
+	tween.finished.connect(_finish_motion)
+
+## Translate the camera by a local-space offset (x = right, y = up) over duration.
+func _execute_translate(local_offset: Vector3, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType):
+	var basis = _camera.global_transform.basis
+	var world_offset = basis.x * local_offset.x + basis.y * local_offset.y + basis.z * local_offset.z
+	var target_pos = _camera.global_position + world_offset
 	var tween = _camera.create_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)

@@ -47,17 +47,25 @@ func display_narrator_line(line: Dictionary):
 
 	_start_typewriter()
 
+## Highlight range keys: the web editor writes startChar/endChar; older trials
+## may carry startIndex/endIndex. Accept both.
+static func _highlight_start(h: Dictionary) -> int:
+	return int(h.get("startChar", h.get("startIndex", 0)))
+
+static func _highlight_end(h: Dictionary) -> int:
+	return int(h.get("endChar", h.get("endIndex", 0)))
+
 func _apply_highlights(text: String, highlights: Array) -> String:
 	if highlights.is_empty():
 		return text
 
 	var sorted = highlights.duplicate()
-	sorted.sort_custom(func(a, b): return a.get("startIndex", 0) > b.get("startIndex", 0))
+	sorted.sort_custom(func(a, b): return _highlight_start(a) > _highlight_start(b))
 
 	var result = text
 	for h in sorted:
-		var start_idx = int(h.get("startIndex", 0))
-		var end_idx = int(h.get("endIndex", 0))
+		var start_idx = _highlight_start(h)
+		var end_idx = _highlight_end(h)
 		var color = h.get("color", "#FFFF00")
 
 		if start_idx >= 0 and end_idx > start_idx and end_idx <= result.length():

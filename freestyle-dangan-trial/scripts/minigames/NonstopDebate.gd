@@ -39,11 +39,11 @@ func wants_mobile_slow_time() -> bool:
 func _split_dialogue_lines():
 	_main_lines.clear()
 	_white_noise_lines.clear()
+	# White noise is disabled: its panel positioning is flawed and slated for a
+	# fundamental rework. Until then we ignore the isWhiteNoise flag entirely and
+	# treat every line as a main line, so no white-noise panels ever spawn.
 	for line in dialogue_lines:
-		if line.get("isWhiteNoise", false):
-			_white_noise_lines.append(line)
-		else:
-			_main_lines.append(line)
+		_main_lines.append(line)
 
 func start():
 	super.start()

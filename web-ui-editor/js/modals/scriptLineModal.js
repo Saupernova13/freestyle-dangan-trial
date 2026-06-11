@@ -825,12 +825,16 @@ function removeEffect(index) {
 function renderHighlightingTab(line) {
   const dialogue = line.dialogue || line.text || "";
 
+  // Repair any stale/overlapping ranges (e.g. dialogue edited after
+  // highlighting) before they are shown or re-saved.
+  scriptLineFields.highlights = normalizeHighlights(scriptLineFields.highlights, dialogue.length);
+
   // Render the dialogue with highlights applied
   const highlightedText = renderHighlightedDialogue(dialogue, scriptLineFields.highlights);
 
   // Render existing highlights list
   const highlightsList = scriptLineFields.highlights.map((h, idx) => {
-    const excerpt = dialogue.substring(h.startChar, h.endChar);
+    const excerpt = escapeHtml(dialogue.substring(h.startChar, h.endChar));
     return `
       <div class="highlight-item" style="border-left: 4px solid ${h.color};">
         <div class="highlight-info">
@@ -846,7 +850,7 @@ function renderHighlightingTab(line) {
 
   // Render dialogue as individual character spans for selection
   const selectableDialogue = dialogue.split('').map((char, idx) =>
-    `<span class="char-selectable" data-char-index="${idx}">${char === ' ' ? '&nbsp;' : char}</span>`
+    `<span class="char-selectable" data-char-index="${idx}">${char === ' ' ? '&nbsp;' : escapeHtml(char)}</span>`
   ).join('');
 
   return `
@@ -1031,27 +1035,23 @@ function initializeDragSelection() {
 // Render dialogue with all highlights applied
 function renderHighlightedDialogue(dialogue, highlights) {
   if (!dialogue) return '<em>No dialogue text</em>';
-  if (!highlights || highlights.length === 0) return dialogue;
 
-  // Sort highlights by start position to apply them correctly
-  const sorted = [...highlights].sort((a, b) => a.startChar - b.startChar);
+  // normalizeHighlights guarantees sorted, disjoint, in-bounds ranges, so
+  // this preview renders exactly what the engine will — including data that
+  // arrives overlapping or stale from older trial files.
+  const normalized = normalizeHighlights(highlights, dialogue.length);
+  if (normalized.length === 0) return escapeHtml(dialogue);
 
-  // Build highlighted HTML
   let result = '';
   let lastIndex = 0;
-
-  sorted.forEach(h => {
-    // Add text before highlight
-    result += dialogue.substring(lastIndex, h.startChar);
-    // Add highlighted text
+  normalized.forEach(h => {
+    result += escapeHtml(dialogue.substring(lastIndex, h.startChar));
     result += `<span style="color: ${h.color}; font-weight: 600;">`;
-    result += dialogue.substring(h.startChar, h.endChar);
+    result += escapeHtml(dialogue.substring(h.startChar, h.endChar));
     result += '</span>';
     lastIndex = h.endChar;
   });
-
-  // Add remaining text
-  result += dialogue.substring(lastIndex);
+  result += escapeHtml(dialogue.substring(lastIndex));
 
   return result;
 }
@@ -1161,12 +1161,15 @@ function addHighlightFromSelection() {
     return;
   }
 
-  // Add highlight
+  // Add highlight, then normalize so a selection over existing highlights
+  // repaints them (highlighter semantics) instead of stacking overlapping
+  // ranges that older versions corrupted at render time.
   scriptLineFields.highlights.push({
     startChar: highlightingState.startChar,
     endChar: highlightingState.endChar,
     color: highlightingState.currentColor
   });
+  scriptLineFields.highlights = normalizeHighlights(scriptLineFields.highlights, dialogue.length);
 
   // Reset state
   highlightingState.startChar = 0;

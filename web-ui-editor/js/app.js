@@ -666,8 +666,13 @@ async function saveScriptLineAdvanced() {
       line.cameraMotion = scriptLineFields.cameraMotion;
     }
 
-    // Common fields for both narrator and speaking
-    line.highlights = scriptLineFields.highlights;
+    // Common fields for both narrator and speaking.
+    // Highlights are normalized against the line's current text so stale or
+    // overlapping ranges can never be persisted to trial.json.
+    line.highlights = normalizeHighlights(
+      scriptLineFields.highlights,
+      (line.dialogue || line.text || "").length
+    );
     line.specialEffects = scriptLineFields.specialEffects;
     line.dialogueBoxStyle = scriptLineFields.dialogueBoxStyle;
 

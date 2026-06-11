@@ -1,6 +1,32 @@
 // Export module - handles packaging trial files into .drtrial format
 
 /**
+ * Final data gate before packaging: normalize every script line's highlight
+ * ranges against that line's text. Older trial.json files (or hand edits)
+ * may carry overlapping or stale ranges; this guarantees the shipped file
+ * only ever contains sorted, disjoint, in-bounds highlights.
+ * Returns the original content untouched if it isn't parseable JSON.
+ */
+function sanitizeTrialJson(content) {
+  try {
+    const trial = JSON.parse(content);
+    const lines = trial?.script?.lines;
+    if (Array.isArray(lines)) {
+      for (const line of lines) {
+        if (line && Array.isArray(line.highlights)) {
+          const text = line.dialogue || line.text || "";
+          line.highlights = normalizeHighlights(line.highlights, text.length);
+        }
+      }
+    }
+    return JSON.stringify(trial, null, 2);
+  } catch (e) {
+    console.warn("sanitizeTrialJson: could not parse trial.json, exporting as-is", e);
+    return content;
+  }
+}
+
+/**
  * Export the current trial to a playable .drtrial file (ZIP format)
  */
 async function exportToPlayableFile() {
@@ -33,7 +59,7 @@ async function exportToPlayableFile() {
       const trialJsonHandle = await dirHandle.getFileHandle("trial.json");
       const trialJsonFile = await trialJsonHandle.getFile();
       const trialJsonContent = await trialJsonFile.text();
-      zip.file("trial.json", trialJsonContent);
+      zip.file("trial.json", sanitizeTrialJson(trialJsonContent));
       filesAdded++;
       console.log(`Added trial.json (${filesAdded}/${totalFiles})`);
     } catch (error) {

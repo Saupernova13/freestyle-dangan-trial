@@ -701,6 +701,31 @@ nav {
   display: none;
 }
 
+.dr-sprslot img {
+  cursor: zoom-in;
+}
+
+/* ==================== Sprite Magnifier Lens ==================== */
+.sprite-magnifier-lens {
+  position: fixed;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 3px solid var(--bg-primary);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border-secondary);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10000;
+  background: var(--bg-tertiary);
+}
+
+.sprite-magnifier-img {
+  position: absolute;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
 .dr-sprslot-bulk {
   grid-column: 1 / -1;
   aspect-ratio: auto;

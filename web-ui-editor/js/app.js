@@ -10,6 +10,7 @@ let highlightedIndex = -1;
 document.addEventListener('DOMContentLoaded', function() {
   initializeTheme();
   loadSettings();
+  initSpriteMagnifier();
   renderActiveView();
 
   // Trial name input handler

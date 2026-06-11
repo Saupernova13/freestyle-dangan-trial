@@ -236,8 +236,11 @@ func _spawn_main_line():
 	_panels_on_screen.append(panel)
 	_current_main_panel = panel
 
-	# Spotlight is opt-in per line via the editor's Character Display section.
-	if line_data.get("characterSpotlight", false) and not panel.character_id.is_empty():
+	# Spotlight follows the currently-speaking character. This ensures the visual
+	# focus stays synced with the audio regardless of editor spotlight settings,
+	# preventing mismatches where the wrong character appears focused while
+	# dialogue from another character plays.
+	if not panel.character_id.is_empty():
 		trigger_spotlight(panel.character_id)
 
 	if voice_file is String and not voice_file.is_empty():

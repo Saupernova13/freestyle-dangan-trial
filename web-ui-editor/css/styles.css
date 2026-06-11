@@ -721,9 +721,9 @@ nav {
 }
 
 .settings-section h3 {
-  margin-bottom: 1rem;
+  margin: 0 0 1rem 0;
   color: var(--text-primary);
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
@@ -731,38 +731,50 @@ nav {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.875rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 0.375rem;
+  border: 1px solid var(--border-primary);
 }
 
 .settings-field label {
   flex: 1;
   font-weight: 500;
   color: var(--text-secondary);
+  font-size: 0.875rem;
 }
 
 .settings-field input {
-  width: 100px;
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid var(--border-secondary);
+  border-radius: 0.375rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 /* Alerts */
 .dr-err {
-  background: rgb(239 68 68 / 0.1);
+  background: rgba(239, 68, 68, 0.08);
   color: var(--error);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border-left: 4px solid var(--error);
+  padding: 0.875rem 1rem;
+  border-radius: 0.375rem;
+  border-left: 3px solid var(--error);
   margin: 1rem 2rem;
   font-weight: 500;
+  font-size: 0.875rem;
 }
 
 .dr-success {
-  background: rgb(16 185 129 / 0.1);
+  background: rgba(16, 185, 129, 0.08);
   color: var(--success);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border-left: 4px solid var(--success);
+  padding: 0.875rem 1rem;
+  border-radius: 0.375rem;
+  border-left: 3px solid var(--success);
   margin: 1rem 2rem;
   font-weight: 500;
+  font-size: 0.875rem;
 }
 
 /* Loader */
@@ -946,12 +958,13 @@ nav {
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid var(--border-primary);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .script-header h2 {
   color: var(--text-primary);
   margin: 0;
+  font-size: 1.125rem;
 }
 
 /* Script Lines Container */
@@ -1805,18 +1818,19 @@ nav {
 .minigame-bar {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   padding: 0.75rem 1rem;
 }
 
 .minigame-id-badge {
-  font-family: monospace;
-  font-size: 0.75rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.7rem;
   background: var(--bg-tertiary);
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 3px;
   color: var(--text-tertiary);
-  border: 1px solid var(--border-primary);
+  border: 1px solid var(--border-secondary);
+  font-weight: 500;
 }
 
 .minigame-info {
@@ -1855,38 +1869,42 @@ nav {
 .minigame-id-display {
   background: var(--bg-tertiary);
   padding: 0.75rem;
-  border-radius: 8px;
+  border-radius: 0.375rem;
   border: 1px solid var(--border-primary);
   margin-bottom: 1rem;
 }
 
 .minigame-id-display label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .minigame-id-display code {
   font-family: 'Courier New', monospace;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--primary);
   background: var(--bg-primary);
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .placeholder-content {
   background: var(--bg-tertiary);
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 0.375rem;
   text-align: center;
   color: var(--text-tertiary);
-  border: 2px dashed var(--border-primary);
+  border: 1px dashed var(--border-primary);
 }
 
 .placeholder-content p {
   margin: 0.5rem 0;
+  font-size: 0.875rem;
 }
 
 /* ==================== Truth Bullets Styles (Split-Pane Layout) ==================== */
@@ -2304,23 +2322,26 @@ nav {
 /* Dialogue Modal Styles */
 .sentence-preview {
   background: var(--bg-tertiary);
-  padding: 1.5rem;
-  border-radius: 8px;
+  padding: 1.25rem;
+  border-radius: 0.375rem;
   margin-bottom: 1.5rem;
-  border: 2px solid var(--border-primary);
+  border: 1px solid var(--border-primary);
 }
 
 .sentence-preview h4 {
-  margin-bottom: 0.75rem;
+  margin: 0 0 0.75rem 0;
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .sentence-preview-text {
-  font-size: 1.125rem;
+  font-size: 1rem;
   color: var(--text-primary);
   line-height: 1.6;
+  margin: 0;
 }
 
 .sentence-target {
@@ -2332,22 +2353,23 @@ nav {
 }
 
 .target-status-indicator {
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 0.875rem;
+  border-radius: 0.375rem;
   text-align: center;
   font-weight: 600;
   margin-top: 1rem;
+  font-size: 0.875rem;
 }
 
 .target-status-indicator.correct {
   background: rgba(16, 185, 129, 0.1);
-  border: 2px solid var(--success);
+  border: 1px solid var(--success);
   color: var(--success);
 }
 
 .target-status-indicator.incorrect {
   background: rgba(239, 68, 68, 0.1);
-  border: 2px solid var(--error);
+  border: 1px solid var(--error);
   color: var(--error);
 }
 
@@ -3044,20 +3066,22 @@ nav {
 
 /* Reuse existing badge styles */
 .badge {
-  font-size: 0.75rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: 4px;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 3px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .badge-loud {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--error);
 }
 
 .badge-weak {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary);
 }
 
 /* Checkbox labels */

@@ -57,8 +57,8 @@ extends Camera3D
 # Internal variables
 var bench_markers: Array[Marker3D] = []
 # Number of player-navigable benches. The Monokuma bench is appended to
-# bench_markers AFTER this count so script lines and minigame spotlights can
-# focus it via jump_to_bench(), while navigate_to_next/previous wrap within
+# bench_markers AFTER this count so script lines and minigame camera focus can
+# reach it via jump_to_bench(), while navigate_to_next/previous wrap within
 # the first _nav_count entries and never cycle the player onto it.
 var _nav_count: int = 0
 var current_index: int = 0
@@ -106,7 +106,7 @@ func _ready():
 	_nav_count = bench_markers.size()
 
 	# The Monokuma bench sits past the navigation range: focusable by the
-	# script/spotlights (bench index 16), but excluded from player cycling.
+	# script/minigame camera focus (bench index 16), but excluded from player cycling.
 	var monokuma_marker = trial_benches.get_node_or_null("Bench_Marker3D_017_Monokuma")
 	if monokuma_marker:
 		bench_markers.append(monokuma_marker)

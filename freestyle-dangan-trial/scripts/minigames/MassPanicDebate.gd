@@ -145,7 +145,7 @@ func _spawn_group():
 			if voice_file is String and not voice_file.is_empty():
 				AudioManager.play_voice_line(voice_file)
 			if not speaker_ids[i].is_empty():
-				trigger_spotlight(speaker_ids[i])
+				focus_camera_on_character(speaker_ids[i])
 
 		if speaker_data.get("isLoudAssertion", false):
 			ScreenEffects.screen_shake(0.2, 0.01)

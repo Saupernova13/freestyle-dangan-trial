@@ -14,7 +14,7 @@ var trial_file_path: String = "user://trial.drtrial"
 
 # Characters keyed two ways from a single insert point in
 # populate_character_position():
-#   - by character id  → script lines and minigame spotlights reference ids
+#   - by character id  → script lines and minigame camera focus reference ids
 #   - by bench index   → the camera and player navigation reference benches
 # The cast can be sparse (null seats, failed loads, the Monokuma seat at 17),
 # so a dense Array indexed by bench would drift out of step with load order —

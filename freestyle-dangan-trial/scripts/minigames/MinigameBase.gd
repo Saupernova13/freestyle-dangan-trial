@@ -230,8 +230,14 @@ func get_difficulty_multiplier() -> float:
 # ---------------------------------------------------------------------------
 # Shared helper: focus the trial-room camera on a speaker bench.
 # Used by NonstopDebate, MassPanicDebate, etc.
+#
+# NOTE: This is CAMERA FOCUS, not a "spotlight". A spotlight (environment
+# darkens, light source aimed at a character) is a separate, NOT YET
+# IMPLEMENTED visual effect — the editor's `characterSpotlight` flag is
+# reserved for it and must never gate camera focus. The camera should always
+# follow whoever is currently speaking.
 # ---------------------------------------------------------------------------
-func trigger_spotlight(char_id: String) -> void:
+func focus_camera_on_character(char_id: String) -> void:
 	var trial_room = get_tree().get_first_node_in_group("trial_room")
 	if trial_room == null or not trial_room.has_method("find_character_position"):
 		return

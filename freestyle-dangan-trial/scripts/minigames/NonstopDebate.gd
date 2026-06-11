@@ -236,12 +236,12 @@ func _spawn_main_line():
 	_panels_on_screen.append(panel)
 	_current_main_panel = panel
 
-	# Spotlight follows the currently-speaking character. This ensures the visual
-	# focus stays synced with the audio regardless of editor spotlight settings,
-	# preventing mismatches where the wrong character appears focused while
-	# dialogue from another character plays.
+	# Camera always follows the currently-speaking character so the displayed
+	# character matches the spoken line. (Not related to the editor's
+	# `characterSpotlight` flag — that is reserved for the unimplemented
+	# spotlight lighting effect and must never gate camera focus.)
 	if not panel.character_id.is_empty():
-		trigger_spotlight(panel.character_id)
+		focus_camera_on_character(panel.character_id)
 
 	if voice_file is String and not voice_file.is_empty():
 		AudioManager.play_voice_line(voice_file)

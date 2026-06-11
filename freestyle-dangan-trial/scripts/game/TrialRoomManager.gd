@@ -12,8 +12,15 @@ extends Node3D
 
 var trial_file_path: String = "user://trial.drtrial"
 
-# Store character data for quick lookup
-var character_data: Array = []
+# Characters keyed two ways from a single insert point in
+# populate_character_position():
+#   - by character id  → script lines and minigame spotlights reference ids
+#   - by bench index   → the camera and player navigation reference benches
+# The cast can be sparse (null seats, failed loads, the Monokuma seat at 17),
+# so a dense Array indexed by bench would drift out of step with load order —
+# that exact conflation once made lines display under the previous speaker.
+var _characters_by_id: Dictionary = {}
+var _characters_by_bench: Dictionary = {}
 
 # Dialogue box controller
 var _dialogue_box: Node
@@ -116,7 +123,8 @@ func populate_character_position(position_index: int, character_id: String):
 		return
 
 	char_data["_bench_index"] = position_index - 1
-	character_data.append(char_data)
+	_characters_by_id[character_id] = char_data
+	_characters_by_bench[position_index - 1] = char_data
 
 	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, 1)
 	if not texture:
@@ -149,11 +157,9 @@ func update_character_name_label(character_name: String):
 func update_character_portrait(bench_index: int, sprite_index: int = 1):
 	if not portrait_rect:
 		return
-	if bench_index < 0 or bench_index >= character_data.size():
-		return
 
-	var char_data = character_data[bench_index]
-	if not char_data:
+	var char_data: Dictionary = _characters_by_bench.get(bench_index, {})
+	if char_data.is_empty():
 		return
 
 	var character_id = char_data.get("id", "")
@@ -179,12 +185,11 @@ func on_bench_focused(bench_index: int):
 	   ScriptDirector.current_state == ScriptDirector.State.DIALOGUE:
 		return
 
-	if bench_index >= 0 and bench_index < character_data.size():
-		var char_data = character_data[bench_index]
-		if char_data:
-			var full_name = char_data.get("name", "") + " " + char_data.get("surname", "")
-			update_character_name_label(full_name.strip_edges())
-			update_character_portrait(bench_index)
+	var char_data: Dictionary = _characters_by_bench.get(bench_index, {})
+	if not char_data.is_empty():
+		var full_name = char_data.get("name", "") + " " + char_data.get("surname", "")
+		update_character_name_label(full_name.strip_edges())
+		update_character_portrait(bench_index)
 
 func _on_line_started(line: Dictionary):
 	var line_type = line.get("type", "")
@@ -196,7 +201,23 @@ func _on_line_started(line: Dictionary):
 		var sprite_index: int = int(raw_sprite) if (raw_sprite is int or raw_sprite is float) else 1
 		if sprite_index < 1:
 			sprite_index = 1
-		var character_position = find_character_position(character_id)
+		# Resolve the speaker by id — never via bench index, so a sparse cast
+		# can't redirect the lookup. Fall back to the character file for
+		# speakers without a bench (or report "???"), because leaving the
+		# previous speaker's name on screen is never acceptable.
+		var char_data: Dictionary = _characters_by_id.get(character_id, {})
+		if char_data.is_empty():
+			char_data = TrialLoader.load_character(character_id)
+		var character_position: int = int(char_data.get("_bench_index", -1))
+
+		if char_data.is_empty():
+			push_warning("Speaking line references unknown character: ", character_id)
+			update_character_name_label("???")
+			if portrait_rect:
+				portrait_rect.texture = null
+		else:
+			var full_name = char_data.get("name", "") + " " + char_data.get("surname", "")
+			update_character_name_label(full_name.strip_edges())
 
 		if character_position >= 0:
 			# Always hard-cut to the speaking character first (no smooth pan)
@@ -207,12 +228,7 @@ func _on_line_started(line: Dictionary):
 				CameraDirector.execute_motion(camera_motion, character_position)
 
 			update_character_sprite(character_position, character_id, sprite_index)
-
-			var char_data = character_data[character_position]
-			if char_data:
-				var full_name = char_data.get("name", "") + " " + char_data.get("surname", "")
-				update_character_name_label(full_name.strip_edges())
-				update_character_portrait(character_position, sprite_index)
+			update_character_portrait(character_position, sprite_index)
 
 	var special_effects = line.get("specialEffects", {})
 	if not special_effects.is_empty():
@@ -326,10 +342,8 @@ func _on_trial_ended():
 	update_character_name_label("")
 
 func find_character_position(character_id: String) -> int:
-	for char_data in character_data:
-		if char_data and char_data.get("id", "") == character_id:
-			return char_data.get("_bench_index", -1)
-	return -1
+	var char_data: Dictionary = _characters_by_id.get(character_id, {})
+	return int(char_data.get("_bench_index", -1))
 
 func update_character_sprite(position_index: int, character_id: String, sprite_index: int):
 	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, sprite_index)
@@ -367,8 +381,6 @@ func update_character_sprite(position_index: int, character_id: String, sprite_i
 		mesh_instance.material_override = material
 	_fit_quad_to_texture(mesh_instance, texture)
 	_ensure_black_backplane(mesh_instance)
-
-	update_character_portrait(position_index)
 
 func _ensure_black_backplane(mesh_instance: MeshInstance3D):
 	if mesh_instance.get_node_or_null("BackPlane"):

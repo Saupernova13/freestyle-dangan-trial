@@ -56,6 +56,11 @@ extends Camera3D
 
 # Internal variables
 var bench_markers: Array[Marker3D] = []
+# Number of player-navigable benches. The Monokuma bench is appended to
+# bench_markers AFTER this count so script lines and minigame spotlights can
+# focus it via jump_to_bench(), while navigate_to_next/previous wrap within
+# the first _nav_count entries and never cycle the player onto it.
+var _nav_count: int = 0
 var current_index: int = 0
 var is_transitioning: bool = false
 var camera_tween: Tween
@@ -88,7 +93,7 @@ func _ready():
 		push_error("Camera is at: " + str(get_path()))
 		return
 
-	# Collect all bench markers in order (001-016, excluding Monokuma)
+	# Collect the player-navigable bench markers in order (001-016)
 	for i in range(1, 17):
 		var marker_name = "Bench_Marker3D_%03d" % i
 
@@ -97,6 +102,16 @@ func _ready():
 			bench_markers.append(marker)
 		else:
 			push_warning("Bench marker not found: " + marker_name)
+
+	_nav_count = bench_markers.size()
+
+	# The Monokuma bench sits past the navigation range: focusable by the
+	# script/spotlights (bench index 16), but excluded from player cycling.
+	var monokuma_marker = trial_benches.get_node_or_null("Bench_Marker3D_017_Monokuma")
+	if monokuma_marker:
+		bench_markers.append(monokuma_marker)
+	else:
+		push_warning("Bench marker not found: Bench_Marker3D_017_Monokuma")
 
 	if bench_markers.is_empty():
 		push_error("No bench markers found! Cannot initialize camera controller.")
@@ -273,18 +288,18 @@ func _input(event):
 
 ## Navigate to the next bench marker (wraps around to first)
 func navigate_to_next():
-	if bench_markers.is_empty():
+	if _nav_count <= 0:
 		return
 
-	current_index = (current_index + 1) % bench_markers.size()
+	current_index = (current_index + 1) % _nav_count
 	focus_on_bench(current_index, true)
 
-## Navigate to the previous bench marker (wraps around to last)
+## Navigate to the previous bench marker (wraps around to last navigable one)
 func navigate_to_previous():
-	if bench_markers.is_empty():
+	if _nav_count <= 0:
 		return
 
-	current_index = (current_index - 1 + bench_markers.size()) % bench_markers.size()
+	current_index = (current_index - 1 + _nav_count) % _nav_count
 	focus_on_bench(current_index, true)
 
 ## Focus camera on specified bench marker

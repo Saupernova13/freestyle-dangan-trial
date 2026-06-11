@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=4 uid="uid://d15txppf4j9hq"]
+[gd_scene load_steps=11 format=4 uid="uid://d15txppf4j9hq"]
 
 [ext_resource type="Texture2D" uid="uid://b6yjbov8i0l74" path="res://models/textures/1x/UV_Curtain_1x.jpg" id="1_0q5xb"]
 [ext_resource type="FontFile" uid="uid://cj7wnflnjmjyv" path="res://fonts/LexendMega-Regular.ttf" id="2_rh4x2"]
@@ -27,6 +27,10 @@ shader_parameter/movement_amplitude = 5.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8eapl"]
 bg_color = Color(0.19215687, 0.19215687, 0.19215687, 0.9411765)
+
+[sub_resource type="FontVariation" id="FontVariation_speech_bold"]
+base_font = ExtResource("2_rh4x2")
+variation_embolden = 0.6
 
 [node name="Conversation_UI" type="Control"]
 layout_mode = 3
@@ -97,7 +101,9 @@ offset_bottom = -29.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_fonts/normal_font = ExtResource("2_rh4x2")
+theme_override_fonts/bold_font = SubResource("FontVariation_speech_bold")
 theme_override_font_sizes/normal_font_size = 48
+theme_override_font_sizes/bold_font_size = 48
 bbcode_enabled = true
 text = "Colonel, they Dangan'ed my Ronpas..."
 

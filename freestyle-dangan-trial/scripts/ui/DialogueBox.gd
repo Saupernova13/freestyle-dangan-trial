@@ -18,6 +18,53 @@ func setup(rich_label: RichTextLabel, name_label: Label = null, portrait_rect: T
 
 	if _rich_label:
 		_rich_label.bbcode_enabled = true
+		_ensure_styled_font_variants()
+
+## Highlighted text is emitted as [b]...[/b]. RichTextLabel resolves bold /
+## italic runs through separate theme entries (bold_font, bold_font_size, ...);
+## if the scene only customizes the normal font, styled runs silently fall back
+## to the default theme font at its default size (~16px) and highlighted words
+## render tiny. Mirror the resolved normal font/size into every variant the
+## scene or an attached Theme doesn't explicitly define, so styled text always
+## matches the dialogue's look — for any label handed to this controller.
+func _ensure_styled_font_variants():
+	var normal_size := _rich_label.get_theme_font_size("normal_font_size")
+	for size_name in ["bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]:
+		if not _theme_chain_defines(size_name, false):
+			_rich_label.add_theme_font_size_override(size_name, normal_size)
+
+	var normal_font := _rich_label.get_theme_font("normal_font")
+	if normal_font:
+		for font_name in ["bold_font", "italics_font", "bold_italics_font", "mono_font"]:
+			if not _theme_chain_defines(font_name, true):
+				_rich_label.add_theme_font_override(font_name, normal_font)
+
+## True if the label, any ancestor's attached Theme, or the project theme
+## explicitly defines this RichTextLabel font (is_font=true) or font size
+## entry. Only unset entries get mirrored — deliberate styling always wins.
+func _theme_chain_defines(prop: String, is_font: bool) -> bool:
+	if is_font and _rich_label.has_theme_font_override(prop):
+		return true
+	if not is_font and _rich_label.has_theme_font_size_override(prop):
+		return true
+
+	var node: Node = _rich_label
+	while node:
+		var theme: Theme = node.theme if (node is Control or node is Window) else null
+		if theme:
+			if is_font and theme.has_font(prop, "RichTextLabel"):
+				return true
+			if not is_font and theme.has_font_size(prop, "RichTextLabel"):
+				return true
+		node = node.get_parent()
+
+	var project_theme := ThemeDB.get_project_theme()
+	if project_theme:
+		if is_font and project_theme.has_font(prop, "RichTextLabel"):
+			return true
+		if not is_font and project_theme.has_font_size(prop, "RichTextLabel"):
+			return true
+	return false
 
 func display_speaking_line(line: Dictionary):
 	if not _rich_label:
@@ -61,24 +108,52 @@ static func _highlight_start(h: Dictionary) -> int:
 static func _highlight_end(h: Dictionary) -> int:
 	return int(h.get("endChar", h.get("endIndex", 0)))
 
+## User-typed "[" must never be parsed as a BBCode tag. "[lb]" renders as a
+## literal left bracket; a "]" without an opener is already literal.
+static func _escape_bbcode(text: String) -> String:
+	return text.replace("[", "[lb]")
+
+## Build display BBCode from plain dialogue text + highlight ranges.
+##
+## Highlights are painted onto a per-character color map (later entries win,
+## like going over text again with a highlighter) and the map is then emitted
+## as disjoint runs. Tags are generated only around whole runs and every text
+## segment is BBCode-escaped, so no input — overlapping ranges, stale ranges
+## from edited dialogue, out-of-bounds indices, brackets typed by the user,
+## malformed color strings — can ever produce broken tags or literal markup.
 func _apply_highlights(text: String, highlights: Array) -> String:
-	if highlights.is_empty():
-		return text
+	var length := text.length()
+	if highlights.is_empty() or length == 0:
+		return _escape_bbcode(text)
 
-	var sorted = highlights.duplicate()
-	sorted.sort_custom(func(a, b): return _highlight_start(a) > _highlight_start(b))
+	var color_at := PackedStringArray()
+	color_at.resize(length)
+	for h in highlights:
+		if not (h is Dictionary):
+			continue
+		var start_idx: int = clampi(_highlight_start(h), 0, length)
+		var end_idx: int = clampi(_highlight_end(h), 0, length)
+		var color := str(h.get("color", "#FFFF00"))
+		# Reject anything that isn't a clean HTML color — a malformed string
+		# here would otherwise be injected straight into a [color=...] tag.
+		if not Color.html_is_valid(color):
+			color = "#FFFF00"
+		for i in range(start_idx, end_idx):
+			color_at[i] = color
 
-	var result = text
-	for h in sorted:
-		var start_idx = _highlight_start(h)
-		var end_idx = _highlight_end(h)
-		var color = h.get("color", "#FFFF00")
-
-		if start_idx >= 0 and end_idx > start_idx and end_idx <= result.length():
-			var before = result.substr(0, start_idx)
-			var highlighted = result.substr(start_idx, end_idx - start_idx)
-			var after = result.substr(end_idx)
-			result = before + "[color=" + color + "][b]" + highlighted + "[/b][/color]" + after
+	var result := ""
+	var i := 0
+	while i < length:
+		var run_color := color_at[i]
+		var j := i
+		while j < length and color_at[j] == run_color:
+			j += 1
+		var segment := _escape_bbcode(text.substr(i, j - i))
+		if run_color.is_empty():
+			result += segment
+		else:
+			result += "[color=%s][b]%s[/b][/color]" % [run_color, segment]
+		i = j
 
 	return result
 

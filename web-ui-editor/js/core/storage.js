@@ -126,45 +126,41 @@ export async function loadCharactersFromIds(characterIds) {
   let charsDir = await state.dirHandle.getDirectoryHandle("Characters", { create: false }).catch(() => null);
   if (!charsDir) return;
 
-  for (let i = 0; i < characterIds.length; i++) {
-    const charId = characterIds[i];
-    if (charId) {
-      try {
-        // Find character folder by ID
-        for await (const [, folderHandle] of charsDir.entries()) {
-          if (folderHandle.kind === 'directory') {
-            try {
-              let charFile = await folderHandle.getFileHandle("character.json");
-              let charData = JSON.parse(await (await charFile.getFile()).text());
-
-              if (charData.id === charId) {
-                // Load only first sprite for state.cast grid (performance optimization)
-                // Remaining sprites loaded lazily when opening character modal
-                charData.sprites = [];
-                try {
-                  let f = await folderHandle.getFileHandle('sprite_01.png');
-                  let file = await f.getFile();
-                  let b64 = await fileToDataUrl(file);
-                  charData.sprites[0] = { dataURL: b64, fname: file.name, blob: file };
-                } catch {
-                  charData.sprites[0] = null;
-                }
-
-                // Store folder handle for lazy loading remaining sprites
-                charData._folderHandle = folderHandle;
-
-                state.cast[i] = charData;
-                break;
-              }
-            } catch {
-              continue;
-            }
-          }
-        }
-      } catch (error) {
-        console.warn(`Failed to load character at position ${i}:`, error);
+  // Scan the Characters directory once, building an id -> data index.
+  // (The previous version re-walked every folder for every cast slot.)
+  const charactersById = new Map();
+  for await (const [, folderHandle] of charsDir.entries()) {
+    if (folderHandle.kind !== 'directory') continue;
+    try {
+      const charFile = await folderHandle.getFileHandle("character.json");
+      const charData = JSON.parse(await (await charFile.getFile()).text());
+      if (charData && charData.id) {
+        // Store folder handle for lazy loading the remaining sprites later.
+        charData._folderHandle = folderHandle;
+        charactersById.set(charData.id, charData);
       }
+    } catch {
+      continue; // not a character folder, or unreadable - skip it
     }
+  }
+
+  for (let i = 0; i < characterIds.length; i++) {
+    const charData = characterIds[i] ? charactersById.get(characterIds[i]) : null;
+    if (!charData) continue;
+
+    // Load only the first sprite for the cast grid (performance optimization);
+    // the rest load lazily when the character modal opens.
+    charData.sprites = [];
+    try {
+      const f = await charData._folderHandle.getFileHandle('sprite_01.png');
+      const file = await f.getFile();
+      const b64 = await fileToDataUrl(file);
+      charData.sprites[0] = { dataURL: b64, fname: file.name, blob: file };
+    } catch {
+      charData.sprites[0] = null;
+    }
+
+    state.cast[i] = charData;
   }
 }
 

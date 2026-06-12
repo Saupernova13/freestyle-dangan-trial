@@ -571,16 +571,9 @@ function updateAudioSeekBar() {
     const percent = duration > 0 ? (current / duration) * 100 : 0;
 
     seekBar.value = percent;
-    currentTimeEl.textContent = formatTime(current);
-    totalTimeEl.textContent = formatTime(duration);
+    currentTimeEl.textContent = formatAudioTime(current);
+    totalTimeEl.textContent = formatAudioTime(duration);
   }
-}
-
-function formatTime(seconds) {
-  if (isNaN(seconds) || seconds === Infinity) return '0:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 function renderCameraMotionTab(line) {
@@ -885,7 +878,7 @@ function renderHighlightingTab(line) {
 
         <!-- Selectable dialogue text -->
         <div class="dialogue-selector" id="dialogue-selector">
-          <div class="dialogue-text" data-dialogue-text="${dialogue}">
+          <div class="dialogue-text">
             ${selectableDialogue}
           </div>
         </div>
@@ -922,7 +915,7 @@ function renderHighlightingTab(line) {
           <button class="btn btn-primary" onclick="addHighlightFromSelection()" id="add-highlight-btn" disabled>
             ➕ Add Highlight
           </button>
-          <button class="btn btn-secondary" onclick="clearSelection()">
+          <button class="btn btn-secondary" onclick="clearHighlightSelection()">
             ❌ Clear Selection
           </button>
         </div>
@@ -1069,8 +1062,11 @@ function renderSelectionPreview(dialogue, start, end, color) {
          dialogue.substring(end);
 }
 
-// Clear text selection
-function clearSelection() {
+// Clear the highlight drag-selection.
+// Named distinctly from app.js's clearSelection (script line multi-select):
+// both files share the global namespace, and the previous shared name meant
+// whichever file loaded last silently won.
+function clearHighlightSelection() {
   highlightingState.startChar = 0;
   highlightingState.endChar = 0;
 

@@ -59,7 +59,7 @@ function renderMinigameCard(mg, index) {
     <div class="minigame-card ${isExpanded ? 'expanded' : ''}" data-minigame-id="${mg.gameId}">
       <div class="minigame-card-header" onclick="toggleMinigameExpand('${mg.gameId}')">
         <div class="minigame-info">
-          <div class="minigame-name">${mg.name || 'Unnamed Minigame'}</div>
+          <div class="minigame-name">${escapeHtml(mg.name || 'Unnamed Minigame')}</div>
           <div class="minigame-meta">
             <span class="minigame-type">${typeLabels[mg.gameType] || mg.gameType}</span>
             <span class="minigame-difficulty" style="color: ${difficultyColors[mg.difficulty]}">
@@ -107,7 +107,7 @@ function renderMinigameEditor(mg) {
         <label>Minigame Question</label>
         <input type="text"
                class="form-input"
-               value="${mg.name || ''}"
+               value="${escapeHtml(mg.name || '')}"
                onchange="updateMinigameField('${mg.gameId}', 'name', this.value)"
                placeholder="Enter minigame question">
       </div>
@@ -147,7 +147,7 @@ function renderMinigameEditor(mg) {
         <label>Fail Comment</label>
         <input type="text"
                class="form-input"
-               value="${mg.failComment || ''}"
+               value="${escapeHtml(mg.failComment || '')}"
                onchange="updateMinigameField('${mg.gameId}', 'failComment', this.value)"
                placeholder="Shown on the result card when the player fails this minigame">
       </div>

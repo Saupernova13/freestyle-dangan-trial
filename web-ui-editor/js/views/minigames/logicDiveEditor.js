@@ -97,7 +97,7 @@ function renderLogicDiveQuestionEditor(gameId, question, index) {
           <textarea class="form-input"
                     rows="2"
                     placeholder="Enter the question..."
-                    onchange="updateLogicDiveQuestion('${gameId}', '${question.questionId}', 'questionText', this.value)">${question.questionText || ''}</textarea>
+                    onchange="updateLogicDiveQuestion('${gameId}', '${question.questionId}', 'questionText', this.value)">${escapeHtml(question.questionText || '')}</textarea>
         </div>
 
         <div class="answers-section">
@@ -124,7 +124,7 @@ function renderLogicDiveQuestionEditor(gameId, question, index) {
                 <input type="text"
                        class="form-input answer-text-input"
                        placeholder="Answer ${ansIndex + 1}"
-                       value="${answer.answerText || ''}"
+                       value="${escapeHtml(answer.answerText || '')}"
                        onchange="updateLogicDiveAnswer('${gameId}', '${question.questionId}', '${answer.answerId}', 'answerText', this.value)">
                 ${question.answers.length > 2 ? `
                   <button class="btn-icon btn-icon-danger"

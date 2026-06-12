@@ -68,7 +68,7 @@ function renderTruthBulletsView() {
 
 function renderTruthBulletListItem(bullet) {
   const isSelected = bullet.bulletId === selectedTruthBulletId;
-  const displayName = bullet.name || 'Unnamed Bullet';
+  const displayName = escapeHtml(bullet.name || 'Unnamed Bullet');
 
   return `
     <div class="truth-bullet-list-item ${isSelected ? 'selected' : ''}"
@@ -90,7 +90,7 @@ function renderTruthBulletDetail(bullet) {
     <!-- TOP: Image Preview -->
     <div class="truth-bullet-image-preview">
       ${hasImage
-        ? `<img src="${bullet.imageDataURL}" alt="${bullet.name || 'Bullet image'}" />`
+        ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name || 'Bullet image')}" />`
         : '<div class="truth-bullet-no-image-large">📷</div>'
       }
     </div>
@@ -99,18 +99,18 @@ function renderTruthBulletDetail(bullet) {
     <div class="truth-bullet-details">
       <div class="detail-row">
         <label>Name</label>
-        <span>${bullet.name || 'Unnamed Bullet'}</span>
+        <span>${escapeHtml(bullet.name || 'Unnamed Bullet')}</span>
       </div>
 
       <div class="detail-row">
         <label>Description</label>
-        <p>${bullet.description || 'No description provided'}</p>
+        <p>${escapeHtml(bullet.description || 'No description provided')}</p>
       </div>
 
       ${bullet.inversedLieBulletName ? `
         <div class="detail-row">
           <label>Lie Form</label>
-          <span class="lie-tag">${bullet.inversedLieBulletName}</span>
+          <span class="lie-tag">${escapeHtml(bullet.inversedLieBulletName)}</span>
         </div>
       ` : ''}
 

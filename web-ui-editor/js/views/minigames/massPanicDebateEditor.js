@@ -41,7 +41,7 @@ function renderMassPanicDebateEditor(mg) {
                   <option value="${c.id}"
                           ${mg.typeSpecific.speaker1CharacterId === c.id ? 'selected' : ''}
                           ${isDisabled ? 'disabled' : ''}>
-                    ${c.name} ${c.surname}${isDisabled ? ' (already selected)' : ''}
+                    ${escapeHtml(`${c.name} ${c.surname}`)}${isDisabled ? ' (already selected)' : ''}
                   </option>
                 `;
               }).join('')}
@@ -58,7 +58,7 @@ function renderMassPanicDebateEditor(mg) {
                   <option value="${c.id}"
                           ${mg.typeSpecific.speaker2CharacterId === c.id ? 'selected' : ''}
                           ${isDisabled ? 'disabled' : ''}>
-                    ${c.name} ${c.surname}${isDisabled ? ' (already selected)' : ''}
+                    ${escapeHtml(`${c.name} ${c.surname}`)}${isDisabled ? ' (already selected)' : ''}
                   </option>
                 `;
               }).join('')}
@@ -75,7 +75,7 @@ function renderMassPanicDebateEditor(mg) {
                   <option value="${c.id}"
                           ${mg.typeSpecific.speaker3CharacterId === c.id ? 'selected' : ''}
                           ${isDisabled ? 'disabled' : ''}>
-                    ${c.name} ${c.surname}${isDisabled ? ' (already selected)' : ''}
+                    ${escapeHtml(`${c.name} ${c.surname}`)}${isDisabled ? ' (already selected)' : ''}
                   </option>
                 `;
               }).join('')}
@@ -142,24 +142,24 @@ function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, colo
   return `
     <div class="mass-panic-speaker-line" style="border-left: 4px solid ${color};">
       <div class="speaker-line-header">
-        <h5>${enhancedLabel}</h5>
+        <h5>${escapeHtml(enhancedLabel)}</h5>
         ${line.isLoudAssertion ? '<span class="badge badge-loud">📢 LOUD</span>' : ''}
       </div>
 
       <div class="sentence-structure">
         <input type="text"
                class="form-input sentence-part"
-               value="${line.sentenceBeginning || ''}"
+               value="${escapeHtml(line.sentenceBeginning || '')}"
                placeholder="Beginning..."
                onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'sentenceBeginning', this.value)">
         <input type="text"
                class="form-input sentence-part target-part"
-               value="${line.target || ''}"
+               value="${escapeHtml(line.target || '')}"
                placeholder="Target (shootable)"
                onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'target', this.value)">
         <input type="text"
                class="form-input sentence-part"
-               value="${line.sentenceEnd || ''}"
+               value="${escapeHtml(line.sentenceEnd || '')}"
                placeholder="...end"
                onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'sentenceEnd', this.value)">
       </div>
@@ -180,7 +180,7 @@ function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, colo
             <option value="">None</option>
             ${truthBullets.map(b => `
               <option value="${b.bulletId}" ${line.answerBulletId === b.bulletId ? 'selected' : ''}>
-                ${b.name}
+                ${escapeHtml(b.name)}
               </option>
             `).join('')}
           </select>
@@ -606,9 +606,4 @@ function updatePanicSeekBar(groupId, speakerKey, audio) {
   }
 }
 
-function formatAudioTime(seconds) {
-  if (isNaN(seconds) || seconds === Infinity) return '0:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
+// formatAudioTime lives in js/utils.js

@@ -26,6 +26,28 @@ document.addEventListener('DOMContentLoaded', function() {
       closeCharacterDropdown(activeDropdownLineId);
     }
   });
+
+  // Character dropdown item selection/highlighting via document-level event
+  // delegation. The list is re-rendered on every keystroke, so per-item (or
+  // even per-list) listeners would need rebinding each time — the old
+  // clone-and-replace approach leaked nodes and lost scroll position.
+  document.addEventListener('click', function(e) {
+    const item = e.target.closest('.searchable-dropdown-item');
+    if (item && item.dataset.charId && activeDropdownLineId) {
+      selectCharacterFromDropdown(activeDropdownLineId, item.dataset.charId);
+    }
+  });
+
+  document.addEventListener('mouseover', function(e) {
+    const item = e.target.closest('.searchable-dropdown-item');
+    if (item && item.dataset.charIndex !== undefined && activeDropdownLineId) {
+      const idx = parseInt(item.dataset.charIndex, 10);
+      if (!Number.isNaN(idx) && idx !== highlightedIndex) {
+        highlightedIndex = idx;
+        updateDropdownHighlighting(activeDropdownLineId);
+      }
+    }
+  });
 });
 
 // Script Editor functions
@@ -467,47 +489,14 @@ function renderCharacterDropdownList(lineId) {
       <div class="${classes.join(' ')}"
            data-char-id="${c.id}"
            data-char-index="${idx}">
-        ${c.name} ${c.surname} (${c.isHeadmaster ? 'Headmaster' : 'Student'})
+        ${escapeHtml(`${c.name} ${c.surname}`)} (${c.isHeadmaster ? 'Headmaster' : 'Student'})
       </div>
     `;
   }).join('');
 
   listEl.innerHTML = itemsHtml;
   listEl.style.display = 'block';
-
-  // Attach event delegation for clicks and hover
-  attachDropdownEventHandlers(lineId);
-}
-
-function attachDropdownEventHandlers(lineId) {
-  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
-  if (!listEl) return;
-
-  // Remove old listeners if any
-  const oldListEl = listEl.cloneNode(true);
-  listEl.parentNode.replaceChild(oldListEl, listEl);
-  const freshListEl = document.getElementById(`char-dropdown-list-${lineId}`);
-
-  // Click delegation
-  freshListEl.addEventListener('click', (e) => {
-    const item = e.target.closest('.searchable-dropdown-item');
-    if (item && item.hasAttribute('data-char-id')) {
-      const charId = item.getAttribute('data-char-id');
-      selectCharacterFromDropdown(lineId, charId);
-    }
-  });
-
-  // Mouseenter delegation for highlighting
-  freshListEl.addEventListener('mouseover', (e) => {
-    const item = e.target.closest('.searchable-dropdown-item');
-    if (item && item.hasAttribute('data-char-index')) {
-      const idx = parseInt(item.getAttribute('data-char-index'));
-      if (idx !== highlightedIndex) {
-        highlightedIndex = idx;
-        updateDropdownHighlighting(lineId);
-      }
-    }
-  });
+  // Clicks and hover are handled by document-level delegation set up at init.
 }
 
 function updateDropdownHighlighting(lineId) {
@@ -551,7 +540,7 @@ function renderScriptLineBar(line, index) {
           id="char-dropdown-input-${line.id}"
           class="searchable-dropdown-input"
           placeholder="Search character..."
-          value="${displayValue}"
+          value="${escapeHtml(displayValue)}"
           onfocus="openCharacterDropdown('${line.id}')"
           oninput="filterCharacters('${line.id}', this.value)"
           onkeydown="handleCharacterKeydown('${line.id}', event)"
@@ -562,7 +551,7 @@ function renderScriptLineBar(line, index) {
         type="text"
         class="script-dialogue-input"
         placeholder="Enter dialogue..."
-        value="${line.dialogue || ''}"
+        value="${escapeHtml(line.dialogue || '')}"
         oninput="updateScriptLine('${line.id}', 'dialogue', this.value)"
         onclick="event.stopPropagation()"
       >
@@ -573,7 +562,7 @@ function renderScriptLineBar(line, index) {
         type="text"
         class="script-narration-input"
         placeholder="Enter narration text..."
-        value="${line.text || ''}"
+        value="${escapeHtml(line.text || '')}"
         oninput="updateScriptLine('${line.id}', 'text', this.value)"
         onclick="event.stopPropagation()"
       >
@@ -592,7 +581,7 @@ function renderScriptLineBar(line, index) {
 
     const minigameOptions = minigames.map(mg => {
       return `<option value="${mg.gameId}" ${line.minigameId === mg.gameId ? 'selected' : ''}>
-        ${mg.name} (${typeLabels[mg.gameType]})
+        ${escapeHtml(mg.name)} (${typeLabels[mg.gameType]})
       </option>`;
     }).join('');
 
@@ -712,7 +701,10 @@ async function saveScriptLineAdvanced() {
   } catch (error) {
     console.error("Error saving script line:", error);
     showLoader(false);
-    modalErr = "Failed to save: " + error.message;
+    // scriptLineModalErr is what renderScriptLineModal displays; the previous
+    // code set modalErr (the character modal's error slot) so save failures
+    // were silently swallowed.
+    scriptLineModalErr = "Failed to save: " + error.message;
     renderScriptLineModal();
   }
 }

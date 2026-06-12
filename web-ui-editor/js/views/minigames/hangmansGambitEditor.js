@@ -19,7 +19,7 @@ function renderHangmansGambitEditor(mg) {
         <label>Answer Key</label>
         <input type="text"
                class="form-input"
-               value="${mg.typeSpecific.answerKey || ''}"
+               value="${escapeHtml(mg.typeSpecific.answerKey || '')}"
                onchange="updateHangmansGambitField('${mg.gameId}', 'answerKey', this.value)"
                placeholder="Enter answer key">
       </div>

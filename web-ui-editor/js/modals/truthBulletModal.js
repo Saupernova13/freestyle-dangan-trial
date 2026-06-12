@@ -55,7 +55,7 @@ function renderTruthBulletModal() {
               <div class="dr-fg-field">
                 <label>Bullet Name:</label>
                 <input type="text"
-                       value="${bulletFields.name}"
+                       value="${escapeHtml(bulletFields.name)}"
                        oninput="updateBulletField('name', this.value)"
                        placeholder="E.g., Bloody Knife">
               </div>
@@ -66,7 +66,7 @@ function renderTruthBulletModal() {
                 <label>Description:</label>
                 <textarea rows="3"
                           oninput="updateBulletField('description', this.value)"
-                          placeholder="Describe this evidence...">${bulletFields.description}</textarea>
+                          placeholder="Describe this evidence...">${escapeHtml(bulletFields.description)}</textarea>
               </div>
             </div>
 
@@ -74,7 +74,7 @@ function renderTruthBulletModal() {
               <div class="dr-fg-field">
                 <label>Inversed Lie Bullet Name:</label>
                 <input type="text"
-                       value="${bulletFields.inversedLieBulletName}"
+                       value="${escapeHtml(bulletFields.inversedLieBulletName)}"
                        oninput="updateBulletField('inversedLieBulletName', this.value)"
                        placeholder="E.g., Clean Knife">
                 <small style="color: var(--text-tertiary);">Name when converted to a lie</small>

@@ -130,11 +130,11 @@ function renderCharDetailsTab() {
     <div class="dr-fg-row">
       <div class="dr-fg-field">
           <label>First Name</label>
-          <input required value="${charFields.name || ''}" onchange="fieldUpdate('name',this.value)" oninput="fieldUpdate('name',this.value)">
+          <input required value="${escapeHtml(charFields.name || '')}" onchange="fieldUpdate('name',this.value)" oninput="fieldUpdate('name',this.value)">
       </div>
       <div class="dr-fg-field">
           <label>Last Name</label>
-          <input required value="${charFields.surname || ''}" onchange="fieldUpdate('surname',this.value)" oninput="fieldUpdate('surname',this.value)">
+          <input required value="${escapeHtml(charFields.surname || '')}" onchange="fieldUpdate('surname',this.value)" oninput="fieldUpdate('surname',this.value)">
       </div>
     </div>
     <div class="dr-fg-row">
@@ -178,17 +178,17 @@ function renderCharDetailsTab() {
     <div class="dr-fg-row">
       <div class="dr-fg-field">
         <label>Likes</label>
-        <textarea required onchange="fieldUpdate('likes',this.value)" oninput="fieldUpdate('likes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster enjoy?' : 'What does this student like?'}">${charFields.likes || ''}</textarea>
+        <textarea required onchange="fieldUpdate('likes',this.value)" oninput="fieldUpdate('likes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster enjoy?' : 'What does this student like?'}">${escapeHtml(charFields.likes || '')}</textarea>
       </div>
       <div class="dr-fg-field">
         <label>Dislikes</label>
-        <textarea required onchange="fieldUpdate('dislikes',this.value)" oninput="fieldUpdate('dislikes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster dislike?' : 'What does this student dislike?'}">${charFields.dislikes || ''}</textarea>
+        <textarea required onchange="fieldUpdate('dislikes',this.value)" oninput="fieldUpdate('dislikes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster dislike?' : 'What does this student dislike?'}">${escapeHtml(charFields.dislikes || '')}</textarea>
       </div>
     </div>
     <div class="dr-fg-row single">
       <div class="dr-fg-field">
         <label>Notes</label>
-        <textarea required onchange="fieldUpdate('notes',this.value)" oninput="fieldUpdate('notes',this.value)" placeholder="${isHeadmasterChar ? 'Additional notes about this headmaster...' : 'Additional notes about this student...'}">${charFields.notes || ''}</textarea>
+        <textarea required onchange="fieldUpdate('notes',this.value)" oninput="fieldUpdate('notes',this.value)" placeholder="${isHeadmasterChar ? 'Additional notes about this headmaster...' : 'Additional notes about this student...'}">${escapeHtml(charFields.notes || '')}</textarea>
       </div>
     </div>
   </form>`;

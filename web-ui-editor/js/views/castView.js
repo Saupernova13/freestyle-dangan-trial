@@ -25,7 +25,7 @@ function renderCastGrid() {
 
       div.innerHTML = `
         ${spriteHtml}
-        <div class="cast-name">${c.name || ""} ${c.surname || ""}</div>
+        <div class="cast-name">${escapeHtml(`${c.name || ''} ${c.surname || ''}`)}</div>
         <div class="cast-block-title">${blockNames[i]}</div>
       `;
     } else {

@@ -57,10 +57,10 @@ function renderNonstopDebateEditor(mg) {
              onclick="toggleBulletForMinigame('${mg.gameId}', '${bullet.bulletId}')">
           <div class="bullet-select-checkbox">${isSelected ? '✓' : ''}</div>
           <div class="bullet-select-image">
-            ${bullet.imageDataURL ? `<img src="${bullet.imageDataURL}" alt="${bullet.name}">` : '📷'}
+            ${bullet.imageDataURL ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name)}">` : '📷'}
           </div>
           <div class="bullet-select-info">
-            <div class="bullet-select-name">${bullet.name || 'Unnamed'}</div>
+            <div class="bullet-select-name">${escapeHtml(bullet.name || 'Unnamed')}</div>
           </div>
         </div>
       `;
@@ -140,7 +140,7 @@ function renderDialogueLineEditor(gameId, line, index) {
                title="Move down">▼</div>
         </div>
         <div class="dialogue-line-number">#${index + 1}</div>
-        <div class="dialogue-line-preview">${fullSentence || '<empty line>'}</div>
+        <div class="dialogue-line-preview">${fullSentence ? escapeHtml(fullSentence) : '&lt;empty line&gt;'}</div>
         <button class="btn-icon" onclick="event.stopPropagation(); deleteDialogueLine('${gameId}', '${line.lineId}')" title="Delete line">🗑️</button>
       </div>
 
@@ -151,7 +151,7 @@ function renderDialogueLineEditor(gameId, line, index) {
           <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'characterId', this.value)">
             <option value="">None</option>
             ${cast.filter(c => c).map(c => `
-              <option value="${c.id}" ${line.characterId === c.id ? 'selected' : ''}>${c.name} ${c.surname}</option>
+              <option value="${c.id}" ${line.characterId === c.id ? 'selected' : ''}>${escapeHtml(`${c.name} ${c.surname}`)}</option>
             `).join('')}
           </select>
         </div>
@@ -162,17 +162,17 @@ function renderDialogueLineEditor(gameId, line, index) {
           <div class="sentence-structure">
             <input type="text"
                    class="form-input sentence-part"
-                   value="${line.sentenceBeginning || ''}"
+                   value="${escapeHtml(line.sentenceBeginning || '')}"
                    onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'sentenceBeginning', this.value)"
                    placeholder="Beginning...">
             <input type="text"
                    class="form-input sentence-part target-part"
-                   value="${line.target || ''}"
+                   value="${escapeHtml(line.target || '')}"
                    onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'target', this.value)"
                    placeholder="Target (shootable)">
             <input type="text"
                    class="form-input sentence-part"
-                   value="${line.sentenceEnd || ''}"
+                   value="${escapeHtml(line.sentenceEnd || '')}"
                    onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'sentenceEnd', this.value)"
                    placeholder="...end">
           </div>
@@ -187,7 +187,7 @@ function renderDialogueLineEditor(gameId, line, index) {
               <option value="">No answer (false target)</option>
               ${truthBullets.map(bullet => `
                 <option value="${bullet.bulletId}" ${line.answerBulletId === bullet.bulletId ? 'selected' : ''}>
-                  ${bullet.name || 'Unnamed Bullet'}
+                  ${escapeHtml(bullet.name || 'Unnamed Bullet')}
                 </option>
               `).join('')}
             </select>
@@ -333,7 +333,7 @@ function renderDialogueLineEditor(gameId, line, index) {
                   <label>User Failed Comment</label>
                   <input type="text"
                          class="form-input"
-                         value="${line.userFailedComment || ''}"
+                         value="${escapeHtml(line.userFailedComment || '')}"
                          onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'userFailedComment', this.value)"
                          placeholder="Message when user fails">
                 </div>
@@ -342,7 +342,7 @@ function renderDialogueLineEditor(gameId, line, index) {
                   <label>Wrong Answer Comment</label>
                   <input type="text"
                          class="form-input"
-                         value="${line.userWrongAnswerComment || ''}"
+                         value="${escapeHtml(line.userWrongAnswerComment || '')}"
                          onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'userWrongAnswerComment', this.value)"
                          placeholder="Message when user shoots wrong target">
                 </div>
@@ -747,9 +747,4 @@ function updateDialogueSeekBar(lineId, audio) {
   }
 }
 
-function formatAudioTime(seconds) {
-  if (isNaN(seconds) || seconds === Infinity) return '0:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
+// formatAudioTime lives in js/utils.js

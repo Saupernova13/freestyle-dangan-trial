@@ -44,6 +44,13 @@ async function chooseTrialDir() {
         }
       } catch (error) {
         console.error("Failed to parse trial.json:", error);
+        // Warn the user before presenting an empty editor — continuing to
+        // edit and auto-save would overwrite the (possibly recoverable) file.
+        alert(
+          "trial.json in this folder could not be read (" + error.message + ").\n\n" +
+          "The editor will open empty. If this trial matters to you, back up " +
+          "the folder before making changes, since saving will overwrite trial.json."
+        );
         // Initialize with empty trial if corrupted
         trialName = "";
         document.getElementById('trialNameInput').value = "";
@@ -70,8 +77,11 @@ async function chooseTrialDir() {
       updateExportButtonState();
     }
   } catch (err) {
-    console.log(err);
     showLoader(false);
+    // AbortError means the user cancelled the directory picker — not an error.
+    if (err && err.name === 'AbortError') return;
+    console.error("Failed to open trial folder:", err);
+    alert(`Failed to open trial folder: ${err.message}`);
   }
 }
 

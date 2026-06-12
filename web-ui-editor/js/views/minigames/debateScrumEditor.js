@@ -110,7 +110,7 @@ function renderDebateScumArgumentEditor(gameId, arg, index) {
               <option value="">None</option>
               ${cast.filter(c => c).map(c => `
                 <option value="${c.id}" ${arg.oppositionCharacterId === c.id ? 'selected' : ''}>
-                  ${c.name} ${c.surname}
+                  ${escapeHtml(`${c.name} ${c.surname}`)}
                 </option>
               `).join('')}
             </select>
@@ -121,7 +121,7 @@ function renderDebateScumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input"
                       rows="3"
                       placeholder="Opposition statement..."
-                      onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'oppositionStatement', this.value)">${arg.oppositionStatement || ''}</textarea>
+                      onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'oppositionStatement', this.value)">${escapeHtml(arg.oppositionStatement || '')}</textarea>
           </div>
 
           <div class="form-group">
@@ -129,7 +129,7 @@ function renderDebateScumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input keywords-input"
                       rows="2"
                       placeholder="Enter keywords, one per line..."
-                      onchange="updateDebateScumArgumentKeywords('${gameId}', '${arg.argumentId}', 'opposition', this.value)">${(arg.oppositionKeywords || []).join('\n')}</textarea>
+                      onchange="updateDebateScumArgumentKeywords('${gameId}', '${arg.argumentId}', 'opposition', this.value)">${escapeHtml((arg.oppositionKeywords || []).join('\n'))}</textarea>
             <small style="color: var(--text-tertiary);">Keywords that will be highlighted during this argument</small>
           </div>
 
@@ -167,7 +167,7 @@ function renderDebateScumArgumentEditor(gameId, arg, index) {
               <option value="">None</option>
               ${cast.filter(c => c).map(c => `
                 <option value="${c.id}" ${arg.defenseCharacterId === c.id ? 'selected' : ''}>
-                  ${c.name} ${c.surname}
+                  ${escapeHtml(`${c.name} ${c.surname}`)}
                 </option>
               `).join('')}
             </select>
@@ -178,7 +178,7 @@ function renderDebateScumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input"
                       rows="3"
                       placeholder="Defense counter statement..."
-                      onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'defenseStatement', this.value)">${arg.defenseStatement || ''}</textarea>
+                      onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'defenseStatement', this.value)">${escapeHtml(arg.defenseStatement || '')}</textarea>
           </div>
 
           <div class="form-group">
@@ -186,7 +186,7 @@ function renderDebateScumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input keywords-input"
                       rows="2"
                       placeholder="Enter keywords, one per line..."
-                      onchange="updateDebateScumArgumentKeywords('${gameId}', '${arg.argumentId}', 'defense', this.value)">${(arg.defenseKeywords || []).join('\n')}</textarea>
+                      onchange="updateDebateScumArgumentKeywords('${gameId}', '${arg.argumentId}', 'defense', this.value)">${escapeHtml((arg.defenseKeywords || []).join('\n'))}</textarea>
             <small style="color: var(--text-tertiary);">Keywords that will be highlighted during this argument</small>
           </div>
 

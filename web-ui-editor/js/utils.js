@@ -16,6 +16,14 @@ function renderDirDisplay(dH) {
   document.getElementById('dirDisplay').innerText = dH ? `📂 ${dH.name}` : "";
 }
 
+// Format seconds as M:SS for audio player time displays.
+function formatAudioTime(seconds) {
+  if (isNaN(seconds) || seconds === Infinity) return '0:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 // Escape user text before injecting it into innerHTML previews.
 function escapeHtml(text) {
   return String(text)

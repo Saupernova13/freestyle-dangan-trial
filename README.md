@@ -116,16 +116,18 @@ A comprehensive tool for creating custom Danganronpa-style trials, featuring bot
 ### Web UI (Authoring Trials)
 
 #### Prerequisites
+- Node.js 18+
 - Modern Chromium-based browser (Chrome, Edge, Opera)
 - File System Access API support
 
 #### Installation & Usage
 
-1. **Open the authoring tool**:
+1. **Start the authoring tool**:
    ```bash
-   # Navigate to web-ui-editor folder and open index.html in a browser
    cd web-ui-editor
-   # Open index.html in Chrome/Edge/Opera
+   npm install
+   npm run dev
+   # Open the printed URL in Chrome/Edge/Opera
    ```
 
 2. **Create a trial workspace**:
@@ -210,16 +212,18 @@ Supports JSON and CSV batch files with automatic sprite discovery.
 
 ```
 freestyle-dangan-trial/
-├── web-ui-editor/                  # Browser-based authoring tool
+├── web-ui-editor/                  # Browser-based authoring tool (ES modules + Vite)
 │   ├── index.html                  # Main entry point
 │   ├── css/styles.css              # Complete styling system with theming
+│   ├── tests/                      # Unit tests (Vitest)
 │   └── js/
-│       ├── core/                   # State management, storage, constants
+│       ├── main.js                 # Entry point and window handler bridge
+│       ├── core/                   # Central state, storage, constants
 │       ├── models/                 # Data structures (character, etc.)
 │       ├── views/                  # UI rendering and controllers
 │       ├── modals/                 # Dialog components
 │       ├── ui/                     # Theme management
-│       └── app.js, settings.js, utils.js
+│       └── app.js, settings.js, utils.js, export.js
 │
 ├── cli/                            # Node.js batch character creation
 │   ├── create-character.js         # CLI entry point
@@ -309,7 +313,8 @@ trial-folder/
 ### Web Interface
 - **HTML5**: Semantic structure, File System Access API
 - **CSS3**: Custom properties, Grid/Flexbox, responsive design
-- **JavaScript**: Modular ES6+, no framework dependencies
+- **JavaScript**: Native ES modules, no framework dependencies
+- **Tooling**: Vite (dev server/build), ESLint, Prettier, Vitest
 - **APIs**: LocalStorage, FileReader, Canvas
 
 ### Game Engine
@@ -407,8 +412,11 @@ trial-folder/
 **Web UI**:
 ```bash
 cd web-ui-editor
-# Open index.html in Chrome/Edge/Opera
-# Or use VS Code Live Server extension
+npm install
+npm run dev      # dev server with hot reload
+npm test         # unit tests (Vitest)
+npm run lint     # ESLint
+npm run build    # static production build to dist/
 ```
 
 **Game Engine**:
@@ -448,7 +456,8 @@ cd freestyle-dangan-trial
 
 ## Contributing
 
-Contributions welcome! Areas of interest:
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup,
+conventions, and the PR checklist. Areas of interest:
 - Bug reports and fixes
 - UI/UX improvements
 - Additional minigame types

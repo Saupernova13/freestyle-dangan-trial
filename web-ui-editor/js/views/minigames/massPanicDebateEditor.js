@@ -343,16 +343,17 @@ export function createEmptyPanicLine() {
   };
 }
 
-export function deleteMassPanicLineGroup(gameId, groupId) {
+export async function deleteMassPanicLineGroup(gameId, groupId) {
   if (!confirm('Delete this entire line group (all 3 speakers)?')) return;
 
   const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
-  // Delete audio files first
+  // Delete audio files first (awaited; the previous forEach(async) version
+  // fired the deletions without waiting or reporting failures)
   const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
   if (group) {
-    ['speaker1', 'speaker2', 'speaker3'].forEach(async (speakerKey) => {
+    for (const speakerKey of ['speaker1', 'speaker2', 'speaker3']) {
       const line = group[speakerKey];
       if (line && line.voiceLineFile) {
         try {
@@ -364,7 +365,7 @@ export function deleteMassPanicLineGroup(gameId, groupId) {
           console.warn("Could not remove audio file:", e);
         }
       }
-    });
+    }
   }
 
   mg.typeSpecific.lineGroups = mg.typeSpecific.lineGroups.filter(g => g.groupId !== groupId);

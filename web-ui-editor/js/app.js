@@ -294,14 +294,36 @@ export function cleanupDrag() {
   state.draggedLineIds = [];
 }
 
-export function deleteScriptLine(lineId) {
-  state.scriptLines = state.scriptLines.filter(line => line.id !== lineId);
+export async function deleteScriptLine(lineId) {
+  const line = state.scriptLines.find(l => l.id === lineId);
+  if (!line) return;
+
+  const label = line.dialogue || line.text || 'this line';
+  if (!confirm(`Delete script line "${label}"?`)) return;
+
+  // Remove the line's voice audio so the trial folder doesn't accumulate
+  // orphaned files that would be bundled into every export.
+  await removeLineAudioFile(line);
+
+  state.scriptLines = state.scriptLines.filter(l => l.id !== lineId);
   // Reorder remaining lines
-  state.scriptLines.forEach((line, index) => {
-    line.order = index;
+  state.scriptLines.forEach((l, index) => {
+    l.order = index;
   });
   renderScriptEditor();
   autoSaveTrial();
+}
+
+// Delete a script line's audio file from the trial folder, if any.
+async function removeLineAudioFile(line) {
+  if (!line.audioFile || !state.dirHandle) return;
+  try {
+    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
+    await audioDir.removeEntry(line.audioFile);
+  } catch (e) {
+    console.warn('Could not remove audio file:', e);
+  }
+  line.audioFile = null;
 }
 
 export function moveLineUp(lineId) {
@@ -340,7 +362,7 @@ export function moveLineDown(lineId) {
   autoSaveTrial();
 }
 
-export function changeScriptLineType(lineId, newType) {
+export async function changeScriptLineType(lineId, newType) {
   const line = state.scriptLines.find(l => l.id === lineId);
   if (!line) return;
 
@@ -349,6 +371,22 @@ export function changeScriptLineType(lineId, newType) {
   delete line.dialogue;
   delete line.text;
   delete line.minigameId;
+
+  // Clear advanced properties that no longer apply, so stale data never
+  // reaches trial.json. Audio/highlights/effects are valid for both spoken
+  // and narrated lines, but nothing carries over to a minigame trigger, and
+  // sprite/camera settings are speaking-only.
+  if (newType === "minigame") {
+    await removeLineAudioFile(line);
+    delete line.audioFile;
+    delete line.highlights;
+    delete line.specialEffects;
+    delete line.dialogueBoxStyle;
+  }
+  if (newType !== "speaking") {
+    delete line.spriteIndex;
+    delete line.cameraMotion;
+  }
 
   // Set new type and initialize fields
   line.type = newType;

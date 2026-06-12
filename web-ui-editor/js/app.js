@@ -2,6 +2,14 @@
 // (Constants and state are now in separate files)
 
 // Searchable dropdown state
+import { updateFloatingAddButton } from './components/floatingAddButton.js';
+import { initSpriteMagnifier } from './components/spriteMagnifier.js';
+import { state } from './core/state.js';
+import { autoSaveTrial } from './core/storage.js';
+import { loadSettings } from './settings.js';
+import { initializeTheme } from './ui/theme.js';
+import { escapeHtml } from './utils.js';
+import { renderActiveView } from './views/viewManager.js';
 let activeDropdownLineId = null;
 let filteredCharacters = [];
 let highlightedIndex = -1;
@@ -15,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Trial name input handler
   document.getElementById('trialNameInput').addEventListener('input', e => {
-    trialName = e.target.value.trim();
+    state.trialName = e.target.value.trim();
     autoSaveTrial();
   });
 
@@ -51,10 +59,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Script Editor functions
-function renderScriptEditor() {
+export function renderScriptEditor() {
   const grid = document.getElementById('mainGrid');
 
-  if (scriptLines.length === 0) {
+  if (state.scriptLines.length === 0) {
     // Empty state
     grid.innerHTML = `
       <div id="scriptEditorContainer">
@@ -76,7 +84,7 @@ function renderScriptEditor() {
     linesHtml += `<div class="script-drop-zone" data-insert-position="0" ondragover="handleGapDragOver(event)" ondrop="handleDropInGap(event, 0)" ondragleave="handleGapDragLeave(event)"></div>`;
 
     // Add each line with a drop zone after it
-    scriptLines.forEach((line, index) => {
+    state.scriptLines.forEach((line, index) => {
       linesHtml += renderScriptLineBar(line, index);
       linesHtml += `<div class="script-drop-zone" data-insert-position="${index + 1}" ondragover="handleGapDragOver(event)" ondrop="handleDropInGap(event, ${index + 1})" ondragleave="handleGapDragLeave(event)"></div>`;
     });
@@ -97,48 +105,48 @@ function renderScriptEditor() {
   updateFloatingAddButton();
 }
 
-function addScriptLine() {
+export function addScriptLine() {
   const newLine = {
     id: `line_${Date.now()}`,
-    order: scriptLines.length,
+    order: state.scriptLines.length,
     type: "speaking",
     characterId: "",
     dialogue: ""
   };
-  scriptLines.push(newLine);
+  state.scriptLines.push(newLine);
   renderScriptEditor();
   autoSaveTrial();
 }
 
 // Multi-select functions
-function toggleLineSelection(event, lineId) {
+export function toggleLineSelection(event, lineId) {
   // Ctrl+Click or Cmd+Click to multi-select
   if (event.ctrlKey || event.metaKey) {
     event.preventDefault();
-    if (selectedLineIds.has(lineId)) {
-      selectedLineIds.delete(lineId);
+    if (state.selectedLineIds.has(lineId)) {
+      state.selectedLineIds.delete(lineId);
     } else {
-      selectedLineIds.add(lineId);
+      state.selectedLineIds.add(lineId);
     }
     renderScriptEditor();  // Re-render to show selection
   }
 }
 
-function clearSelection() {
-  selectedLineIds.clear();
+export function clearSelection() {
+  state.selectedLineIds.clear();
   renderScriptEditor();
 }
 
 // Drag-and-drop event handlers
-function handleDragStart(event, lineId) {
+export function handleDragStart(event, lineId) {
   // Check if this line is part of a selection
-  if (selectedLineIds.size > 0 && selectedLineIds.has(lineId)) {
+  if (state.selectedLineIds.size > 0 && state.selectedLineIds.has(lineId)) {
     // Dragging multiple selected lines
-    draggedLineIds = Array.from(selectedLineIds);
+    state.draggedLineIds = Array.from(state.selectedLineIds);
   } else {
     // Dragging single line
-    draggedLineIds = [lineId];
-    selectedLineIds.clear();
+    state.draggedLineIds = [lineId];
+    state.selectedLineIds.clear();
   }
 
   event.target.classList.add('dragging');
@@ -146,32 +154,32 @@ function handleDragStart(event, lineId) {
   event.dataTransfer.setData('text/html', event.target.innerHTML);
 
   // Create ghost element for visual preview
-  createDragGhost(draggedLineIds);
+  createDragGhost(state.draggedLineIds);
 
   // Set custom drag image
-  if (dragGhostElement) {
-    event.dataTransfer.setDragImage(dragGhostElement, 0, 0);
+  if (state.dragGhostElement) {
+    event.dataTransfer.setDragImage(state.dragGhostElement, 0, 0);
   }
 }
 
-function createDragGhost(lineIds) {
+export function createDragGhost(lineIds) {
   // Create a ghost element showing what's being dragged
-  dragGhostElement = document.createElement('div');
-  dragGhostElement.className = 'drag-ghost';
+  state.dragGhostElement = document.createElement('div');
+  state.dragGhostElement.className = 'drag-ghost';
 
   if (lineIds.length === 1) {
-    dragGhostElement.textContent = '1 line';
+    state.dragGhostElement.textContent = '1 line';
   } else {
-    dragGhostElement.textContent = `${lineIds.length} lines`;
+    state.dragGhostElement.textContent = `${lineIds.length} lines`;
   }
 
-  dragGhostElement.style.position = 'absolute';
-  dragGhostElement.style.top = '-1000px';
-  dragGhostElement.style.left = '-1000px';
-  document.body.appendChild(dragGhostElement);
+  state.dragGhostElement.style.position = 'absolute';
+  state.dragGhostElement.style.top = '-1000px';
+  state.dragGhostElement.style.left = '-1000px';
+  document.body.appendChild(state.dragGhostElement);
 }
 
-function handleGapDragOver(event) {
+export function handleGapDragOver(event) {
   event.preventDefault();  // Allow drop
   event.dataTransfer.dropEffect = 'move';
 
@@ -182,7 +190,7 @@ function handleGapDragOver(event) {
   }
 }
 
-function handleGapDragLeave(event) {
+export function handleGapDragLeave(event) {
   // Remove visual feedback when leaving the gap
   const gap = event.currentTarget;
   if (gap.classList.contains('script-drop-zone')) {
@@ -190,13 +198,13 @@ function handleGapDragLeave(event) {
   }
 }
 
-function handleDropInGap(event, insertPosition) {
+export function handleDropInGap(event, insertPosition) {
   event.preventDefault();
   event.stopPropagation();
 
   // Get the lines being dragged
-  const draggedLines = draggedLineIds.map(id =>
-    scriptLines.find(l => l.id === id)
+  const draggedLines = state.draggedLineIds.map(id =>
+    state.scriptLines.find(l => l.id === id)
   ).filter(Boolean);
 
   if (draggedLines.length === 0) {
@@ -205,8 +213,8 @@ function handleDropInGap(event, insertPosition) {
   }
 
   // Calculate the indices of dragged lines
-  const draggedIndices = draggedLineIds
-    .map(id => scriptLines.findIndex(l => l.id === id))
+  const draggedIndices = state.draggedLineIds
+    .map(id => state.scriptLines.findIndex(l => l.id === id))
     .filter(idx => idx !== -1)
     .sort((a, b) => a - b);  // Sort ascending for position calculation
 
@@ -220,7 +228,7 @@ function handleDropInGap(event, insertPosition) {
   // Remove dragged lines from array (in reverse order to preserve indices)
   const draggedIndicesSorted = [...draggedIndices].sort((a, b) => b - a);
   draggedIndicesSorted.forEach(idx => {
-    scriptLines.splice(idx, 1);
+    state.scriptLines.splice(idx, 1);
   });
 
   // Adjust insert position based on how many lines were removed before it
@@ -232,10 +240,10 @@ function handleDropInGap(event, insertPosition) {
   }
 
   // Insert dragged lines at the new position
-  scriptLines.splice(adjustedPosition, 0, ...draggedLines);
+  state.scriptLines.splice(adjustedPosition, 0, ...draggedLines);
 
   // Update order field for all lines
-  scriptLines.forEach((line, index) => {
+  state.scriptLines.forEach((line, index) => {
     line.order = index;
   });
 
@@ -257,12 +265,12 @@ function handleDropInGap(event, insertPosition) {
   autoSaveTrial();
 }
 
-function handleDragEnd(event) {
+export function handleDragEnd(event) {
   event.target.classList.remove('dragging');
   cleanupDrag();
 }
 
-function cleanupDrag() {
+export function cleanupDrag() {
   // Clean up all visual feedback
   document.querySelectorAll('.drag-over').forEach(el => {
     el.classList.remove('drag-over');
@@ -273,37 +281,37 @@ function cleanupDrag() {
   });
 
   // Remove ghost element
-  if (dragGhostElement && dragGhostElement.parentNode) {
-    dragGhostElement.parentNode.removeChild(dragGhostElement);
+  if (state.dragGhostElement && state.dragGhostElement.parentNode) {
+    state.dragGhostElement.parentNode.removeChild(state.dragGhostElement);
   }
-  dragGhostElement = null;
+  state.dragGhostElement = null;
 
   // Clear selection after successful drag
-  selectedLineIds.clear();
-  draggedLineIds = [];
+  state.selectedLineIds.clear();
+  state.draggedLineIds = [];
 }
 
-function deleteScriptLine(lineId) {
-  scriptLines = scriptLines.filter(line => line.id !== lineId);
+export function deleteScriptLine(lineId) {
+  state.scriptLines = state.scriptLines.filter(line => line.id !== lineId);
   // Reorder remaining lines
-  scriptLines.forEach((line, index) => {
+  state.scriptLines.forEach((line, index) => {
     line.order = index;
   });
   renderScriptEditor();
   autoSaveTrial();
 }
 
-function moveLineUp(lineId) {
-  const currentIndex = scriptLines.findIndex(l => l.id === lineId);
+export function moveLineUp(lineId) {
+  const currentIndex = state.scriptLines.findIndex(l => l.id === lineId);
   if (currentIndex <= 0) return; // Already at top
 
   // Swap with previous line
-  const temp = scriptLines[currentIndex];
-  scriptLines[currentIndex] = scriptLines[currentIndex - 1];
-  scriptLines[currentIndex - 1] = temp;
+  const temp = state.scriptLines[currentIndex];
+  state.scriptLines[currentIndex] = state.scriptLines[currentIndex - 1];
+  state.scriptLines[currentIndex - 1] = temp;
 
   // Update order fields
-  scriptLines.forEach((line, index) => {
+  state.scriptLines.forEach((line, index) => {
     line.order = index;
   });
 
@@ -311,17 +319,17 @@ function moveLineUp(lineId) {
   autoSaveTrial();
 }
 
-function moveLineDown(lineId) {
-  const currentIndex = scriptLines.findIndex(l => l.id === lineId);
-  if (currentIndex === -1 || currentIndex >= scriptLines.length - 1) return; // Already at bottom
+export function moveLineDown(lineId) {
+  const currentIndex = state.scriptLines.findIndex(l => l.id === lineId);
+  if (currentIndex === -1 || currentIndex >= state.scriptLines.length - 1) return; // Already at bottom
 
   // Swap with next line
-  const temp = scriptLines[currentIndex];
-  scriptLines[currentIndex] = scriptLines[currentIndex + 1];
-  scriptLines[currentIndex + 1] = temp;
+  const temp = state.scriptLines[currentIndex];
+  state.scriptLines[currentIndex] = state.scriptLines[currentIndex + 1];
+  state.scriptLines[currentIndex + 1] = temp;
 
   // Update order fields
-  scriptLines.forEach((line, index) => {
+  state.scriptLines.forEach((line, index) => {
     line.order = index;
   });
 
@@ -329,8 +337,8 @@ function moveLineDown(lineId) {
   autoSaveTrial();
 }
 
-function changeScriptLineType(lineId, newType) {
-  const line = scriptLines.find(l => l.id === lineId);
+export function changeScriptLineType(lineId, newType) {
+  const line = state.scriptLines.find(l => l.id === lineId);
   if (!line) return;
 
   // Clear type-specific fields
@@ -354,8 +362,8 @@ function changeScriptLineType(lineId, newType) {
   autoSaveTrial();
 }
 
-function updateScriptLine(lineId, field, value) {
-  const line = scriptLines.find(l => l.id === lineId);
+export function updateScriptLine(lineId, field, value) {
+  const line = state.scriptLines.find(l => l.id === lineId);
   if (!line) return;
 
   line[field] = value;
@@ -363,7 +371,7 @@ function updateScriptLine(lineId, field, value) {
 }
 
 // Searchable dropdown helper functions
-function openCharacterDropdown(lineId) {
+export function openCharacterDropdown(lineId) {
   // Close any open dropdown first
   if (activeDropdownLineId && activeDropdownLineId !== lineId) {
     closeCharacterDropdown(activeDropdownLineId);
@@ -373,13 +381,13 @@ function openCharacterDropdown(lineId) {
   highlightedIndex = -1;
 
   // Initialize with all characters
-  filteredCharacters = cast.filter(c => c !== null);
+  filteredCharacters = state.cast.filter(c => c !== null);
 
   // Render the dropdown list
   renderCharacterDropdownList(lineId);
 }
 
-function closeCharacterDropdown(lineId) {
+export function closeCharacterDropdown(lineId) {
   const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
   if (listEl) {
     listEl.style.display = 'none';
@@ -392,8 +400,8 @@ function closeCharacterDropdown(lineId) {
   }
 }
 
-function filterCharacters(lineId, searchTerm) {
-  const characters = cast.filter(c => c !== null);
+export function filterCharacters(lineId, searchTerm) {
+  const characters = state.cast.filter(c => c !== null);
   const term = searchTerm.toLowerCase().trim();
 
   if (term === '') {
@@ -409,7 +417,7 @@ function filterCharacters(lineId, searchTerm) {
   renderCharacterDropdownList(lineId);
 }
 
-function handleCharacterKeydown(lineId, event) {
+export function handleCharacterKeydown(lineId, event) {
   const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
 
   // Only handle if dropdown is open
@@ -451,12 +459,12 @@ function handleCharacterKeydown(lineId, event) {
   }
 }
 
-function selectCharacterFromDropdown(lineId, characterId) {
+export function selectCharacterFromDropdown(lineId, characterId) {
   updateScriptLine(lineId, 'characterId', characterId);
   closeCharacterDropdown(lineId);
 
   // Update the input value to show selected character
-  const selectedChar = cast.find(c => c && c.id === characterId);
+  const selectedChar = state.cast.find(c => c && c.id === characterId);
   if (selectedChar) {
     const inputEl = document.getElementById(`char-dropdown-input-${lineId}`);
     if (inputEl) {
@@ -465,7 +473,7 @@ function selectCharacterFromDropdown(lineId, characterId) {
   }
 }
 
-function renderCharacterDropdownList(lineId) {
+export function renderCharacterDropdownList(lineId) {
   const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
   if (!listEl) return;
 
@@ -475,7 +483,7 @@ function renderCharacterDropdownList(lineId) {
     return;
   }
 
-  const line = scriptLines.find(l => l.id === lineId);
+  const line = state.scriptLines.find(l => l.id === lineId);
   const selectedCharId = line ? line.characterId : '';
 
   const itemsHtml = filteredCharacters.map((c, idx) => {
@@ -499,7 +507,7 @@ function renderCharacterDropdownList(lineId) {
   // Clicks and hover are handled by document-level delegation set up at init.
 }
 
-function updateDropdownHighlighting(lineId) {
+export function updateDropdownHighlighting(lineId) {
   const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
   if (!listEl) return;
 
@@ -513,7 +521,7 @@ function updateDropdownHighlighting(lineId) {
   });
 }
 
-function scrollToHighlighted(lineId) {
+export function scrollToHighlighted(lineId) {
   const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
   if (!listEl) return;
 
@@ -523,14 +531,14 @@ function scrollToHighlighted(lineId) {
   }
 }
 
-function renderScriptLineBar(line, index) {
+export function renderScriptLineBar(line, index) {
   const lineNumber = index + 1;
   let contentHtml = "";
 
   // Generate content based on type
   if (line.type === "speaking") {
     // Get selected character name for display
-    const selectedChar = cast.find(c => c && c.id === line.characterId);
+    const selectedChar = state.cast.find(c => c && c.id === line.characterId);
     const displayValue = selectedChar ? `${selectedChar.name} ${selectedChar.surname}` : '';
 
     contentHtml = `
@@ -579,7 +587,7 @@ function renderScriptLineBar(line, index) {
       'closing_argument': 'Closing Argument'
     };
 
-    const minigameOptions = minigames.map(mg => {
+    const minigameOptions = state.minigames.map(mg => {
       return `<option value="${mg.gameId}" ${line.minigameId === mg.gameId ? 'selected' : ''}>
         ${escapeHtml(mg.name)} (${typeLabels[mg.gameType]})
       </option>`;
@@ -589,12 +597,12 @@ function renderScriptLineBar(line, index) {
       <select class="script-minigame-select" onchange="updateScriptLine('${line.id}', 'minigameId', this.value)" onclick="event.stopPropagation()">
         <option value="">Select Minigame Instance...</option>
         ${minigameOptions}
-        ${minigames.length === 0 ? '<option value="" disabled>No minigames configured - visit Minigame Details to create one</option>' : ''}
+        ${state.minigames.length === 0 ? '<option value="" disabled>No state.minigames configured - visit Minigame Details to create one</option>' : ''}
       </select>
     `;
   }
 
-  const isSelected = selectedLineIds.has(line.id);
+  const isSelected = state.selectedLineIds.has(line.id);
 
   return `
     <div class="script-line-bar ${isSelected ? 'selected' : ''}"
@@ -635,76 +643,3 @@ function renderScriptLineBar(line, index) {
 // Character model functions now in js/models/characterModel.js
 // Minigame view and functions now in js/views/minigameView.js
 // Truth bullets view and functions now in js/views/truthBulletsView.js
-
-// ==================== Script Line Advanced Editing ====================
-
-async function saveScriptLineAdvanced() {
-  const line = scriptLines.find(l => l.id === activeLineId);
-  if (!line) {
-    alert("Script line not found!");
-    closeModal();
-    return;
-  }
-
-  try {
-    showLoader(true);
-
-    // Update line data based on type
-    if (line.type === 'speaking') {
-      line.spriteIndex = scriptLineFields.spriteIndex;
-      line.cameraMotion = scriptLineFields.cameraMotion;
-    }
-
-    // Common fields for both narrator and speaking.
-    // Highlights are normalized against the line's current text so stale or
-    // overlapping ranges can never be persisted to trial.json.
-    line.highlights = normalizeHighlights(
-      scriptLineFields.highlights,
-      (line.dialogue || line.text || "").length
-    );
-    line.specialEffects = scriptLineFields.specialEffects;
-    line.dialogueBoxStyle = scriptLineFields.dialogueBoxStyle;
-
-    // Handle audio file upload
-    if (scriptLineFields.audioBlob) {
-      // Create Audio directory if it doesn't exist
-      const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: true });
-
-      // Generate filename based on line ID
-      const audioFileName = `${line.id}.${scriptLineFields.audioBlob.name.split('.').pop()}`;
-
-      // Write audio file
-      const audioFileHandle = await audioDir.getFileHandle(audioFileName, { create: true });
-      const writable = await audioFileHandle.createWritable();
-      await writable.write(scriptLineFields.audioBlob);
-      await writable.close();
-
-      line.audioFile = audioFileName;
-    } else if (scriptLineFields.audioFile === null && line.audioFile) {
-      // Audio was cleared, remove the file
-      try {
-        const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
-        await audioDir.removeEntry(line.audioFile);
-      } catch (e) {
-        console.warn("Could not remove audio file:", e);
-      }
-      line.audioFile = null;
-    }
-
-    // Save trial data
-    await autoSaveTrial();
-
-    showLoader(false);
-    closeModal();
-    renderScriptEditor();
-
-  } catch (error) {
-    console.error("Error saving script line:", error);
-    showLoader(false);
-    // scriptLineModalErr is what renderScriptLineModal displays; the previous
-    // code set modalErr (the character modal's error slot) so save failures
-    // were silently swallowed.
-    scriptLineModalErr = "Failed to save: " + error.message;
-    renderScriptLineModal();
-  }
-}

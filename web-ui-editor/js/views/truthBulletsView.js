@@ -1,9 +1,14 @@
 // Truth bullets view - displays truth bullet list in split-pane layout
+import { updateFloatingAddButton } from '../components/floatingAddButton.js';
+import { state } from '../core/state.js';
+import { autoSaveTrial } from '../core/storage.js';
+import { openTruthBulletModal } from '../modals/truthBulletModal.js';
+import { escapeHtml } from '../utils.js';
 
-function renderTruthBulletsView() {
+export function renderTruthBulletsView() {
   const grid = document.getElementById('mainGrid');
 
-  if (truthBullets.length === 0) {
+  if (state.truthBullets.length === 0) {
     grid.innerHTML = `
       <div id="truthBulletsContainer">
         <div class="script-empty-state">
@@ -21,20 +26,20 @@ function renderTruthBulletsView() {
   }
 
   // Auto-select first bullet if none selected
-  if (!selectedTruthBulletId && truthBullets.length > 0) {
-    selectedTruthBulletId = truthBullets[0].bulletId;
+  if (!state.selectedTruthBulletId && state.truthBullets.length > 0) {
+    state.selectedTruthBulletId = state.truthBullets[0].bulletId;
   }
 
   // Check if selected bullet still exists (might have been deleted)
-  const selectedStillExists = truthBullets.some(b => b.bulletId === selectedTruthBulletId);
-  if (!selectedStillExists && truthBullets.length > 0) {
-    selectedTruthBulletId = truthBullets[0].bulletId;
+  const selectedStillExists = state.truthBullets.some(b => b.bulletId === state.selectedTruthBulletId);
+  if (!selectedStillExists && state.truthBullets.length > 0) {
+    state.selectedTruthBulletId = state.truthBullets[0].bulletId;
   }
 
-  const selectedBullet = truthBullets.find(b => b.bulletId === selectedTruthBulletId);
+  const selectedBullet = state.truthBullets.find(b => b.bulletId === state.selectedTruthBulletId);
 
   // Render list on left
-  const listHtml = truthBullets.map(bullet =>
+  const listHtml = state.truthBullets.map(bullet =>
     renderTruthBulletListItem(bullet)
   ).join('');
 
@@ -66,8 +71,8 @@ function renderTruthBulletsView() {
   updateFloatingAddButton();
 }
 
-function renderTruthBulletListItem(bullet) {
-  const isSelected = bullet.bulletId === selectedTruthBulletId;
+export function renderTruthBulletListItem(bullet) {
+  const isSelected = bullet.bulletId === state.selectedTruthBulletId;
   const displayName = escapeHtml(bullet.name || 'Unnamed Bullet');
 
   return `
@@ -83,7 +88,7 @@ function renderTruthBulletListItem(bullet) {
   `;
 }
 
-function renderTruthBulletDetail(bullet) {
+export function renderTruthBulletDetail(bullet) {
   const hasImage = bullet.imageFile && bullet.imageDataURL;
 
   return `
@@ -122,16 +127,16 @@ function renderTruthBulletDetail(bullet) {
   `;
 }
 
-function selectTruthBullet(bulletId) {
-  selectedTruthBulletId = bulletId;
+export function selectTruthBullet(bulletId) {
+  state.selectedTruthBulletId = bulletId;
   renderTruthBulletsView();
 }
 
-function generateBulletId() {
+export function generateBulletId() {
   return `tb_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
 }
 
-function addTruthBullet() {
+export function addTruthBullet() {
   const newBullet = {
     bulletId: generateBulletId(),
     name: "",
@@ -139,41 +144,41 @@ function addTruthBullet() {
     imageFile: null,
     inversedLieBulletName: ""
   };
-  truthBullets.push(newBullet);
+  state.truthBullets.push(newBullet);
 
   // Auto-select the newly created bullet
-  selectedTruthBulletId = newBullet.bulletId;
+  state.selectedTruthBulletId = newBullet.bulletId;
 
   renderTruthBulletsView();
   openTruthBulletModal(newBullet.bulletId);
 }
 
-function deleteTruthBullet(bulletId) {
+export function deleteTruthBullet(bulletId) {
   if (!confirm('Delete this truth bullet? It will be removed from any debates that reference it.')) {
     return;
   }
 
   // Find the index of the bullet being deleted
-  const bulletIndex = truthBullets.findIndex(b => b.bulletId === bulletId);
+  const bulletIndex = state.truthBullets.findIndex(b => b.bulletId === bulletId);
 
   // Remove the bullet
-  truthBullets = truthBullets.filter(b => b.bulletId !== bulletId);
+  state.truthBullets = state.truthBullets.filter(b => b.bulletId !== bulletId);
 
   // Remove from all minigame selections
-  minigames.forEach(mg => {
+  state.minigames.forEach(mg => {
     if (mg.typeSpecific && mg.typeSpecific.selectedBullets) {
       mg.typeSpecific.selectedBullets = mg.typeSpecific.selectedBullets.filter(id => id !== bulletId);
     }
   });
 
   // Smart selection: if deleting the selected bullet, select another one
-  if (selectedTruthBulletId === bulletId) {
-    if (truthBullets.length > 0) {
+  if (state.selectedTruthBulletId === bulletId) {
+    if (state.truthBullets.length > 0) {
       // Try to select the next bullet, or the previous one if it was the last
-      const newIndex = Math.min(bulletIndex, truthBullets.length - 1);
-      selectedTruthBulletId = truthBullets[newIndex].bulletId;
+      const newIndex = Math.min(bulletIndex, state.truthBullets.length - 1);
+      state.selectedTruthBulletId = state.truthBullets[newIndex].bulletId;
     } else {
-      selectedTruthBulletId = null;
+      state.selectedTruthBulletId = null;
     }
   }
 

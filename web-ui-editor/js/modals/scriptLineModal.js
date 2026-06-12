@@ -1,4 +1,10 @@
 // Script Line modal for editing dialogue, audio, effects, and highlighting
+import { renderScriptEditor } from '../app.js';
+import { state } from '../core/state.js';
+import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
+import { closeModal } from './modalCoordinator.js';
+import { appSettings } from '../settings.js';
+import { escapeHtml, formatAudioTime, normalizeHighlights, showLoader } from '../utils.js';
 
 let activeLineId = null;
 let scriptLineTab = "sprite";
@@ -34,7 +40,7 @@ let highlightingState = {
 let audioPreviewElement = null;
 let isAudioPlaying = false;
 
-function getAvailableTabs(line) {
+export function getAvailableTabs(line) {
   if (line.type === 'narrator') {
     return ['audio', 'dialogueBox', 'highlighting', 'specialEffects'];
   } else if (line.type === 'speaking') {
@@ -43,8 +49,8 @@ function getAvailableTabs(line) {
   return [];
 }
 
-async function openScriptLineModal(lineId) {
-  if (!dirHandle) {
+export async function openScriptLineModal(lineId) {
+  if (!state.dirHandle) {
     alert("Choose a folder first!");
     return;
   }
@@ -54,7 +60,7 @@ async function openScriptLineModal(lineId) {
   scriptLineModalMsg = "";
 
   // Find the script line
-  const line = scriptLines.find(l => l.id === lineId);
+  const line = state.scriptLines.find(l => l.id === lineId);
   if (!line) {
     alert("Script line not found!");
     return;
@@ -62,12 +68,12 @@ async function openScriptLineModal(lineId) {
 
   // Load remaining sprites for the character if speaking line
   if (line.type === 'speaking') {
-    const character = cast.find(c => c && c.id === line.characterId);
+    const character = state.cast.find(c => c && c.id === line.characterId);
     if (character && character.id && character._folderHandle) {
       // Check if sprites need to be loaded
       if (!character.sprites || character.sprites.length < appSettings.maxSprites) {
         showLoader(true);
-        const charIndex = cast.indexOf(character);
+        const charIndex = state.cast.indexOf(character);
         await loadRemainingSprites(charIndex);
         showLoader(false);
       }
@@ -112,13 +118,13 @@ async function openScriptLineModal(lineId) {
   renderScriptLineModal();
 }
 
-function renderScriptLineModal() {
+export function renderScriptLineModal() {
   const root = document.getElementById("modalroot");
-  const line = scriptLines.find(l => l.id === activeLineId);
+  const line = state.scriptLines.find(l => l.id === activeLineId);
 
   // For speaking lines, validate character selection
   if (line.type === 'speaking') {
-    const character = cast.find(c => c && c.id === line.characterId);
+    const character = state.cast.find(c => c && c.id === line.characterId);
     if (!character) {
       alert("No character selected for this line!");
       closeModal();
@@ -135,7 +141,7 @@ function renderScriptLineModal() {
 
   let tabContent = "";
   if (scriptLineTab === "sprite" && line.type === 'speaking') {
-    const character = cast.find(c => c && c.id === line.characterId);
+    const character = state.cast.find(c => c && c.id === line.characterId);
     tabContent = renderSpriteSelectionTab(character);
   } else if (scriptLineTab === "audio") {
     tabContent = renderAudioUploadTab(line);
@@ -214,7 +220,7 @@ function renderScriptLineModal() {
   `;
 }
 
-function switchScriptLineTab(tab) {
+export function switchScriptLineTab(tab) {
   scriptLineTab = tab;
   scriptLineModalErr = "";
   scriptLineModalMsg = "";
@@ -227,7 +233,7 @@ function switchScriptLineTab(tab) {
 }
 
 // Tab rendering functions
-function renderSpriteSelectionTab(character) {
+export function renderSpriteSelectionTab(character) {
   if (!character.sprites || character.sprites.length === 0) {
     return `
       <div class="dr-form">
@@ -272,12 +278,12 @@ function renderSpriteSelectionTab(character) {
   `;
 }
 
-function selectSprite(index) {
+export function selectSprite(index) {
   scriptLineFields.spriteIndex = index;
   renderScriptLineModal();
 }
 
-function renderAudioUploadTab(line) {
+export function renderAudioUploadTab(line) {
   const hasAudio = scriptLineFields.audioFile !== null;
 
   return `
@@ -326,11 +332,11 @@ function renderAudioUploadTab(line) {
   `;
 }
 
-function triggerAudioInput() {
+export function triggerAudioInput() {
   document.getElementById('audioFileInput').click();
 }
 
-function handleAudioUpload(event) {
+export function handleAudioUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -347,13 +353,13 @@ function handleAudioUpload(event) {
   renderScriptLineModal();
 }
 
-function clearAudio() {
+export function clearAudio() {
   scriptLineFields.audioFile = null;
   scriptLineFields.audioBlob = null;
   renderScriptLineModal();
 }
 
-function renderDialogueBoxTab(line) {
+export function renderDialogueBoxTab(line) {
   const box = scriptLineFields.dialogueBoxStyle;
 
   const boxStyles = [
@@ -437,20 +443,20 @@ function renderDialogueBoxTab(line) {
   `;
 }
 
-function updateDialogueBoxStyle(field, value) {
+export function updateDialogueBoxStyle(field, value) {
   scriptLineFields.dialogueBoxStyle[field] = value;
 
   // Update only the dialogue box tab content
   const tabContent = document.querySelector('.dr-modal-content');
   if (tabContent && scriptLineTab === 'dialogueBox') {
-    const line = scriptLines.find(l => l.id === activeLineId);
+    const line = state.scriptLines.find(l => l.id === activeLineId);
     tabContent.innerHTML = renderDialogueBoxTab(line);
   }
 }
 
-async function loadAudioFileFromDisk(filename) {
+export async function loadAudioFileFromDisk(filename) {
   try {
-    const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+    const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
     const fileHandle = await audioDir.getFileHandle(filename);
     const file = await fileHandle.getFile();
     return file;
@@ -460,7 +466,7 @@ async function loadAudioFileFromDisk(filename) {
   }
 }
 
-async function playAudioPreview() {
+export async function playAudioPreview() {
   // Toggle pause if already playing
   if (audioPreviewElement && !audioPreviewElement.paused) {
     audioPreviewElement.pause();
@@ -544,21 +550,21 @@ async function playAudioPreview() {
 }
 
 // Update only the play button without full re-render
-function updateAudioPlayButton() {
+export function updateAudioPlayButton() {
   const playButton = document.querySelector('.audio-controls .btn-secondary');
   if (playButton) {
     playButton.innerHTML = isAudioPlaying ? '⏸️ Pause' : '▶️ Play';
   }
 }
 
-function seekAudio(value) {
+export function seekAudio(value) {
   if (audioPreviewElement) {
     const duration = audioPreviewElement.duration;
     audioPreviewElement.currentTime = (value / 100) * duration;
   }
 }
 
-function updateAudioSeekBar() {
+export function updateAudioSeekBar() {
   if (!audioPreviewElement) return;
 
   const seekBar = document.getElementById('audio-seek-bar');
@@ -576,7 +582,7 @@ function updateAudioSeekBar() {
   }
 }
 
-function renderCameraMotionTab(line) {
+export function renderCameraMotionTab(line) {
   const cam = scriptLineFields.cameraMotion;
 
   const cameraTypes = [
@@ -674,18 +680,18 @@ function renderCameraMotionTab(line) {
   `;
 }
 
-function updateCameraMotion(field, value) {
+export function updateCameraMotion(field, value) {
   scriptLineFields.cameraMotion[field] = value;
 
   // Update only the camera tab content
   const tabContent = document.querySelector('.dr-modal-content');
   if (tabContent && scriptLineTab === 'cameraMotion') {
-    const line = scriptLines.find(l => l.id === activeLineId);
+    const line = state.scriptLines.find(l => l.id === activeLineId);
     tabContent.innerHTML = renderCameraMotionTab(line);
   }
 }
 
-function renderSpecialEffectsTab(line) {
+export function renderSpecialEffectsTab(line) {
   const effects = scriptLineFields.specialEffects.effects;
 
   const availableEffects = [
@@ -771,7 +777,7 @@ function renderSpecialEffectsTab(line) {
   `;
 }
 
-function toggleEffect(effectType) {
+export function toggleEffect(effectType) {
   const effects = scriptLineFields.specialEffects.effects;
   const existingIndex = effects.findIndex(e => e.type === effectType);
 
@@ -799,23 +805,23 @@ function toggleEffect(effectType) {
   // Update only the effects tab content
   const tabContent = document.querySelector('.dr-modal-content');
   if (tabContent && scriptLineTab === 'specialEffects') {
-    const line = scriptLines.find(l => l.id === activeLineId);
+    const line = state.scriptLines.find(l => l.id === activeLineId);
     tabContent.innerHTML = renderSpecialEffectsTab(line);
   }
 }
 
-function removeEffect(index) {
+export function removeEffect(index) {
   scriptLineFields.specialEffects.effects.splice(index, 1);
 
   // Update only the effects tab content
   const tabContent = document.querySelector('.dr-modal-content');
   if (tabContent && scriptLineTab === 'specialEffects') {
-    const line = scriptLines.find(l => l.id === activeLineId);
+    const line = state.scriptLines.find(l => l.id === activeLineId);
     tabContent.innerHTML = renderSpecialEffectsTab(line);
   }
 }
 
-function renderHighlightingTab(line) {
+export function renderHighlightingTab(line) {
   const dialogue = line.dialogue || line.text || "";
 
   // Repair any stale/overlapping ranges (e.g. dialogue edited after
@@ -925,12 +931,11 @@ function renderHighlightingTab(line) {
 }
 
 // Initialize drag selection after rendering highlighting tab
-function initializeDragSelection() {
+export function initializeDragSelection() {
   const dialogueSelector = document.getElementById('dialogue-selector');
   if (!dialogueSelector) return;
 
   const dialogueText = dialogueSelector.querySelector('.dialogue-text');
-  const selectionInfo = document.getElementById('selection-info');
   const selectionRange = document.getElementById('selection-range');
   const addButton = document.getElementById('add-highlight-btn');
 
@@ -991,7 +996,7 @@ function initializeDragSelection() {
   }
 
   function updateSelectionDisplay() {
-    const line = scriptLines.find(l => l.id === activeLineId);
+    const line = state.scriptLines.find(l => l.id === activeLineId);
     const dialogue = line.dialogue || "";
 
     // Highlight selected characters in the selectable text
@@ -1026,7 +1031,7 @@ function initializeDragSelection() {
 }
 
 // Render dialogue with all highlights applied
-function renderHighlightedDialogue(dialogue, highlights) {
+export function renderHighlightedDialogue(dialogue, highlights) {
   if (!dialogue) return '<em>No dialogue text</em>';
 
   // normalizeHighlights guarantees sorted, disjoint, in-bounds ranges, so
@@ -1050,7 +1055,7 @@ function renderHighlightedDialogue(dialogue, highlights) {
 }
 
 // Render preview of current selection (before adding)
-function renderSelectionPreview(dialogue, start, end, color) {
+export function renderSelectionPreview(dialogue, start, end, color) {
   if (!dialogue || start >= end || start < 0 || end > dialogue.length) {
     return '<em>Invalid selection</em>';
   }
@@ -1066,7 +1071,7 @@ function renderSelectionPreview(dialogue, start, end, color) {
 // Named distinctly from app.js's clearSelection (script line multi-select):
 // both files share the global namespace, and the previous shared name meant
 // whichever file loaded last silently won.
-function clearHighlightSelection() {
+export function clearHighlightSelection() {
   highlightingState.startChar = 0;
   highlightingState.endChar = 0;
 
@@ -1094,7 +1099,7 @@ function clearHighlightSelection() {
 }
 
 // Select color (updated to avoid full re-render)
-function selectHighlightColor(color) {
+export function selectHighlightColor(color) {
   highlightingState.currentColor = color;
 
   // Update color preview without full re-render
@@ -1116,7 +1121,7 @@ function selectHighlightColor(color) {
   });
 
   // Update live preview if selection exists
-  const line = scriptLines.find(l => l.id === activeLineId);
+  const line = state.scriptLines.find(l => l.id === activeLineId);
   const livePreview = document.getElementById('selection-live-preview');
   if (livePreview && highlightingState.endChar > highlightingState.startChar && line) {
     livePreview.innerHTML = renderSelectionPreview(
@@ -1129,7 +1134,7 @@ function selectHighlightColor(color) {
 }
 
 // Helper function to convert RGB to hex for color comparison
-function rgbToHex(rgb) {
+export function rgbToHex(rgb) {
   if (rgb.startsWith('#')) return rgb.toLowerCase();
   const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
   if (!match) return rgb;
@@ -1140,8 +1145,8 @@ function rgbToHex(rgb) {
 }
 
 // Add highlight from drag selection
-function addHighlightFromSelection() {
-  const line = scriptLines.find(l => l.id === activeLineId);
+export function addHighlightFromSelection() {
+  const line = state.scriptLines.find(l => l.id === activeLineId);
   const dialogue = line.dialogue || "";
 
   // Validate
@@ -1180,7 +1185,7 @@ function addHighlightFromSelection() {
 }
 
 // Remove highlight
-function removeHighlight(index) {
+export function removeHighlight(index) {
   scriptLineFields.highlights.splice(index, 1);
   renderScriptLineModal();
 
@@ -1191,7 +1196,7 @@ function removeHighlight(index) {
 
 
 // Close script line modal
-function closeScriptLineModal() {
+export function closeScriptLineModal() {
   // Stop and cleanup audio if playing
   if (audioPreviewElement) {
     audioPreviewElement.pause();
@@ -1204,4 +1209,77 @@ function closeScriptLineModal() {
 
   document.getElementById("modalroot").innerHTML = "";
   activeLineId = null;
+}
+
+// ==================== Script Line Advanced Editing ====================
+
+export async function saveScriptLineAdvanced() {
+  const line = state.scriptLines.find(l => l.id === activeLineId);
+  if (!line) {
+    alert("Script line not found!");
+    closeModal();
+    return;
+  }
+
+  try {
+    showLoader(true);
+
+    // Update line data based on type
+    if (line.type === 'speaking') {
+      line.spriteIndex = scriptLineFields.spriteIndex;
+      line.cameraMotion = scriptLineFields.cameraMotion;
+    }
+
+    // Common fields for both narrator and speaking.
+    // Highlights are normalized against the line's current text so stale or
+    // overlapping ranges can never be persisted to trial.json.
+    line.highlights = normalizeHighlights(
+      scriptLineFields.highlights,
+      (line.dialogue || line.text || "").length
+    );
+    line.specialEffects = scriptLineFields.specialEffects;
+    line.dialogueBoxStyle = scriptLineFields.dialogueBoxStyle;
+
+    // Handle audio file upload
+    if (scriptLineFields.audioBlob) {
+      // Create Audio directory if it doesn't exist
+      const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: true });
+
+      // Generate filename based on line ID
+      const audioFileName = `${line.id}.${scriptLineFields.audioBlob.name.split('.').pop()}`;
+
+      // Write audio file
+      const audioFileHandle = await audioDir.getFileHandle(audioFileName, { create: true });
+      const writable = await audioFileHandle.createWritable();
+      await writable.write(scriptLineFields.audioBlob);
+      await writable.close();
+
+      line.audioFile = audioFileName;
+    } else if (scriptLineFields.audioFile === null && line.audioFile) {
+      // Audio was cleared, remove the file
+      try {
+        const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
+        await audioDir.removeEntry(line.audioFile);
+      } catch (e) {
+        console.warn("Could not remove audio file:", e);
+      }
+      line.audioFile = null;
+    }
+
+    // Save trial data
+    await autoSaveTrial();
+
+    showLoader(false);
+    closeModal();
+    renderScriptEditor();
+
+  } catch (error) {
+    console.error("Error saving script line:", error);
+    showLoader(false);
+    // scriptLineModalErr is what renderScriptLineModal displays; the previous
+    // code set modalErr (the character modal's error slot) so save failures
+    // were silently swallowed.
+    scriptLineModalErr = "Failed to save: " + error.message;
+    renderScriptLineModal();
+  }
 }

@@ -1,18 +1,22 @@
 // Cast view - displays the character grid
+import { BLOCK_COUNT, blockNames, blockTypes } from '../core/constants.js';
+import { state } from '../core/state.js';
+import { openCharModal } from '../modals/characterModal.js';
+import { escapeHtml } from '../utils.js';
 
-function renderCastGrid() {
+export function renderCastGrid() {
   const grid = document.getElementById('mainGrid');
   grid.innerHTML = '';
 
   for (let i = 0; i < BLOCK_COUNT; i++) {
-    const c = cast[i];
+    const c = state.cast[i];
     const isHeadmaster = blockTypes[i];
     const div = document.createElement('div');
     div.className = 'cast-block';
     div.setAttribute('tabindex', 0);
     div.setAttribute('data-filled', c ? "1" : "0");
     div.setAttribute('data-type', isHeadmaster ? 'headmaster' : 'student');
-    div.onclick = () => dirHandle ? openCharModal(i) : null;
+    div.onclick = () => state.dirHandle ? openCharModal(i) : null;
 
     if (c) {
       // Character exists - show sprite and name

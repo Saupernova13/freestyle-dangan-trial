@@ -1,7 +1,10 @@
 // Hangman's Gambit minigame editor
 // Simple answer key configuration
+import { state } from '../../core/state.js';
+import { autoSaveTrial } from '../../core/storage.js';
+import { escapeHtml } from '../../utils.js';
 
-function renderHangmansGambitEditor(mg) {
+export function renderHangmansGambitEditor(mg) {
   // Initialize typeSpecific if needed
   if (!mg.typeSpecific) {
     mg.typeSpecific = {};
@@ -27,8 +30,8 @@ function renderHangmansGambitEditor(mg) {
   `;
 }
 
-function updateHangmansGambitField(gameId, field, value) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function updateHangmansGambitField(gameId, field, value) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   if (!mg.typeSpecific) {

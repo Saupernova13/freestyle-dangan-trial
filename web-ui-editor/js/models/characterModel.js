@@ -1,9 +1,10 @@
 // Character model - utility functions for working with characters
+import { blockTypes } from '../core/constants.js';
 
-function getCharacterType(index) {
+export function getCharacterType(index) {
   return blockTypes[index] ? 'headmaster' : 'student';
 }
 
-function isHeadmaster(index) {
+export function isHeadmaster(index) {
   return blockTypes[index] === true;
 }

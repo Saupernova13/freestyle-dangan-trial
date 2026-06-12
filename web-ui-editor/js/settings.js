@@ -1,20 +1,21 @@
 // Settings management
-let appSettings = {
+import { closeModal } from './modals/modalCoordinator.js';
+export const appSettings = {
   maxSprites: 25
 };
 
-function loadSettings() {
+export function loadSettings() {
   const saved = localStorage.getItem('drCastSettings');
   if (saved) {
-    appSettings = { ...appSettings, ...JSON.parse(saved) };
+    Object.assign(appSettings, JSON.parse(saved));
   }
 }
 
-function saveSettings() {
+export function saveSettings() {
   localStorage.setItem('drCastSettings', JSON.stringify(appSettings));
 }
 
-function openSettings() {
+export function openSettings() {
   const root = document.getElementById("modalroot");
   root.innerHTML = `
     <div class="dr-modal-bg">
@@ -46,7 +47,7 @@ function openSettings() {
   `;
 }
 
-function saveAppSettings() {
+export function saveAppSettings() {
   const maxSpritesInput = document.getElementById('maxSpritesInput');
   if (!maxSpritesInput) return;
 

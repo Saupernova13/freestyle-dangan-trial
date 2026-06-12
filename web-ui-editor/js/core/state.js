@@ -1,18 +1,26 @@
-// Global state management for the application
+// Central mutable application state.
+//
+// Every module reads and writes trial data through this single object, which
+// makes data flow explicit (`state.scriptLines`, not an ambient global) and
+// keeps cross-module mutation auditable. UI-local state (open modal, active
+// dropdown, drag-in-progress) stays module-local in the file that owns it.
+import { BLOCK_COUNT } from './constants.js';
 
-// Cast and trial data
-let cast = Array(BLOCK_COUNT).fill(null);
-let trialName = "";
-let dirHandle = null;
+export const state = {
+  // Trial data
+  cast: Array(BLOCK_COUNT).fill(null),
+  trialName: '',
+  dirHandle: null, // FileSystemDirectoryHandle of the open trial folder
 
-// View management
-let activeView = "cast";  // "cast", "script", "truthBullets", or "minigames"
-let scriptLines = [];     // Array of script line objects
-let minigames = [];       // Array of minigame instance objects
-let truthBullets = [];    // Array of truth bullet objects
-let selectedTruthBulletId = null; // Currently selected truth bullet in split-pane view
+  // View management
+  activeView: 'cast', // "cast" | "script" | "truthBullets" | "minigames"
+  scriptLines: [],
+  minigames: [],
+  truthBullets: [],
+  selectedTruthBulletId: null,
 
-// Drag-and-drop state
-let draggedLineIds = [];       // IDs of lines being dragged (supports multi-select)
-let selectedLineIds = new Set();  // Set of selected line IDs for multi-select
-let dragGhostElement = null;   // Ghost element for drag preview
+  // Script editor drag-and-drop
+  draggedLineIds: [],
+  selectedLineIds: new Set(),
+  dragGhostElement: null,
+};

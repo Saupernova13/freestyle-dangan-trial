@@ -2,11 +2,15 @@
 // Handles line groups with 3 simultaneous speakers
 
 // Audio players state
+import { state } from '../../core/state.js';
+import { autoSaveTrial } from '../../core/storage.js';
+import { escapeHtml, formatAudioTime } from '../../utils.js';
+import { renderMinigameDetails } from '../minigameView.js';
 const panicAudioPlayers = {};
 
 // ==================== Main Rendering ====================
 
-function renderMassPanicDebateEditor(mg) {
+export function renderMassPanicDebateEditor(mg) {
   // Initialize typeSpecific
   if (!mg.typeSpecific) {
     mg.typeSpecific = {};
@@ -34,7 +38,7 @@ function renderMassPanicDebateEditor(mg) {
             <label>Speaker 1 Character</label>
             <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker1CharacterId', this.value)">
               <option value="">None</option>
-              ${cast.filter(c => c).map(c => {
+              ${state.cast.filter(c => c).map(c => {
                 const isDisabled = mg.typeSpecific.speaker2CharacterId === c.id ||
                                   mg.typeSpecific.speaker3CharacterId === c.id;
                 return `
@@ -51,7 +55,7 @@ function renderMassPanicDebateEditor(mg) {
             <label>Speaker 2 Character</label>
             <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker2CharacterId', this.value)">
               <option value="">None</option>
-              ${cast.filter(c => c).map(c => {
+              ${state.cast.filter(c => c).map(c => {
                 const isDisabled = mg.typeSpecific.speaker1CharacterId === c.id ||
                                   mg.typeSpecific.speaker3CharacterId === c.id;
                 return `
@@ -68,7 +72,7 @@ function renderMassPanicDebateEditor(mg) {
             <label>Speaker 3 Character</label>
             <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker3CharacterId', this.value)">
               <option value="">None</option>
-              ${cast.filter(c => c).map(c => {
+              ${state.cast.filter(c => c).map(c => {
                 const isDisabled = mg.typeSpecific.speaker1CharacterId === c.id ||
                                   mg.typeSpecific.speaker2CharacterId === c.id;
                 return `
@@ -104,7 +108,7 @@ function renderMassPanicDebateEditor(mg) {
   `;
 }
 
-function renderMassPanicLineGroup(gameId, group, groupIndex) {
+export function renderMassPanicLineGroup(gameId, group, groupIndex) {
   const speakerLabels = ['Speaker 1', 'Speaker 2', 'Speaker 3'];
   const speakerColors = ['rgba(239, 68, 68, 0.3)', 'rgba(59, 130, 246, 0.3)', 'rgba(16, 185, 129, 0.3)'];
 
@@ -124,16 +128,16 @@ function renderMassPanicLineGroup(gameId, group, groupIndex) {
   `;
 }
 
-function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, color, label) {
+export function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, color, label) {
   // Get character ID for this speaker
-  const mg = minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find(m => m.gameId === gameId);
   const speakerCharIdField = `speaker${speakerIndex + 1}CharacterId`;
   const speakerCharId = mg?.typeSpecific?.[speakerCharIdField];
 
   // Build enhanced label with character name
   let enhancedLabel = label;
   if (speakerCharId) {
-    const character = cast.find(c => c && c.id === speakerCharId);
+    const character = state.cast.find(c => c && c.id === speakerCharId);
     if (character) {
       enhancedLabel = `${label} [${character.name} ${character.surname}]`;
     }
@@ -178,7 +182,7 @@ function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, colo
           <select class="form-input"
                   onchange="handleMassPanicAnswerSelection('${gameId}', '${group.groupId}', '${speakerKey}', this.value)">
             <option value="">None</option>
-            ${truthBullets.map(b => `
+            ${state.truthBullets.map(b => `
               <option value="${b.bulletId}" ${line.answerBulletId === b.bulletId ? 'selected' : ''}>
                 ${escapeHtml(b.name)}
               </option>
@@ -262,8 +266,8 @@ function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, colo
 
 // ==================== Line Group Management ====================
 
-function validateSpeakerSelection(gameId, speakerField, selectedCharacterId) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function validateSpeakerSelection(gameId, speakerField, selectedCharacterId) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg || !mg.typeSpecific) return true;
 
   // Check if this character is already selected in another speaker slot
@@ -275,7 +279,7 @@ function validateSpeakerSelection(gameId, speakerField, selectedCharacterId) {
   );
 
   if (isDuplicate) {
-    const character = cast.find(c => c && c.id === selectedCharacterId);
+    const character = state.cast.find(c => c && c.id === selectedCharacterId);
     const characterName = character ? `${character.name} ${character.surname}` : 'This character';
     alert(`${characterName} is already selected for another speaker. Please choose a different character.`);
     return false;
@@ -284,8 +288,8 @@ function validateSpeakerSelection(gameId, speakerField, selectedCharacterId) {
   return true;
 }
 
-function updateMassPanicField(gameId, field, value) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function updateMassPanicField(gameId, field, value) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg || !mg.typeSpecific) return;
 
   // Validate speaker selection if it's a character field
@@ -301,8 +305,8 @@ function updateMassPanicField(gameId, field, value) {
   autoSaveTrial();
 }
 
-function addMassPanicLineGroup(gameId) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function addMassPanicLineGroup(gameId) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg || !mg.typeSpecific) return;
 
   if (!mg.typeSpecific.lineGroups) {
@@ -324,7 +328,7 @@ function addMassPanicLineGroup(gameId) {
   autoSaveTrial();
 }
 
-function createEmptyPanicLine() {
+export function createEmptyPanicLine() {
   return {
     sentenceBeginning: "",
     target: "",
@@ -339,10 +343,10 @@ function createEmptyPanicLine() {
   };
 }
 
-function deleteMassPanicLineGroup(gameId, groupId) {
+export function deleteMassPanicLineGroup(gameId, groupId) {
   if (!confirm('Delete this entire line group (all 3 speakers)?')) return;
 
-  const mg = minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
   // Delete audio files first
@@ -352,7 +356,7 @@ function deleteMassPanicLineGroup(gameId, groupId) {
       const line = group[speakerKey];
       if (line && line.voiceLineFile) {
         try {
-          const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+          const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
           const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
           const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
           await gameAudioDir.removeEntry(line.voiceLineFile);
@@ -374,8 +378,8 @@ function deleteMassPanicLineGroup(gameId, groupId) {
   autoSaveTrial();
 }
 
-function updateMassPanicLineField(gameId, groupId, speakerKey, field, value) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function updateMassPanicLineField(gameId, groupId, speakerKey, field, value) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
   const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
@@ -385,8 +389,8 @@ function updateMassPanicLineField(gameId, groupId, speakerKey, field, value) {
   autoSaveTrial();
 }
 
-function handleLoudAssertionToggle(gameId, groupId, speakerKey, checked) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function handleLoudAssertionToggle(gameId, groupId, speakerKey, checked) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
   const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
@@ -406,8 +410,8 @@ function handleLoudAssertionToggle(gameId, groupId, speakerKey, checked) {
   autoSaveTrial();
 }
 
-function handleMassPanicAnswerSelection(gameId, groupId, speakerKey, bulletId) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function handleMassPanicAnswerSelection(gameId, groupId, speakerKey, bulletId) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
   const currentGroup = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
@@ -435,7 +439,7 @@ function handleMassPanicAnswerSelection(gameId, groupId, speakerKey, bulletId) {
 
 // ==================== Audio Handling ====================
 
-async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event) {
+export async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -445,14 +449,14 @@ async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event) {
     return;
   }
 
-  const mg = minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
   if (!group || !group[speakerKey]) return;
 
   try {
-    const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: true });
+    const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: true });
     const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: true });
     const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: true });
 
@@ -475,8 +479,8 @@ async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event) {
   }
 }
 
-async function clearPanicVoiceLine(gameId, groupId, speakerKey) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export async function clearPanicVoiceLine(gameId, groupId, speakerKey) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
@@ -484,7 +488,7 @@ async function clearPanicVoiceLine(gameId, groupId, speakerKey) {
 
   if (group[speakerKey].voiceLineFile) {
     try {
-      const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+      const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
       const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
       const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
       await gameAudioDir.removeEntry(group[speakerKey].voiceLineFile);
@@ -502,7 +506,7 @@ async function clearPanicVoiceLine(gameId, groupId, speakerKey) {
 
 // ==================== Audio Playback ====================
 
-async function playPanicAudioPreview(gameId, groupId, speakerKey) {
+export async function playPanicAudioPreview(gameId, groupId, speakerKey) {
   const playerKey = `${gameId}_${groupId}_${speakerKey}`;
   const player = panicAudioPlayers[playerKey];
 
@@ -513,7 +517,7 @@ async function playPanicAudioPreview(gameId, groupId, speakerKey) {
     return;
   }
 
-  const mg = minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   const group = mg.typeSpecific.lineGroups.find(g => g.groupId === groupId);
@@ -525,7 +529,7 @@ async function playPanicAudioPreview(gameId, groupId, speakerKey) {
   let audioBlob = line.voiceLineBlob;
   if (!audioBlob) {
     try {
-      const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+      const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
       const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
       const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false});
       const fileHandle = await gameAudioDir.getFileHandle(line.voiceLineFile);
@@ -575,14 +579,14 @@ async function playPanicAudioPreview(gameId, groupId, speakerKey) {
   }
 }
 
-function updatePanicPlayButton(groupId, speakerKey, isPlaying) {
+export function updatePanicPlayButton(groupId, speakerKey, isPlaying) {
   const btn = document.getElementById(`panic-play-btn-${groupId}-${speakerKey}`);
   if (btn) {
     btn.innerHTML = isPlaying ? '⏸️ Pause' : '▶️ Play';
   }
 }
 
-function seekPanicAudio(gameId, groupId, speakerKey, value) {
+export function seekPanicAudio(gameId, groupId, speakerKey, value) {
   const playerKey = `${gameId}_${groupId}_${speakerKey}`;
   const audio = panicAudioPlayers[playerKey];
   if (audio && audio.duration) {
@@ -590,7 +594,7 @@ function seekPanicAudio(gameId, groupId, speakerKey, value) {
   }
 }
 
-function updatePanicSeekBar(groupId, speakerKey, audio) {
+export function updatePanicSeekBar(groupId, speakerKey, audio) {
   const seekBar = document.getElementById(`panic-audio-seek-bar-${groupId}-${speakerKey}`);
   const currentTimeEl = document.getElementById(`panic-audio-time-current-${groupId}-${speakerKey}`);
   const totalTimeEl = document.getElementById(`panic-audio-time-total-${groupId}-${speakerKey}`);

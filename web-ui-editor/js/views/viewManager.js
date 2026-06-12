@@ -1,16 +1,22 @@
 // View manager - handles switching between different views
+import { renderScriptEditor } from '../app.js';
+import { updateFloatingAddButton } from '../components/floatingAddButton.js';
+import { state } from '../core/state.js';
+import { renderCastGrid } from './castView.js';
+import { renderMinigameDetails } from './minigameView.js';
+import { renderTruthBulletsView } from './truthBulletsView.js';
 
-function switchView(viewName) {
-  activeView = viewName;
+export function switchView(viewName) {
+  state.activeView = viewName;
   updateNavSelection();
   renderActiveView();
   updateFloatingAddButton();  // Update floating button for new view
 }
 
-function updateNavSelection() {
+export function updateNavSelection() {
   document.querySelectorAll('.nav-item').forEach(item => {
     const itemView = item.getAttribute('data-view');
-    if (itemView === activeView) {
+    if (itemView === state.activeView) {
       item.classList.add('selected');
     } else {
       item.classList.remove('selected');
@@ -18,11 +24,11 @@ function updateNavSelection() {
   });
 }
 
-function renderActiveView() {
+export function renderActiveView() {
   const mainGrid = document.getElementById('mainGrid');
   if (!mainGrid) return;
 
-  if (!dirHandle) {
+  if (!state.dirHandle) {
     mainGrid.innerHTML = `
       <div class="welcome-screen">
         <h2>Welcome to Danganronpa Cast Manager</h2>
@@ -33,13 +39,13 @@ function renderActiveView() {
     return;
   }
 
-  if (activeView === 'cast') {
+  if (state.activeView === 'cast') {
     renderCastGrid();
-  } else if (activeView === 'script') {
+  } else if (state.activeView === 'script') {
     renderScriptEditor();
-  } else if (activeView === 'truthBullets') {
+  } else if (state.activeView === 'truthBullets') {
     renderTruthBulletsView();
-  } else if (activeView === 'minigames') {
+  } else if (state.activeView === 'minigames') {
     renderMinigameDetails();
   }
 }

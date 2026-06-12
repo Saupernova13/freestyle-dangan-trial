@@ -1,10 +1,18 @@
 // Minigame view coordinator - delegates to specific minigame editor modules
+import { state } from '../core/state.js';
+import { autoSaveTrial } from '../core/storage.js';
+import { escapeHtml } from '../utils.js';
+import { renderDebateScumEditor } from './minigames/debateScrumEditor.js';
+import { renderHangmansGambitEditor } from './minigames/hangmansGambitEditor.js';
+import { renderLogicDiveEditor } from './minigames/logicDiveEditor.js';
+import { renderMassPanicDebateEditor } from './minigames/massPanicDebateEditor.js';
+import { renderNonstopDebateEditor } from './minigames/nonstopDebateEditor.js';
 let expandedMinigameId = null;
 
-function renderMinigameDetails() {
+export function renderMinigameDetails() {
   const grid = document.getElementById('mainGrid');
 
-  if (minigames.length === 0) {
+  if (state.minigames.length === 0) {
     grid.innerHTML = `
       <div id="minigameDetailsContainer">
         <div class="script-empty-state">
@@ -18,7 +26,7 @@ function renderMinigameDetails() {
       </div>
     `;
   } else {
-    let minigamesHtml = minigames.map((mg, index) =>
+    let minigamesHtml = state.minigames.map((mg, index) =>
       renderMinigameCard(mg, index)
     ).join('');
 
@@ -35,7 +43,7 @@ function renderMinigameDetails() {
   }
 }
 
-function renderMinigameCard(mg, index) {
+export function renderMinigameCard(mg, index) {
   const isExpanded = expandedMinigameId === mg.gameId;
 
   const typeLabels = {
@@ -88,7 +96,7 @@ function renderMinigameCard(mg, index) {
   return cardContent;
 }
 
-function toggleMinigameExpand(gameId) {
+export function toggleMinigameExpand(gameId) {
   if (expandedMinigameId === gameId) {
     expandedMinigameId = null;
   } else {
@@ -97,7 +105,7 @@ function toggleMinigameExpand(gameId) {
   renderMinigameDetails();
 }
 
-function renderMinigameEditor(mg) {
+export function renderMinigameEditor(mg) {
   // Common settings
   let editorHtml = `
     <div class="minigame-editor-section">
@@ -179,8 +187,8 @@ function renderMinigameEditor(mg) {
   return editorHtml;
 }
 
-function updateMinigameField(gameId, field, value) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function updateMinigameField(gameId, field, value) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (mg) {
     mg[field] = value;
 
@@ -206,11 +214,11 @@ function updateMinigameField(gameId, field, value) {
   }
 }
 
-function generateMinigameId() {
+export function generateMinigameId() {
   return `mg_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
 }
 
-function addMinigame() {
+export function addMinigame() {
   const newMinigame = {
     gameId: generateMinigameId(),
     name: "",
@@ -222,20 +230,20 @@ function addMinigame() {
       dialogueLines: []
     }
   };
-  minigames.push(newMinigame);
+  state.minigames.push(newMinigame);
   expandedMinigameId = newMinigame.gameId; // Auto-expand new minigame
   renderMinigameDetails();
   autoSaveTrial();
 }
 
-function deleteMinigame(gameId) {
+export function deleteMinigame(gameId) {
   if (!confirm('Delete this minigame? This will also remove it from any script lines that reference it.')) {
     return;
   }
 
-  minigames = minigames.filter(mg => mg.gameId !== gameId);
+  state.minigames = state.minigames.filter(mg => mg.gameId !== gameId);
 
-  scriptLines.forEach(line => {
+  state.scriptLines.forEach(line => {
     if (line.type === 'minigame' && line.minigameId === gameId) {
       line.minigameId = "";
     }

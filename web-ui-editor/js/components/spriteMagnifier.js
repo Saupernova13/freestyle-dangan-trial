@@ -13,7 +13,7 @@ const SPRITE_MAGNIFIER_OFFSET = 24; // gap between cursor and lens
 let _magnifierLens = null;
 let _magnifierInnerImg = null;
 
-function _ensureMagnifierLens() {
+export function _ensureMagnifierLens() {
   if (_magnifierLens) return;
 
   _magnifierLens = document.createElement('div');
@@ -29,11 +29,11 @@ function _ensureMagnifierLens() {
   document.body.appendChild(_magnifierLens);
 }
 
-function _isSpriteThumb(el) {
+export function _isSpriteThumb(el) {
   return el && el.tagName === 'IMG' && el.closest('.dr-sprslot');
 }
 
-function _showMagnifier(img) {
+export function _showMagnifier(img) {
   _ensureMagnifierLens();
   // Mirror the source so the lens shows the same picture as the slot.
   if (_magnifierInnerImg.src !== img.src) {
@@ -42,11 +42,11 @@ function _showMagnifier(img) {
   _magnifierLens.style.display = 'block';
 }
 
-function _hideMagnifier() {
+export function _hideMagnifier() {
   if (_magnifierLens) _magnifierLens.style.display = 'none';
 }
 
-function _moveMagnifier(img, clientX, clientY) {
+export function _moveMagnifier(img, clientX, clientY) {
   if (!_magnifierLens) return;
 
   const rect = img.getBoundingClientRect();
@@ -83,7 +83,7 @@ function _moveMagnifier(img, clientX, clientY) {
   _magnifierLens.style.top = lensY + 'px';
 }
 
-function initSpriteMagnifier() {
+export function initSpriteMagnifier() {
   document.addEventListener('mouseover', (e) => {
     if (_isSpriteThumb(e.target)) _showMagnifier(e.target);
   });

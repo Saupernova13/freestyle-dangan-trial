@@ -1,4 +1,7 @@
 // Export module - handles packaging trial files into .drtrial format
+import JSZip from 'jszip';
+import { state } from './core/state.js';
+import { normalizeHighlights, showLoader } from './utils.js';
 
 /**
  * Final data gate before packaging: normalize every script line's highlight
@@ -7,7 +10,7 @@
  * only ever contains sorted, disjoint, in-bounds highlights.
  * Returns the original content untouched if it isn't parseable JSON.
  */
-function sanitizeTrialJson(content) {
+export function sanitizeTrialJson(content) {
   try {
     const trial = JSON.parse(content);
     const lines = trial?.script?.lines;
@@ -29,13 +32,13 @@ function sanitizeTrialJson(content) {
 /**
  * Export the current trial to a playable .drtrial file (ZIP format)
  */
-async function exportToPlayableFile() {
-  if (!dirHandle) {
+export async function exportToPlayableFile() {
+  if (!state.dirHandle) {
     alert("Please choose a trial folder first!");
     return;
   }
 
-  if (!trialName || trialName.trim() === "") {
+  if (!state.trialName || state.trialName.trim() === "") {
     alert("Please enter a trial name before exporting!");
     return;
   }
@@ -51,32 +54,32 @@ async function exportToPlayableFile() {
     let totalFiles = 0;
 
     // Count total files first
-    totalFiles = await countFilesInDirectory(dirHandle);
+    totalFiles = await countFilesInDirectory(state.dirHandle);
     console.log(`Preparing to package ${totalFiles} files...`);
 
     // Add trial.json
     try {
-      const trialJsonHandle = await dirHandle.getFileHandle("trial.json");
+      const trialJsonHandle = await state.dirHandle.getFileHandle("trial.json");
       const trialJsonFile = await trialJsonHandle.getFile();
       const trialJsonContent = await trialJsonFile.text();
       zip.file("trial.json", sanitizeTrialJson(trialJsonContent));
       filesAdded++;
       console.log(`Added trial.json (${filesAdded}/${totalFiles})`);
-    } catch (error) {
+    } catch {
       console.warn("trial.json not found, creating minimal version");
       // Create minimal trial.json if it doesn't exist
       const minimalTrial = {
-        trialName: trialName,
-        characters: cast.map(c => c ? c.id : null),
-        truthBullets: truthBullets || [],
-        minigames: minigames || [],
-        script: { lines: scriptLines || [] },
+        trialName: state.trialName,
+        characters: state.cast.map(c => c ? c.id : null),
+        truthBullets: state.truthBullets || [],
+        minigames: state.minigames || [],
+        script: { lines: state.scriptLines || [] },
         metadata: {
           version: "4.0",
           lastModified: new Date().toISOString(),
-          scriptLineCount: (scriptLines || []).length,
-          minigameCount: (minigames || []).length,
-          truthBulletCount: (truthBullets || []).length
+          scriptLineCount: (state.scriptLines || []).length,
+          minigameCount: (state.minigames || []).length,
+          truthBulletCount: (state.truthBullets || []).length
         }
       };
       zip.file("trial.json", JSON.stringify(minimalTrial, null, 2));
@@ -84,7 +87,7 @@ async function exportToPlayableFile() {
     }
 
     // Add all other files and directories
-    await addDirectoryToZip(zip, dirHandle, "", (current, total) => {
+    await addDirectoryToZip(zip, state.dirHandle, "", (current, total) => {
       filesAdded = current;
       console.log(`Packaging... ${current}/${total} files`);
     });
@@ -105,7 +108,7 @@ async function exportToPlayableFile() {
     });
 
     // Create filename and trigger download
-    const sanitizedTrialName = trialName.replace(/[^a-z0-9_\-]/gi, '_');
+    const sanitizedTrialName = state.trialName.replace(/[^a-z0-9_-]/gi, '_');
     const filename = `${sanitizedTrialName}.drtrial`;
 
     // Create download link
@@ -134,18 +137,18 @@ async function exportToPlayableFile() {
 /**
  * Recursively add directory contents to ZIP archive
  * @param {JSZip} zip - The JSZip instance
- * @param {FileSystemDirectoryHandle} dirHandle - Directory handle to process
+ * @param {FileSystemDirectoryHandle} state.dirHandle - Directory handle to process
  * @param {string} zipPath - Path within the ZIP file
  * @param {Function} progressCallback - Optional callback for progress updates
- * @param {Object} state - State object to track progress
+ * @param {Object} progress - Mutable counter used across recursive calls
  */
-async function addDirectoryToZip(zip, dirHandle, zipPath, progressCallback, state = { count: 1, total: 0 }) {
+export async function addDirectoryToZip(zip, dir, zipPath, progressCallback, progress = { count: 1, total: 0 }) {
   // Skip trial.json as it's already added
   if (zipPath === "trial.json") {
     return;
   }
 
-  for await (const entry of dirHandle.values()) {
+  for await (const entry of dir.values()) {
     const entryPath = zipPath ? `${zipPath}/${entry.name}` : entry.name;
 
     // Skip trial.json at root level (already added)
@@ -156,39 +159,39 @@ async function addDirectoryToZip(zip, dirHandle, zipPath, progressCallback, stat
     if (entry.kind === 'file') {
       // Add file to ZIP
       try {
-        const fileHandle = await dirHandle.getFileHandle(entry.name);
+        const fileHandle = await dir.getFileHandle(entry.name);
         const file = await fileHandle.getFile();
         const fileData = await file.arrayBuffer();
         zip.file(entryPath, fileData);
 
-        state.count++;
+        progress.count++;
         if (progressCallback) {
-          progressCallback(state.count, state.total);
+          progressCallback(progress.count, progress.total);
         }
       } catch (error) {
         console.warn(`Failed to add file ${entryPath}:`, error);
       }
     } else if (entry.kind === 'directory') {
       // Recursively add directory
-      const subDirHandle = await dirHandle.getDirectoryHandle(entry.name);
-      await addDirectoryToZip(zip, subDirHandle, entryPath, progressCallback, state);
+      const subDirHandle = await dir.getDirectoryHandle(entry.name);
+      await addDirectoryToZip(zip, subDirHandle, entryPath, progressCallback, progress);
     }
   }
 }
 
 /**
  * Count total files in directory (for progress tracking)
- * @param {FileSystemDirectoryHandle} dirHandle - Directory to count
+ * @param {FileSystemDirectoryHandle} state.dirHandle - Directory to count
  * @returns {Promise<number>} Total number of files
  */
-async function countFilesInDirectory(dirHandle) {
+export async function countFilesInDirectory(dir) {
   let count = 0;
 
-  for await (const entry of dirHandle.values()) {
+  for await (const entry of dir.values()) {
     if (entry.kind === 'file') {
       count++;
     } else if (entry.kind === 'directory') {
-      const subDirHandle = await dirHandle.getDirectoryHandle(entry.name);
+      const subDirHandle = await dir.getDirectoryHandle(entry.name);
       count += await countFilesInDirectory(subDirHandle);
     }
   }
@@ -199,11 +202,11 @@ async function countFilesInDirectory(dirHandle) {
 /**
  * Enable/disable export button based on trial state
  */
-function updateExportButtonState() {
+export function updateExportButtonState() {
   const exportBtn = document.getElementById('exportBtn');
   if (exportBtn) {
     // Enable if we have a directory handle and a trial name
-    exportBtn.disabled = !dirHandle || !trialName || trialName.trim() === "";
+    exportBtn.disabled = !state.dirHandle || !state.trialName || state.trialName.trim() === "";
   }
 }
 
@@ -215,5 +218,3 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Also expose this function to be called when directory is chosen
-window.updateExportButtonState = updateExportButtonState;

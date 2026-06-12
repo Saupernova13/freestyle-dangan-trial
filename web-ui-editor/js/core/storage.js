@@ -1,46 +1,52 @@
 // Storage layer - handles file I/O and trial data persistence
+import { BLOCK_COUNT, blockTypes } from './constants.js';
+import { state } from './state.js';
+import { updateExportButtonState } from '../export.js';
+import { appSettings } from '../settings.js';
+import { fileToDataUrl, renderDirDisplay, showLoader } from '../utils.js';
+import { renderActiveView } from '../views/viewManager.js';
 
-async function chooseTrialDir() {
+export async function chooseTrialDir() {
   try {
     showLoader(true);
     let dH = await window.showDirectoryPicker({ id: 'dr-trial-dir', mode: 'readwrite' });
-    dirHandle = dH;
-    renderDirDisplay(dirHandle);
+    state.dirHandle = dH;
+    renderDirDisplay(state.dirHandle);
 
     let files = [];
-    for await (const entry of dirHandle.values()) files.push(entry.name);
+    for await (const entry of state.dirHandle.values()) files.push(entry.name);
 
     if (files.includes("trial.json")) {
       try {
-        const file = await dirHandle.getFileHandle("trial.json").then(fh => fh.getFile());
+        const file = await state.dirHandle.getFileHandle("trial.json").then(fh => fh.getFile());
         const data = JSON.parse(await file.text());
-        trialName = data.trialName || "";
-        document.getElementById('trialNameInput').value = trialName;
+        state.trialName = data.trialName || "";
+        document.getElementById('trialNameInput').value = state.trialName;
 
         // Load characters from ID references
         await loadCharactersFromIds(data.characters || []);
 
         // Load script lines
         if (data.script && data.script.lines) {
-          scriptLines = data.script.lines;
+          state.scriptLines = data.script.lines;
         } else {
-          scriptLines = [];
+          state.scriptLines = [];
         }
 
-        // Load minigames
+        // Load state.minigames
         if (data.minigames && Array.isArray(data.minigames)) {
-          minigames = data.minigames;
+          state.minigames = data.minigames;
           await loadMinigameAudio();
         } else {
-          minigames = [];
+          state.minigames = [];
         }
 
         // Load truth bullets
         if (data.truthBullets && Array.isArray(data.truthBullets)) {
-          truthBullets = data.truthBullets;
+          state.truthBullets = data.truthBullets;
           await loadTruthBulletImages();
         } else {
-          truthBullets = [];
+          state.truthBullets = [];
         }
       } catch (error) {
         console.error("Failed to parse trial.json:", error);
@@ -52,30 +58,28 @@ async function chooseTrialDir() {
           "the folder before making changes, since saving will overwrite trial.json."
         );
         // Initialize with empty trial if corrupted
-        trialName = "";
+        state.trialName = "";
         document.getElementById('trialNameInput').value = "";
-        cast = Array(BLOCK_COUNT).fill(null);
-        scriptLines = [];
-        minigames = [];
-        truthBullets = [];
+        state.cast = Array(BLOCK_COUNT).fill(null);
+        state.scriptLines = [];
+        state.minigames = [];
+        state.truthBullets = [];
       }
     } else {
-      trialName = "";
+      state.trialName = "";
       document.getElementById('trialNameInput').value = "";
-      cast = Array(BLOCK_COUNT).fill(null);
-      scriptLines = [];
-      minigames = [];
-      truthBullets = [];
-      await dirHandle.getDirectoryHandle('Characters', { create: true });
+      state.cast = Array(BLOCK_COUNT).fill(null);
+      state.scriptLines = [];
+      state.minigames = [];
+      state.truthBullets = [];
+      await state.dirHandle.getDirectoryHandle('Characters', { create: true });
     }
 
     showLoader(false);
     renderActiveView();
 
     // Enable export button now that we have a directory
-    if (typeof updateExportButtonState === 'function') {
-      updateExportButtonState();
-    }
+    updateExportButtonState();
   } catch (err) {
     showLoader(false);
     // AbortError means the user cancelled the directory picker — not an error.
@@ -86,8 +90,8 @@ async function chooseTrialDir() {
 }
 
 // Lazy load remaining sprites for a character (performance optimization)
-async function loadRemainingSprites(charIndex) {
-  const char = cast[charIndex];
+export async function loadRemainingSprites(charIndex) {
+  const char = state.cast[charIndex];
   if (!char || !char._folderHandle) return;
 
   // Check if sprites already loaded
@@ -116,10 +120,10 @@ async function loadRemainingSprites(charIndex) {
   }
 }
 
-async function loadCharactersFromIds(characterIds) {
-  cast = Array(BLOCK_COUNT).fill(null);
+export async function loadCharactersFromIds(characterIds) {
+  state.cast = Array(BLOCK_COUNT).fill(null);
 
-  let charsDir = await dirHandle.getDirectoryHandle("Characters", { create: false }).catch(() => null);
+  let charsDir = await state.dirHandle.getDirectoryHandle("Characters", { create: false }).catch(() => null);
   if (!charsDir) return;
 
   for (let i = 0; i < characterIds.length; i++) {
@@ -127,14 +131,14 @@ async function loadCharactersFromIds(characterIds) {
     if (charId) {
       try {
         // Find character folder by ID
-        for await (const [folderName, folderHandle] of charsDir.entries()) {
+        for await (const [, folderHandle] of charsDir.entries()) {
           if (folderHandle.kind === 'directory') {
             try {
               let charFile = await folderHandle.getFileHandle("character.json");
               let charData = JSON.parse(await (await charFile.getFile()).text());
 
               if (charData.id === charId) {
-                // Load only first sprite for cast grid (performance optimization)
+                // Load only first sprite for state.cast grid (performance optimization)
                 // Remaining sprites loaded lazily when opening character modal
                 charData.sprites = [];
                 try {
@@ -149,7 +153,7 @@ async function loadCharactersFromIds(characterIds) {
                 // Store folder handle for lazy loading remaining sprites
                 charData._folderHandle = folderHandle;
 
-                cast[i] = charData;
+                state.cast[i] = charData;
                 break;
               }
             } catch {
@@ -164,11 +168,11 @@ async function loadCharactersFromIds(characterIds) {
   }
 }
 
-async function loadTruthBulletImages() {
-  let bulletsDir = await dirHandle.getDirectoryHandle("TruthBullets", { create: false }).catch(() => null);
+export async function loadTruthBulletImages() {
+  let bulletsDir = await state.dirHandle.getDirectoryHandle("TruthBullets", { create: false }).catch(() => null);
   if (!bulletsDir) return;
 
-  for (let bullet of truthBullets) {
+  for (let bullet of state.truthBullets) {
     if (bullet.imageFile) {
       try {
         const fileHandle = await bulletsDir.getFileHandle(bullet.imageFile);
@@ -182,12 +186,12 @@ async function loadTruthBulletImages() {
   }
 }
 
-async function loadMinigameAudio() {
+export async function loadMinigameAudio() {
   try {
-    const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+    const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
     const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
 
-    for (let mg of minigames) {
+    for (let mg of state.minigames) {
       try {
         const gameAudioDir = await minigamesDir.getDirectoryHandle(mg.gameId, { create: false });
 
@@ -257,21 +261,21 @@ async function loadMinigameAudio() {
   }
 }
 
-async function autoSaveTrial() {
-  if (!dirHandle) return;
+export async function autoSaveTrial() {
+  if (!state.dirHandle) return;
 
   // Create minimal ID-only references
-  let characterIds = cast.map(c => c ? c.id : null);
+  let characterIds = state.cast.map(c => c ? c.id : null);
 
   const RUNTIME_FIELDS = new Set(['voiceLineBlob', 'oppositionAudioBlob', 'defenseAudioBlob']);
-  let minigamesForSave = JSON.parse(JSON.stringify(minigames, (k, v) =>
+  let minigamesForSave = JSON.parse(JSON.stringify(state.minigames, (k, v) =>
     RUNTIME_FIELDS.has(k) ? undefined : v
   ));
 
   let trialJs = {
-    trialName,
+    trialName: state.trialName,
     characters: characterIds, // Just an array of IDs or nulls
-    truthBullets: truthBullets.map(b => ({  // Exclude imageDataURL
+    truthBullets: state.truthBullets.map(b => ({  // Exclude imageDataURL
       bulletId: b.bulletId,
       name: b.name,
       description: b.description,
@@ -280,7 +284,7 @@ async function autoSaveTrial() {
     })),
     minigames: minigamesForSave,
     script: {
-      lines: scriptLines,
+      lines: state.scriptLines,
       lastModified: new Date().toISOString()
     },
     metadata: {
@@ -289,13 +293,13 @@ async function autoSaveTrial() {
       studentCount: blockTypes.filter(t => !t).length,
       headmasterCount: blockTypes.filter(t => t).length,
       totalCharacters: characterIds.filter(id => id !== null).length,
-      scriptLineCount: scriptLines.length,
-      minigameCount: minigames.length,
-      truthBulletCount: truthBullets.length
+      scriptLineCount: state.scriptLines.length,
+      minigameCount: state.minigames.length,
+      truthBulletCount: state.truthBullets.length
     }
   };
 
-  let fHandle = await dirHandle.getFileHandle("trial.json", { create: true });
+  let fHandle = await state.dirHandle.getFileHandle("trial.json", { create: true });
   let wr = await fHandle.createWritable();
   await wr.write(JSON.stringify(trialJs, null, 2));
   await wr.close();

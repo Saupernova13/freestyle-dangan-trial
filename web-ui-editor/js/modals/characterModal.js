@@ -1,4 +1,10 @@
-// Character modal for creating/editing cast members
+// Character modal for creating/editing state.cast members
+import { state } from '../core/state.js';
+import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
+import { getCharacterType, isHeadmaster } from '../models/characterModel.js';
+import { appSettings } from '../settings.js';
+import { escapeHtml, showLoader } from '../utils.js';
+import { renderCastGrid } from '../views/castView.js';
 
 let activeIdx = null;
 let charFields = {
@@ -20,7 +26,7 @@ let modalErr = "";
 let modalMsg = "";
 
 // Generate human-readable ID for characters
-function generateCharacterId(name, surname, dob) {
+export function generateCharacterId(name, surname, dob) {
   // Clean and format components
   const cleanName = name.charAt(0).toUpperCase().replace(/[^A-Za-z0-9]/g, '') || 'X';
   const cleanSurname = surname.charAt(0).toUpperCase().replace(/[^A-Za-z0-9]/g, '') || 'Y';
@@ -30,8 +36,8 @@ function generateCharacterId(name, surname, dob) {
   return `${cleanSurname}${cleanName}_${dobFormatted}_${randomString}`;
 }
 
-async function openCharModal(idx) {
-  if (!dirHandle) {
+export async function openCharModal(idx) {
+  if (!state.dirHandle) {
     alert("Choose a folder first!");
     return;
   }
@@ -41,7 +47,7 @@ async function openCharModal(idx) {
   modalErr = "";
   modalMsg = "";
 
-  let c = cast[idx] || {};
+  let c = state.cast[idx] || {};
   charFields = {
     name: c.name || "",
     surname: c.surname || "",
@@ -60,7 +66,7 @@ async function openCharModal(idx) {
   if (c.id && c._folderHandle) {
     showLoader(true);
     await loadRemainingSprites(idx);
-    c = cast[idx]; // Refresh reference after loading sprites
+    c = state.cast[idx]; // Refresh reference after loading sprites
     showLoader(false);
   }
 
@@ -74,7 +80,7 @@ async function openCharModal(idx) {
   renderCharacterModal();
 }
 
-function renderCharacterModal() {
+export function renderCharacterModal() {
   let root = document.getElementById("modalroot");
   const characterType = getCharacterType(activeIdx);
   const isHeadmasterChar = isHeadmaster(activeIdx);
@@ -96,32 +102,31 @@ function renderCharacterModal() {
         </div>
         <div class="dr-btn-row">
           <button class="btn btn-secondary" onclick="closeCharModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="trySaveChar()" ${(!dirHandle) ? "disabled" : ""}>Save ${isHeadmasterChar ? 'Headmaster' : 'Student'}</button>
+          <button class="btn btn-primary" onclick="trySaveChar()" ${(!state.dirHandle) ? "disabled" : ""}>Save ${isHeadmasterChar ? 'Headmaster' : 'Student'}</button>
         </div>
       </div>
     </div>
   `;
 }
 
-function closeCharModal() {
+export function closeCharModal() {
   document.getElementById("modalroot").innerHTML = "";
   activeIdx = null;
 }
 
-function switchCharModalTab(tab) {
+export function switchCharModalTab(tab) {
   modalTab = tab;
   modalErr = "";
   modalMsg = "";
   renderCharacterModal();
 }
 
-function fieldUpdate(field, val) {
+export function fieldUpdate(field, val) {
   charFields[field] = val;
 }
 
-function renderCharDetailsTab() {
+export function renderCharDetailsTab() {
   const isHeadmasterChar = isHeadmaster(activeIdx);
-  const characterType = getCharacterType(activeIdx);
 
   return `<form class="dr-form" onsubmit="event.preventDefault();">
     <div style="background: ${isHeadmasterChar ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, var(--primary), var(--primary-dark))'}; color: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; text-align: center; font-weight: 600;">
@@ -194,7 +199,7 @@ function renderCharDetailsTab() {
   </form>`;
 }
 
-function renderCharSpritesTab() {
+export function renderCharSpritesTab() {
   const isHeadmasterChar = isHeadmaster(activeIdx);
 
   return `
@@ -219,7 +224,7 @@ function renderCharSpritesTab() {
   `;
 }
 
-function spriteUpload(e, idx) {
+export function spriteUpload(e, idx) {
   const file = e.target.files[0];
   if (!file) return;
 
@@ -228,11 +233,11 @@ function spriteUpload(e, idx) {
   renderCharacterModal();
 }
 
-function triggerSpriteInput(i) {
+export function triggerSpriteInput(i) {
   document.getElementById(`sprite_inp_${i}`).click();
 }
 
-function bulkImportSprites() {
+export function bulkImportSprites() {
   let inp = document.createElement("input");
   inp.type = 'file';
   inp.accept = "image/*";
@@ -256,7 +261,7 @@ function bulkImportSprites() {
   inp.click();
 }
 
-async function trySaveChar() {
+export async function trySaveChar() {
   let missingF = !charFields.name || !charFields.surname || !charFields.weight || !charFields.chest
     || !charFields.dob || !charFields.likes || !charFields.dislikes || !charFields.notes;
   let badh = isNaN(parseFloat(charFields.heightM)) || isNaN(parseInt(charFields.heightCM));
@@ -270,7 +275,7 @@ async function trySaveChar() {
     return;
   }
 
-  if (!dirHandle) {
+  if (!state.dirHandle) {
     modalErr = "Choose a folder first!";
     renderCharacterModal();
     return;
@@ -280,11 +285,11 @@ async function trySaveChar() {
     showLoader(true);
 
     // Generate human-readable ID for new characters or keep existing ID
-    const existingChar = cast[activeIdx];
+    const existingChar = state.cast[activeIdx];
     const characterId = existingChar ? existingChar.id : generateCharacterId(charFields.name, charFields.surname, charFields.dob);
 
     let charDirname = (charFields.name + "_" + charFields.surname).replace(/[^a-zA-Z0-9_\- ]/g, '_');
-    let charsDir = await dirHandle.getDirectoryHandle("Characters", { create: true });
+    let charsDir = await state.dirHandle.getDirectoryHandle("Characters", { create: true });
     let charDir = await charsDir.getDirectoryHandle(charDirname, { create: true });
 
     // Save character data (optimized structure)
@@ -329,8 +334,8 @@ async function trySaveChar() {
       }
     }
 
-    // Update cast with new character data
-    cast[activeIdx] = {
+    // Update state.cast with new character data
+    state.cast[activeIdx] = {
       ...charJson,
       sprites: savedSprites
     };

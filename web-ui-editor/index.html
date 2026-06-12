@@ -64,54 +64,8 @@
     <div class="spinner"></div>
   </div>
 
-  <!-- External Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-  <!-- Core (no dependencies) -->
-  <script src="js/core/constants.js"></script>
-  <script src="js/core/state.js"></script>
-
-  <!-- Utilities (depend on constants/state) -->
-  <script src="js/utils.js"></script>
-  <script src="js/ui/theme.js"></script>
-
-  <!-- Components -->
-  <script src="js/components/floatingAddButton.js"></script>
-  <script src="js/components/spriteMagnifier.js"></script>
-
-  <!-- Models (depend on state) -->
-  <script src="js/models/characterModel.js"></script>
-
-  <!-- Storage (depends on state, utils) -->
-  <script src="js/core/storage.js"></script>
-
-  <!-- Export (depends on storage, JSZip) -->
-  <script src="js/export.js"></script>
-
-  <!-- Views (depend on state, models) -->
-  <script src="js/views/castView.js"></script>
-
-  <!-- Minigame editor modules (load before minigameView) -->
-  <script src="js/views/minigames/nonstopDebateEditor.js"></script>
-  <script src="js/views/minigames/logicDiveEditor.js"></script>
-  <script src="js/views/minigames/debateScrumEditor.js"></script>
-  <script src="js/views/minigames/massPanicDebateEditor.js"></script>
-  <script src="js/views/minigames/hangmansGambitEditor.js"></script>
-
-  <script src="js/views/minigameView.js"></script>
-  <script src="js/views/truthBulletsView.js"></script>
-  <script src="js/views/viewManager.js"></script>
-
-  <!-- Settings -->
-  <script src="js/settings.js"></script>
-
-  <!-- Modals (depend on everything) -->
-  <script src="js/modals/modalCoordinator.js"></script>
-  <script src="js/modals/characterModal.js"></script>
-  <script src="js/modals/truthBulletModal.js"></script>
-  <script src="js/modals/scriptLineModal.js"></script>
-
-  <!-- Main app (initialization only) -->
-  <script src="js/app.js"></script>
+  <!-- Single ES-module entry point; js/main.js imports every module and
+       bridges public handlers onto window for the inline onclick markup. -->
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

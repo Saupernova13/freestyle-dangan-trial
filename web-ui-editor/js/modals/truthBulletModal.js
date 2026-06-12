@@ -1,6 +1,12 @@
 // Truth Bullet modal for editing bullet details
+import { state } from '../core/state.js';
+import { autoSaveTrial } from '../core/storage.js';
+import { escapeHtml, showLoader } from '../utils.js';
+import { renderTruthBulletsView } from '../views/truthBulletsView.js';
 
 let activeBulletId = null;
+let bulletModalErr = "";
+let bulletModalMsg = "";
 let bulletFields = {
   name: "",
   description: "",
@@ -9,8 +15,8 @@ let bulletFields = {
   inversedLieBulletName: ""
 };
 
-function openTruthBulletModal(bulletId) {
-  if (!dirHandle) {
+export function openTruthBulletModal(bulletId) {
+  if (!state.dirHandle) {
     alert("Choose a folder first!");
     return;
   }
@@ -19,7 +25,7 @@ function openTruthBulletModal(bulletId) {
   bulletModalErr = "";
   bulletModalMsg = "";
 
-  const bullet = truthBullets.find(b => b.bulletId === bulletId);
+  const bullet = state.truthBullets.find(b => b.bulletId === bulletId);
   if (!bullet) {
     alert("Truth bullet not found!");
     return;
@@ -36,9 +42,9 @@ function openTruthBulletModal(bulletId) {
   renderTruthBulletModal();
 }
 
-function renderTruthBulletModal() {
+export function renderTruthBulletModal() {
   const root = document.getElementById("modalroot");
-  const bullet = truthBullets.find(b => b.bulletId === activeBulletId);
+  const bullet = state.truthBullets.find(b => b.bulletId === activeBulletId);
 
   const hasImage = bulletFields.imageFile !== null;
 
@@ -118,15 +124,15 @@ function renderTruthBulletModal() {
   `;
 }
 
-function updateBulletField(field, value) {
+export function updateBulletField(field, value) {
   bulletFields[field] = value;
 }
 
-function triggerBulletImageInput() {
+export function triggerBulletImageInput() {
   document.getElementById('bulletImageInput').click();
 }
 
-function handleBulletImageUpload(event) {
+export function handleBulletImageUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -142,7 +148,7 @@ function handleBulletImageUpload(event) {
   // Create data URL for immediate preview
   const reader = new FileReader();
   reader.onload = (e) => {
-    const bullet = truthBullets.find(b => b.bulletId === activeBulletId);
+    const bullet = state.truthBullets.find(b => b.bulletId === activeBulletId);
     if (bullet) {
       bullet.imageDataURL = e.target.result;
       renderTruthBulletModal();
@@ -154,23 +160,23 @@ function handleBulletImageUpload(event) {
   renderTruthBulletModal();
 }
 
-function clearBulletImage() {
+export function clearBulletImage() {
   bulletFields.imageFile = null;
   bulletFields.imageBlob = null;
-  const bullet = truthBullets.find(b => b.bulletId === activeBulletId);
+  const bullet = state.truthBullets.find(b => b.bulletId === activeBulletId);
   if (bullet) {
     bullet.imageDataURL = null;
   }
   renderTruthBulletModal();
 }
 
-function closeTruthBulletModal() {
+export function closeTruthBulletModal() {
   document.getElementById("modalroot").innerHTML = "";
   activeBulletId = null;
 }
 
-async function saveTruthBullet() {
-  const bullet = truthBullets.find(b => b.bulletId === activeBulletId);
+export async function saveTruthBullet() {
+  const bullet = state.truthBullets.find(b => b.bulletId === activeBulletId);
   if (!bullet) {
     alert("Bullet not found!");
     closeTruthBulletModal();
@@ -188,7 +194,7 @@ async function saveTruthBullet() {
 
     // Handle image upload
     if (bulletFields.imageBlob) {
-      const bulletsDir = await dirHandle.getDirectoryHandle("TruthBullets", { create: true });
+      const bulletsDir = await state.dirHandle.getDirectoryHandle("TruthBullets", { create: true });
       const imageFileName = `${bullet.bulletId}.${bulletFields.imageBlob.name.split('.').pop()}`;
       const imageFileHandle = await bulletsDir.getFileHandle(imageFileName, { create: true });
       const writable = await imageFileHandle.createWritable();
@@ -206,7 +212,7 @@ async function saveTruthBullet() {
     } else if (bulletFields.imageFile === null && bullet.imageFile) {
       // Image was cleared, remove the file
       try {
-        const bulletsDir = await dirHandle.getDirectoryHandle("TruthBullets", { create: false });
+        const bulletsDir = await state.dirHandle.getDirectoryHandle("TruthBullets", { create: false });
         await bulletsDir.removeEntry(bullet.imageFile);
       } catch (e) {
         console.warn("Could not remove image file:", e);

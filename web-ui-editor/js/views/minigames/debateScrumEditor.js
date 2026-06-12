@@ -2,6 +2,10 @@
 // Handles paired opposition/defense arguments with audio and keywords
 
 // Drag state for arguments
+import { state } from '../../core/state.js';
+import { autoSaveTrial } from '../../core/storage.js';
+import { escapeHtml } from '../../utils.js';
+import { renderMinigameDetails } from '../minigameView.js';
 let draggedArgumentId = null;
 
 // Audio players state
@@ -9,7 +13,7 @@ const debateScumAudioPlayers = {};
 
 // ==================== Main Rendering ====================
 
-function renderDebateScumEditor(mg) {
+export function renderDebateScumEditor(mg) {
   // Initialize typeSpecific
   if (!mg.typeSpecific) {
     mg.typeSpecific = {};
@@ -52,7 +56,7 @@ function renderDebateScumEditor(mg) {
   return html;
 }
 
-function renderDebateScumArguments(gameId, args) {
+export function renderDebateScumArguments(gameId, args) {
   let html = '';
 
   // Add drop zone at top
@@ -81,7 +85,7 @@ function renderDebateScumArguments(gameId, args) {
   return html;
 }
 
-function renderDebateScumArgumentEditor(gameId, arg, index) {
+export function renderDebateScumArgumentEditor(gameId, arg, index) {
   return `
     <div class="debate-argument-card" data-argument-id="${arg.argumentId}">
       <div class="argument-header">
@@ -108,7 +112,7 @@ function renderDebateScumArgumentEditor(gameId, arg, index) {
             <select class="form-input"
                     onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'oppositionCharacterId', this.value)">
               <option value="">None</option>
-              ${cast.filter(c => c).map(c => `
+              ${state.cast.filter(c => c).map(c => `
                 <option value="${c.id}" ${arg.oppositionCharacterId === c.id ? 'selected' : ''}>
                   ${escapeHtml(`${c.name} ${c.surname}`)}
                 </option>
@@ -165,7 +169,7 @@ function renderDebateScumArgumentEditor(gameId, arg, index) {
             <select class="form-input"
                     onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'defenseCharacterId', this.value)">
               <option value="">None</option>
-              ${cast.filter(c => c).map(c => `
+              ${state.cast.filter(c => c).map(c => `
                 <option value="${c.id}" ${arg.defenseCharacterId === c.id ? 'selected' : ''}>
                   ${escapeHtml(`${c.name} ${c.surname}`)}
                 </option>
@@ -220,8 +224,8 @@ function renderDebateScumArgumentEditor(gameId, arg, index) {
 
 // ==================== Argument Management ====================
 
-function addDebateScumArgument(gameId) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function addDebateScumArgument(gameId) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   if (!mg.typeSpecific) mg.typeSpecific = {};
@@ -254,8 +258,8 @@ function addDebateScumArgument(gameId) {
   autoSaveTrial();
 }
 
-function deleteDebateScumArgument(gameId, argumentId) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function deleteDebateScumArgument(gameId, argumentId) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   mg.typeSpecific.arguments = mg.typeSpecific.arguments.filter(a => a.argumentId !== argumentId);
@@ -269,8 +273,8 @@ function deleteDebateScumArgument(gameId, argumentId) {
   autoSaveTrial();
 }
 
-function updateDebateScumArgument(gameId, argumentId, field, value) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function updateDebateScumArgument(gameId, argumentId, field, value) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find(a => a.argumentId === argumentId);
@@ -280,8 +284,8 @@ function updateDebateScumArgument(gameId, argumentId, field, value) {
   autoSaveTrial();
 }
 
-function updateDebateScumArgumentKeywords(gameId, argumentId, side, value) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function updateDebateScumArgumentKeywords(gameId, argumentId, side, value) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find(a => a.argumentId === argumentId);
@@ -301,8 +305,8 @@ function updateDebateScumArgumentKeywords(gameId, argumentId, side, value) {
 
 // ==================== Argument Reordering ====================
 
-function moveArgumentUp(gameId, argumentId) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function moveArgumentUp(gameId, argumentId) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   const args = mg.typeSpecific.arguments;
@@ -316,8 +320,8 @@ function moveArgumentUp(gameId, argumentId) {
   autoSaveTrial();
 }
 
-function moveArgumentDown(gameId, argumentId) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export function moveArgumentDown(gameId, argumentId) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   const args = mg.typeSpecific.arguments;
@@ -333,13 +337,13 @@ function moveArgumentDown(gameId, argumentId) {
 
 // ==================== Drag-and-Drop for Arguments ====================
 
-function handleArgumentDragStart(event, gameId, argumentId) {
+export function handleArgumentDragStart(event, gameId, argumentId) {
   draggedArgumentId = argumentId;
   event.target.classList.add('dragging');
   event.dataTransfer.effectAllowed = 'move';
 }
 
-function handleArgumentDragEnd(event) {
+export function handleArgumentDragEnd(event) {
   event.target.classList.remove('dragging');
   draggedArgumentId = null;
   document.querySelectorAll('.drag-over-gap').forEach(el => {
@@ -347,11 +351,11 @@ function handleArgumentDragEnd(event) {
   });
 }
 
-function handleArgumentDropInGap(event, gameId, insertPosition) {
+export function handleArgumentDropInGap(event, gameId, insertPosition) {
   event.preventDefault();
   event.stopPropagation();
 
-  const mg = minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg || !draggedArgumentId) return;
 
   const args = mg.typeSpecific.arguments;
@@ -376,19 +380,19 @@ function handleArgumentDropInGap(event, gameId, insertPosition) {
   autoSaveTrial();
 }
 
-function handleArgumentGapDragOver(event) {
+export function handleArgumentGapDragOver(event) {
   event.preventDefault();
   event.dataTransfer.dropEffect = 'move';
   event.currentTarget.classList.add('drag-over-gap');
 }
 
-function handleArgumentGapDragLeave(event) {
+export function handleArgumentGapDragLeave(event) {
   event.currentTarget.classList.remove('drag-over-gap');
 }
 
 // ==================== Audio Handling ====================
 
-async function handleDebateScumAudioUpload(gameId, argumentId, side, event) {
+export async function handleDebateScumAudioUpload(gameId, argumentId, side, event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -399,7 +403,7 @@ async function handleDebateScumAudioUpload(gameId, argumentId, side, event) {
     return;
   }
 
-  const mg = minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find(a => a.argumentId === argumentId);
@@ -407,7 +411,7 @@ async function handleDebateScumAudioUpload(gameId, argumentId, side, event) {
 
   try {
     // Create nested directory: Audio/Minigames/{gameId}/
-    const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: true });
+    const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: true });
     const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: true });
     const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: true });
 
@@ -438,8 +442,8 @@ async function handleDebateScumAudioUpload(gameId, argumentId, side, event) {
   }
 }
 
-async function clearDebateScumAudio(gameId, argumentId, side) {
-  const mg = minigames.find(m => m.gameId === gameId);
+export async function clearDebateScumAudio(gameId, argumentId, side) {
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find(a => a.argumentId === argumentId);
@@ -450,7 +454,7 @@ async function clearDebateScumAudio(gameId, argumentId, side) {
   // Delete file from disk
   if (audioFile) {
     try {
-      const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+      const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
       const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
       const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
       await gameAudioDir.removeEntry(audioFile);
@@ -474,7 +478,7 @@ async function clearDebateScumAudio(gameId, argumentId, side) {
 
 // ==================== Audio Playback ====================
 
-async function playDebateScumAudio(gameId, argumentId, side) {
+export async function playDebateScumAudio(gameId, argumentId, side) {
   const playerKey = `${gameId}_${argumentId}_${side}`;
   const player = debateScumAudioPlayers[playerKey];
 
@@ -486,7 +490,7 @@ async function playDebateScumAudio(gameId, argumentId, side) {
     return;
   }
 
-  const mg = minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find(m => m.gameId === gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find(a => a.argumentId === argumentId);
@@ -501,7 +505,7 @@ async function playDebateScumAudio(gameId, argumentId, side) {
   // Load audio from disk if needed
   if (!audioBlob) {
     try {
-      const audioDir = await dirHandle.getDirectoryHandle("Audio", { create: false });
+      const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
       const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
       const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
       const fileHandle = await gameAudioDir.getFileHandle(audioFile);
@@ -550,7 +554,7 @@ async function playDebateScumAudio(gameId, argumentId, side) {
   }
 }
 
-function updateDebateScumPlayButton(argumentId, side, isPlaying) {
+export function updateDebateScumPlayButton(argumentId, side, isPlaying) {
   const btn = document.getElementById(`scrum-play-btn-${argumentId}-${side}`);
   if (btn) {
     btn.innerHTML = isPlaying ? '⏸️ Pause' : '▶️ Play';

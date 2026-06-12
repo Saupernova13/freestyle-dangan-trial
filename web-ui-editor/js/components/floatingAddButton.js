@@ -1,7 +1,11 @@
 // Floating Add Button Manager
+import { addScriptLine } from '../app.js';
+import { state } from '../core/state.js';
+import { addMinigame } from '../views/minigameView.js';
+import { addTruthBullet } from '../views/truthBulletsView.js';
 let floatingButton = null;
 
-function initFloatingAddButton() {
+export function initFloatingAddButton() {
   // Create button if doesn't exist
   if (!floatingButton) {
     floatingButton = document.createElement('button');
@@ -13,21 +17,21 @@ function initFloatingAddButton() {
   }
 }
 
-function updateFloatingAddButton() {
+export function updateFloatingAddButton() {
   if (!floatingButton) initFloatingAddButton();
 
   // Hide button immediately to prevent flash/overlay during view switch
   floatingButton.style.display = 'none';
 
-  // Determine which button to show based on activeView
+  // Determine which button to show based on state.activeView
   let buttonConfig = null;
 
-  switch(activeView) {
+  switch(state.activeView) {
     case 'script':
       buttonConfig = {
         text: 'Add Line',
         onclick: () => addScriptLine(),
-        show: scriptLines.length > 0  // Show when not empty
+        show: state.scriptLines.length > 0  // Show when not empty
       };
       break;
 
@@ -35,7 +39,7 @@ function updateFloatingAddButton() {
       buttonConfig = {
         text: 'Add Bullet',
         onclick: () => addTruthBullet(),
-        show: truthBullets.length > 0  // Show when not empty
+        show: state.truthBullets.length > 0  // Show when not empty
       };
       break;
 
@@ -43,7 +47,7 @@ function updateFloatingAddButton() {
       buttonConfig = {
         text: 'Create Minigame',
         onclick: () => addMinigame(),
-        show: minigames.length > 0  // Show when not empty
+        show: state.minigames.length > 0  // Show when not empty
       };
       break;
 

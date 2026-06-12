@@ -261,8 +261,40 @@ export async function loadMinigameAudio() {
   }
 }
 
+let autoSaveTimer = null;
+let autoSaveFailureNotified = false;
+
+// Debounced auto-save for keystroke-frequency callers (dialogue inputs,
+// trial name). Writing trial.json on every keypress hammers the disk and
+// can interleave writes; one trailing save after the user pauses is enough.
+export function scheduleAutoSave(delayMs = 600) {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(autoSaveTrial, delayMs);
+}
+
 export async function autoSaveTrial() {
   if (!state.dirHandle) return;
+  try {
+    await writeTrialJson();
+    autoSaveFailureNotified = false;
+  } catch (err) {
+    // Surface the first failure loudly (revoked permission, disk full, ...)
+    // but don't re-alert on every subsequent keystroke until a save succeeds.
+    console.error('Auto-save failed:', err);
+    if (!autoSaveFailureNotified) {
+      autoSaveFailureNotified = true;
+      alert(
+        `Auto-save failed: ${err.message}
+
+` +
+        'Your latest changes are NOT saved. Check folder permissions and ' +
+        'free disk space, then make another edit to retry.'
+      );
+    }
+  }
+}
+
+async function writeTrialJson() {
 
   // Create minimal ID-only references
   let characterIds = state.cast.map(c => c ? c.id : null);

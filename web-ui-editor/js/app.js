@@ -5,7 +5,7 @@
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
 import { initSpriteMagnifier } from './components/spriteMagnifier.js';
 import { state } from './core/state.js';
-import { autoSaveTrial } from './core/storage.js';
+import { autoSaveTrial, scheduleAutoSave } from './core/storage.js';
 import { updateExportButtonState } from './export.js';
 import { loadSettings } from './settings.js';
 import { initializeTheme } from './ui/theme.js';
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('trialNameInput').addEventListener('input', e => {
     state.trialName = e.target.value.trim();
     updateExportButtonState();
-    autoSaveTrial();
+    scheduleAutoSave();
   });
 
   // Click outside to close dropdown
@@ -408,7 +408,8 @@ export function updateScriptLine(lineId, field, value) {
   if (!line) return;
 
   line[field] = value;
-  autoSaveTrial();
+  // Fires on every keystroke of the dialogue inputs - debounce the write.
+  scheduleAutoSave();
 }
 
 // Searchable dropdown helper functions

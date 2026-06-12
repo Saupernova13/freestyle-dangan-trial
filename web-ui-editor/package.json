@@ -1,0 +1,28 @@
+{
+  "name": "dangan-trial-editor",
+  "version": "1.0.0",
+  "description": "Browser-based authoring tool for custom Danganronpa-style trials",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint js",
+    "format": "prettier --write \"js/**/*.js\" \"css/**/*.css\" index.html",
+    "format:check": "prettier --check \"js/**/*.js\" \"css/**/*.css\" index.html",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "prettier": "^3.0.0",
+    "vite": "^6.4.3",
+    "vitest": "^3.2.6"
+  }
+}

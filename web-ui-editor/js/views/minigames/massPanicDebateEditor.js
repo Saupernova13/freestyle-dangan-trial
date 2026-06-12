@@ -4,7 +4,7 @@
 // Audio players state
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
-import { escapeHtml, formatAudioTime } from '../../utils.js';
+import { generateId, escapeHtml, formatAudioTime } from '../../utils.js';
 import { renderMinigameDetails } from '../minigameView.js';
 const panicAudioPlayers = {};
 
@@ -313,7 +313,7 @@ export function addMassPanicLineGroup(gameId) {
     mg.typeSpecific.lineGroups = [];
   }
 
-  const groupId = `panic_group_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  const groupId = generateId('panic_group');
 
   const newLineGroup = {
     groupId: groupId,

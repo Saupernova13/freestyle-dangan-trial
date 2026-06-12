@@ -9,8 +9,9 @@ import { autoSaveTrial } from './core/storage.js';
 import { updateExportButtonState } from './export.js';
 import { loadSettings } from './settings.js';
 import { initializeTheme } from './ui/theme.js';
-import { escapeHtml } from './utils.js';
+import { generateId, escapeHtml } from './utils.js';
 import { renderActiveView } from './views/viewManager.js';
+import { MINIGAME_TYPE_LABELS } from './core/constants.js';
 let activeDropdownLineId = null;
 let filteredCharacters = [];
 let highlightedIndex = -1;
@@ -109,7 +110,7 @@ export function renderScriptEditor() {
 
 export function addScriptLine() {
   const newLine = {
-    id: `line_${Date.now()}`,
+    id: generateId('line'),
     order: state.scriptLines.length,
     type: "speaking",
     characterId: "",
@@ -578,20 +579,9 @@ export function renderScriptLineBar(line, index) {
       >
     `;
   } else if (line.type === "minigame") {
-    const typeLabels = {
-      'nonstop_debate': 'Nonstop Debate',
-      'mass_panic_debate': 'Mass Panic Debate',
-      'logic_dive': 'Logic Dive',
-      'hangmans_gambit': "Hangman's Gambit",
-      'debate_scrum': 'Debate Scrum',
-      'rebuttal_showdown': 'Rebuttal Showdown',
-      'psyche_taxi': 'Psyche Taxi',
-      'closing_argument': 'Closing Argument'
-    };
-
     const minigameOptions = state.minigames.map(mg => {
       return `<option value="${mg.gameId}" ${line.minigameId === mg.gameId ? 'selected' : ''}>
-        ${escapeHtml(mg.name)} (${typeLabels[mg.gameType]})
+        ${escapeHtml(mg.name)} (${MINIGAME_TYPE_LABELS[mg.gameType] || mg.gameType})
       </option>`;
     }).join('');
 

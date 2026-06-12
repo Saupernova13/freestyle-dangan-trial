@@ -1,12 +1,13 @@
 // Minigame view coordinator - delegates to specific minigame editor modules
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
-import { escapeHtml } from '../utils.js';
+import { generateId, escapeHtml } from '../utils.js';
 import { renderDebateScumEditor } from './minigames/debateScrumEditor.js';
 import { renderHangmansGambitEditor } from './minigames/hangmansGambitEditor.js';
 import { renderLogicDiveEditor } from './minigames/logicDiveEditor.js';
 import { renderMassPanicDebateEditor } from './minigames/massPanicDebateEditor.js';
 import { renderNonstopDebateEditor } from './minigames/nonstopDebateEditor.js';
+import { MINIGAME_TYPE_LABELS } from '../core/constants.js';
 let expandedMinigameId = null;
 
 export function renderMinigameDetails() {
@@ -46,17 +47,6 @@ export function renderMinigameDetails() {
 export function renderMinigameCard(mg, index) {
   const isExpanded = expandedMinigameId === mg.gameId;
 
-  const typeLabels = {
-    'nonstop_debate': 'Nonstop Debate',
-    'mass_panic_debate': 'Mass Panic Debate',
-    'logic_dive': 'Logic Dive',
-    'hangmans_gambit': "Hangman's Gambit",
-    'debate_scrum': 'Debate Scrum',
-    'rebuttal_showdown': 'Rebuttal Showdown',
-    'psyche_taxi': 'Psyche Taxi',
-    'closing_argument': 'Closing Argument'
-  };
-
   const difficultyColors = {
     'easy': '#10b981',
     'medium': '#f59e0b',
@@ -69,7 +59,7 @@ export function renderMinigameCard(mg, index) {
         <div class="minigame-info">
           <div class="minigame-name">${escapeHtml(mg.name || 'Unnamed Minigame')}</div>
           <div class="minigame-meta">
-            <span class="minigame-type">${typeLabels[mg.gameType] || mg.gameType}</span>
+            <span class="minigame-type">${MINIGAME_TYPE_LABELS[mg.gameType] || mg.gameType}</span>
             <span class="minigame-difficulty" style="color: ${difficultyColors[mg.difficulty]}">
               ${mg.difficulty}
             </span>
@@ -214,13 +204,9 @@ export function updateMinigameField(gameId, field, value) {
   }
 }
 
-export function generateMinigameId() {
-  return `mg_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-}
-
 export function addMinigame() {
   const newMinigame = {
-    gameId: generateMinigameId(),
+    gameId: generateId('mg'),
     name: "",
     gameType: "nonstop_debate",
     difficulty: "medium",

@@ -4,7 +4,7 @@
 // Drag state for arguments
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
-import { escapeHtml } from '../../utils.js';
+import { generateId, escapeHtml } from '../../utils.js';
 import { renderMinigameDetails } from '../minigameView.js';
 let draggedArgumentId = null;
 
@@ -237,7 +237,7 @@ export function addDebateScumArgument(gameId) {
   }
 
   const newArg = {
-    argumentId: `arg_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    argumentId: generateId('arg'),
     order: mg.typeSpecific.arguments.length,
     // Opposition side
     oppositionStatement: "",

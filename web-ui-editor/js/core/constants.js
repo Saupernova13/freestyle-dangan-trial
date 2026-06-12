@@ -10,3 +10,15 @@ export const blockNames = [...Array(16)]
 
 // Slot type per index: false = student, true = headmaster.
 export const blockTypes = [...Array(16)].fill(false).concat([true]);
+
+// Human-readable labels for each minigame type.
+export const MINIGAME_TYPE_LABELS = {
+  nonstop_debate: 'Nonstop Debate',
+  mass_panic_debate: 'Mass Panic Debate',
+  logic_dive: 'Logic Dive',
+  hangmans_gambit: "Hangman's Gambit",
+  debate_scrum: 'Debate Scrum',
+  rebuttal_showdown: 'Rebuttal Showdown',
+  psyche_taxi: 'Psyche Taxi',
+  closing_argument: 'Closing Argument',
+};

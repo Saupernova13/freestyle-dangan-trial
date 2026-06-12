@@ -4,7 +4,7 @@
 // Audio players state
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
-import { escapeHtml, formatAudioTime } from '../../utils.js';
+import { generateId, escapeHtml, formatAudioTime } from '../../utils.js';
 import { renderMinigameDetails } from '../minigameView.js';
 const dialogueAudioPlayers = {};
 
@@ -393,7 +393,7 @@ export function addDialogueLine(gameId) {
   }
 
   const newLine = {
-    lineId: `dl_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    lineId: generateId('dl'),
     order: mg.typeSpecific.dialogueLines.length,
     sentenceBeginning: "",
     target: "",

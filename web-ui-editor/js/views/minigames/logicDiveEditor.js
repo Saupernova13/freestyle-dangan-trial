@@ -4,7 +4,7 @@
 // Drag state for questions
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
-import { escapeHtml } from '../../utils.js';
+import { generateId, escapeHtml } from '../../utils.js';
 import { renderMinigameDetails } from '../minigameView.js';
 let draggedQuestionId = null;
 
@@ -162,7 +162,7 @@ export function addLogicDiveQuestion(gameId) {
   }
 
   const newQuestion = {
-    questionId: `q_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    questionId: generateId('q'),
     order: mg.typeSpecific.questions.length,
     questionText: "",
     answers: [
@@ -215,7 +215,7 @@ export function addLogicDiveAnswer(gameId, questionId) {
   if (!question || question.answers.length >= 5) return;
 
   const newAnswer = {
-    answerId: `a_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    answerId: generateId('a'),
     answerText: "",
     isCorrect: false
   };

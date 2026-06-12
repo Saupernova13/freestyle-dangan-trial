@@ -3,7 +3,7 @@ import { updateFloatingAddButton } from '../components/floatingAddButton.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { openTruthBulletModal } from '../modals/truthBulletModal.js';
-import { escapeHtml } from '../utils.js';
+import { generateId, escapeHtml } from '../utils.js';
 
 export function renderTruthBulletsView() {
   const grid = document.getElementById('mainGrid');
@@ -132,13 +132,9 @@ export function selectTruthBullet(bulletId) {
   renderTruthBulletsView();
 }
 
-export function generateBulletId() {
-  return `tb_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-}
-
 export function addTruthBullet() {
   const newBullet = {
-    bulletId: generateBulletId(),
+    bulletId: generateId('tb'),
     name: "",
     description: "",
     imageFile: null,

@@ -69,3 +69,9 @@ export function normalizeHighlights(highlights, textLength) {
   }
   return out;
 }
+
+// Generate a collision-resistant id: <prefix>_<timestamp>_<random>.
+// Matches the historical id format used throughout trial.json.
+export function generateId(prefix) {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}

@@ -2,6 +2,12 @@
 // Handles line groups with 3 simultaneous speakers
 
 // Audio players state
+import {
+  deleteMinigameAudioFile,
+  loadMinigameAudioFile,
+  saveMinigameAudioFile,
+  validateAudioUpload,
+} from '../../core/minigameAudio.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml, formatAudioTime } from '../../utils.js';
@@ -398,16 +404,7 @@ export async function deleteMassPanicLineGroup(gameId, groupId) {
   if (group) {
     for (const speakerKey of ['speaker1', 'speaker2', 'speaker3']) {
       const line = group[speakerKey];
-      if (line && line.voiceLineFile) {
-        try {
-          const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
-          const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
-          const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
-          await gameAudioDir.removeEntry(line.voiceLineFile);
-        } catch (e) {
-          console.warn('Could not remove audio file:', e);
-        }
-      }
+      if (line) await deleteMinigameAudioFile(gameId, line.voiceLineFile);
     }
   }
 
@@ -484,14 +481,8 @@ export function handleMassPanicAnswerSelection(gameId, groupId, speakerKey, bull
 // ==================== Audio Handling ====================
 
 export async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event) {
-  const file = event.target.files[0];
+  const file = validateAudioUpload(event);
   if (!file) return;
-
-  if (!file.type.startsWith('audio/')) {
-    alert('Please select an audio file');
-    event.target.value = '';
-    return;
-  }
 
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
@@ -500,17 +491,9 @@ export async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event)
   if (!group || !group[speakerKey]) return;
 
   try {
-    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: true });
-    const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: true });
-    const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: true });
-
     const ext = file.name.split('.').pop();
     const audioFileName = `panic_${groupId}_${speakerKey}.${ext}`;
-
-    const audioFileHandle = await gameAudioDir.getFileHandle(audioFileName, { create: true });
-    const writable = await audioFileHandle.createWritable();
-    await writable.write(file);
-    await writable.close();
+    await saveMinigameAudioFile(gameId, audioFileName, file);
 
     group[speakerKey].voiceLineFile = audioFileName;
     group[speakerKey].voiceLineBlob = file;
@@ -530,16 +513,7 @@ export async function clearPanicVoiceLine(gameId, groupId, speakerKey) {
   const group = mg.typeSpecific.lineGroups.find((g) => g.groupId === groupId);
   if (!group || !group[speakerKey]) return;
 
-  if (group[speakerKey].voiceLineFile) {
-    try {
-      const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
-      const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
-      const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
-      await gameAudioDir.removeEntry(group[speakerKey].voiceLineFile);
-    } catch (e) {
-      console.warn('Could not remove audio file:', e);
-    }
-  }
+  await deleteMinigameAudioFile(gameId, group[speakerKey].voiceLineFile);
 
   group[speakerKey].voiceLineFile = null;
   group[speakerKey].voiceLineBlob = null;
@@ -572,19 +546,12 @@ export async function playPanicAudioPreview(gameId, groupId, speakerKey) {
 
   let audioBlob = line.voiceLineBlob;
   if (!audioBlob) {
-    try {
-      const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
-      const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
-      const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
-      const fileHandle = await gameAudioDir.getFileHandle(line.voiceLineFile);
-      const file = await fileHandle.getFile();
-      audioBlob = file;
-      line.voiceLineBlob = file;
-    } catch (error) {
-      console.error('Error loading audio:', error);
+    audioBlob = await loadMinigameAudioFile(gameId, line.voiceLineFile);
+    if (!audioBlob) {
       alert('Failed to load audio file');
       return;
     }
+    line.voiceLineBlob = audioBlob;
   }
 
   try {

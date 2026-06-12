@@ -3,6 +3,12 @@
 
 // Drag state for arguments
 import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
+import {
+  deleteMinigameAudioFile,
+  loadMinigameAudioFile,
+  saveMinigameAudioFile,
+  validateAudioUpload,
+} from '../../core/minigameAudio.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
@@ -386,15 +392,8 @@ export function handleArgumentGapDragLeave(event) {
 // ==================== Audio Handling ====================
 
 export async function handleDebateScumAudioUpload(gameId, argumentId, side, event) {
-  const file = event.target.files[0];
+  const file = validateAudioUpload(event);
   if (!file) return;
-
-  // Validate file type (audio only)
-  if (!file.type.startsWith('audio/')) {
-    alert('Please select an audio file');
-    event.target.value = '';
-    return;
-  }
 
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
@@ -403,20 +402,10 @@ export async function handleDebateScumAudioUpload(gameId, argumentId, side, even
   if (!arg) return;
 
   try {
-    // Create nested directory: Audio/Minigames/{gameId}/
-    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: true });
-    const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: true });
-    const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: true });
-
-    // Generate filename: scrum_{argumentId}_{side}.{ext}
+    // Filename: scrum_{argumentId}_{side}.{ext}
     const ext = file.name.split('.').pop();
     const audioFileName = `scrum_${argumentId}_${side}.${ext}`;
-
-    // Write audio file to disk
-    const audioFileHandle = await gameAudioDir.getFileHandle(audioFileName, { create: true });
-    const writable = await audioFileHandle.createWritable();
-    await writable.write(file);
-    await writable.close();
+    await saveMinigameAudioFile(gameId, audioFileName, file);
 
     // Store file information
     if (side === 'opposition') {
@@ -444,17 +433,7 @@ export async function clearDebateScumAudio(gameId, argumentId, side) {
 
   const audioFile = side === 'opposition' ? arg.oppositionAudioFile : arg.defenseAudioFile;
 
-  // Delete file from disk
-  if (audioFile) {
-    try {
-      const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
-      const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
-      const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
-      await gameAudioDir.removeEntry(audioFile);
-    } catch (e) {
-      console.warn('Could not remove audio file:', e);
-    }
-  }
+  await deleteMinigameAudioFile(gameId, audioFile);
 
   // Clear metadata
   if (side === 'opposition') {
@@ -497,24 +476,16 @@ export async function playDebateScumAudio(gameId, argumentId, side) {
 
   // Load audio from disk if needed
   if (!audioBlob) {
-    try {
-      const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
-      const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
-      const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
-      const fileHandle = await gameAudioDir.getFileHandle(audioFile);
-      const file = await fileHandle.getFile();
-      audioBlob = file;
-
-      // Store blob for future use
-      if (side === 'opposition') {
-        arg.oppositionAudioBlob = file;
-      } else {
-        arg.defenseAudioBlob = file;
-      }
-    } catch (error) {
-      console.error('Error loading audio:', error);
+    audioBlob = await loadMinigameAudioFile(gameId, audioFile);
+    if (!audioBlob) {
       alert('Failed to load audio file');
       return;
+    }
+    // Store blob for future use
+    if (side === 'opposition') {
+      arg.oppositionAudioBlob = audioBlob;
+    } else {
+      arg.defenseAudioBlob = audioBlob;
     }
   }
 

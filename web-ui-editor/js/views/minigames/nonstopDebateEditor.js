@@ -3,6 +3,12 @@
 
 // Audio players state
 import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
+import {
+  deleteMinigameAudioFile,
+  loadMinigameAudioFile,
+  saveMinigameAudioFile,
+  validateAudioUpload,
+} from '../../core/minigameAudio.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml, formatAudioTime } from '../../utils.js';
@@ -543,15 +549,8 @@ export function handleDialogueGapDragLeave(event) {
 // ==================== Voice Line Handling ====================
 
 export async function handleDialogueVoiceUpload(gameId, lineId, event) {
-  const file = event.target.files[0];
+  const file = validateAudioUpload(event);
   if (!file) return;
-
-  // Validate file type (audio only)
-  if (!file.type.startsWith('audio/')) {
-    alert('Please select an audio file');
-    event.target.value = ''; // Reset file input
-    return;
-  }
 
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
@@ -560,22 +559,10 @@ export async function handleDialogueVoiceUpload(gameId, lineId, event) {
   if (!line) return;
 
   try {
-    // Create nested directory: Audio/Minigames/{gameId}/
-    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: true });
-    const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: true });
-    const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: true });
-
-    // Generate filename: dialogue_{lineId}.{ext}
     const ext = file.name.split('.').pop();
     const audioFileName = `dialogue_${lineId}.${ext}`;
+    await saveMinigameAudioFile(gameId, audioFileName, file);
 
-    // Write audio file to disk
-    const audioFileHandle = await gameAudioDir.getFileHandle(audioFileName, { create: true });
-    const writable = await audioFileHandle.createWritable();
-    await writable.write(file);
-    await writable.close();
-
-    // Store file information
     line.voiceLineFile = audioFileName;
     line.voiceLineBlob = file; // Keep blob for preview
 
@@ -587,6 +574,7 @@ export async function handleDialogueVoiceUpload(gameId, lineId, event) {
   }
 }
 
+
 export async function clearDialogueVoiceLine(gameId, lineId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
@@ -594,19 +582,7 @@ export async function clearDialogueVoiceLine(gameId, lineId) {
   const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);
   if (!line) return;
 
-  // Delete file from disk
-  if (line.voiceLineFile) {
-    try {
-      const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
-      const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
-      const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
-      await gameAudioDir.removeEntry(line.voiceLineFile);
-    } catch (e) {
-      console.warn('Could not remove audio file:', e);
-    }
-  }
-
-  // Clear voice line metadata
+  await deleteMinigameAudioFile(gameId, line.voiceLineFile);
   line.voiceLineFile = null;
   line.voiceLineBlob = null;
 
@@ -614,21 +590,10 @@ export async function clearDialogueVoiceLine(gameId, lineId) {
   autoSaveTrial();
 }
 
+
 // ==================== Audio Playback ====================
 
-export async function loadDialogueAudioFromDisk(gameId, lineId, filename) {
-  try {
-    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
-    const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
-    const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
-    const fileHandle = await gameAudioDir.getFileHandle(filename);
-    const file = await fileHandle.getFile();
-    return file;
-  } catch (error) {
-    console.error('Error loading dialogue audio:', error);
-    return null;
-  }
-}
+
 
 export async function playDialogueAudioPreview(gameId, lineId) {
   const playerKey = `${gameId}_${lineId}`;
@@ -651,7 +616,7 @@ export async function playDialogueAudioPreview(gameId, lineId) {
   // Load audio from disk if needed
   let audioBlob = line.voiceLineBlob;
   if (!audioBlob) {
-    audioBlob = await loadDialogueAudioFromDisk(gameId, lineId, line.voiceLineFile);
+    audioBlob = await loadMinigameAudioFile(gameId, line.voiceLineFile);
     if (!audioBlob) {
       alert('Failed to load audio file');
       return;

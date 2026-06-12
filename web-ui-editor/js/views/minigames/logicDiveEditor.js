@@ -3,10 +3,9 @@
 
 // Drag state for questions
 import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
-import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
-import { renderMinigameDetails } from '../minigameView.js';
+import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 let draggedQuestionId = null;
 
 // ==================== Main Rendering ====================
@@ -172,7 +171,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
 // ==================== Question Management ====================
 
 export function addLogicDiveQuestion(gameId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   if (!mg.typeSpecific) {
@@ -201,7 +200,7 @@ export function addLogicDiveQuestion(gameId) {
 }
 
 export function deleteLogicDiveQuestion(gameId, questionId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   mg.typeSpecific.questions = mg.typeSpecific.questions.filter((q) => q.questionId !== questionId);
@@ -212,7 +211,7 @@ export function deleteLogicDiveQuestion(gameId, questionId) {
 }
 
 export function updateLogicDiveQuestion(gameId, questionId, field, value) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
@@ -225,7 +224,7 @@ export function updateLogicDiveQuestion(gameId, questionId, field, value) {
 // ==================== Answer Management ====================
 
 export function addLogicDiveAnswer(gameId, questionId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
@@ -243,7 +242,7 @@ export function addLogicDiveAnswer(gameId, questionId) {
 }
 
 export function deleteLogicDiveAnswer(gameId, questionId, answerId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
@@ -261,7 +260,7 @@ export function deleteLogicDiveAnswer(gameId, questionId, answerId) {
 }
 
 export function updateLogicDiveAnswer(gameId, questionId, answerId, field, value) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
@@ -275,7 +274,7 @@ export function updateLogicDiveAnswer(gameId, questionId, answerId, field, value
 }
 
 export function setCorrectAnswer(gameId, questionId, answerId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
@@ -293,7 +292,7 @@ export function setCorrectAnswer(gameId, questionId, answerId) {
 // ==================== Question Reordering ====================
 
 export function moveQuestionUp(gameId, questionId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
   if (!moveItem(mg.typeSpecific.questions, 'questionId', questionId, -1)) return;
   renderMinigameDetails();
@@ -301,7 +300,7 @@ export function moveQuestionUp(gameId, questionId) {
 }
 
 export function moveQuestionDown(gameId, questionId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
   if (!moveItem(mg.typeSpecific.questions, 'questionId', questionId, 1)) return;
   renderMinigameDetails();
@@ -328,7 +327,7 @@ export function handleQuestionDropInGap(event, gameId, insertPosition) {
   event.preventDefault();
   event.stopPropagation();
 
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !draggedQuestionId) return;
 
   const changed = dropAtGap(

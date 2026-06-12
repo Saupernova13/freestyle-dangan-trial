@@ -10,10 +10,11 @@ import {
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
 import { seekAudioPreview, toggleAudioPreview } from '../../components/audioPreview.js';
+import { renderCharacterOptions } from '../../models/characterModel.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
-import { renderMinigameDetails } from '../minigameView.js';
+import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 
 // Drag state for dialogue lines
 let draggedDialogueLineId = null;
@@ -160,15 +161,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
         <div class="form-group">
           <label>Character</label>
           <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'characterId', this.value)">
-            <option value="">None</option>
-            ${state.cast
-              .filter((c) => c)
-              .map(
-                (c) => `
-              <option value="${c.id}" ${line.characterId === c.id ? 'selected' : ''}>${escapeHtml(`${c.name} ${c.surname}`)}</option>
-            `
-              )
-              .join('')}
+            ${renderCharacterOptions(line.characterId)}
           </select>
         </div>
 
@@ -398,7 +391,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
 // ==================== Truth Bullet Selection ====================
 
 export function toggleBulletForMinigame(gameId, bulletId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific) return;
 
   const selectedBullets = mg.typeSpecific.selectedBullets;
@@ -423,7 +416,7 @@ export function toggleBulletForMinigame(gameId, bulletId) {
 // ==================== Dialogue Line Management ====================
 
 export function addDialogueLine(gameId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific) return;
 
   if (!mg.typeSpecific.dialogueLines) {
@@ -455,7 +448,7 @@ export function addDialogueLine(gameId) {
 }
 
 export function updateDialogueLine(gameId, lineId, field, value) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.dialogueLines) return;
 
   const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);
@@ -475,7 +468,7 @@ export function updateDialogueLine(gameId, lineId, field, value) {
 export function deleteDialogueLine(gameId, lineId) {
   if (!confirm('Delete this dialogue line?')) return;
 
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.dialogueLines) return;
 
   mg.typeSpecific.dialogueLines = mg.typeSpecific.dialogueLines.filter((l) => l.lineId !== lineId);
@@ -488,7 +481,7 @@ export function deleteDialogueLine(gameId, lineId) {
 // ==================== Dialogue Line Reordering ====================
 
 export function moveDialogueLineUp(gameId, lineId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
   if (!moveItem(mg.typeSpecific.dialogueLines, 'lineId', lineId, -1)) return;
   renderMinigameDetails();
@@ -496,7 +489,7 @@ export function moveDialogueLineUp(gameId, lineId) {
 }
 
 export function moveDialogueLineDown(gameId, lineId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
   if (!moveItem(mg.typeSpecific.dialogueLines, 'lineId', lineId, 1)) return;
   renderMinigameDetails();
@@ -524,7 +517,7 @@ export function handleDialogueDropInGap(event, gameId, insertPosition) {
   event.preventDefault();
   event.stopPropagation();
 
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !draggedDialogueLineId) return;
 
   const changed = dropAtGap(
@@ -554,7 +547,7 @@ export async function handleDialogueVoiceUpload(gameId, lineId, event) {
   const file = validateAudioUpload(event);
   if (!file) return;
 
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);
@@ -577,7 +570,7 @@ export async function handleDialogueVoiceUpload(gameId, lineId, event) {
 }
 
 export async function clearDialogueVoiceLine(gameId, lineId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);
@@ -594,7 +587,7 @@ export async function clearDialogueVoiceLine(gameId, lineId) {
 // ==================== Audio Playback ====================
 
 export async function playDialogueAudioPreview(gameId, lineId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);

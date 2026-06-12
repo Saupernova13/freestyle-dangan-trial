@@ -10,6 +10,11 @@ import { renderNonstopDebateEditor } from './minigames/nonstopDebateEditor.js';
 import { MINIGAME_TYPE_LABELS } from '../core/constants.js';
 let expandedMinigameId = null;
 
+// Look up a minigame instance by id.
+export function findMinigame(gameId) {
+  return findMinigame(gameId);
+}
+
 export function renderMinigameDetails() {
   const grid = document.getElementById('mainGrid');
 
@@ -176,7 +181,7 @@ export function renderMinigameEditor(mg) {
 }
 
 export function updateMinigameField(gameId, field, value) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (mg) {
     mg[field] = value;
 

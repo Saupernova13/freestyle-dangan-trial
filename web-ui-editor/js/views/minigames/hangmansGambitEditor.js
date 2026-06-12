@@ -1,6 +1,6 @@
 // Hangman's Gambit minigame editor
 // Simple answer key configuration
-import { state } from '../../core/state.js';
+import { findMinigame } from '../minigameView.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { escapeHtml } from '../../utils.js';
 
@@ -31,7 +31,7 @@ export function renderHangmansGambitEditor(mg) {
 }
 
 export function updateHangmansGambitField(gameId, field, value) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   if (!mg.typeSpecific) {

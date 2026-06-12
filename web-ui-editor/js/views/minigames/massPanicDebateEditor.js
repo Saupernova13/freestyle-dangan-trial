@@ -9,10 +9,11 @@ import {
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
 import { seekAudioPreview, toggleAudioPreview } from '../../components/audioPreview.js';
+import { renderCharacterOptions } from '../../models/characterModel.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
-import { renderMinigameDetails } from '../minigameView.js';
+import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 
 // ==================== Main Rendering ====================
 
@@ -40,69 +41,22 @@ export function renderMassPanicDebateEditor(mg) {
 
       <div class="mass-panic-character-setup">
         <div class="form-row">
+          ${[1, 2, 3]
+            .map((n) => {
+              const field = `speaker${n}CharacterId`;
+              const otherIds = [1, 2, 3]
+                .filter((m) => m !== n)
+                .map((m) => mg.typeSpecific[`speaker${m}CharacterId`])
+                .filter(Boolean);
+              return `
           <div class="form-group">
-            <label>Speaker 1 Character</label>
-            <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker1CharacterId', this.value)">
-              <option value="">None</option>
-              ${state.cast
-                .filter((c) => c)
-                .map((c) => {
-                  const isDisabled =
-                    mg.typeSpecific.speaker2CharacterId === c.id ||
-                    mg.typeSpecific.speaker3CharacterId === c.id;
-                  return `
-                  <option value="${c.id}"
-                          ${mg.typeSpecific.speaker1CharacterId === c.id ? 'selected' : ''}
-                          ${isDisabled ? 'disabled' : ''}>
-                    ${escapeHtml(`${c.name} ${c.surname}`)}${isDisabled ? ' (already selected)' : ''}
-                  </option>
-                `;
-                })
-                .join('')}
+            <label>Speaker ${n} Character</label>
+            <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', '${field}', this.value)">
+              ${renderCharacterOptions(mg.typeSpecific[field], otherIds)}
             </select>
-          </div>
-          <div class="form-group">
-            <label>Speaker 2 Character</label>
-            <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker2CharacterId', this.value)">
-              <option value="">None</option>
-              ${state.cast
-                .filter((c) => c)
-                .map((c) => {
-                  const isDisabled =
-                    mg.typeSpecific.speaker1CharacterId === c.id ||
-                    mg.typeSpecific.speaker3CharacterId === c.id;
-                  return `
-                  <option value="${c.id}"
-                          ${mg.typeSpecific.speaker2CharacterId === c.id ? 'selected' : ''}
-                          ${isDisabled ? 'disabled' : ''}>
-                    ${escapeHtml(`${c.name} ${c.surname}`)}${isDisabled ? ' (already selected)' : ''}
-                  </option>
-                `;
-                })
-                .join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Speaker 3 Character</label>
-            <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', 'speaker3CharacterId', this.value)">
-              <option value="">None</option>
-              ${state.cast
-                .filter((c) => c)
-                .map((c) => {
-                  const isDisabled =
-                    mg.typeSpecific.speaker1CharacterId === c.id ||
-                    mg.typeSpecific.speaker2CharacterId === c.id;
-                  return `
-                  <option value="${c.id}"
-                          ${mg.typeSpecific.speaker3CharacterId === c.id ? 'selected' : ''}
-                          ${isDisabled ? 'disabled' : ''}>
-                    ${escapeHtml(`${c.name} ${c.surname}`)}${isDisabled ? ' (already selected)' : ''}
-                  </option>
-                `;
-                })
-                .join('')}
-            </select>
-          </div>
+          </div>`;
+            })
+            .join('')}
         </div>
       </div>
 
@@ -166,7 +120,7 @@ export function renderMassPanicLineGroup(gameId, group, groupIndex) {
 
 export function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, color, label) {
   // Get character ID for this speaker
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   const speakerCharIdField = `speaker${speakerIndex + 1}CharacterId`;
   const speakerCharId = mg?.typeSpecific?.[speakerCharIdField];
 
@@ -311,7 +265,7 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
 // ==================== Line Group Management ====================
 
 export function validateSpeakerSelection(gameId, speakerField, selectedCharacterId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific) return true;
 
   // Check if this character is already selected in another speaker slot
@@ -338,7 +292,7 @@ export function validateSpeakerSelection(gameId, speakerField, selectedCharacter
 }
 
 export function updateMassPanicField(gameId, field, value) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific) return;
 
   // Validate speaker selection if it's a character field
@@ -355,7 +309,7 @@ export function updateMassPanicField(gameId, field, value) {
 }
 
 export function addMassPanicLineGroup(gameId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific) return;
 
   if (!mg.typeSpecific.lineGroups) {
@@ -395,7 +349,7 @@ export function createEmptyPanicLine() {
 export async function deleteMassPanicLineGroup(gameId, groupId) {
   if (!confirm('Delete this entire line group (all 3 speakers)?')) return;
 
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
   // Delete audio files first (awaited; the previous forEach(async) version
@@ -420,7 +374,7 @@ export async function deleteMassPanicLineGroup(gameId, groupId) {
 }
 
 export function updateMassPanicLineField(gameId, groupId, speakerKey, field, value) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
   const group = mg.typeSpecific.lineGroups.find((g) => g.groupId === groupId);
@@ -431,7 +385,7 @@ export function updateMassPanicLineField(gameId, groupId, speakerKey, field, val
 }
 
 export function handleLoudAssertionToggle(gameId, groupId, speakerKey, checked) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
   const group = mg.typeSpecific.lineGroups.find((g) => g.groupId === groupId);
@@ -452,7 +406,7 @@ export function handleLoudAssertionToggle(gameId, groupId, speakerKey, checked) 
 }
 
 export function handleMassPanicAnswerSelection(gameId, groupId, speakerKey, bulletId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
   const currentGroup = mg.typeSpecific.lineGroups.find((g) => g.groupId === groupId);
@@ -484,7 +438,7 @@ export async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event)
   const file = validateAudioUpload(event);
   if (!file) return;
 
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const group = mg.typeSpecific.lineGroups.find((g) => g.groupId === groupId);
@@ -507,7 +461,7 @@ export async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event)
 }
 
 export async function clearPanicVoiceLine(gameId, groupId, speakerKey) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const group = mg.typeSpecific.lineGroups.find((g) => g.groupId === groupId);
@@ -525,7 +479,7 @@ export async function clearPanicVoiceLine(gameId, groupId, speakerKey) {
 // ==================== Audio Playback ====================
 
 export async function playPanicAudioPreview(gameId, groupId, speakerKey) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const group = mg.typeSpecific.lineGroups.find((g) => g.groupId === groupId);

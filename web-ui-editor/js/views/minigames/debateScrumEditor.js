@@ -10,10 +10,10 @@ import {
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
 import { toggleAudioPreview } from '../../components/audioPreview.js';
-import { state } from '../../core/state.js';
+import { renderCharacterOptions } from '../../models/characterModel.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
-import { renderMinigameDetails } from '../minigameView.js';
+import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 let draggedArgumentId = null;
 
 // ==================== Main Rendering ====================
@@ -118,17 +118,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
             <label>Character</label>
             <select class="form-input"
                     onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'oppositionCharacterId', this.value)">
-              <option value="">None</option>
-              ${state.cast
-                .filter((c) => c)
-                .map(
-                  (c) => `
-                <option value="${c.id}" ${arg.oppositionCharacterId === c.id ? 'selected' : ''}>
-                  ${escapeHtml(`${c.name} ${c.surname}`)}
-                </option>
-              `
-                )
-                .join('')}
+              ${renderCharacterOptions(arg.oppositionCharacterId)}
             </select>
           </div>
 
@@ -184,17 +174,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
             <label>Character</label>
             <select class="form-input"
                     onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'defenseCharacterId', this.value)">
-              <option value="">None</option>
-              ${state.cast
-                .filter((c) => c)
-                .map(
-                  (c) => `
-                <option value="${c.id}" ${arg.defenseCharacterId === c.id ? 'selected' : ''}>
-                  ${escapeHtml(`${c.name} ${c.surname}`)}
-                </option>
-              `
-                )
-                .join('')}
+              ${renderCharacterOptions(arg.defenseCharacterId)}
             </select>
           </div>
 
@@ -250,7 +230,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
 // ==================== Argument Management ====================
 
 export function addDebateScumArgument(gameId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   if (!mg.typeSpecific) mg.typeSpecific = {};
@@ -284,7 +264,7 @@ export function addDebateScumArgument(gameId) {
 }
 
 export function deleteDebateScumArgument(gameId, argumentId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   mg.typeSpecific.arguments = mg.typeSpecific.arguments.filter((a) => a.argumentId !== argumentId);
@@ -295,7 +275,7 @@ export function deleteDebateScumArgument(gameId, argumentId) {
 }
 
 export function updateDebateScumArgument(gameId, argumentId, field, value) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
@@ -306,7 +286,7 @@ export function updateDebateScumArgument(gameId, argumentId, field, value) {
 }
 
 export function updateDebateScumArgumentKeywords(gameId, argumentId, side, value) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
@@ -330,7 +310,7 @@ export function updateDebateScumArgumentKeywords(gameId, argumentId, side, value
 // ==================== Argument Reordering ====================
 
 export function moveArgumentUp(gameId, argumentId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
   if (!moveItem(mg.typeSpecific.arguments, 'argumentId', argumentId, -1)) return;
   renderMinigameDetails();
@@ -338,7 +318,7 @@ export function moveArgumentUp(gameId, argumentId) {
 }
 
 export function moveArgumentDown(gameId, argumentId) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
   if (!moveItem(mg.typeSpecific.arguments, 'argumentId', argumentId, 1)) return;
   renderMinigameDetails();
@@ -365,7 +345,7 @@ export function handleArgumentDropInGap(event, gameId, insertPosition) {
   event.preventDefault();
   event.stopPropagation();
 
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg || !draggedArgumentId) return;
 
   const changed = dropAtGap(
@@ -395,7 +375,7 @@ export async function handleDebateScumAudioUpload(gameId, argumentId, side, even
   const file = validateAudioUpload(event);
   if (!file) return;
 
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
@@ -425,7 +405,7 @@ export async function handleDebateScumAudioUpload(gameId, argumentId, side, even
 }
 
 export async function clearDebateScumAudio(gameId, argumentId, side) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
@@ -451,7 +431,7 @@ export async function clearDebateScumAudio(gameId, argumentId, side) {
 // ==================== Audio Playback ====================
 
 export async function playDebateScumAudio(gameId, argumentId, side) {
-  const mg = state.minigames.find((m) => m.gameId === gameId);
+  const mg = findMinigame(gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);

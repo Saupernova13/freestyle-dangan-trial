@@ -1054,19 +1054,6 @@ export function renderHighlightedDialogue(dialogue, highlights) {
   return result;
 }
 
-// Render preview of current selection (before adding)
-export function renderSelectionPreview(dialogue, start, end, color) {
-  if (!dialogue || start >= end || start < 0 || end > dialogue.length) {
-    return '<em>Invalid selection</em>';
-  }
-
-  return dialogue.substring(0, start) +
-         `<span style="background-color: ${color}; padding: 2px 4px; border-radius: 3px;">` +
-         dialogue.substring(start, end) +
-         '</span>' +
-         dialogue.substring(end);
-}
-
 // Clear the highlight drag-selection.
 // Named distinctly from app.js's clearSelection (script line multi-select):
 // both files share the global namespace, and the previous shared name meant
@@ -1085,11 +1072,6 @@ export function clearHighlightSelection() {
   const selectionRange = document.getElementById('selection-range');
   if (selectionRange) {
     selectionRange.innerHTML = 'None';
-  }
-
-  const livePreview = document.getElementById('selection-live-preview');
-  if (livePreview) {
-    livePreview.innerHTML = '<em>Drag across the text above to select</em>';
   }
 
   const addButton = document.getElementById('add-highlight-btn');
@@ -1120,16 +1102,18 @@ export function selectHighlightColor(color) {
     }
   });
 
-  // Update live preview if selection exists
+  // Repaint the unified preview so an in-progress selection reflects the
+  // newly chosen color.
   const line = state.scriptLines.find(l => l.id === activeLineId);
-  const livePreview = document.getElementById('selection-live-preview');
-  if (livePreview && highlightingState.endChar > highlightingState.startChar && line) {
-    livePreview.innerHTML = renderSelectionPreview(
-      line.dialogue,
-      highlightingState.startChar,
-      highlightingState.endChar,
-      color
-    );
+  const unifiedPreview = document.getElementById('highlight-unified-preview');
+  if (unifiedPreview && line && highlightingState.endChar > highlightingState.startChar) {
+    const dialogue = line.dialogue || line.text || "";
+    const tempHighlights = [...scriptLineFields.highlights, {
+      startChar: highlightingState.startChar,
+      endChar: highlightingState.endChar,
+      color: highlightingState.currentColor,
+    }];
+    unifiedPreview.innerHTML = renderHighlightedDialogue(dialogue, tempHighlights);
   }
 }
 

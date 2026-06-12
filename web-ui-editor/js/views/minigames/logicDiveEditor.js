@@ -27,11 +27,15 @@ export function renderLogicDiveEditor(mg) {
       <p class="section-description">Create questions with 3-5 multiple choice answers. Select an answer in green to mark it as the correct answer.</p>
 
       <div class="logic-dive-questions-container">
-        ${questions.length === 0 ? `
+        ${
+          questions.length === 0
+            ? `
           <div class="empty-state">
             <p>No questions yet. Click "Add Question" to create your first question.</p>
           </div>
-        ` : renderLogicDiveQuestions(mg.gameId, questions)}
+        `
+            : renderLogicDiveQuestions(mg.gameId, questions)
+        }
       </div>
 
       <!-- Floating button for questions -->
@@ -107,16 +111,22 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
         <div class="answers-section">
           <div class="answers-header">
             <h4>Answers (${question.answers.length}/5)</h4>
-            ${question.answers.length < 5 ? `
+            ${
+              question.answers.length < 5
+                ? `
               <button class="btn btn-secondary btn-sm"
                       onclick="addLogicDiveAnswer('${gameId}', '${question.questionId}')">
                 ➕ Add Answer
               </button>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
 
           <div class="answers-list">
-            ${question.answers.map((answer, ansIndex) => `
+            ${question.answers
+              .map(
+                (answer, ansIndex) => `
               <div class="answer-item ${answer.isCorrect ? 'correct-answer' : ''}">
                 <div class="answer-radio">
                   <input type="radio"
@@ -130,18 +140,28 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
                        placeholder="Answer ${ansIndex + 1}"
                        value="${escapeHtml(answer.answerText || '')}"
                        onchange="updateLogicDiveAnswer('${gameId}', '${question.questionId}', '${answer.answerId}', 'answerText', this.value)">
-                ${question.answers.length > 2 ? `
+                ${
+                  question.answers.length > 2
+                    ? `
                   <button class="btn-icon btn-icon-danger"
                           onclick="deleteLogicDiveAnswer('${gameId}', '${question.questionId}', '${answer.answerId}')"
                           title="Delete answer">🗑️</button>
-                ` : ''}
+                `
+                    : ''
+                }
               </div>
-            `).join('')}
+            `
+              )
+              .join('')}
           </div>
 
-          ${question.answers.length < 2 ? `
+          ${
+            question.answers.length < 2
+              ? `
             <p class="validation-warning">⚠️ Add at least 2 answers</p>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       </div>
     </div>
@@ -151,7 +171,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
 // ==================== Question Management ====================
 
 export function addLogicDiveQuestion(gameId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   if (!mg.typeSpecific) {
@@ -164,14 +184,14 @@ export function addLogicDiveQuestion(gameId) {
   const newQuestion = {
     questionId: generateId('q'),
     order: mg.typeSpecific.questions.length,
-    questionText: "",
+    questionText: '',
     answers: [
-      { answerId: `a_${Date.now()}_1`, answerText: "", isCorrect: true },
-      { answerId: `a_${Date.now()}_2`, answerText: "", isCorrect: false },
-      { answerId: `a_${Date.now()}_3`, answerText: "", isCorrect: false },
-      { answerId: `a_${Date.now()}_4`, answerText: "", isCorrect: false },
-      { answerId: `a_${Date.now()}_5`, answerText: "", isCorrect: false }
-    ]
+      { answerId: `a_${Date.now()}_1`, answerText: '', isCorrect: true },
+      { answerId: `a_${Date.now()}_2`, answerText: '', isCorrect: false },
+      { answerId: `a_${Date.now()}_3`, answerText: '', isCorrect: false },
+      { answerId: `a_${Date.now()}_4`, answerText: '', isCorrect: false },
+      { answerId: `a_${Date.now()}_5`, answerText: '', isCorrect: false },
+    ],
   };
 
   mg.typeSpecific.questions.push(newQuestion);
@@ -180,10 +200,10 @@ export function addLogicDiveQuestion(gameId) {
 }
 
 export function deleteLogicDiveQuestion(gameId, questionId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  mg.typeSpecific.questions = mg.typeSpecific.questions.filter(q => q.questionId !== questionId);
+  mg.typeSpecific.questions = mg.typeSpecific.questions.filter((q) => q.questionId !== questionId);
 
   // Re-index order
   mg.typeSpecific.questions.forEach((q, index) => {
@@ -195,10 +215,10 @@ export function deleteLogicDiveQuestion(gameId, questionId) {
 }
 
 export function updateLogicDiveQuestion(gameId, questionId, field, value) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const question = mg.typeSpecific.questions.find(q => q.questionId === questionId);
+  const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
   if (!question) return;
 
   question[field] = value;
@@ -208,16 +228,16 @@ export function updateLogicDiveQuestion(gameId, questionId, field, value) {
 // ==================== Answer Management ====================
 
 export function addLogicDiveAnswer(gameId, questionId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const question = mg.typeSpecific.questions.find(q => q.questionId === questionId);
+  const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
   if (!question || question.answers.length >= 5) return;
 
   const newAnswer = {
     answerId: generateId('a'),
-    answerText: "",
-    isCorrect: false
+    answerText: '',
+    isCorrect: false,
   };
 
   question.answers.push(newAnswer);
@@ -226,16 +246,16 @@ export function addLogicDiveAnswer(gameId, questionId) {
 }
 
 export function deleteLogicDiveAnswer(gameId, questionId, answerId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const question = mg.typeSpecific.questions.find(q => q.questionId === questionId);
+  const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
   if (!question || question.answers.length <= 2) return; // Minimum 2 answers
 
-  question.answers = question.answers.filter(a => a.answerId !== answerId);
+  question.answers = question.answers.filter((a) => a.answerId !== answerId);
 
   // If deleted answer was correct, make first answer correct
-  if (!question.answers.some(a => a.isCorrect)) {
+  if (!question.answers.some((a) => a.isCorrect)) {
     question.answers[0].isCorrect = true;
   }
 
@@ -244,13 +264,13 @@ export function deleteLogicDiveAnswer(gameId, questionId, answerId) {
 }
 
 export function updateLogicDiveAnswer(gameId, questionId, answerId, field, value) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const question = mg.typeSpecific.questions.find(q => q.questionId === questionId);
+  const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
   if (!question) return;
 
-  const answer = question.answers.find(a => a.answerId === answerId);
+  const answer = question.answers.find((a) => a.answerId === answerId);
   if (!answer) return;
 
   answer[field] = value;
@@ -258,15 +278,15 @@ export function updateLogicDiveAnswer(gameId, questionId, answerId, field, value
 }
 
 export function setCorrectAnswer(gameId, questionId, answerId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const question = mg.typeSpecific.questions.find(q => q.questionId === questionId);
+  const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
   if (!question) return;
 
   // Set all answers to false, then set selected to true
-  question.answers.forEach(a => {
-    a.isCorrect = (a.answerId === answerId);
+  question.answers.forEach((a) => {
+    a.isCorrect = a.answerId === answerId;
   });
 
   renderMinigameDetails();
@@ -276,15 +296,18 @@ export function setCorrectAnswer(gameId, questionId, answerId) {
 // ==================== Question Reordering ====================
 
 export function moveQuestionUp(gameId, questionId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   const questions = mg.typeSpecific.questions;
-  const currentIndex = questions.findIndex(q => q.questionId === questionId);
+  const currentIndex = questions.findIndex((q) => q.questionId === questionId);
 
   if (currentIndex <= 0) return;
 
-  [questions[currentIndex], questions[currentIndex - 1]] = [questions[currentIndex - 1], questions[currentIndex]];
+  [questions[currentIndex], questions[currentIndex - 1]] = [
+    questions[currentIndex - 1],
+    questions[currentIndex],
+  ];
 
   questions.forEach((q, index) => {
     q.order = index;
@@ -295,15 +318,18 @@ export function moveQuestionUp(gameId, questionId) {
 }
 
 export function moveQuestionDown(gameId, questionId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   const questions = mg.typeSpecific.questions;
-  const currentIndex = questions.findIndex(q => q.questionId === questionId);
+  const currentIndex = questions.findIndex((q) => q.questionId === questionId);
 
   if (currentIndex === -1 || currentIndex >= questions.length - 1) return;
 
-  [questions[currentIndex], questions[currentIndex + 1]] = [questions[currentIndex + 1], questions[currentIndex]];
+  [questions[currentIndex], questions[currentIndex + 1]] = [
+    questions[currentIndex + 1],
+    questions[currentIndex],
+  ];
 
   questions.forEach((q, index) => {
     q.order = index;
@@ -324,7 +350,7 @@ export function handleQuestionDragStart(event, gameId, questionId) {
 export function handleQuestionDragEnd(event) {
   event.target.classList.remove('dragging');
   draggedQuestionId = null;
-  document.querySelectorAll('.drag-over-gap').forEach(el => {
+  document.querySelectorAll('.drag-over-gap').forEach((el) => {
     el.classList.remove('drag-over-gap');
   });
 }
@@ -333,11 +359,11 @@ export function handleQuestionDropInGap(event, gameId, insertPosition) {
   event.preventDefault();
   event.stopPropagation();
 
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !draggedQuestionId) return;
 
   const questions = mg.typeSpecific.questions;
-  const draggedIndex = questions.findIndex(q => q.questionId === draggedQuestionId);
+  const draggedIndex = questions.findIndex((q) => q.questionId === draggedQuestionId);
 
   if (draggedIndex === -1) return;
   if (insertPosition === draggedIndex || insertPosition === draggedIndex + 1) {

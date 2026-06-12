@@ -10,7 +10,7 @@ export function renderHangmansGambitEditor(mg) {
     mg.typeSpecific = {};
   }
   if (mg.typeSpecific.answerKey === undefined) {
-    mg.typeSpecific.answerKey = "";
+    mg.typeSpecific.answerKey = '';
   }
 
   return `
@@ -31,7 +31,7 @@ export function renderHangmansGambitEditor(mg) {
 }
 
 export function updateHangmansGambitField(gameId, field, value) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   if (!mg.typeSpecific) {

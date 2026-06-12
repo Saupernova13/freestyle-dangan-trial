@@ -5,46 +5,46 @@ import { escapeHtml, showLoader } from '../utils.js';
 import { renderTruthBulletsView } from '../views/truthBulletsView.js';
 
 let activeBulletId = null;
-let bulletModalErr = "";
-let bulletModalMsg = "";
+let bulletModalErr = '';
+let bulletModalMsg = '';
 let bulletFields = {
-  name: "",
-  description: "",
+  name: '',
+  description: '',
   imageFile: null,
   imageBlob: null,
-  inversedLieBulletName: ""
+  inversedLieBulletName: '',
 };
 
 export function openTruthBulletModal(bulletId) {
   if (!state.dirHandle) {
-    alert("Choose a folder first!");
+    alert('Choose a folder first!');
     return;
   }
 
   activeBulletId = bulletId;
-  bulletModalErr = "";
-  bulletModalMsg = "";
+  bulletModalErr = '';
+  bulletModalMsg = '';
 
-  const bullet = state.truthBullets.find(b => b.bulletId === bulletId);
+  const bullet = state.truthBullets.find((b) => b.bulletId === bulletId);
   if (!bullet) {
-    alert("Truth bullet not found!");
+    alert('Truth bullet not found!');
     return;
   }
 
   bulletFields = {
-    name: bullet.name || "",
-    description: bullet.description || "",
+    name: bullet.name || '',
+    description: bullet.description || '',
     imageFile: bullet.imageFile || null,
     imageBlob: null,
-    inversedLieBulletName: bullet.inversedLieBulletName || ""
+    inversedLieBulletName: bullet.inversedLieBulletName || '',
   };
 
   renderTruthBulletModal();
 }
 
 export function renderTruthBulletModal() {
-  const root = document.getElementById("modalroot");
-  const bullet = state.truthBullets.find(b => b.bulletId === activeBulletId);
+  const root = document.getElementById('modalroot');
+  const bullet = state.truthBullets.find((b) => b.bulletId === activeBulletId);
 
   const hasImage = bulletFields.imageFile !== null;
 
@@ -90,18 +90,22 @@ export function renderTruthBulletModal() {
             <div class="dr-fg-row">
               <div class="dr-fg-field">
                 <label>Bullet Image:</label>
-                ${hasImage ? `
+                ${
+                  hasImage
+                    ? `
                   <div class="bullet-image-preview">
                     <div class="bullet-image-preview-container">
                       <img src="${bullet.imageDataURL || ''}" alt="Bullet image">
                     </div>
                     <button class="btn btn-secondary" onclick="clearBulletImage()">🗑️ Remove Image</button>
                   </div>
-                ` : `
+                `
+                    : `
                   <div class="bullet-image-empty">
                     <p>No image uploaded</p>
                   </div>
-                `}
+                `
+                }
                 <input type="file" accept="image/*" id="bulletImageInput"
                        onchange="handleBulletImageUpload(event)" style="display: none;">
                 <button class="btn btn-primary" onclick="triggerBulletImageInput()">
@@ -112,8 +116,8 @@ export function renderTruthBulletModal() {
           </div>
         </div>
 
-        ${bulletModalErr ? `<div class="dr-err">${bulletModalErr}</div>` : ""}
-        ${bulletModalMsg ? `<div class="dr-success">${bulletModalMsg}</div>` : ""}
+        ${bulletModalErr ? `<div class="dr-err">${bulletModalErr}</div>` : ''}
+        ${bulletModalMsg ? `<div class="dr-success">${bulletModalMsg}</div>` : ''}
 
         <div class="dr-btn-row">
           <button class="btn btn-secondary" onclick="closeTruthBulletModal()">Cancel</button>
@@ -137,7 +141,7 @@ export function handleBulletImageUpload(event) {
   if (!file) return;
 
   if (!file.type.startsWith('image/')) {
-    bulletModalErr = "Please select a valid image file.";
+    bulletModalErr = 'Please select a valid image file.';
     renderTruthBulletModal();
     return;
   }
@@ -148,7 +152,7 @@ export function handleBulletImageUpload(event) {
   // Create data URL for immediate preview
   const reader = new FileReader();
   reader.onload = (e) => {
-    const bullet = state.truthBullets.find(b => b.bulletId === activeBulletId);
+    const bullet = state.truthBullets.find((b) => b.bulletId === activeBulletId);
     if (bullet) {
       bullet.imageDataURL = e.target.result;
       renderTruthBulletModal();
@@ -156,14 +160,14 @@ export function handleBulletImageUpload(event) {
   };
   reader.readAsDataURL(file);
 
-  bulletModalErr = "";
+  bulletModalErr = '';
   renderTruthBulletModal();
 }
 
 export function clearBulletImage() {
   bulletFields.imageFile = null;
   bulletFields.imageBlob = null;
-  const bullet = state.truthBullets.find(b => b.bulletId === activeBulletId);
+  const bullet = state.truthBullets.find((b) => b.bulletId === activeBulletId);
   if (bullet) {
     bullet.imageDataURL = null;
   }
@@ -171,20 +175,20 @@ export function clearBulletImage() {
 }
 
 export function closeTruthBulletModal() {
-  document.getElementById("modalroot").innerHTML = "";
+  document.getElementById('modalroot').innerHTML = '';
   activeBulletId = null;
 }
 
 export async function saveTruthBullet() {
-  const bullet = state.truthBullets.find(b => b.bulletId === activeBulletId);
+  const bullet = state.truthBullets.find((b) => b.bulletId === activeBulletId);
   if (!bullet) {
-    alert("Bullet not found!");
+    alert('Bullet not found!');
     closeTruthBulletModal();
     return;
   }
 
   if (!bulletFields.name.trim()) {
-    bulletModalErr = "Please enter a bullet name.";
+    bulletModalErr = 'Please enter a bullet name.';
     renderTruthBulletModal();
     return;
   }
@@ -194,7 +198,7 @@ export async function saveTruthBullet() {
 
     // Handle image upload
     if (bulletFields.imageBlob) {
-      const bulletsDir = await state.dirHandle.getDirectoryHandle("TruthBullets", { create: true });
+      const bulletsDir = await state.dirHandle.getDirectoryHandle('TruthBullets', { create: true });
       const imageFileName = `${bullet.bulletId}.${bulletFields.imageBlob.name.split('.').pop()}`;
       const imageFileHandle = await bulletsDir.getFileHandle(imageFileName, { create: true });
       const writable = await imageFileHandle.createWritable();
@@ -212,10 +216,12 @@ export async function saveTruthBullet() {
     } else if (bulletFields.imageFile === null && bullet.imageFile) {
       // Image was cleared, remove the file
       try {
-        const bulletsDir = await state.dirHandle.getDirectoryHandle("TruthBullets", { create: false });
+        const bulletsDir = await state.dirHandle.getDirectoryHandle('TruthBullets', {
+          create: false,
+        });
         await bulletsDir.removeEntry(bullet.imageFile);
       } catch (e) {
-        console.warn("Could not remove image file:", e);
+        console.warn('Could not remove image file:', e);
       }
       bullet.imageFile = null;
       bullet.imageDataURL = null;
@@ -230,11 +236,10 @@ export async function saveTruthBullet() {
     showLoader(false);
     closeTruthBulletModal();
     renderTruthBulletsView();
-
   } catch (error) {
-    console.error("Error saving truth bullet:", error);
+    console.error('Error saving truth bullet:', error);
     showLoader(false);
-    bulletModalErr = "Failed to save: " + error.message;
+    bulletModalErr = 'Failed to save: ' + error.message;
     renderTruthBulletModal();
   }
 }

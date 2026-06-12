@@ -1,7 +1,7 @@
 // Settings management
 import { closeModal } from './modals/modalCoordinator.js';
 export const appSettings = {
-  maxSprites: 25
+  maxSprites: 25,
 };
 
 export function loadSettings() {
@@ -16,7 +16,7 @@ export function saveSettings() {
 }
 
 export function openSettings() {
-  const root = document.getElementById("modalroot");
+  const root = document.getElementById('modalroot');
   root.innerHTML = `
     <div class="dr-modal-bg">
       <div class="dr-modal">
@@ -57,11 +57,11 @@ export function saveAppSettings() {
     alert('Please enter a valid number between 1 and 100');
     return;
   }
-  
+
   appSettings.maxSprites = newMaxSprites;
   saveSettings();
   closeModal();
-  
+
   // Show success message briefly
   const successDiv = document.createElement('div');
   successDiv.className = 'dr-success';
@@ -71,7 +71,7 @@ export function saveAppSettings() {
   successDiv.style.right = '2rem';
   successDiv.style.zIndex = '1000';
   document.body.appendChild(successDiv);
-  
+
   setTimeout(() => {
     document.body.removeChild(successDiv);
   }, 3000);

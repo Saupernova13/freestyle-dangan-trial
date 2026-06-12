@@ -119,7 +119,12 @@ describe('normalizeHighlights', () => {
 
   it('skips malformed entries without dropping valid ones', () => {
     const result = normalizeHighlights(
-      [null, 'junk', { startChar: 'x', endChar: 'y' }, { startChar: 0, endChar: 2, color: '#FF0000' }],
+      [
+        null,
+        'junk',
+        { startChar: 'x', endChar: 'y' },
+        { startChar: 0, endChar: 2, color: '#FF0000' },
+      ],
       5
     );
     expect(result).toEqual([{ startChar: 0, endChar: 2, color: '#FF0000' }]);

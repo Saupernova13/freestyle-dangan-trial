@@ -17,21 +17,21 @@ let filteredCharacters = [];
 let highlightedIndex = -1;
 
 // Initialize app
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   initializeTheme();
   loadSettings();
   initSpriteMagnifier();
   renderActiveView();
 
   // Trial name input handler
-  document.getElementById('trialNameInput').addEventListener('input', e => {
+  document.getElementById('trialNameInput').addEventListener('input', (e) => {
     state.trialName = e.target.value.trim();
     updateExportButtonState();
     scheduleAutoSave();
   });
 
   // Click outside to close dropdown
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     // Check if click is outside any searchable dropdown
     if (!e.target.closest('.searchable-dropdown') && activeDropdownLineId) {
       closeCharacterDropdown(activeDropdownLineId);
@@ -42,14 +42,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // delegation. The list is re-rendered on every keystroke, so per-item (or
   // even per-list) listeners would need rebinding each time — the old
   // clone-and-replace approach leaked nodes and lost scroll position.
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     const item = e.target.closest('.searchable-dropdown-item');
     if (item && item.dataset.charId && activeDropdownLineId) {
       selectCharacterFromDropdown(activeDropdownLineId, item.dataset.charId);
     }
   });
 
-  document.addEventListener('mouseover', function(e) {
+  document.addEventListener('mouseover', function (e) {
     const item = e.target.closest('.searchable-dropdown-item');
     if (item && item.dataset.charIndex !== undefined && activeDropdownLineId) {
       const idx = parseInt(item.dataset.charIndex, 10);
@@ -112,9 +112,9 @@ export function addScriptLine() {
   const newLine = {
     id: generateId('line'),
     order: state.scriptLines.length,
-    type: "speaking",
-    characterId: "",
-    dialogue: ""
+    type: 'speaking',
+    characterId: '',
+    dialogue: '',
   };
   state.scriptLines.push(newLine);
   renderScriptEditor();
@@ -131,7 +131,7 @@ export function toggleLineSelection(event, lineId) {
     } else {
       state.selectedLineIds.add(lineId);
     }
-    renderScriptEditor();  // Re-render to show selection
+    renderScriptEditor(); // Re-render to show selection
   }
 }
 
@@ -183,7 +183,7 @@ export function createDragGhost(lineIds) {
 }
 
 export function handleGapDragOver(event) {
-  event.preventDefault();  // Allow drop
+  event.preventDefault(); // Allow drop
   event.dataTransfer.dropEffect = 'move';
 
   // Add visual feedback to the gap
@@ -206,9 +206,9 @@ export function handleDropInGap(event, insertPosition) {
   event.stopPropagation();
 
   // Get the lines being dragged
-  const draggedLines = state.draggedLineIds.map(id =>
-    state.scriptLines.find(l => l.id === id)
-  ).filter(Boolean);
+  const draggedLines = state.draggedLineIds
+    .map((id) => state.scriptLines.find((l) => l.id === id))
+    .filter(Boolean);
 
   if (draggedLines.length === 0) {
     cleanupDrag();
@@ -217,20 +217,23 @@ export function handleDropInGap(event, insertPosition) {
 
   // Calculate the indices of dragged lines
   const draggedIndices = state.draggedLineIds
-    .map(id => state.scriptLines.findIndex(l => l.id === id))
-    .filter(idx => idx !== -1)
-    .sort((a, b) => a - b);  // Sort ascending for position calculation
+    .map((id) => state.scriptLines.findIndex((l) => l.id === id))
+    .filter((idx) => idx !== -1)
+    .sort((a, b) => a - b); // Sort ascending for position calculation
 
   // Check if we're dropping in the same position (no-op)
   // The dragged block starts at draggedIndices[0] and ends at draggedIndices[draggedIndices.length - 1]
-  if (insertPosition >= draggedIndices[0] && insertPosition <= draggedIndices[draggedIndices.length - 1] + 1) {
+  if (
+    insertPosition >= draggedIndices[0] &&
+    insertPosition <= draggedIndices[draggedIndices.length - 1] + 1
+  ) {
     cleanupDrag();
     return;
   }
 
   // Remove dragged lines from array (in reverse order to preserve indices)
   const draggedIndicesSorted = [...draggedIndices].sort((a, b) => b - a);
-  draggedIndicesSorted.forEach(idx => {
+  draggedIndicesSorted.forEach((idx) => {
     state.scriptLines.splice(idx, 1);
   });
 
@@ -251,13 +254,13 @@ export function handleDropInGap(event, insertPosition) {
   });
 
   // Add animation class for smooth transition
-  document.querySelectorAll('.script-line-bar').forEach(el => {
+  document.querySelectorAll('.script-line-bar').forEach((el) => {
     el.classList.add('reordering');
   });
 
   // Remove animation class after transition
   setTimeout(() => {
-    document.querySelectorAll('.script-line-bar').forEach(el => {
+    document.querySelectorAll('.script-line-bar').forEach((el) => {
       el.classList.remove('reordering');
     });
   }, 300);
@@ -275,11 +278,11 @@ export function handleDragEnd(event) {
 
 export function cleanupDrag() {
   // Clean up all visual feedback
-  document.querySelectorAll('.drag-over').forEach(el => {
+  document.querySelectorAll('.drag-over').forEach((el) => {
     el.classList.remove('drag-over');
   });
 
-  document.querySelectorAll('.drag-over-gap').forEach(el => {
+  document.querySelectorAll('.drag-over-gap').forEach((el) => {
     el.classList.remove('drag-over-gap');
   });
 
@@ -295,7 +298,7 @@ export function cleanupDrag() {
 }
 
 export async function deleteScriptLine(lineId) {
-  const line = state.scriptLines.find(l => l.id === lineId);
+  const line = state.scriptLines.find((l) => l.id === lineId);
   if (!line) return;
 
   const label = line.dialogue || line.text || 'this line';
@@ -305,7 +308,7 @@ export async function deleteScriptLine(lineId) {
   // orphaned files that would be bundled into every export.
   await removeLineAudioFile(line);
 
-  state.scriptLines = state.scriptLines.filter(l => l.id !== lineId);
+  state.scriptLines = state.scriptLines.filter((l) => l.id !== lineId);
   // Reorder remaining lines
   state.scriptLines.forEach((l, index) => {
     l.order = index;
@@ -327,7 +330,7 @@ async function removeLineAudioFile(line) {
 }
 
 export function moveLineUp(lineId) {
-  const currentIndex = state.scriptLines.findIndex(l => l.id === lineId);
+  const currentIndex = state.scriptLines.findIndex((l) => l.id === lineId);
   if (currentIndex <= 0) return; // Already at top
 
   // Swap with previous line
@@ -345,7 +348,7 @@ export function moveLineUp(lineId) {
 }
 
 export function moveLineDown(lineId) {
-  const currentIndex = state.scriptLines.findIndex(l => l.id === lineId);
+  const currentIndex = state.scriptLines.findIndex((l) => l.id === lineId);
   if (currentIndex === -1 || currentIndex >= state.scriptLines.length - 1) return; // Already at bottom
 
   // Swap with next line
@@ -363,7 +366,7 @@ export function moveLineDown(lineId) {
 }
 
 export async function changeScriptLineType(lineId, newType) {
-  const line = state.scriptLines.find(l => l.id === lineId);
+  const line = state.scriptLines.find((l) => l.id === lineId);
   if (!line) return;
 
   // Clear type-specific fields
@@ -376,27 +379,27 @@ export async function changeScriptLineType(lineId, newType) {
   // reaches trial.json. Audio/highlights/effects are valid for both spoken
   // and narrated lines, but nothing carries over to a minigame trigger, and
   // sprite/camera settings are speaking-only.
-  if (newType === "minigame") {
+  if (newType === 'minigame') {
     await removeLineAudioFile(line);
     delete line.audioFile;
     delete line.highlights;
     delete line.specialEffects;
     delete line.dialogueBoxStyle;
   }
-  if (newType !== "speaking") {
+  if (newType !== 'speaking') {
     delete line.spriteIndex;
     delete line.cameraMotion;
   }
 
   // Set new type and initialize fields
   line.type = newType;
-  if (newType === "speaking") {
-    line.characterId = "";
-    line.dialogue = "";
-  } else if (newType === "narrator") {
-    line.text = "";
-  } else if (newType === "minigame") {
-    line.minigameId = "";
+  if (newType === 'speaking') {
+    line.characterId = '';
+    line.dialogue = '';
+  } else if (newType === 'narrator') {
+    line.text = '';
+  } else if (newType === 'minigame') {
+    line.minigameId = '';
   }
 
   renderScriptEditor();
@@ -404,7 +407,7 @@ export async function changeScriptLineType(lineId, newType) {
 }
 
 export function updateScriptLine(lineId, field, value) {
-  const line = state.scriptLines.find(l => l.id === lineId);
+  const line = state.scriptLines.find((l) => l.id === lineId);
   if (!line) return;
 
   line[field] = value;
@@ -423,7 +426,7 @@ export function openCharacterDropdown(lineId) {
   highlightedIndex = -1;
 
   // Initialize with all characters
-  filteredCharacters = state.cast.filter(c => c !== null);
+  filteredCharacters = state.cast.filter((c) => c !== null);
 
   // Render the dropdown list
   renderCharacterDropdownList(lineId);
@@ -443,13 +446,13 @@ export function closeCharacterDropdown(lineId) {
 }
 
 export function filterCharacters(lineId, searchTerm) {
-  const characters = state.cast.filter(c => c !== null);
+  const characters = state.cast.filter((c) => c !== null);
   const term = searchTerm.toLowerCase().trim();
 
   if (term === '') {
     filteredCharacters = characters;
   } else {
-    filteredCharacters = characters.filter(c => {
+    filteredCharacters = characters.filter((c) => {
       const fullName = `${c.name} ${c.surname}`.toLowerCase();
       return fullName.includes(term);
     });
@@ -467,7 +470,7 @@ export function handleCharacterKeydown(lineId, event) {
     return;
   }
 
-  switch(event.key) {
+  switch (event.key) {
     case 'ArrowDown':
       event.preventDefault();
       if (highlightedIndex < filteredCharacters.length - 1) {
@@ -506,7 +509,7 @@ export function selectCharacterFromDropdown(lineId, characterId) {
   closeCharacterDropdown(lineId);
 
   // Update the input value to show selected character
-  const selectedChar = state.cast.find(c => c && c.id === characterId);
+  const selectedChar = state.cast.find((c) => c && c.id === characterId);
   if (selectedChar) {
     const inputEl = document.getElementById(`char-dropdown-input-${lineId}`);
     if (inputEl) {
@@ -520,29 +523,32 @@ export function renderCharacterDropdownList(lineId) {
   if (!listEl) return;
 
   if (filteredCharacters.length === 0) {
-    listEl.innerHTML = '<div class="searchable-dropdown-item" style="cursor: default; opacity: 0.6;">No characters found</div>';
+    listEl.innerHTML =
+      '<div class="searchable-dropdown-item" style="cursor: default; opacity: 0.6;">No characters found</div>';
     listEl.style.display = 'block';
     return;
   }
 
-  const line = state.scriptLines.find(l => l.id === lineId);
+  const line = state.scriptLines.find((l) => l.id === lineId);
   const selectedCharId = line ? line.characterId : '';
 
-  const itemsHtml = filteredCharacters.map((c, idx) => {
-    const isSelected = c.id === selectedCharId;
-    const isHighlighted = idx === highlightedIndex;
-    const classes = ['searchable-dropdown-item'];
-    if (isSelected) classes.push('selected');
-    if (isHighlighted) classes.push('highlighted');
+  const itemsHtml = filteredCharacters
+    .map((c, idx) => {
+      const isSelected = c.id === selectedCharId;
+      const isHighlighted = idx === highlightedIndex;
+      const classes = ['searchable-dropdown-item'];
+      if (isSelected) classes.push('selected');
+      if (isHighlighted) classes.push('highlighted');
 
-    return `
+      return `
       <div class="${classes.join(' ')}"
            data-char-id="${c.id}"
            data-char-index="${idx}">
         ${escapeHtml(`${c.name} ${c.surname}`)} (${c.isHeadmaster ? 'Headmaster' : 'Student'})
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 
   listEl.innerHTML = itemsHtml;
   listEl.style.display = 'block';
@@ -575,12 +581,12 @@ export function scrollToHighlighted(lineId) {
 
 export function renderScriptLineBar(line, index) {
   const lineNumber = index + 1;
-  let contentHtml = "";
+  let contentHtml = '';
 
   // Generate content based on type
-  if (line.type === "speaking") {
+  if (line.type === 'speaking') {
     // Get selected character name for display
-    const selectedChar = state.cast.find(c => c && c.id === line.characterId);
+    const selectedChar = state.cast.find((c) => c && c.id === line.characterId);
     const displayValue = selectedChar ? `${selectedChar.name} ${selectedChar.surname}` : '';
 
     contentHtml = `
@@ -606,7 +612,7 @@ export function renderScriptLineBar(line, index) {
         onclick="event.stopPropagation()"
       >
     `;
-  } else if (line.type === "narrator") {
+  } else if (line.type === 'narrator') {
     contentHtml = `
       <input
         type="text"
@@ -617,12 +623,14 @@ export function renderScriptLineBar(line, index) {
         onclick="event.stopPropagation()"
       >
     `;
-  } else if (line.type === "minigame") {
-    const minigameOptions = state.minigames.map(mg => {
-      return `<option value="${mg.gameId}" ${line.minigameId === mg.gameId ? 'selected' : ''}>
+  } else if (line.type === 'minigame') {
+    const minigameOptions = state.minigames
+      .map((mg) => {
+        return `<option value="${mg.gameId}" ${line.minigameId === mg.gameId ? 'selected' : ''}>
         ${escapeHtml(mg.name)} (${MINIGAME_TYPE_LABELS[mg.gameType] || mg.gameType})
       </option>`;
-    }).join('');
+      })
+      .join('');
 
     contentHtml = `
       <select class="script-minigame-select" onchange="updateScriptLine('${line.id}', 'minigameId', this.value)" onclick="event.stopPropagation()">
@@ -662,7 +670,7 @@ export function renderScriptLineBar(line, index) {
         </select>
       </div>
 
-      ${(line.type === 'speaking' || line.type === 'narrator') ? `<button class="script-line-edit" onclick="event.stopPropagation(); openScriptLineModal('${line.id}')" title="Edit advanced properties">✏️</button>` : ''}
+      ${line.type === 'speaking' || line.type === 'narrator' ? `<button class="script-line-edit" onclick="event.stopPropagation(); openScriptLineModal('${line.id}')" title="Edit advanced properties">✏️</button>` : ''}
 
       <button class="script-line-delete" onclick="event.stopPropagation(); deleteScriptLine('${line.id}')" title="Delete line">🗑️</button>
     </div>

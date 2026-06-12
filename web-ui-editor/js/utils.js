@@ -6,14 +6,14 @@ export function showLoader(on) {
 export function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     let fr = new FileReader();
-    fr.onload = _ => resolve(fr.result);
+    fr.onload = (_) => resolve(fr.result);
     fr.onerror = reject;
     fr.readAsDataURL(file);
   });
 }
 
 export function renderDirDisplay(dH) {
-  document.getElementById('dirDisplay').innerText = dH ? `📂 ${dH.name}` : "";
+  document.getElementById('dirDisplay').innerText = dH ? `📂 ${dH.name}` : '';
 }
 
 // Format seconds as M:SS for audio player time displays.
@@ -52,16 +52,20 @@ export function normalizeHighlights(highlights, textLength) {
     if (!Number.isFinite(rawStart) || !Number.isFinite(rawEnd)) continue;
     const start = Math.max(0, Math.min(textLength, Math.floor(rawStart)));
     const end = Math.max(0, Math.min(textLength, Math.floor(rawEnd)));
-    const color = (typeof h.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(h.color))
-      ? h.color.toUpperCase()
-      : '#FFFF00';
+    const color =
+      typeof h.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(h.color)
+        ? h.color.toUpperCase()
+        : '#FFFF00';
     for (let i = start; i < end; i++) colorAt[i] = color;
   }
 
   const out = [];
   let i = 0;
   while (i < textLength) {
-    if (!colorAt[i]) { i++; continue; }
+    if (!colorAt[i]) {
+      i++;
+      continue;
+    }
     let j = i;
     while (j < textLength && colorAt[j] === colorAt[i]) j++;
     out.push({ startChar: i, endChar: j, color: colorAt[i] });

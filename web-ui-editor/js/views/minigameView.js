@@ -27,9 +27,7 @@ export function renderMinigameDetails() {
       </div>
     `;
   } else {
-    let minigamesHtml = state.minigames.map((mg, index) =>
-      renderMinigameCard(mg, index)
-    ).join('');
+    let minigamesHtml = state.minigames.map((mg, index) => renderMinigameCard(mg, index)).join('');
 
     grid.innerHTML = `
       <div id="minigameDetailsContainer">
@@ -48,9 +46,9 @@ export function renderMinigameCard(mg, index) {
   const isExpanded = expandedMinigameId === mg.gameId;
 
   const difficultyColors = {
-    'easy': '#10b981',
-    'medium': '#f59e0b',
-    'hard': '#ef4444'
+    easy: '#10b981',
+    medium: '#f59e0b',
+    hard: '#ef4444',
   };
 
   let cardContent = `
@@ -178,7 +176,7 @@ export function renderMinigameEditor(mg) {
 }
 
 export function updateMinigameField(gameId, field, value) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (mg) {
     mg[field] = value;
 
@@ -188,12 +186,23 @@ export function updateMinigameField(gameId, field, value) {
         mg.typeSpecific = { selectedBullets: [], dialogueLines: [] };
       } else if (value === 'logic_dive' && (!mg.typeSpecific || !mg.typeSpecific.questions)) {
         mg.typeSpecific = { questions: [] };
-      } else if (value === 'hangmans_gambit' && (!mg.typeSpecific || mg.typeSpecific.answerKey === undefined)) {
+      } else if (
+        value === 'hangmans_gambit' &&
+        (!mg.typeSpecific || mg.typeSpecific.answerKey === undefined)
+      ) {
         mg.typeSpecific = { answerKey: '' };
       } else if (value === 'debate_scrum' && (!mg.typeSpecific || !mg.typeSpecific.arguments)) {
         mg.typeSpecific = { arguments: [] };
-      } else if (value === 'mass_panic_debate' && (!mg.typeSpecific || !mg.typeSpecific.lineGroups)) {
-        mg.typeSpecific = { lineGroups: [], speaker1CharacterId: "", speaker2CharacterId: "", speaker3CharacterId: "" };
+      } else if (
+        value === 'mass_panic_debate' &&
+        (!mg.typeSpecific || !mg.typeSpecific.lineGroups)
+      ) {
+        mg.typeSpecific = {
+          lineGroups: [],
+          speaker1CharacterId: '',
+          speaker2CharacterId: '',
+          speaker3CharacterId: '',
+        };
       }
     }
 
@@ -207,14 +216,14 @@ export function updateMinigameField(gameId, field, value) {
 export function addMinigame() {
   const newMinigame = {
     gameId: generateId('mg'),
-    name: "",
-    gameType: "nonstop_debate",
-    difficulty: "medium",
+    name: '',
+    gameType: 'nonstop_debate',
+    difficulty: 'medium',
     timeLimit: 60,
     typeSpecific: {
       selectedBullets: [],
-      dialogueLines: []
-    }
+      dialogueLines: [],
+    },
   };
   state.minigames.push(newMinigame);
   expandedMinigameId = newMinigame.gameId; // Auto-expand new minigame
@@ -223,15 +232,19 @@ export function addMinigame() {
 }
 
 export function deleteMinigame(gameId) {
-  if (!confirm('Delete this minigame? This will also remove it from any script lines that reference it.')) {
+  if (
+    !confirm(
+      'Delete this minigame? This will also remove it from any script lines that reference it.'
+    )
+  ) {
     return;
   }
 
-  state.minigames = state.minigames.filter(mg => mg.gameId !== gameId);
+  state.minigames = state.minigames.filter((mg) => mg.gameId !== gameId);
 
-  state.scriptLines.forEach(line => {
+  state.scriptLines.forEach((line) => {
     if (line.type === 'minigame' && line.minigameId === gameId) {
-      line.minigameId = "";
+      line.minigameId = '';
     }
   });
 

@@ -66,8 +66,10 @@ export function renderDebateScumArguments(gameId, args) {
                 ondrop="handleArgumentDropInGap(event, '${gameId}', 0)"
                 ondragleave="handleArgumentGapDragLeave(event)"></div>`;
 
-  args.sort((a, b) => a.order - b.order).forEach((arg, index) => {
-    html += `
+  args
+    .sort((a, b) => a.order - b.order)
+    .forEach((arg, index) => {
+      html += `
       <div class="argument-wrapper"
            draggable="true"
            ondragstart="handleArgumentDragStart(event, '${gameId}', '${arg.argumentId}')"
@@ -80,7 +82,7 @@ export function renderDebateScumArguments(gameId, args) {
            ondrop="handleArgumentDropInGap(event, '${gameId}', ${index + 1})"
            ondragleave="handleArgumentGapDragLeave(event)"></div>
     `;
-  });
+    });
 
   return html;
 }
@@ -112,11 +114,16 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
             <select class="form-input"
                     onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'oppositionCharacterId', this.value)">
               <option value="">None</option>
-              ${state.cast.filter(c => c).map(c => `
+              ${state.cast
+                .filter((c) => c)
+                .map(
+                  (c) => `
                 <option value="${c.id}" ${arg.oppositionCharacterId === c.id ? 'selected' : ''}>
                   ${escapeHtml(`${c.name} ${c.surname}`)}
                 </option>
-              `).join('')}
+              `
+                )
+                .join('')}
             </select>
           </div>
 
@@ -139,7 +146,9 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
 
           <div class="form-group">
             <label>Voice Line Audio</label>
-            ${arg.oppositionAudioFile ? `
+            ${
+              arg.oppositionAudioFile
+                ? `
               <div class="audio-preview-mini">
                 <span class="audio-icon">🎵</span>
                 <span class="audio-filename">${arg.oppositionAudioFile}</span>
@@ -153,11 +162,13 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
                   🗑️ Remove
                 </button>
               </div>
-            ` : `
+            `
+                : `
               <input type="file"
                      accept="audio/*"
                      onchange="handleDebateScumAudioUpload('${gameId}', '${arg.argumentId}', 'opposition', event)">
-            `}
+            `
+            }
           </div>
         </div>
 
@@ -169,11 +180,16 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
             <select class="form-input"
                     onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'defenseCharacterId', this.value)">
               <option value="">None</option>
-              ${state.cast.filter(c => c).map(c => `
+              ${state.cast
+                .filter((c) => c)
+                .map(
+                  (c) => `
                 <option value="${c.id}" ${arg.defenseCharacterId === c.id ? 'selected' : ''}>
                   ${escapeHtml(`${c.name} ${c.surname}`)}
                 </option>
-              `).join('')}
+              `
+                )
+                .join('')}
             </select>
           </div>
 
@@ -196,7 +212,9 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
 
           <div class="form-group">
             <label>Voice Line Audio</label>
-            ${arg.defenseAudioFile ? `
+            ${
+              arg.defenseAudioFile
+                ? `
               <div class="audio-preview-mini">
                 <span class="audio-icon">🎵</span>
                 <span class="audio-filename">${arg.defenseAudioFile}</span>
@@ -210,11 +228,13 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
                   🗑️ Remove
                 </button>
               </div>
-            ` : `
+            `
+                : `
               <input type="file"
                      accept="audio/*"
                      onchange="handleDebateScumAudioUpload('${gameId}', '${arg.argumentId}', 'defense', event)">
-            `}
+            `
+            }
           </div>
         </div>
       </div>
@@ -225,7 +245,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
 // ==================== Argument Management ====================
 
 export function addDebateScumArgument(gameId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   if (!mg.typeSpecific) mg.typeSpecific = {};
@@ -240,17 +260,17 @@ export function addDebateScumArgument(gameId) {
     argumentId: generateId('arg'),
     order: mg.typeSpecific.arguments.length,
     // Opposition side
-    oppositionStatement: "",
-    oppositionCharacterId: "",
+    oppositionStatement: '',
+    oppositionCharacterId: '',
     oppositionAudioFile: null,
     oppositionAudioBlob: null,
     oppositionKeywords: [],
     // Defense side
-    defenseStatement: "",
-    defenseCharacterId: "",
+    defenseStatement: '',
+    defenseCharacterId: '',
     defenseAudioFile: null,
     defenseAudioBlob: null,
-    defenseKeywords: []
+    defenseKeywords: [],
   };
 
   mg.typeSpecific.arguments.push(newArg);
@@ -259,10 +279,10 @@ export function addDebateScumArgument(gameId) {
 }
 
 export function deleteDebateScumArgument(gameId, argumentId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  mg.typeSpecific.arguments = mg.typeSpecific.arguments.filter(a => a.argumentId !== argumentId);
+  mg.typeSpecific.arguments = mg.typeSpecific.arguments.filter((a) => a.argumentId !== argumentId);
 
   // Re-index order
   mg.typeSpecific.arguments.forEach((a, index) => {
@@ -274,10 +294,10 @@ export function deleteDebateScumArgument(gameId, argumentId) {
 }
 
 export function updateDebateScumArgument(gameId, argumentId, field, value) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const arg = mg.typeSpecific.arguments.find(a => a.argumentId === argumentId);
+  const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
   if (!arg) return;
 
   arg[field] = value;
@@ -285,14 +305,17 @@ export function updateDebateScumArgument(gameId, argumentId, field, value) {
 }
 
 export function updateDebateScumArgumentKeywords(gameId, argumentId, side, value) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const arg = mg.typeSpecific.arguments.find(a => a.argumentId === argumentId);
+  const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
   if (!arg) return;
 
   // Split by newlines and filter empty
-  const keywords = value.split('\n').map(k => k.trim()).filter(k => k.length > 0);
+  const keywords = value
+    .split('\n')
+    .map((k) => k.trim())
+    .filter((k) => k.length > 0);
 
   if (side === 'opposition') {
     arg.oppositionKeywords = keywords;
@@ -306,30 +329,34 @@ export function updateDebateScumArgumentKeywords(gameId, argumentId, side, value
 // ==================== Argument Reordering ====================
 
 export function moveArgumentUp(gameId, argumentId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   const args = mg.typeSpecific.arguments;
-  const currentIndex = args.findIndex(a => a.argumentId === argumentId);
+  const currentIndex = args.findIndex((a) => a.argumentId === argumentId);
   if (currentIndex <= 0) return;
 
   [args[currentIndex], args[currentIndex - 1]] = [args[currentIndex - 1], args[currentIndex]];
-  args.forEach((a, index) => { a.order = index; });
+  args.forEach((a, index) => {
+    a.order = index;
+  });
 
   renderMinigameDetails();
   autoSaveTrial();
 }
 
 export function moveArgumentDown(gameId, argumentId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   const args = mg.typeSpecific.arguments;
-  const currentIndex = args.findIndex(a => a.argumentId === argumentId);
+  const currentIndex = args.findIndex((a) => a.argumentId === argumentId);
   if (currentIndex === -1 || currentIndex >= args.length - 1) return;
 
   [args[currentIndex], args[currentIndex + 1]] = [args[currentIndex + 1], args[currentIndex]];
-  args.forEach((a, index) => { a.order = index; });
+  args.forEach((a, index) => {
+    a.order = index;
+  });
 
   renderMinigameDetails();
   autoSaveTrial();
@@ -346,7 +373,7 @@ export function handleArgumentDragStart(event, gameId, argumentId) {
 export function handleArgumentDragEnd(event) {
   event.target.classList.remove('dragging');
   draggedArgumentId = null;
-  document.querySelectorAll('.drag-over-gap').forEach(el => {
+  document.querySelectorAll('.drag-over-gap').forEach((el) => {
     el.classList.remove('drag-over-gap');
   });
 }
@@ -355,11 +382,11 @@ export function handleArgumentDropInGap(event, gameId, insertPosition) {
   event.preventDefault();
   event.stopPropagation();
 
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !draggedArgumentId) return;
 
   const args = mg.typeSpecific.arguments;
-  const draggedIndex = args.findIndex(a => a.argumentId === draggedArgumentId);
+  const draggedIndex = args.findIndex((a) => a.argumentId === draggedArgumentId);
 
   if (draggedIndex === -1) return;
   if (insertPosition === draggedIndex || insertPosition === draggedIndex + 1) {
@@ -373,7 +400,9 @@ export function handleArgumentDropInGap(event, gameId, insertPosition) {
   if (draggedIndex < insertPosition) adjustedPosition--;
 
   args.splice(adjustedPosition, 0, draggedArg);
-  args.forEach((a, index) => { a.order = index; });
+  args.forEach((a, index) => {
+    a.order = index;
+  });
 
   draggedArgumentId = null;
   renderMinigameDetails();
@@ -403,16 +432,16 @@ export async function handleDebateScumAudioUpload(gameId, argumentId, side, even
     return;
   }
 
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const arg = mg.typeSpecific.arguments.find(a => a.argumentId === argumentId);
+  const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
   if (!arg) return;
 
   try {
     // Create nested directory: Audio/Minigames/{gameId}/
-    const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: true });
-    const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: true });
+    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: true });
+    const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: true });
     const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: true });
 
     // Generate filename: scrum_{argumentId}_{side}.{ext}
@@ -437,16 +466,16 @@ export async function handleDebateScumAudioUpload(gameId, argumentId, side, even
     renderMinigameDetails();
     autoSaveTrial();
   } catch (error) {
-    console.error("Error saving audio:", error);
+    console.error('Error saving audio:', error);
     alert(`Failed to save audio: ${error.message}`);
   }
 }
 
 export async function clearDebateScumAudio(gameId, argumentId, side) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const arg = mg.typeSpecific.arguments.find(a => a.argumentId === argumentId);
+  const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
   if (!arg) return;
 
   const audioFile = side === 'opposition' ? arg.oppositionAudioFile : arg.defenseAudioFile;
@@ -454,12 +483,12 @@ export async function clearDebateScumAudio(gameId, argumentId, side) {
   // Delete file from disk
   if (audioFile) {
     try {
-      const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
-      const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
+      const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
+      const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
       const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
       await gameAudioDir.removeEntry(audioFile);
     } catch (e) {
-      console.warn("Could not remove audio file:", e);
+      console.warn('Could not remove audio file:', e);
     }
   }
 
@@ -490,10 +519,10 @@ export async function playDebateScumAudio(gameId, argumentId, side) {
     return;
   }
 
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const arg = mg.typeSpecific.arguments.find(a => a.argumentId === argumentId);
+  const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
   if (!arg) return;
 
   // Get audio file and blob
@@ -505,8 +534,8 @@ export async function playDebateScumAudio(gameId, argumentId, side) {
   // Load audio from disk if needed
   if (!audioBlob) {
     try {
-      const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
-      const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
+      const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
+      const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
       const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
       const fileHandle = await gameAudioDir.getFileHandle(audioFile);
       const file = await fileHandle.getFile();
@@ -519,8 +548,8 @@ export async function playDebateScumAudio(gameId, argumentId, side) {
         arg.defenseAudioBlob = file;
       }
     } catch (error) {
-      console.error("Error loading audio:", error);
-      alert("Failed to load audio file");
+      console.error('Error loading audio:', error);
+      alert('Failed to load audio file');
       return;
     }
   }
@@ -539,7 +568,7 @@ export async function playDebateScumAudio(gameId, argumentId, side) {
       };
 
       audio.onerror = () => {
-        alert("Audio playback error");
+        alert('Audio playback error');
         updateDebateScumPlayButton(argumentId, side, false);
       };
     }
@@ -549,7 +578,7 @@ export async function playDebateScumAudio(gameId, argumentId, side) {
     await audio.play();
     updateDebateScumPlayButton(argumentId, side, true);
   } catch (error) {
-    console.error("Error playing audio:", error);
+    console.error('Error playing audio:', error);
     alert(`Failed to play audio: ${error.message}`);
   }
 }

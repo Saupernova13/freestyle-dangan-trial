@@ -31,17 +31,17 @@ export function renderTruthBulletsView() {
   }
 
   // Check if selected bullet still exists (might have been deleted)
-  const selectedStillExists = state.truthBullets.some(b => b.bulletId === state.selectedTruthBulletId);
+  const selectedStillExists = state.truthBullets.some(
+    (b) => b.bulletId === state.selectedTruthBulletId
+  );
   if (!selectedStillExists && state.truthBullets.length > 0) {
     state.selectedTruthBulletId = state.truthBullets[0].bulletId;
   }
 
-  const selectedBullet = state.truthBullets.find(b => b.bulletId === state.selectedTruthBulletId);
+  const selectedBullet = state.truthBullets.find((b) => b.bulletId === state.selectedTruthBulletId);
 
   // Render list on left
-  const listHtml = state.truthBullets.map(bullet =>
-    renderTruthBulletListItem(bullet)
-  ).join('');
+  const listHtml = state.truthBullets.map((bullet) => renderTruthBulletListItem(bullet)).join('');
 
   // Render details on right
   const detailHtml = selectedBullet
@@ -94,9 +94,10 @@ export function renderTruthBulletDetail(bullet) {
   return `
     <!-- TOP: Image Preview -->
     <div class="truth-bullet-image-preview">
-      ${hasImage
-        ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name || 'Bullet image')}" />`
-        : '<div class="truth-bullet-no-image-large">📷</div>'
+      ${
+        hasImage
+          ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name || 'Bullet image')}" />`
+          : '<div class="truth-bullet-no-image-large">📷</div>'
       }
     </div>
 
@@ -112,12 +113,16 @@ export function renderTruthBulletDetail(bullet) {
         <p>${escapeHtml(bullet.description || 'No description provided')}</p>
       </div>
 
-      ${bullet.inversedLieBulletName ? `
+      ${
+        bullet.inversedLieBulletName
+          ? `
         <div class="detail-row">
           <label>Lie Form</label>
           <span class="lie-tag">${escapeHtml(bullet.inversedLieBulletName)}</span>
         </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <div class="detail-actions">
         <button class="btn btn-primary" onclick="openTruthBulletModal('${bullet.bulletId}')">✏️ Edit Bullet</button>
@@ -135,10 +140,10 @@ export function selectTruthBullet(bulletId) {
 export function addTruthBullet() {
   const newBullet = {
     bulletId: generateId('tb'),
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     imageFile: null,
-    inversedLieBulletName: ""
+    inversedLieBulletName: '',
   };
   state.truthBullets.push(newBullet);
 
@@ -150,20 +155,24 @@ export function addTruthBullet() {
 }
 
 export function deleteTruthBullet(bulletId) {
-  if (!confirm('Delete this truth bullet? It will be removed from any debates that reference it.')) {
+  if (
+    !confirm('Delete this truth bullet? It will be removed from any debates that reference it.')
+  ) {
     return;
   }
 
   // Find the index of the bullet being deleted
-  const bulletIndex = state.truthBullets.findIndex(b => b.bulletId === bulletId);
+  const bulletIndex = state.truthBullets.findIndex((b) => b.bulletId === bulletId);
 
   // Remove the bullet
-  state.truthBullets = state.truthBullets.filter(b => b.bulletId !== bulletId);
+  state.truthBullets = state.truthBullets.filter((b) => b.bulletId !== bulletId);
 
   // Remove from all minigame selections
-  state.minigames.forEach(mg => {
+  state.minigames.forEach((mg) => {
     if (mg.typeSpecific && mg.typeSpecific.selectedBullets) {
-      mg.typeSpecific.selectedBullets = mg.typeSpecific.selectedBullets.filter(id => id !== bulletId);
+      mg.typeSpecific.selectedBullets = mg.typeSpecific.selectedBullets.filter(
+        (id) => id !== bulletId
+      );
     }
   });
 

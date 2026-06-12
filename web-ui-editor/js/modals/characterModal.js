@@ -8,28 +8,36 @@ import { renderCastGrid } from '../views/castView.js';
 
 let activeIdx = null;
 let charFields = {
-  name: "",
-  surname: "",
+  name: '',
+  surname: '',
   heightM: 1,
   heightCM: 50,
-  weight: "",
-  chest: "",
-  blood: "A",
-  dob: "",
-  likes: "",
-  dislikes: "",
-  notes: ""
+  weight: '',
+  chest: '',
+  blood: 'A',
+  dob: '',
+  likes: '',
+  dislikes: '',
+  notes: '',
 };
 let charSprites = [];
-let modalTab = "details";
-let modalErr = "";
-let modalMsg = "";
+let modalTab = 'details';
+let modalErr = '';
+let modalMsg = '';
 
 // Generate human-readable ID for characters
 export function generateCharacterId(name, surname, dob) {
   // Clean and format components
-  const cleanName = name.charAt(0).toUpperCase().replace(/[^A-Za-z0-9]/g, '') || 'X';
-  const cleanSurname = surname.charAt(0).toUpperCase().replace(/[^A-Za-z0-9]/g, '') || 'Y';
+  const cleanName =
+    name
+      .charAt(0)
+      .toUpperCase()
+      .replace(/[^A-Za-z0-9]/g, '') || 'X';
+  const cleanSurname =
+    surname
+      .charAt(0)
+      .toUpperCase()
+      .replace(/[^A-Za-z0-9]/g, '') || 'Y';
   const dobFormatted = dob.replace(/-/g, ''); // YYYYMMDD format
   const randomString = Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -38,28 +46,28 @@ export function generateCharacterId(name, surname, dob) {
 
 export async function openCharModal(idx) {
   if (!state.dirHandle) {
-    alert("Choose a folder first!");
+    alert('Choose a folder first!');
     return;
   }
 
   activeIdx = idx;
-  modalTab = "details";
-  modalErr = "";
-  modalMsg = "";
+  modalTab = 'details';
+  modalErr = '';
+  modalMsg = '';
 
   let c = state.cast[idx] || {};
   charFields = {
-    name: c.name || "",
-    surname: c.surname || "",
+    name: c.name || '',
+    surname: c.surname || '',
     heightM: c.heightM || 1,
     heightCM: c.heightCM || 50,
-    weight: c.weight || "",
-    chest: c.chest || "",
-    blood: c.blood || "A",
-    dob: c.dob || "",
-    likes: c.likes || "",
-    dislikes: c.dislikes || "",
-    notes: c.notes || ""
+    weight: c.weight || '',
+    chest: c.chest || '',
+    blood: c.blood || 'A',
+    dob: c.dob || '',
+    likes: c.likes || '',
+    dislikes: c.dislikes || '',
+    notes: c.notes || '',
   };
 
   // Lazy load remaining sprites if character exists (performance optimization)
@@ -81,7 +89,7 @@ export async function openCharModal(idx) {
 }
 
 export function renderCharacterModal() {
-  let root = document.getElementById("modalroot");
+  let root = document.getElementById('modalroot');
   const characterType = getCharacterType(activeIdx);
   const isHeadmasterChar = isHeadmaster(activeIdx);
 
@@ -97,12 +105,12 @@ export function renderCharacterModal() {
         </div>
         <div class="dr-modal-content">
           <div id="dr-tab-content">${modalTab === 'details' ? renderCharDetailsTab() : renderCharSpritesTab()}</div>
-          ${modalErr ? `<div class="dr-err">${modalErr}</div>` : ""}
-          ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ""}
+          ${modalErr ? `<div class="dr-err">${modalErr}</div>` : ''}
+          ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ''}
         </div>
         <div class="dr-btn-row">
           <button class="btn btn-secondary" onclick="closeCharModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="trySaveChar()" ${(!state.dirHandle) ? "disabled" : ""}>Save ${isHeadmasterChar ? 'Headmaster' : 'Student'}</button>
+          <button class="btn btn-primary" onclick="trySaveChar()" ${!state.dirHandle ? 'disabled' : ''}>Save ${isHeadmasterChar ? 'Headmaster' : 'Student'}</button>
         </div>
       </div>
     </div>
@@ -110,14 +118,14 @@ export function renderCharacterModal() {
 }
 
 export function closeCharModal() {
-  document.getElementById("modalroot").innerHTML = "";
+  document.getElementById('modalroot').innerHTML = '';
   activeIdx = null;
 }
 
 export function switchCharModalTab(tab) {
   modalTab = tab;
-  modalErr = "";
-  modalMsg = "";
+  modalErr = '';
+  modalMsg = '';
   renderCharacterModal();
 }
 
@@ -150,11 +158,11 @@ export function renderCharDetailsTab() {
       <div class="dr-fg-field">
         <label>Blood Type</label>
         <select required onchange="fieldUpdate('blood',this.value)">
-          <option${charFields.blood === "A" ? ' selected' : ''}>A</option>
-          <option${charFields.blood === "B" ? ' selected' : ''}>B</option>
-          <option${charFields.blood === "O" ? ' selected' : ''}>O</option>
-          <option${charFields.blood === "AB" ? ' selected' : ''}>AB</option>
-          <option${charFields.blood === "Unknown" ? ' selected' : ''}>Unknown</option>
+          <option${charFields.blood === 'A' ? ' selected' : ''}>A</option>
+          <option${charFields.blood === 'B' ? ' selected' : ''}>B</option>
+          <option${charFields.blood === 'O' ? ' selected' : ''}>O</option>
+          <option${charFields.blood === 'AB' ? ' selected' : ''}>AB</option>
+          <option${charFields.blood === 'Unknown' ? ' selected' : ''}>Unknown</option>
         </select>
       </div>
     </div>
@@ -206,15 +214,19 @@ export function renderCharSpritesTab() {
     <div class="dr-form">
       <button class="btn btn-primary dr-sprslot-bulk" type="button" onclick="bulkImportSprites()">📁 Bulk Import All ${appSettings.maxSprites} ${isHeadmasterChar ? 'Headmaster' : 'Student'} Sprites</button>
       <div class="dr-sprgrid">
-        ${charSprites.map((spr, i) =>
-    `<div class="dr-sprslot" onclick="triggerSpriteInput(${i})">
+        ${charSprites
+          .map(
+            (spr, i) =>
+              `<div class="dr-sprslot" onclick="triggerSpriteInput(${i})">
             <input type="file" accept="image/*" id="sprite_inp_${i}" onchange="spriteUpload(event,${i})">
-            ${spr ?
-        `<img src="${spr.dataURL}" alt="Sprite ${i + 1}"><span class="dr-sprslot-num">#${i + 1}</span>`
-        : `<span style="color: var(--text-tertiary);">+<br><small>Sprite #${i + 1}</small></span>`
-      }
+            ${
+              spr
+                ? `<img src="${spr.dataURL}" alt="Sprite ${i + 1}"><span class="dr-sprslot-num">#${i + 1}</span>`
+                : `<span style="color: var(--text-tertiary);">+<br><small>Sprite #${i + 1}</small></span>`
+            }
           </div>`
-  ).join("")}
+          )
+          .join('')}
       </div>
       <p style="font-size: 0.875rem; color: var(--text-tertiary); margin-top: 1rem;">
         Upload images in any format. They will be automatically processed and saved as PNG files.
@@ -238,12 +250,12 @@ export function triggerSpriteInput(i) {
 }
 
 export function bulkImportSprites() {
-  let inp = document.createElement("input");
+  let inp = document.createElement('input');
   inp.type = 'file';
-  inp.accept = "image/*";
+  inp.accept = 'image/*';
   inp.multiple = true;
 
-  inp.onchange = e => {
+  inp.onchange = (e) => {
     let files = Array.from(inp.files);
     if (files.length !== appSettings.maxSprites) {
       modalErr = `Please select exactly ${appSettings.maxSprites} images.`;
@@ -262,21 +274,29 @@ export function bulkImportSprites() {
 }
 
 export async function trySaveChar() {
-  let missingF = !charFields.name || !charFields.surname || !charFields.weight || !charFields.chest
-    || !charFields.dob || !charFields.likes || !charFields.dislikes || !charFields.notes;
+  let missingF =
+    !charFields.name ||
+    !charFields.surname ||
+    !charFields.weight ||
+    !charFields.chest ||
+    !charFields.dob ||
+    !charFields.likes ||
+    !charFields.dislikes ||
+    !charFields.notes;
   let badh = isNaN(parseFloat(charFields.heightM)) || isNaN(parseInt(charFields.heightCM));
-  let allSprites = charSprites.length === appSettings.maxSprites && charSprites.every(s => s && s.blob);
+  let allSprites =
+    charSprites.length === appSettings.maxSprites && charSprites.every((s) => s && s.blob);
 
   if (missingF || badh || !allSprites) {
-    modalErr = "";
-    if (missingF || badh) modalErr += "All fields must be filled correctly.<br>";
+    modalErr = '';
+    if (missingF || badh) modalErr += 'All fields must be filled correctly.<br>';
     if (!allSprites) modalErr += `All ${appSettings.maxSprites} sprites must be uploaded.`;
     renderCharacterModal();
     return;
   }
 
   if (!state.dirHandle) {
-    modalErr = "Choose a folder first!";
+    modalErr = 'Choose a folder first!';
     renderCharacterModal();
     return;
   }
@@ -286,10 +306,15 @@ export async function trySaveChar() {
 
     // Generate human-readable ID for new characters or keep existing ID
     const existingChar = state.cast[activeIdx];
-    const characterId = existingChar ? existingChar.id : generateCharacterId(charFields.name, charFields.surname, charFields.dob);
+    const characterId = existingChar
+      ? existingChar.id
+      : generateCharacterId(charFields.name, charFields.surname, charFields.dob);
 
-    let charDirname = (charFields.name + "_" + charFields.surname).replace(/[^a-zA-Z0-9_\- ]/g, '_');
-    let charsDir = await state.dirHandle.getDirectoryHandle("Characters", { create: true });
+    let charDirname = (charFields.name + '_' + charFields.surname).replace(
+      /[^a-zA-Z0-9_\- ]/g,
+      '_'
+    );
+    let charsDir = await state.dirHandle.getDirectoryHandle('Characters', { create: true });
     let charDir = await charsDir.getDirectoryHandle(charDirname, { create: true });
 
     // Save character data (optimized structure)
@@ -308,10 +333,12 @@ export async function trySaveChar() {
       notes: charFields.notes,
       isHeadmaster: isHeadmaster(activeIdx), // Single boolean instead of redundant fields
       position: activeIdx,
-      lastModified: new Date().toISOString()
+      lastModified: new Date().toISOString(),
     };
 
-    let writer = await charDir.getFileHandle("character.json", { create: true }).then(fh => fh.createWritable());
+    let writer = await charDir
+      .getFileHandle('character.json', { create: true })
+      .then((fh) => fh.createWritable());
     await writer.write(JSON.stringify(charJson, null, 2));
     await writer.close();
 
@@ -321,7 +348,9 @@ export async function trySaveChar() {
       let s = charSprites[k];
       if (s && s.blob) {
         try {
-          let sw = await charDir.getFileHandle(`sprite_${String(k + 1).padStart(2, '0')}.png`, { create: true }).then(fh => fh.createWritable());
+          let sw = await charDir
+            .getFileHandle(`sprite_${String(k + 1).padStart(2, '0')}.png`, { create: true })
+            .then((fh) => fh.createWritable());
           await sw.write(s.blob);
           await sw.close();
           savedSprites.push(s);
@@ -337,7 +366,7 @@ export async function trySaveChar() {
     // Update state.cast with new character data
     state.cast[activeIdx] = {
       ...charJson,
-      sprites: savedSprites
+      sprites: savedSprites,
     };
 
     // Save trial data
@@ -346,7 +375,6 @@ export async function trySaveChar() {
     showLoader(false);
     closeCharModal();
     renderCastGrid();
-
   } catch (error) {
     showLoader(false);
     modalErr = `Failed to save character: ${error.message}`;

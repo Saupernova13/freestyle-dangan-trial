@@ -67,8 +67,8 @@ export function _moveMagnifier(img, clientX, clientY) {
   _magnifierInnerImg.style.height = scaledH + 'px';
 
   // Center the hovered point within the lens.
-  _magnifierInnerImg.style.left = (SPRITE_MAGNIFIER_SIZE / 2 - relX * scaledW) + 'px';
-  _magnifierInnerImg.style.top = (SPRITE_MAGNIFIER_SIZE / 2 - relY * scaledH) + 'px';
+  _magnifierInnerImg.style.left = SPRITE_MAGNIFIER_SIZE / 2 - relX * scaledW + 'px';
+  _magnifierInnerImg.style.top = SPRITE_MAGNIFIER_SIZE / 2 - relY * scaledH + 'px';
 
   // Position the lens near the cursor, flipping to stay on screen.
   let lensX = clientX + SPRITE_MAGNIFIER_OFFSET;

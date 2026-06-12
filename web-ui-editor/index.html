@@ -1,71 +1,83 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Danganronpa Cast Manager</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="css/styles.css">
-</head>
-<body data-theme="light">
-  <header>
-    <h1>Danganronpa Cast Manager</h1>
-    <div class="header-actions">
-      <button class="settings-toggle" onclick="openSettings()" title="Settings">
-        <span>⚙️</span>
-      </button>
-      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
-        <span class="theme-icon">🌙</span>
-      </button>
-    </div>
-  </header>
-  
-  <div class="trialbar">
-    <label for="trialNameInput">Trial Name:</label>
-    <input id="trialNameInput" maxlength="60" placeholder="Enter trial name..." spellcheck="false">
-    <div class="dir-actions">
-      <button class="btn btn-primary" onclick="chooseTrialDir()">
-        📁 Choose Folder
-      </button>
-      <button class="btn btn-success" onclick="exportToPlayableFile()" id="exportBtn" disabled title="Export trial to .drtrial file">
-        📦 Export to Playable File
-      </button>
-      <span id="dirDisplay"></span>
-    </div>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Danganronpa Cast Manager</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-theme="light">
+    <header>
+      <h1>Danganronpa Cast Manager</h1>
+      <div class="header-actions">
+        <button class="settings-toggle" onclick="openSettings()" title="Settings">
+          <span>⚙️</span>
+        </button>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+          <span class="theme-icon">🌙</span>
+        </button>
+      </div>
+    </header>
 
-  <main>
-    <nav>
-      <div class="nav-item selected" data-view="cast" onclick="switchView('cast')">
-        <span class="icon">👥</span>
-        <span>Cast</span>
+    <div class="trialbar">
+      <label for="trialNameInput">Trial Name:</label>
+      <input
+        id="trialNameInput"
+        maxlength="60"
+        placeholder="Enter trial name..."
+        spellcheck="false"
+      />
+      <div class="dir-actions">
+        <button class="btn btn-primary" onclick="chooseTrialDir()">📁 Choose Folder</button>
+        <button
+          class="btn btn-success"
+          onclick="exportToPlayableFile()"
+          id="exportBtn"
+          disabled
+          title="Export trial to .drtrial file"
+        >
+          📦 Export to Playable File
+        </button>
+        <span id="dirDisplay"></span>
       </div>
-      <div class="nav-item" data-view="script" onclick="switchView('script')">
-        <span class="icon">📝</span>
-        <span>Script</span>
-      </div>
-      <div class="nav-item" data-view="truthBullets" onclick="switchView('truthBullets')">
-        <span class="icon">🎯</span>
-        <span>Truth Bullets</span>
-      </div>
-      <div class="nav-item" data-view="minigames" onclick="switchView('minigames')">
-        <span class="icon">🎮</span>
-        <span>Minigame Details</span>
-      </div>
-    </nav>
-    
-    <div style="flex: 1; min-width: 0;">
-      <div id="mainGrid"></div>
     </div>
-  </main>
 
-  <div id="modalroot"></div>
-  <div id="loaderOverlay">
-    <div class="spinner"></div>
-  </div>
+    <main>
+      <nav>
+        <div class="nav-item selected" data-view="cast" onclick="switchView('cast')">
+          <span class="icon">👥</span>
+          <span>Cast</span>
+        </div>
+        <div class="nav-item" data-view="script" onclick="switchView('script')">
+          <span class="icon">📝</span>
+          <span>Script</span>
+        </div>
+        <div class="nav-item" data-view="truthBullets" onclick="switchView('truthBullets')">
+          <span class="icon">🎯</span>
+          <span>Truth Bullets</span>
+        </div>
+        <div class="nav-item" data-view="minigames" onclick="switchView('minigames')">
+          <span class="icon">🎮</span>
+          <span>Minigame Details</span>
+        </div>
+      </nav>
 
-  <!-- Single ES-module entry point; js/main.js imports every module and
+      <div style="flex: 1; min-width: 0">
+        <div id="mainGrid"></div>
+      </div>
+    </main>
+
+    <div id="modalroot"></div>
+    <div id="loaderOverlay">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Single ES-module entry point; js/main.js imports every module and
        bridges public handlers onto window for the inline onclick markup. -->
-  <script type="module" src="js/main.js"></script>
-</body>
+    <script type="module" src="js/main.js"></script>
+  </body>
 </html>

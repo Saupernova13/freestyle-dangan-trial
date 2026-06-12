@@ -54,7 +54,7 @@ export function renderNonstopDebateEditor(mg) {
     `;
   } else {
     html += `<div class="bullet-selection-grid">`;
-    state.truthBullets.forEach(bullet => {
+    state.truthBullets.forEach((bullet) => {
       const isSelected = selectedBullets.includes(bullet.bulletId);
       html += `
         <div class="bullet-select-card ${isSelected ? 'selected' : ''}"
@@ -94,8 +94,10 @@ export function renderNonstopDebateEditor(mg) {
                   ondrop="handleDialogueDropInGap(event, '${mg.gameId}', 0)"
                   ondragleave="handleDialogueGapDragLeave(event)"></div>`;
 
-    dialogueLines.sort((a, b) => a.order - b.order).forEach((line, index) => {
-      html += `
+    dialogueLines
+      .sort((a, b) => a.order - b.order)
+      .forEach((line, index) => {
+        html += `
         <div class="dialogue-line-wrapper"
              draggable="true"
              ondragstart="handleDialogueDragStart(event, '${mg.gameId}', '${line.lineId}')"
@@ -108,7 +110,7 @@ export function renderNonstopDebateEditor(mg) {
              ondrop="handleDialogueDropInGap(event, '${mg.gameId}', ${index + 1})"
              ondragleave="handleDialogueGapDragLeave(event)"></div>
       `;
-    });
+      });
   }
 
   html += `</div>`;
@@ -152,9 +154,14 @@ export function renderDialogueLineEditor(gameId, line, index) {
           <label>Character</label>
           <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'characterId', this.value)">
             <option value="">None</option>
-            ${state.cast.filter(c => c).map(c => `
+            ${state.cast
+              .filter((c) => c)
+              .map(
+                (c) => `
               <option value="${c.id}" ${line.characterId === c.id ? 'selected' : ''}>${escapeHtml(`${c.name} ${c.surname}`)}</option>
-            `).join('')}
+            `
+              )
+              .join('')}
           </select>
         </div>
 
@@ -187,15 +194,21 @@ export function renderDialogueLineEditor(gameId, line, index) {
             <select class="form-input"
                     onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'answerBulletId', this.value)">
               <option value="">No answer (false target)</option>
-              ${state.truthBullets.map(bullet => `
+              ${state.truthBullets
+                .map(
+                  (bullet) => `
                 <option value="${bullet.bulletId}" ${line.answerBulletId === bullet.bulletId ? 'selected' : ''}>
                   ${escapeHtml(bullet.name || 'Unnamed Bullet')}
                 </option>
-              `).join('')}
+              `
+                )
+                .join('')}
             </select>
           </div>
 
-          ${line.answerBulletId ? `
+          ${
+            line.answerBulletId
+              ? `
             <div class="form-group">
               <label>
                 <input type="checkbox"
@@ -204,13 +217,17 @@ export function renderDialogueLineEditor(gameId, line, index) {
                 Use Lie/Negative Version
               </label>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
 
         <!-- 4. VOICE LINE AUDIO (moved up) -->
         <div class="form-group">
           <label>Voice Line Audio</label>
-          ${line.voiceLineFile ? `
+          ${
+            line.voiceLineFile
+              ? `
             <div class="audio-preview">
               <div class="audio-info">
                 <span class="audio-icon">🎵</span>
@@ -241,14 +258,16 @@ export function renderDialogueLineEditor(gameId, line, index) {
                 </button>
               </div>
             </div>
-          ` : `
+          `
+              : `
             <div class="audio-empty">
               <p>No audio file uploaded</p>
             </div>
             <input type="file"
                    accept="audio/*"
                    onchange="handleDialogueVoiceUpload('${gameId}', '${line.lineId}', event)">
-          `}
+          `
+          }
         </div>
 
         <!-- 5. COLLAPSIBLE: Advanced Text Styling -->
@@ -260,7 +279,9 @@ export function renderDialogueLineEditor(gameId, line, index) {
             <span class="collapsible-title">Advanced Text Styling</span>
             <span class="collapsible-badge">Optional</span>
           </button>
-          ${isSectionExpanded(line.lineId, 'textStyling') ? `
+          ${
+            isSectionExpanded(line.lineId, 'textStyling')
+              ? `
             <div class="collapsible-content">
               <div class="form-row">
                 <div class="form-group">
@@ -293,7 +314,9 @@ export function renderDialogueLineEditor(gameId, line, index) {
                 </div>
               </div>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
 
         <!-- 6. COLLAPSIBLE: Character Display -->
@@ -305,7 +328,9 @@ export function renderDialogueLineEditor(gameId, line, index) {
             <span class="collapsible-title">Character Display</span>
             <span class="collapsible-badge">Optional</span>
           </button>
-          ${isSectionExpanded(line.lineId, 'characterDisplay') ? `
+          ${
+            isSectionExpanded(line.lineId, 'characterDisplay')
+              ? `
             <div class="collapsible-content">
               <div class="form-group">
                 <label>
@@ -316,7 +341,9 @@ export function renderDialogueLineEditor(gameId, line, index) {
                 </label>
               </div>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
 
         <!-- 7. COLLAPSIBLE: User Feedback Messages -->
@@ -328,7 +355,9 @@ export function renderDialogueLineEditor(gameId, line, index) {
             <span class="collapsible-title">User Feedback Messages</span>
             <span class="collapsible-badge">Optional</span>
           </button>
-          ${isSectionExpanded(line.lineId, 'feedback') ? `
+          ${
+            isSectionExpanded(line.lineId, 'feedback')
+              ? `
             <div class="collapsible-content">
               <div class="form-row">
                 <div class="form-group">
@@ -350,7 +379,9 @@ export function renderDialogueLineEditor(gameId, line, index) {
                 </div>
               </div>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       </div>
     </div>
@@ -360,7 +391,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
 // ==================== Truth Bullet Selection ====================
 
 export function toggleBulletForMinigame(gameId, bulletId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !mg.typeSpecific) return;
 
   const selectedBullets = mg.typeSpecific.selectedBullets;
@@ -372,7 +403,7 @@ export function toggleBulletForMinigame(gameId, bulletId) {
   } else {
     // Select (max 6)
     if (selectedBullets.length >= 6) {
-      alert("Maximum 6 truth bullets can be selected.");
+      alert('Maximum 6 truth bullets can be selected.');
       return;
     }
     selectedBullets.push(bulletId);
@@ -385,7 +416,7 @@ export function toggleBulletForMinigame(gameId, bulletId) {
 // ==================== Dialogue Line Management ====================
 
 export function addDialogueLine(gameId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !mg.typeSpecific) return;
 
   if (!mg.typeSpecific.dialogueLines) {
@@ -395,20 +426,20 @@ export function addDialogueLine(gameId) {
   const newLine = {
     lineId: generateId('dl'),
     order: mg.typeSpecific.dialogueLines.length,
-    sentenceBeginning: "",
-    target: "",
-    sentenceEnd: "",
+    sentenceBeginning: '',
+    target: '',
+    sentenceEnd: '',
     isShootable: false,
     answerBulletId: null,
     useNegativeBullet: false,
-    textEffect: "normal",
-    textMovementDirection: "left_to_right",
-    userFailedComment: "",
-    userWrongAnswerComment: "",
-    textFont: "default",
+    textEffect: 'normal',
+    textMovementDirection: 'left_to_right',
+    userFailedComment: '',
+    userWrongAnswerComment: '',
+    textFont: 'default',
     characterSpotlight: false,
-    characterId: "",
-    voiceLineFile: null
+    characterId: '',
+    voiceLineFile: null,
   };
 
   mg.typeSpecific.dialogueLines.push(newLine);
@@ -417,16 +448,16 @@ export function addDialogueLine(gameId) {
 }
 
 export function updateDialogueLine(gameId, lineId, field, value) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.dialogueLines) return;
 
-  const line = mg.typeSpecific.dialogueLines.find(l => l.lineId === lineId);
+  const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);
   if (line) {
     line[field] = value;
 
     // Auto-update isShootable based on answerBulletId
     if (field === 'answerBulletId') {
-      line.isShootable = (value !== '' && value !== null);
+      line.isShootable = value !== '' && value !== null;
     }
 
     renderMinigameDetails();
@@ -437,10 +468,10 @@ export function updateDialogueLine(gameId, lineId, field, value) {
 export function deleteDialogueLine(gameId, lineId) {
   if (!confirm('Delete this dialogue line?')) return;
 
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.dialogueLines) return;
 
-  mg.typeSpecific.dialogueLines = mg.typeSpecific.dialogueLines.filter(l => l.lineId !== lineId);
+  mg.typeSpecific.dialogueLines = mg.typeSpecific.dialogueLines.filter((l) => l.lineId !== lineId);
 
   // Re-index orders
   mg.typeSpecific.dialogueLines.forEach((line, index) => {
@@ -454,11 +485,11 @@ export function deleteDialogueLine(gameId, lineId) {
 // ==================== Dialogue Line Reordering ====================
 
 export function moveDialogueLineUp(gameId, lineId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   const lines = mg.typeSpecific.dialogueLines;
-  const currentIndex = lines.findIndex(l => l.lineId === lineId);
+  const currentIndex = lines.findIndex((l) => l.lineId === lineId);
 
   if (currentIndex <= 0) return; // Already at top
 
@@ -475,11 +506,11 @@ export function moveDialogueLineUp(gameId, lineId) {
 }
 
 export function moveDialogueLineDown(gameId, lineId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   const lines = mg.typeSpecific.dialogueLines;
-  const currentIndex = lines.findIndex(l => l.lineId === lineId);
+  const currentIndex = lines.findIndex((l) => l.lineId === lineId);
 
   if (currentIndex === -1 || currentIndex >= lines.length - 1) return;
 
@@ -507,7 +538,7 @@ export function handleDialogueDragEnd(event) {
   event.target.classList.remove('dragging');
   draggedDialogueLineId = null;
   // Remove all drag-over classes
-  document.querySelectorAll('.drag-over-gap').forEach(el => {
+  document.querySelectorAll('.drag-over-gap').forEach((el) => {
     el.classList.remove('drag-over-gap');
   });
 }
@@ -516,11 +547,11 @@ export function handleDialogueDropInGap(event, gameId, insertPosition) {
   event.preventDefault();
   event.stopPropagation();
 
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !draggedDialogueLineId) return;
 
   const lines = mg.typeSpecific.dialogueLines;
-  const draggedIndex = lines.findIndex(l => l.lineId === draggedDialogueLineId);
+  const draggedIndex = lines.findIndex((l) => l.lineId === draggedDialogueLineId);
 
   if (draggedIndex === -1) return;
   if (insertPosition === draggedIndex || insertPosition === draggedIndex + 1) {
@@ -575,16 +606,16 @@ export async function handleDialogueVoiceUpload(gameId, lineId, event) {
     return;
   }
 
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const line = mg.typeSpecific.dialogueLines.find(l => l.lineId === lineId);
+  const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);
   if (!line) return;
 
   try {
     // Create nested directory: Audio/Minigames/{gameId}/
-    const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: true });
-    const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: true });
+    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: true });
+    const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: true });
     const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: true });
 
     // Generate filename: dialogue_{lineId}.{ext}
@@ -604,27 +635,27 @@ export async function handleDialogueVoiceUpload(gameId, lineId, event) {
     renderMinigameDetails();
     autoSaveTrial();
   } catch (error) {
-    console.error("Error saving audio file:", error);
+    console.error('Error saving audio file:', error);
     alert(`Failed to save audio: ${error.message}`);
   }
 }
 
 export async function clearDialogueVoiceLine(gameId, lineId) {
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const line = mg.typeSpecific.dialogueLines.find(l => l.lineId === lineId);
+  const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);
   if (!line) return;
 
   // Delete file from disk
   if (line.voiceLineFile) {
     try {
-      const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
-      const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
+      const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
+      const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
       const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
       await gameAudioDir.removeEntry(line.voiceLineFile);
     } catch (e) {
-      console.warn("Could not remove audio file:", e);
+      console.warn('Could not remove audio file:', e);
     }
   }
 
@@ -640,14 +671,14 @@ export async function clearDialogueVoiceLine(gameId, lineId) {
 
 export async function loadDialogueAudioFromDisk(gameId, lineId, filename) {
   try {
-    const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
-    const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
+    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
+    const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
     const gameAudioDir = await minigamesDir.getDirectoryHandle(gameId, { create: false });
     const fileHandle = await gameAudioDir.getFileHandle(filename);
     const file = await fileHandle.getFile();
     return file;
   } catch (error) {
-    console.error("Error loading dialogue audio:", error);
+    console.error('Error loading dialogue audio:', error);
     return null;
   }
 }
@@ -664,10 +695,10 @@ export async function playDialogueAudioPreview(gameId, lineId) {
     return;
   }
 
-  const mg = state.minigames.find(m => m.gameId === gameId);
+  const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
-  const line = mg.typeSpecific.dialogueLines.find(l => l.lineId === lineId);
+  const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);
   if (!line || !line.voiceLineFile) return;
 
   // Load audio from disk if needed
@@ -675,7 +706,7 @@ export async function playDialogueAudioPreview(gameId, lineId) {
   if (!audioBlob) {
     audioBlob = await loadDialogueAudioFromDisk(gameId, lineId, line.voiceLineFile);
     if (!audioBlob) {
-      alert("Failed to load audio file");
+      alert('Failed to load audio file');
       return;
     }
     line.voiceLineBlob = audioBlob;
@@ -695,7 +726,7 @@ export async function playDialogueAudioPreview(gameId, lineId) {
       };
 
       audio.onerror = () => {
-        alert("Audio playback error");
+        alert('Audio playback error');
         updateDialoguePlayButton(lineId, false);
       };
 
@@ -713,7 +744,7 @@ export async function playDialogueAudioPreview(gameId, lineId) {
     await audio.play();
     updateDialoguePlayButton(lineId, true);
   } catch (error) {
-    console.error("Error playing audio:", error);
+    console.error('Error playing audio:', error);
     alert(`Failed to play audio: ${error.message}`);
   }
 }

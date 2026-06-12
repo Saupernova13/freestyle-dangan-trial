@@ -16,11 +16,11 @@ export async function chooseTrialDir() {
     let files = [];
     for await (const entry of state.dirHandle.values()) files.push(entry.name);
 
-    if (files.includes("trial.json")) {
+    if (files.includes('trial.json')) {
       try {
-        const file = await state.dirHandle.getFileHandle("trial.json").then(fh => fh.getFile());
+        const file = await state.dirHandle.getFileHandle('trial.json').then((fh) => fh.getFile());
         const data = JSON.parse(await file.text());
-        state.trialName = data.trialName || "";
+        state.trialName = data.trialName || '';
         document.getElementById('trialNameInput').value = state.trialName;
 
         // Load characters from ID references
@@ -49,25 +49,27 @@ export async function chooseTrialDir() {
           state.truthBullets = [];
         }
       } catch (error) {
-        console.error("Failed to parse trial.json:", error);
+        console.error('Failed to parse trial.json:', error);
         // Warn the user before presenting an empty editor — continuing to
         // edit and auto-save would overwrite the (possibly recoverable) file.
         alert(
-          "trial.json in this folder could not be read (" + error.message + ").\n\n" +
-          "The editor will open empty. If this trial matters to you, back up " +
-          "the folder before making changes, since saving will overwrite trial.json."
+          'trial.json in this folder could not be read (' +
+            error.message +
+            ').\n\n' +
+            'The editor will open empty. If this trial matters to you, back up ' +
+            'the folder before making changes, since saving will overwrite trial.json.'
         );
         // Initialize with empty trial if corrupted
-        state.trialName = "";
-        document.getElementById('trialNameInput').value = "";
+        state.trialName = '';
+        document.getElementById('trialNameInput').value = '';
         state.cast = Array(BLOCK_COUNT).fill(null);
         state.scriptLines = [];
         state.minigames = [];
         state.truthBullets = [];
       }
     } else {
-      state.trialName = "";
-      document.getElementById('trialNameInput').value = "";
+      state.trialName = '';
+      document.getElementById('trialNameInput').value = '';
       state.cast = Array(BLOCK_COUNT).fill(null);
       state.scriptLines = [];
       state.minigames = [];
@@ -84,7 +86,7 @@ export async function chooseTrialDir() {
     showLoader(false);
     // AbortError means the user cancelled the directory picker — not an error.
     if (err && err.name === 'AbortError') return;
-    console.error("Failed to open trial folder:", err);
+    console.error('Failed to open trial folder:', err);
     alert(`Failed to open trial folder: ${err.message}`);
   }
 }
@@ -123,7 +125,9 @@ export async function loadRemainingSprites(charIndex) {
 export async function loadCharactersFromIds(characterIds) {
   state.cast = Array(BLOCK_COUNT).fill(null);
 
-  let charsDir = await state.dirHandle.getDirectoryHandle("Characters", { create: false }).catch(() => null);
+  let charsDir = await state.dirHandle
+    .getDirectoryHandle('Characters', { create: false })
+    .catch(() => null);
   if (!charsDir) return;
 
   // Scan the Characters directory once, building an id -> data index.
@@ -132,7 +136,7 @@ export async function loadCharactersFromIds(characterIds) {
   for await (const [, folderHandle] of charsDir.entries()) {
     if (folderHandle.kind !== 'directory') continue;
     try {
-      const charFile = await folderHandle.getFileHandle("character.json");
+      const charFile = await folderHandle.getFileHandle('character.json');
       const charData = JSON.parse(await (await charFile.getFile()).text());
       if (charData && charData.id) {
         // Store folder handle for lazy loading the remaining sprites later.
@@ -165,7 +169,9 @@ export async function loadCharactersFromIds(characterIds) {
 }
 
 export async function loadTruthBulletImages() {
-  let bulletsDir = await state.dirHandle.getDirectoryHandle("TruthBullets", { create: false }).catch(() => null);
+  let bulletsDir = await state.dirHandle
+    .getDirectoryHandle('TruthBullets', { create: false })
+    .catch(() => null);
   if (!bulletsDir) return;
 
   for (let bullet of state.truthBullets) {
@@ -184,8 +190,8 @@ export async function loadTruthBulletImages() {
 
 export async function loadMinigameAudio() {
   try {
-    const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
-    const minigamesDir = await audioDir.getDirectoryHandle("Minigames", { create: false });
+    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
+    const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
 
     for (let mg of state.minigames) {
       try {
@@ -215,7 +221,10 @@ export async function loadMinigameAudio() {
                 const file = await fileHandle.getFile();
                 arg.oppositionAudioBlob = file;
               } catch (error) {
-                console.warn(`Failed to load opposition audio for argument ${arg.argumentId}:`, error);
+                console.warn(
+                  `Failed to load opposition audio for argument ${arg.argumentId}:`,
+                  error
+                );
               }
             }
             if (arg.defenseAudioFile) {
@@ -242,7 +251,10 @@ export async function loadMinigameAudio() {
                   const file = await fileHandle.getFile();
                   line.voiceLineBlob = file;
                 } catch (error) {
-                  console.warn(`Failed to load audio for panic line ${group.groupId}-${speakerKey}:`, error);
+                  console.warn(
+                    `Failed to load audio for panic line ${group.groupId}-${speakerKey}:`,
+                    error
+                  );
                 }
               }
             }
@@ -253,7 +265,7 @@ export async function loadMinigameAudio() {
       }
     }
   } catch (error) {
-    console.warn("Failed to load minigame audio:", error);
+    console.warn('Failed to load minigame audio:', error);
   }
 }
 
@@ -283,51 +295,51 @@ export async function autoSaveTrial() {
         `Auto-save failed: ${err.message}
 
 ` +
-        'Your latest changes are NOT saved. Check folder permissions and ' +
-        'free disk space, then make another edit to retry.'
+          'Your latest changes are NOT saved. Check folder permissions and ' +
+          'free disk space, then make another edit to retry.'
       );
     }
   }
 }
 
 async function writeTrialJson() {
-
   // Create minimal ID-only references
-  let characterIds = state.cast.map(c => c ? c.id : null);
+  let characterIds = state.cast.map((c) => (c ? c.id : null));
 
   const RUNTIME_FIELDS = new Set(['voiceLineBlob', 'oppositionAudioBlob', 'defenseAudioBlob']);
-  let minigamesForSave = JSON.parse(JSON.stringify(state.minigames, (k, v) =>
-    RUNTIME_FIELDS.has(k) ? undefined : v
-  ));
+  let minigamesForSave = JSON.parse(
+    JSON.stringify(state.minigames, (k, v) => (RUNTIME_FIELDS.has(k) ? undefined : v))
+  );
 
   let trialJs = {
     trialName: state.trialName,
     characters: characterIds, // Just an array of IDs or nulls
-    truthBullets: state.truthBullets.map(b => ({  // Exclude imageDataURL
+    truthBullets: state.truthBullets.map((b) => ({
+      // Exclude imageDataURL
       bulletId: b.bulletId,
       name: b.name,
       description: b.description,
       imageFile: b.imageFile,
-      inversedLieBulletName: b.inversedLieBulletName
+      inversedLieBulletName: b.inversedLieBulletName,
     })),
     minigames: minigamesForSave,
     script: {
       lines: state.scriptLines,
-      lastModified: new Date().toISOString()
+      lastModified: new Date().toISOString(),
     },
     metadata: {
-      version: "4.0",
+      version: '4.0',
       lastModified: new Date().toISOString(),
-      studentCount: blockTypes.filter(t => !t).length,
-      headmasterCount: blockTypes.filter(t => t).length,
-      totalCharacters: characterIds.filter(id => id !== null).length,
+      studentCount: blockTypes.filter((t) => !t).length,
+      headmasterCount: blockTypes.filter((t) => t).length,
+      totalCharacters: characterIds.filter((id) => id !== null).length,
       scriptLineCount: state.scriptLines.length,
       minigameCount: state.minigames.length,
-      truthBulletCount: state.truthBullets.length
-    }
+      truthBulletCount: state.truthBullets.length,
+    },
   };
 
-  let fHandle = await state.dirHandle.getFileHandle("trial.json", { create: true });
+  let fHandle = await state.dirHandle.getFileHandle('trial.json', { create: true });
   let wr = await fHandle.createWritable();
   await wr.write(JSON.stringify(trialJs, null, 2));
   await wr.close();

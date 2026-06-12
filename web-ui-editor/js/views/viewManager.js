@@ -10,11 +10,11 @@ export function switchView(viewName) {
   state.activeView = viewName;
   updateNavSelection();
   renderActiveView();
-  updateFloatingAddButton();  // Update floating button for new view
+  updateFloatingAddButton(); // Update floating button for new view
 }
 
 export function updateNavSelection() {
-  document.querySelectorAll('.nav-item').forEach(item => {
+  document.querySelectorAll('.nav-item').forEach((item) => {
     const itemView = item.getAttribute('data-view');
     if (itemView === state.activeView) {
       item.classList.add('selected');

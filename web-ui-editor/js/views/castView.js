@@ -14,9 +14,9 @@ export function renderCastGrid() {
     const div = document.createElement('div');
     div.className = 'cast-block';
     div.setAttribute('tabindex', 0);
-    div.setAttribute('data-filled', c ? "1" : "0");
+    div.setAttribute('data-filled', c ? '1' : '0');
     div.setAttribute('data-type', isHeadmaster ? 'headmaster' : 'student');
-    div.onclick = () => state.dirHandle ? openCharModal(i) : null;
+    div.onclick = () => (state.dirHandle ? openCharModal(i) : null);
 
     if (c) {
       // Character exists - show sprite and name

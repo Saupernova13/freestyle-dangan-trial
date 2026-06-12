@@ -17,14 +17,14 @@ export function sanitizeTrialJson(content) {
     if (Array.isArray(lines)) {
       for (const line of lines) {
         if (line && Array.isArray(line.highlights)) {
-          const text = line.dialogue || line.text || "";
+          const text = line.dialogue || line.text || '';
           line.highlights = normalizeHighlights(line.highlights, text.length);
         }
       }
     }
     return JSON.stringify(trial, null, 2);
   } catch (e) {
-    console.warn("sanitizeTrialJson: could not parse trial.json, exporting as-is", e);
+    console.warn('sanitizeTrialJson: could not parse trial.json, exporting as-is', e);
     return content;
   }
 }
@@ -34,12 +34,12 @@ export function sanitizeTrialJson(content) {
  */
 export async function exportToPlayableFile() {
   if (!state.dirHandle) {
-    alert("Please choose a trial folder first!");
+    alert('Please choose a trial folder first!');
     return;
   }
 
-  if (!state.trialName || state.trialName.trim() === "") {
-    alert("Please enter a trial name before exporting!");
+  if (!state.trialName || state.trialName.trim() === '') {
+    alert('Please enter a trial name before exporting!');
     return;
   }
 
@@ -59,53 +59,56 @@ export async function exportToPlayableFile() {
 
     // Add trial.json
     try {
-      const trialJsonHandle = await state.dirHandle.getFileHandle("trial.json");
+      const trialJsonHandle = await state.dirHandle.getFileHandle('trial.json');
       const trialJsonFile = await trialJsonHandle.getFile();
       const trialJsonContent = await trialJsonFile.text();
-      zip.file("trial.json", sanitizeTrialJson(trialJsonContent));
+      zip.file('trial.json', sanitizeTrialJson(trialJsonContent));
       filesAdded++;
       console.log(`Added trial.json (${filesAdded}/${totalFiles})`);
     } catch {
-      console.warn("trial.json not found, creating minimal version");
+      console.warn('trial.json not found, creating minimal version');
       // Create minimal trial.json if it doesn't exist
       const minimalTrial = {
         trialName: state.trialName,
-        characters: state.cast.map(c => c ? c.id : null),
+        characters: state.cast.map((c) => (c ? c.id : null)),
         truthBullets: state.truthBullets || [],
         minigames: state.minigames || [],
         script: { lines: state.scriptLines || [] },
         metadata: {
-          version: "4.0",
+          version: '4.0',
           lastModified: new Date().toISOString(),
           scriptLineCount: (state.scriptLines || []).length,
           minigameCount: (state.minigames || []).length,
-          truthBulletCount: (state.truthBullets || []).length
-        }
+          truthBulletCount: (state.truthBullets || []).length,
+        },
       };
-      zip.file("trial.json", JSON.stringify(minimalTrial, null, 2));
+      zip.file('trial.json', JSON.stringify(minimalTrial, null, 2));
       filesAdded++;
     }
 
     // Add all other files and directories
-    await addDirectoryToZip(zip, state.dirHandle, "", (current, total) => {
+    await addDirectoryToZip(zip, state.dirHandle, '', (current, total) => {
       filesAdded = current;
       console.log(`Packaging... ${current}/${total} files`);
     });
 
     // Generate ZIP file
-    console.log("Generating ZIP archive...");
-    const blob = await zip.generateAsync({
-      type: "blob",
-      compression: "DEFLATE",
-      compressionOptions: {
-        level: 6  // Balanced compression (1-9, 9=max)
+    console.log('Generating ZIP archive...');
+    const blob = await zip.generateAsync(
+      {
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: {
+          level: 6, // Balanced compression (1-9, 9=max)
+        },
+      },
+      (metadata) => {
+        // Progress callback
+        if (metadata.percent) {
+          console.log(`Compressing... ${Math.round(metadata.percent)}%`);
+        }
       }
-    }, (metadata) => {
-      // Progress callback
-      if (metadata.percent) {
-        console.log(`Compressing... ${Math.round(metadata.percent)}%`);
-      }
-    });
+    );
 
     // Create filename and trigger download
     const sanitizedTrialName = state.trialName.replace(/[^a-z0-9_-]/gi, '_');
@@ -125,10 +128,11 @@ export async function exportToPlayableFile() {
 
     // Show success message
     const fileSizeMB = (blob.size / (1024 * 1024)).toFixed(2);
-    alert(`✅ Trial exported successfully!\n\nFile: ${filename}\nSize: ${fileSizeMB} MB\nFiles packaged: ${filesAdded}`);
-
+    alert(
+      `✅ Trial exported successfully!\n\nFile: ${filename}\nSize: ${fileSizeMB} MB\nFiles packaged: ${filesAdded}`
+    );
   } catch (error) {
-    console.error("Export failed:", error);
+    console.error('Export failed:', error);
     showLoader(false);
     alert(`❌ Export failed: ${error.message}`);
   }
@@ -142,9 +146,15 @@ export async function exportToPlayableFile() {
  * @param {Function} progressCallback - Optional callback for progress updates
  * @param {Object} progress - Mutable counter used across recursive calls
  */
-export async function addDirectoryToZip(zip, dir, zipPath, progressCallback, progress = { count: 1, total: 0 }) {
+export async function addDirectoryToZip(
+  zip,
+  dir,
+  zipPath,
+  progressCallback,
+  progress = { count: 1, total: 0 }
+) {
   // Skip trial.json as it's already added
-  if (zipPath === "trial.json") {
+  if (zipPath === 'trial.json') {
     return;
   }
 
@@ -152,7 +162,7 @@ export async function addDirectoryToZip(zip, dir, zipPath, progressCallback, pro
     const entryPath = zipPath ? `${zipPath}/${entry.name}` : entry.name;
 
     // Skip trial.json at root level (already added)
-    if (entryPath === "trial.json") {
+    if (entryPath === 'trial.json') {
       continue;
     }
 
@@ -206,7 +216,6 @@ export function updateExportButtonState() {
   const exportBtn = document.getElementById('exportBtn');
   if (exportBtn) {
     // Enable if we have a directory handle and a trial name
-    exportBtn.disabled = !state.dirHandle || !state.trialName || state.trialName.trim() === "";
+    exportBtn.disabled = !state.dirHandle || !state.trialName || state.trialName.trim() === '';
   }
 }
-

@@ -7,36 +7,36 @@ import { appSettings } from '../settings.js';
 import { escapeHtml, formatAudioTime, normalizeHighlights, showLoader } from '../utils.js';
 
 let activeLineId = null;
-let scriptLineTab = "sprite";
-let scriptLineModalErr = "";
-let scriptLineModalMsg = "";
+let scriptLineTab = 'sprite';
+let scriptLineModalErr = '';
+let scriptLineModalMsg = '';
 let scriptLineFields = {
   spriteIndex: null,
   audioFile: null,
   audioBlob: null,
   highlights: [],
   cameraMotion: {
-    type: "none",
+    type: 'none',
     duration: 1.0,
-    easing: "ease-in-out"
+    easing: 'ease-in-out',
   },
   specialEffects: {
-    effects: []
+    effects: [],
   },
   dialogueBoxStyle: {
-    style: "default",
-    borderColor: "#FFFFFF",
+    style: 'default',
+    borderColor: '#FFFFFF',
     bgOpacity: 0.9,
-    borderThickness: 2
-  }
+    borderThickness: 2,
+  },
 };
 let highlightingState = {
   startChar: 0,
   endChar: 0,
-  currentColor: "#FFFF00"
+  currentColor: '#FFFF00',
 };
 
-// Audio preview state  
+// Audio preview state
 let audioPreviewElement = null;
 let isAudioPlaying = false;
 
@@ -51,24 +51,24 @@ export function getAvailableTabs(line) {
 
 export async function openScriptLineModal(lineId) {
   if (!state.dirHandle) {
-    alert("Choose a folder first!");
+    alert('Choose a folder first!');
     return;
   }
 
   activeLineId = lineId;
-  scriptLineModalErr = "";
-  scriptLineModalMsg = "";
+  scriptLineModalErr = '';
+  scriptLineModalMsg = '';
 
   // Find the script line
-  const line = state.scriptLines.find(l => l.id === lineId);
+  const line = state.scriptLines.find((l) => l.id === lineId);
   if (!line) {
-    alert("Script line not found!");
+    alert('Script line not found!');
     return;
   }
 
   // Load remaining sprites for the character if speaking line
   if (line.type === 'speaking') {
-    const character = state.cast.find(c => c && c.id === line.characterId);
+    const character = state.cast.find((c) => c && c.id === line.characterId);
     if (character && character.id && character._folderHandle) {
       // Check if sprites need to be loaded
       if (!character.sprites || character.sprites.length < appSettings.maxSprites) {
@@ -82,9 +82,9 @@ export async function openScriptLineModal(lineId) {
 
   // Set initial tab based on line type
   if (line.type === 'narrator') {
-    scriptLineTab = "audio";  // Start with audio for narrator
+    scriptLineTab = 'audio'; // Start with audio for narrator
   } else {
-    scriptLineTab = "sprite";  // Start with sprite for speaking
+    scriptLineTab = 'sprite'; // Start with sprite for speaking
   }
 
   // Load existing data
@@ -94,39 +94,39 @@ export async function openScriptLineModal(lineId) {
     audioBlob: null,
     highlights: line.highlights ? [...line.highlights] : [],
     cameraMotion: line.cameraMotion || {
-      type: "none",
+      type: 'none',
       duration: 1.0,
-      easing: "ease-in-out"
+      easing: 'ease-in-out',
     },
     specialEffects: line.specialEffects || {
-      effects: []
+      effects: [],
     },
     dialogueBoxStyle: line.dialogueBoxStyle || {
-      style: "default",
-      borderColor: "#FFFFFF",
+      style: 'default',
+      borderColor: '#FFFFFF',
       bgOpacity: 0.9,
-      borderThickness: 2
-    }
+      borderThickness: 2,
+    },
   };
 
   highlightingState = {
     startChar: 0,
     endChar: 0,
-    currentColor: "#FFFF00"
+    currentColor: '#FFFF00',
   };
 
   renderScriptLineModal();
 }
 
 export function renderScriptLineModal() {
-  const root = document.getElementById("modalroot");
-  const line = state.scriptLines.find(l => l.id === activeLineId);
+  const root = document.getElementById('modalroot');
+  const line = state.scriptLines.find((l) => l.id === activeLineId);
 
   // For speaking lines, validate character selection
   if (line.type === 'speaking') {
-    const character = state.cast.find(c => c && c.id === line.characterId);
+    const character = state.cast.find((c) => c && c.id === line.characterId);
     if (!character) {
-      alert("No character selected for this line!");
+      alert('No character selected for this line!');
       closeModal();
       return;
     }
@@ -139,19 +139,19 @@ export function renderScriptLineModal() {
     scriptLineTab = availableTabs[0] || 'audio';
   }
 
-  let tabContent = "";
-  if (scriptLineTab === "sprite" && line.type === 'speaking') {
-    const character = state.cast.find(c => c && c.id === line.characterId);
+  let tabContent = '';
+  if (scriptLineTab === 'sprite' && line.type === 'speaking') {
+    const character = state.cast.find((c) => c && c.id === line.characterId);
     tabContent = renderSpriteSelectionTab(character);
-  } else if (scriptLineTab === "audio") {
+  } else if (scriptLineTab === 'audio') {
     tabContent = renderAudioUploadTab(line);
-  } else if (scriptLineTab === "dialogueBox") {
+  } else if (scriptLineTab === 'dialogueBox') {
     tabContent = renderDialogueBoxTab(line);
-  } else if (scriptLineTab === "highlighting") {
+  } else if (scriptLineTab === 'highlighting') {
     tabContent = renderHighlightingTab(line);
-  } else if (scriptLineTab === "cameraMotion" && line.type === 'speaking') {
+  } else if (scriptLineTab === 'cameraMotion' && line.type === 'speaking') {
     tabContent = renderCameraMotionTab(line);
-  } else if (scriptLineTab === "specialEffects") {
+  } else if (scriptLineTab === 'specialEffects') {
     tabContent = renderSpecialEffectsTab(line);
   }
 
@@ -161,55 +161,79 @@ export function renderScriptLineModal() {
         <button class="dr-close" onclick="closeScriptLineModal()">&times;</button>
 
         <div class="dr-tabs">
-          ${availableTabs.includes('sprite') ? `
+          ${
+            availableTabs.includes('sprite')
+              ? `
             <div class="dr-tab ${scriptLineTab === 'sprite' ? 'active' : ''}"
                  onclick="switchScriptLineTab('sprite')">
               🎭 Sprite
             </div>
-          ` : ''}
+          `
+              : ''
+          }
 
-          ${availableTabs.includes('audio') ? `
+          ${
+            availableTabs.includes('audio')
+              ? `
             <div class="dr-tab ${scriptLineTab === 'audio' ? 'active' : ''}"
                  onclick="switchScriptLineTab('audio')">
               🔊 Audio
             </div>
-          ` : ''}
+          `
+              : ''
+          }
 
-          ${availableTabs.includes('dialogueBox') ? `
+          ${
+            availableTabs.includes('dialogueBox')
+              ? `
             <div class="dr-tab ${scriptLineTab === 'dialogueBox' ? 'active' : ''}"
                  onclick="switchScriptLineTab('dialogueBox')">
               💬 Box Style
             </div>
-          ` : ''}
+          `
+              : ''
+          }
 
-          ${availableTabs.includes('highlighting') ? `
+          ${
+            availableTabs.includes('highlighting')
+              ? `
             <div class="dr-tab ${scriptLineTab === 'highlighting' ? 'active' : ''}"
                  onclick="switchScriptLineTab('highlighting')">
               🖍️ Highlighting
             </div>
-          ` : ''}
+          `
+              : ''
+          }
 
-          ${availableTabs.includes('cameraMotion') ? `
+          ${
+            availableTabs.includes('cameraMotion')
+              ? `
             <div class="dr-tab ${scriptLineTab === 'cameraMotion' ? 'active' : ''}"
                  onclick="switchScriptLineTab('cameraMotion')">
               📹 Camera
             </div>
-          ` : ''}
+          `
+              : ''
+          }
 
-          ${availableTabs.includes('specialEffects') ? `
+          ${
+            availableTabs.includes('specialEffects')
+              ? `
             <div class="dr-tab ${scriptLineTab === 'specialEffects' ? 'active' : ''}"
                  onclick="switchScriptLineTab('specialEffects')">
               ✨ Effects
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
 
         <div class="dr-modal-content">
           ${tabContent}
         </div>
 
-        ${scriptLineModalErr ? `<div class="dr-err">${scriptLineModalErr}</div>` : ""}
-        ${scriptLineModalMsg ? `<div class="dr-success">${scriptLineModalMsg}</div>` : ""}
+        ${scriptLineModalErr ? `<div class="dr-err">${scriptLineModalErr}</div>` : ''}
+        ${scriptLineModalMsg ? `<div class="dr-success">${scriptLineModalMsg}</div>` : ''}
 
         <div class="dr-btn-row">
           <button class="btn btn-secondary" onclick="closeScriptLineModal()">Cancel</button>
@@ -222,8 +246,8 @@ export function renderScriptLineModal() {
 
 export function switchScriptLineTab(tab) {
   scriptLineTab = tab;
-  scriptLineModalErr = "";
-  scriptLineModalMsg = "";
+  scriptLineModalErr = '';
+  scriptLineModalMsg = '';
   renderScriptLineModal();
 
   // Initialize drag selection if switching to highlighting tab
@@ -243,19 +267,20 @@ export function renderSpriteSelectionTab(character) {
     `;
   }
 
-  let spriteSlots = character.sprites.map((spr, idx) => {
-    if (!spr) {
-      return `
+  let spriteSlots = character.sprites
+    .map((spr, idx) => {
+      if (!spr) {
+        return `
         <div class="dr-sprslot empty">
           <span>No Sprite</span>
         </div>
       `;
-    }
+      }
 
-    // spriteIndex is 1-based — it maps directly to sprite_NN.png on disk and
-    // to what the engine reads. The sprites array itself is 0-based.
-    const isSelected = scriptLineFields.spriteIndex === idx + 1;
-    return `
+      // spriteIndex is 1-based — it maps directly to sprite_NN.png on disk and
+      // to what the engine reads. The sprites array itself is 0-based.
+      const isSelected = scriptLineFields.spriteIndex === idx + 1;
+      return `
       <div class="dr-sprslot ${isSelected ? 'selected-sprite' : ''}"
            onclick="selectSprite(${idx + 1})"
            title="Sprite ${idx + 1}">
@@ -263,7 +288,8 @@ export function renderSpriteSelectionTab(character) {
         ${isSelected ? '<div class="sprite-check">✓</div>' : ''}
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 
   return `
     <div class="dr-form">
@@ -293,7 +319,9 @@ export function renderAudioUploadTab(line) {
         Upload an audio file for this dialogue line (optional).
       </p>
 
-      ${hasAudio ? `
+      ${
+        hasAudio
+          ? `
         <div class="audio-preview">
           <div class="audio-info">
             <span class="audio-icon">🎵</span>
@@ -317,11 +345,13 @@ export function renderAudioUploadTab(line) {
             <button class="btn btn-secondary" onclick="clearAudio()">🗑️ Remove</button>
           </div>
         </div>
-      ` : `
+      `
+          : `
         <div class="audio-empty">
           <p>No audio file uploaded</p>
         </div>
-      `}
+      `
+      }
 
       <input type="file" accept="audio/*" id="audioFileInput"
              onchange="handleAudioUpload(event)" style="display: none;">
@@ -342,14 +372,14 @@ export function handleAudioUpload(event) {
 
   // Validate file type
   if (!file.type.startsWith('audio/')) {
-    scriptLineModalErr = "Please select a valid audio file.";
+    scriptLineModalErr = 'Please select a valid audio file.';
     renderScriptLineModal();
     return;
   }
 
   scriptLineFields.audioFile = file.name;
   scriptLineFields.audioBlob = file;
-  scriptLineModalErr = "";
+  scriptLineModalErr = '';
   renderScriptLineModal();
 }
 
@@ -363,22 +393,25 @@ export function renderDialogueBoxTab(line) {
   const box = scriptLineFields.dialogueBoxStyle;
 
   const boxStyles = [
-    { value: "default", label: "Default", desc: "Standard rectangular box" },
-    { value: "slant_left", label: "Slant Left", desc: "Box tilted to the left" },
-    { value: "slant_right", label: "Slant Right", desc: "Box tilted to the right" },
-    { value: "spiky", label: "Spiky", desc: "Sharp pointed edges" },
-    { value: "bubbly", label: "Bubbly", desc: "Rounded speech bubble style" },
-    { value: "rounded", label: "Rounded", desc: "Soft rounded corners" },
-    { value: "sharp", label: "Sharp", desc: "Hard angular edges" }
+    { value: 'default', label: 'Default', desc: 'Standard rectangular box' },
+    { value: 'slant_left', label: 'Slant Left', desc: 'Box tilted to the left' },
+    { value: 'slant_right', label: 'Slant Right', desc: 'Box tilted to the right' },
+    { value: 'spiky', label: 'Spiky', desc: 'Sharp pointed edges' },
+    { value: 'bubbly', label: 'Bubbly', desc: 'Rounded speech bubble style' },
+    { value: 'rounded', label: 'Rounded', desc: 'Soft rounded corners' },
+    { value: 'sharp', label: 'Sharp', desc: 'Hard angular edges' },
   ];
 
-  const styleOptions = boxStyles.map(style =>
-    `<option value="${style.value}" ${box.style === style.value ? 'selected' : ''} title="${style.desc}">
+  const styleOptions = boxStyles
+    .map(
+      (style) =>
+        `<option value="${style.value}" ${box.style === style.value ? 'selected' : ''} title="${style.desc}">
       ${style.label}
     </option>`
-  ).join('');
+    )
+    .join('');
 
-  const selectedStyle = boxStyles.find(s => s.value === box.style);
+  const selectedStyle = boxStyles.find((s) => s.value === box.style);
 
   return `
     <div class="dr-form">
@@ -449,19 +482,19 @@ export function updateDialogueBoxStyle(field, value) {
   // Update only the dialogue box tab content
   const tabContent = document.querySelector('.dr-modal-content');
   if (tabContent && scriptLineTab === 'dialogueBox') {
-    const line = state.scriptLines.find(l => l.id === activeLineId);
+    const line = state.scriptLines.find((l) => l.id === activeLineId);
     tabContent.innerHTML = renderDialogueBoxTab(line);
   }
 }
 
 export async function loadAudioFileFromDisk(filename) {
   try {
-    const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
+    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
     const fileHandle = await audioDir.getFileHandle(filename);
     const file = await fileHandle.getFile();
     return file;
   } catch (error) {
-    console.error("Error loading audio file:", error);
+    console.error('Error loading audio file:', error);
     return null;
   }
 }
@@ -483,7 +516,7 @@ export async function playAudioPreview() {
       if (audioFile) {
         scriptLineFields.audioBlob = audioFile;
       } else {
-        scriptLineModalErr = "Failed to load audio file from disk.";
+        scriptLineModalErr = 'Failed to load audio file from disk.';
         renderScriptLineModal();
         return;
       }
@@ -495,7 +528,7 @@ export async function playAudioPreview() {
   }
 
   if (!scriptLineFields.audioBlob) {
-    scriptLineModalErr = "No audio file to play.";
+    scriptLineModalErr = 'No audio file to play.';
     renderScriptLineModal();
     return;
   }
@@ -531,18 +564,18 @@ export async function playAudioPreview() {
     }
 
     audioPreviewElement.src = blobUrl;
-    audioPreviewElement.play()
+    audioPreviewElement
+      .play()
       .then(() => {
         isAudioPlaying = true;
         updateAudioPlayButton();
         updateAudioSeekBar();
       })
-      .catch(err => {
+      .catch((err) => {
         isAudioPlaying = false;
         scriptLineModalErr = `Failed to play audio: ${err.message}`;
         renderScriptLineModal();
       });
-
   } catch (error) {
     scriptLineModalErr = `Error playing audio: ${error.message}`;
     renderScriptLineModal();
@@ -586,55 +619,65 @@ export function renderCameraMotionTab(line) {
   const cam = scriptLineFields.cameraMotion;
 
   const cameraTypes = [
-    { value: "none", label: "None", desc: "No camera movement" },
-    { value: "pan_left", label: "Pan Left", desc: "Camera pans to the left" },
-    { value: "pan_right", label: "Pan Right", desc: "Camera pans to the right" },
-    { value: "pan_up", label: "Pan Up", desc: "Camera pans upward" },
-    { value: "pan_down", label: "Pan Down", desc: "Camera pans downward" },
-    { value: "zoom_in", label: "Zoom In", desc: "Camera zooms closer" },
-    { value: "zoom_out", label: "Zoom Out", desc: "Camera zooms out" },
-    { value: "rotate_cw", label: "Rotate Clockwise", desc: "Camera rotates clockwise" },
-    { value: "rotate_ccw", label: "Rotate Counter-Clockwise", desc: "Camera rotates counter-clockwise" },
-    { value: "tilt_up", label: "Tilt Up", desc: "Camera tilts upward" },
-    { value: "tilt_down", label: "Tilt Down", desc: "Camera tilts downward" },
-    { value: "dolly_in", label: "Dolly In", desc: "Camera moves forward on track" },
-    { value: "dolly_out", label: "Dolly Out", desc: "Camera moves backward on track" },
-    { value: "truck_left", label: "Truck Left", desc: "Camera moves left on track" },
-    { value: "truck_right", label: "Truck Right", desc: "Camera moves right on track" },
-    { value: "pedestal_up", label: "Pedestal Up", desc: "Camera moves up vertically" },
-    { value: "pedestal_down", label: "Pedestal Down", desc: "Camera moves down vertically" },
-    { value: "pan", label: "Pan to Speaker", desc: "Smooth pan to the speaking character" },
-    { value: "shake", label: "Camera Shake", desc: "Quick handheld-style shake" },
-    { value: "dramatic_zoom", label: "Dramatic Zoom", desc: "Punch-in zoom with shake" },
-    { value: "spin", label: "Spin", desc: "Full 360 spin around the room" },
-    { value: "overhead", label: "Overhead", desc: "Bird's-eye view from above" },
-    { value: "low_angle", label: "Low Angle", desc: "Drops low looking up at the speaker" },
-    { value: "dutch_tilt", label: "Dutch Tilt", desc: "Tilts sideways then rights itself" },
-    { value: "cross_dissolve", label: "Cross Dissolve", desc: "Fade through black transition" },
-    { value: "tracking", label: "Tracking", desc: "Smooth tracking move to the speaker" },
-    { value: "reset", label: "Reset", desc: "Return FOV and roll to defaults" }
+    { value: 'none', label: 'None', desc: 'No camera movement' },
+    { value: 'pan_left', label: 'Pan Left', desc: 'Camera pans to the left' },
+    { value: 'pan_right', label: 'Pan Right', desc: 'Camera pans to the right' },
+    { value: 'pan_up', label: 'Pan Up', desc: 'Camera pans upward' },
+    { value: 'pan_down', label: 'Pan Down', desc: 'Camera pans downward' },
+    { value: 'zoom_in', label: 'Zoom In', desc: 'Camera zooms closer' },
+    { value: 'zoom_out', label: 'Zoom Out', desc: 'Camera zooms out' },
+    { value: 'rotate_cw', label: 'Rotate Clockwise', desc: 'Camera rotates clockwise' },
+    {
+      value: 'rotate_ccw',
+      label: 'Rotate Counter-Clockwise',
+      desc: 'Camera rotates counter-clockwise',
+    },
+    { value: 'tilt_up', label: 'Tilt Up', desc: 'Camera tilts upward' },
+    { value: 'tilt_down', label: 'Tilt Down', desc: 'Camera tilts downward' },
+    { value: 'dolly_in', label: 'Dolly In', desc: 'Camera moves forward on track' },
+    { value: 'dolly_out', label: 'Dolly Out', desc: 'Camera moves backward on track' },
+    { value: 'truck_left', label: 'Truck Left', desc: 'Camera moves left on track' },
+    { value: 'truck_right', label: 'Truck Right', desc: 'Camera moves right on track' },
+    { value: 'pedestal_up', label: 'Pedestal Up', desc: 'Camera moves up vertically' },
+    { value: 'pedestal_down', label: 'Pedestal Down', desc: 'Camera moves down vertically' },
+    { value: 'pan', label: 'Pan to Speaker', desc: 'Smooth pan to the speaking character' },
+    { value: 'shake', label: 'Camera Shake', desc: 'Quick handheld-style shake' },
+    { value: 'dramatic_zoom', label: 'Dramatic Zoom', desc: 'Punch-in zoom with shake' },
+    { value: 'spin', label: 'Spin', desc: 'Full 360 spin around the room' },
+    { value: 'overhead', label: 'Overhead', desc: "Bird's-eye view from above" },
+    { value: 'low_angle', label: 'Low Angle', desc: 'Drops low looking up at the speaker' },
+    { value: 'dutch_tilt', label: 'Dutch Tilt', desc: 'Tilts sideways then rights itself' },
+    { value: 'cross_dissolve', label: 'Cross Dissolve', desc: 'Fade through black transition' },
+    { value: 'tracking', label: 'Tracking', desc: 'Smooth tracking move to the speaker' },
+    { value: 'reset', label: 'Reset', desc: 'Return FOV and roll to defaults' },
   ];
 
   const easingTypes = [
-    { value: "linear", label: "Linear" },
-    { value: "ease-in", label: "Ease In" },
-    { value: "ease-out", label: "Ease Out" },
-    { value: "ease-in-out", label: "Ease In-Out" }
+    { value: 'linear', label: 'Linear' },
+    { value: 'ease-in', label: 'Ease In' },
+    { value: 'ease-out', label: 'Ease Out' },
+    { value: 'ease-in-out', label: 'Ease In-Out' },
   ];
 
-  const cameraOptions = cameraTypes.map(type =>
-    `<option value="${type.value}" ${cam.type === type.value ? 'selected' : ''} title="${type.desc}">
+  const cameraOptions = cameraTypes
+    .map(
+      (type) =>
+        `<option value="${type.value}" ${cam.type === type.value ? 'selected' : ''} title="${type.desc}">
       ${type.label}
     </option>`
-  ).join('');
+    )
+    .join('');
 
-  const easingOptions = easingTypes.map(easing =>
-    `<option value="${easing.value}" ${cam.easing === easing.value ? 'selected' : ''}>
+  const easingOptions = easingTypes
+    .map(
+      (easing) =>
+        `<option value="${easing.value}" ${cam.easing === easing.value ? 'selected' : ''}>
       ${easing.label}
     </option>`
-  ).join('');
+    )
+    .join('');
 
-  const selectedType = cameraTypes.find(t => t.value === cam.type);
+  const selectedType = cameraTypes.find((t) => t.value === cam.type);
 
   return `
     <div class="dr-form">
@@ -660,7 +703,9 @@ export function renderCameraMotionTab(line) {
         </div>
       </div>
 
-      ${cam.type !== 'none' ? `
+      ${
+        cam.type !== 'none'
+          ? `
         <div class="dr-fg-row">
           <div class="dr-fg-field">
             <label>Duration (seconds):</label>
@@ -675,7 +720,9 @@ export function renderCameraMotionTab(line) {
             </select>
           </div>
         </div>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
   `;
 }
@@ -686,7 +733,7 @@ export function updateCameraMotion(field, value) {
   // Update only the camera tab content
   const tabContent = document.querySelector('.dr-modal-content');
   if (tabContent && scriptLineTab === 'cameraMotion') {
-    const line = state.scriptLines.find(l => l.id === activeLineId);
+    const line = state.scriptLines.find((l) => l.id === activeLineId);
     tabContent.innerHTML = renderCameraMotionTab(line);
   }
 }
@@ -695,30 +742,31 @@ export function renderSpecialEffectsTab(line) {
   const effects = scriptLineFields.specialEffects.effects;
 
   const availableEffects = [
-    { type: "shake", label: "Screen Shake", icon: "📳", hasIntensity: true },
-    { type: "flash", label: "Flash", icon: "⚡", hasColor: true },
-    { type: "pulse", label: "Pulse", icon: "💓", hasIntensity: true },
-    { type: "fade_black", label: "Fade to Black", icon: "⬛" },
-    { type: "fade_white", label: "Fade to White", icon: "⬜" },
-    { type: "blur", label: "Background Blur", icon: "💨", hasIntensity: true },
-    { type: "distortion", label: "Distortion/Ripple", icon: "🌀", hasIntensity: true },
-    { type: "sepia", label: "Sepia Filter", icon: "🟫" },
-    { type: "grayscale", label: "Grayscale", icon: "⚫" },
-    { type: "invert", label: "Color Invert", icon: "🔄" },
-    { type: "vignette", label: "Vignette", icon: "◉", hasIntensity: true },
-    { type: "scanlines", label: "Scanlines", icon: "📺", hasIntensity: true },
-    { type: "objection", label: "Objection Overlay", icon: "❗" },
-    { type: "blood_splatter", label: "Blood Splatter", icon: "🩸" },
-    { type: "evidence_popup", label: "Evidence Popup", icon: "🔍" },
-    { type: "glitch", label: "Glitch", icon: "👾" },
-    { type: "chromatic_aberration", label: "Chromatic Aberration", icon: "🌈" },
-    { type: "impact_frame", label: "Impact Frame", icon: "💥" }
+    { type: 'shake', label: 'Screen Shake', icon: '📳', hasIntensity: true },
+    { type: 'flash', label: 'Flash', icon: '⚡', hasColor: true },
+    { type: 'pulse', label: 'Pulse', icon: '💓', hasIntensity: true },
+    { type: 'fade_black', label: 'Fade to Black', icon: '⬛' },
+    { type: 'fade_white', label: 'Fade to White', icon: '⬜' },
+    { type: 'blur', label: 'Background Blur', icon: '💨', hasIntensity: true },
+    { type: 'distortion', label: 'Distortion/Ripple', icon: '🌀', hasIntensity: true },
+    { type: 'sepia', label: 'Sepia Filter', icon: '🟫' },
+    { type: 'grayscale', label: 'Grayscale', icon: '⚫' },
+    { type: 'invert', label: 'Color Invert', icon: '🔄' },
+    { type: 'vignette', label: 'Vignette', icon: '◉', hasIntensity: true },
+    { type: 'scanlines', label: 'Scanlines', icon: '📺', hasIntensity: true },
+    { type: 'objection', label: 'Objection Overlay', icon: '❗' },
+    { type: 'blood_splatter', label: 'Blood Splatter', icon: '🩸' },
+    { type: 'evidence_popup', label: 'Evidence Popup', icon: '🔍' },
+    { type: 'glitch', label: 'Glitch', icon: '👾' },
+    { type: 'chromatic_aberration', label: 'Chromatic Aberration', icon: '🌈' },
+    { type: 'impact_frame', label: 'Impact Frame', icon: '💥' },
   ];
 
   // Render active effects list
-  const activeEffectsList = effects.map((effect, idx) => {
-    const effectDef = availableEffects.find(e => e.type === effect.type);
-    return `
+  const activeEffectsList = effects
+    .map((effect, idx) => {
+      const effectDef = availableEffects.find((e) => e.type === effect.type);
+      return `
       <div class="effect-active-item">
         <span class="effect-icon">${effectDef ? effectDef.icon : '✨'}</span>
         <div class="effect-details">
@@ -734,12 +782,14 @@ export function renderSpecialEffectsTab(line) {
         </button>
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 
   // Render available effects grid
-  const effectsGrid = availableEffects.map(effect => {
-    const isActive = effects.some(e => e.type === effect.type);
-    return `
+  const effectsGrid = availableEffects
+    .map((effect) => {
+      const isActive = effects.some((e) => e.type === effect.type);
+      return `
       <div class="effect-option ${isActive ? 'effect-active' : ''}"
            onclick="toggleEffect('${effect.type}')">
         <div class="effect-option-icon">${effect.icon}</div>
@@ -747,7 +797,8 @@ export function renderSpecialEffectsTab(line) {
         ${isActive ? '<div class="effect-checkmark">✓</div>' : ''}
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 
   return `
     <div class="dr-form">
@@ -756,12 +807,16 @@ export function renderSpecialEffectsTab(line) {
         Add visual effects that trigger during this dialogue line.
       </p>
 
-      ${effects.length > 0 ? `
+      ${
+        effects.length > 0
+          ? `
         <div class="active-effects-list">
           <h4>Active Effects:</h4>
           ${activeEffectsList}
         </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <div class="effects-grid">
         <h4>Available Effects:</h4>
@@ -779,7 +834,7 @@ export function renderSpecialEffectsTab(line) {
 
 export function toggleEffect(effectType) {
   const effects = scriptLineFields.specialEffects.effects;
-  const existingIndex = effects.findIndex(e => e.type === effectType);
+  const existingIndex = effects.findIndex((e) => e.type === effectType);
 
   if (existingIndex !== -1) {
     // Remove effect
@@ -805,7 +860,7 @@ export function toggleEffect(effectType) {
   // Update only the effects tab content
   const tabContent = document.querySelector('.dr-modal-content');
   if (tabContent && scriptLineTab === 'specialEffects') {
-    const line = state.scriptLines.find(l => l.id === activeLineId);
+    const line = state.scriptLines.find((l) => l.id === activeLineId);
     tabContent.innerHTML = renderSpecialEffectsTab(line);
   }
 }
@@ -816,13 +871,13 @@ export function removeEffect(index) {
   // Update only the effects tab content
   const tabContent = document.querySelector('.dr-modal-content');
   if (tabContent && scriptLineTab === 'specialEffects') {
-    const line = state.scriptLines.find(l => l.id === activeLineId);
+    const line = state.scriptLines.find((l) => l.id === activeLineId);
     tabContent.innerHTML = renderSpecialEffectsTab(line);
   }
 }
 
 export function renderHighlightingTab(line) {
-  const dialogue = line.dialogue || line.text || "";
+  const dialogue = line.dialogue || line.text || '';
 
   // Repair any stale/overlapping ranges (e.g. dialogue edited after
   // highlighting) before they are shown or re-saved.
@@ -832,9 +887,10 @@ export function renderHighlightingTab(line) {
   const highlightedText = renderHighlightedDialogue(dialogue, scriptLineFields.highlights);
 
   // Render existing highlights list
-  const highlightsList = scriptLineFields.highlights.map((h, idx) => {
-    const excerpt = escapeHtml(dialogue.substring(h.startChar, h.endChar));
-    return `
+  const highlightsList = scriptLineFields.highlights
+    .map((h, idx) => {
+      const excerpt = escapeHtml(dialogue.substring(h.startChar, h.endChar));
+      return `
       <div class="highlight-item" style="border-left: 4px solid ${h.color};">
         <div class="highlight-info">
           <span class="highlight-text">"${excerpt}"</span>
@@ -845,12 +901,17 @@ export function renderHighlightingTab(line) {
         </button>
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 
   // Render dialogue as individual character spans for selection
-  const selectableDialogue = dialogue.split('').map((char, idx) =>
-    `<span class="char-selectable" data-char-index="${idx}">${char === ' ' ? '&nbsp;' : escapeHtml(char)}</span>`
-  ).join('');
+  const selectableDialogue = dialogue
+    .split('')
+    .map(
+      (char, idx) =>
+        `<span class="char-selectable" data-char-index="${idx}">${char === ' ' ? '&nbsp;' : escapeHtml(char)}</span>`
+    )
+    .join('');
 
   return `
     <div class="dr-form">
@@ -871,12 +932,16 @@ export function renderHighlightingTab(line) {
       </div>
 
       <!-- Existing highlights list -->
-      ${scriptLineFields.highlights.length > 0 ? `
+      ${
+        scriptLineFields.highlights.length > 0
+          ? `
         <div class="highlights-list">
           <h4>Current Highlights:</h4>
           ${highlightsList}
         </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <!-- Drag-to-select controls -->
       <div class="highlight-controls">
@@ -990,14 +1055,14 @@ export function initializeDragSelection() {
   });
 
   function clearPreviousSelection() {
-    dialogueText.querySelectorAll('.char-selectable').forEach(span => {
+    dialogueText.querySelectorAll('.char-selectable').forEach((span) => {
       span.classList.remove('char-selected');
     });
   }
 
   function updateSelectionDisplay() {
-    const line = state.scriptLines.find(l => l.id === activeLineId);
-    const dialogue = line.dialogue || "";
+    const line = state.scriptLines.find((l) => l.id === activeLineId);
+    const dialogue = line.dialogue || '';
 
     // Highlight selected characters in the selectable text
     const spans = dialogueText.querySelectorAll('.char-selectable');
@@ -1009,9 +1074,10 @@ export function initializeDragSelection() {
 
     // Update selection info
     const selectedText = dialogue.substring(highlightingState.startChar, highlightingState.endChar);
-    selectionRange.innerHTML = highlightingState.endChar > highlightingState.startChar
-      ? `"${selectedText}" (${highlightingState.startChar}-${highlightingState.endChar})`
-      : 'None';
+    selectionRange.innerHTML =
+      highlightingState.endChar > highlightingState.startChar
+        ? `"${selectedText}" (${highlightingState.startChar}-${highlightingState.endChar})`
+        : 'None';
 
     // Update unified preview with live selection + existing highlights
     const unifiedPreview = document.getElementById('highlight-unified-preview');
@@ -1022,7 +1088,7 @@ export function initializeDragSelection() {
           startChar: highlightingState.startChar,
           endChar: highlightingState.endChar,
           color: highlightingState.currentColor,
-          isTemp: true  // Mark as temporary
+          isTemp: true, // Mark as temporary
         });
       }
       unifiedPreview.innerHTML = renderHighlightedDialogue(dialogue, tempHighlights);
@@ -1042,7 +1108,7 @@ export function renderHighlightedDialogue(dialogue, highlights) {
 
   let result = '';
   let lastIndex = 0;
-  normalized.forEach(h => {
+  normalized.forEach((h) => {
     result += escapeHtml(dialogue.substring(lastIndex, h.startChar));
     result += `<span style="color: ${h.color}; font-weight: 600;">`;
     result += escapeHtml(dialogue.substring(h.startChar, h.endChar));
@@ -1064,7 +1130,7 @@ export function clearHighlightSelection() {
 
   const dialogueText = document.querySelector('.dialogue-text');
   if (dialogueText) {
-    dialogueText.querySelectorAll('.char-selectable').forEach(span => {
+    dialogueText.querySelectorAll('.char-selectable').forEach((span) => {
       span.classList.remove('char-selected');
     });
   }
@@ -1092,7 +1158,7 @@ export function selectHighlightColor(color) {
   }
 
   // Update color preset active states
-  document.querySelectorAll('.color-preset').forEach(btn => {
+  document.querySelectorAll('.color-preset').forEach((btn) => {
     const btnColor = btn.style.background.toLowerCase();
     const targetColor = color.toLowerCase();
     if (btnColor === targetColor || rgbToHex(btnColor) === targetColor) {
@@ -1104,15 +1170,18 @@ export function selectHighlightColor(color) {
 
   // Repaint the unified preview so an in-progress selection reflects the
   // newly chosen color.
-  const line = state.scriptLines.find(l => l.id === activeLineId);
+  const line = state.scriptLines.find((l) => l.id === activeLineId);
   const unifiedPreview = document.getElementById('highlight-unified-preview');
   if (unifiedPreview && line && highlightingState.endChar > highlightingState.startChar) {
-    const dialogue = line.dialogue || line.text || "";
-    const tempHighlights = [...scriptLineFields.highlights, {
-      startChar: highlightingState.startChar,
-      endChar: highlightingState.endChar,
-      color: highlightingState.currentColor,
-    }];
+    const dialogue = line.dialogue || line.text || '';
+    const tempHighlights = [
+      ...scriptLineFields.highlights,
+      {
+        startChar: highlightingState.startChar,
+        endChar: highlightingState.endChar,
+        color: highlightingState.currentColor,
+      },
+    ];
     unifiedPreview.innerHTML = renderHighlightedDialogue(dialogue, tempHighlights);
   }
 }
@@ -1130,18 +1199,18 @@ export function rgbToHex(rgb) {
 
 // Add highlight from drag selection
 export function addHighlightFromSelection() {
-  const line = state.scriptLines.find(l => l.id === activeLineId);
-  const dialogue = line.dialogue || "";
+  const line = state.scriptLines.find((l) => l.id === activeLineId);
+  const dialogue = line.dialogue || '';
 
   // Validate
   if (highlightingState.startChar >= highlightingState.endChar) {
-    scriptLineModalErr = "Please select text to highlight.";
+    scriptLineModalErr = 'Please select text to highlight.';
     renderScriptLineModal();
     return;
   }
 
   if (highlightingState.startChar < 0 || highlightingState.endChar > dialogue.length) {
-    scriptLineModalErr = "Invalid selection range.";
+    scriptLineModalErr = 'Invalid selection range.';
     renderScriptLineModal();
     return;
   }
@@ -1152,14 +1221,14 @@ export function addHighlightFromSelection() {
   scriptLineFields.highlights.push({
     startChar: highlightingState.startChar,
     endChar: highlightingState.endChar,
-    color: highlightingState.currentColor
+    color: highlightingState.currentColor,
   });
   scriptLineFields.highlights = normalizeHighlights(scriptLineFields.highlights, dialogue.length);
 
   // Reset state
   highlightingState.startChar = 0;
   highlightingState.endChar = 0;
-  scriptLineModalErr = "";
+  scriptLineModalErr = '';
 
   // Re-render to show updated highlights
   renderScriptLineModal();
@@ -1177,8 +1246,6 @@ export function removeHighlight(index) {
   setTimeout(() => initializeDragSelection(), 0);
 }
 
-
-
 // Close script line modal
 export function closeScriptLineModal() {
   // Stop and cleanup audio if playing
@@ -1191,16 +1258,16 @@ export function closeScriptLineModal() {
     isAudioPlaying = false;
   }
 
-  document.getElementById("modalroot").innerHTML = "";
+  document.getElementById('modalroot').innerHTML = '';
   activeLineId = null;
 }
 
 // ==================== Script Line Advanced Editing ====================
 
 export async function saveScriptLineAdvanced() {
-  const line = state.scriptLines.find(l => l.id === activeLineId);
+  const line = state.scriptLines.find((l) => l.id === activeLineId);
   if (!line) {
-    alert("Script line not found!");
+    alert('Script line not found!');
     closeModal();
     return;
   }
@@ -1219,7 +1286,7 @@ export async function saveScriptLineAdvanced() {
     // overlapping ranges can never be persisted to trial.json.
     line.highlights = normalizeHighlights(
       scriptLineFields.highlights,
-      (line.dialogue || line.text || "").length
+      (line.dialogue || line.text || '').length
     );
     line.specialEffects = scriptLineFields.specialEffects;
     line.dialogueBoxStyle = scriptLineFields.dialogueBoxStyle;
@@ -1227,7 +1294,7 @@ export async function saveScriptLineAdvanced() {
     // Handle audio file upload
     if (scriptLineFields.audioBlob) {
       // Create Audio directory if it doesn't exist
-      const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: true });
+      const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: true });
 
       // Generate filename based on line ID
       const audioFileName = `${line.id}.${scriptLineFields.audioBlob.name.split('.').pop()}`;
@@ -1242,10 +1309,10 @@ export async function saveScriptLineAdvanced() {
     } else if (scriptLineFields.audioFile === null && line.audioFile) {
       // Audio was cleared, remove the file
       try {
-        const audioDir = await state.dirHandle.getDirectoryHandle("Audio", { create: false });
+        const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
         await audioDir.removeEntry(line.audioFile);
       } catch (e) {
-        console.warn("Could not remove audio file:", e);
+        console.warn('Could not remove audio file:', e);
       }
       line.audioFile = null;
     }
@@ -1256,14 +1323,13 @@ export async function saveScriptLineAdvanced() {
     showLoader(false);
     closeModal();
     renderScriptEditor();
-
   } catch (error) {
-    console.error("Error saving script line:", error);
+    console.error('Error saving script line:', error);
     showLoader(false);
     // scriptLineModalErr is what renderScriptLineModal displays; the previous
     // code set modalErr (the character modal's error slot) so save failures
     // were silently swallowed.
-    scriptLineModalErr = "Failed to save: " + error.message;
+    scriptLineModalErr = 'Failed to save: ' + error.message;
     renderScriptLineModal();
   }
 }

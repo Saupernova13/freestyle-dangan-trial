@@ -28,15 +28,19 @@ npm run preview  # serve the build locally
 
 ## Development workflow
 
-| Command                | Purpose                              |
-| ---------------------- | ------------------------------------ |
-| `npm run dev`          | Dev server with hot reload           |
-| `npm test`             | Run unit tests (Vitest)              |
-| `npm run lint`         | Lint all source (ESLint)             |
-| `npm run format`       | Format source (Prettier)             |
-| `npm run build`        | Production build to `dist/`          |
+| Command                | Purpose                                            |
+| ---------------------- | -------------------------------------------------- |
+| `npm run dev`          | Dev server with hot reload                         |
+| `npm test`             | Run unit tests (Vitest)                            |
+| `npm run lint`         | Lint all source (ESLint)                           |
+| `npm run format`       | Format source (Prettier)                           |
+| `npm run build`        | Production build to `dist/`                        |
+| `npm run build:single` | Self-contained single-file `dist/index.html`       |
+| `npm run check`        | Lint + tests + build (run this before a PR)        |
 
-Run `npm run lint` and `npm test` before opening a pull request.
+`npm run build:single` produces one HTML file with all JS/CSS inlined — handy
+for sharing the editor with non-technical users. If the browser refuses the
+folder picker when opened via double-click, serve it over HTTP instead.
 
 ## Architecture
 

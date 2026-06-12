@@ -210,11 +210,3 @@ export function updateExportButtonState() {
   }
 }
 
-// Update export button state when trial name changes
-document.addEventListener('DOMContentLoaded', () => {
-  const trialNameInput = document.getElementById('trialNameInput');
-  if (trialNameInput) {
-    trialNameInput.addEventListener('input', updateExportButtonState);
-  }
-});
-

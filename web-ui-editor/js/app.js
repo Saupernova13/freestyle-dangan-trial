@@ -6,6 +6,7 @@ import { updateFloatingAddButton } from './components/floatingAddButton.js';
 import { initSpriteMagnifier } from './components/spriteMagnifier.js';
 import { state } from './core/state.js';
 import { autoSaveTrial } from './core/storage.js';
+import { updateExportButtonState } from './export.js';
 import { loadSettings } from './settings.js';
 import { initializeTheme } from './ui/theme.js';
 import { escapeHtml } from './utils.js';
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Trial name input handler
   document.getElementById('trialNameInput').addEventListener('input', e => {
     state.trialName = e.target.value.trim();
+    updateExportButtonState();
     autoSaveTrial();
   });
 

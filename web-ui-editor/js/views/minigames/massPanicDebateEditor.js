@@ -8,11 +8,11 @@ import {
   saveMinigameAudioFile,
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
+import { seekAudioPreview, toggleAudioPreview } from '../../components/audioPreview.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
-import { generateId, escapeHtml, formatAudioTime } from '../../utils.js';
+import { generateId, escapeHtml } from '../../utils.js';
 import { renderMinigameDetails } from '../minigameView.js';
-const panicAudioPlayers = {};
 
 // ==================== Main Rendering ====================
 
@@ -525,16 +525,6 @@ export async function clearPanicVoiceLine(gameId, groupId, speakerKey) {
 // ==================== Audio Playback ====================
 
 export async function playPanicAudioPreview(gameId, groupId, speakerKey) {
-  const playerKey = `${gameId}_${groupId}_${speakerKey}`;
-  const player = panicAudioPlayers[playerKey];
-
-  if (player && !player.paused) {
-    player.pause();
-    player.currentTime = 0;
-    updatePanicPlayButton(groupId, speakerKey, false);
-    return;
-  }
-
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
@@ -544,83 +534,20 @@ export async function playPanicAudioPreview(gameId, groupId, speakerKey) {
   const line = group[speakerKey];
   if (!line.voiceLineFile) return;
 
-  let audioBlob = line.voiceLineBlob;
-  if (!audioBlob) {
-    audioBlob = await loadMinigameAudioFile(gameId, line.voiceLineFile);
-    if (!audioBlob) {
-      alert('Failed to load audio file');
-      return;
-    }
-    line.voiceLineBlob = audioBlob;
-  }
-
-  try {
-    const blobUrl = URL.createObjectURL(audioBlob);
-
-    if (!panicAudioPlayers[playerKey]) {
-      const audio = new Audio();
-      panicAudioPlayers[playerKey] = audio;
-
-      audio.onended = () => {
-        updatePanicPlayButton(groupId, speakerKey, false);
-        URL.revokeObjectURL(audio.src);
-      };
-
-      audio.onerror = () => {
-        alert('Audio playback error');
-        updatePanicPlayButton(groupId, speakerKey, false);
-      };
-
-      audio.ontimeupdate = () => {
-        updatePanicSeekBar(groupId, speakerKey, audio);
-      };
-
-      audio.onloadedmetadata = () => {
-        updatePanicSeekBar(groupId, speakerKey, audio);
-      };
-    }
-
-    const audio = panicAudioPlayers[playerKey];
-    audio.src = blobUrl;
-    await audio.play();
-    updatePanicPlayButton(groupId, speakerKey, true);
-  } catch (error) {
-    console.error('Error playing audio:', error);
-    alert(`Failed to play audio: ${error.message}`);
-  }
-}
-
-export function updatePanicPlayButton(groupId, speakerKey, isPlaying) {
-  const btn = document.getElementById(`panic-play-btn-${groupId}-${speakerKey}`);
-  if (btn) {
-    btn.innerHTML = isPlaying ? '⏸️ Pause' : '▶️ Play';
-  }
+  await toggleAudioPreview(`${gameId}_${groupId}_${speakerKey}`, {
+    buttonId: `panic-play-btn-${groupId}-${speakerKey}`,
+    seekBarId: `panic-audio-seek-bar-${groupId}-${speakerKey}`,
+    timeCurrentId: `panic-audio-time-current-${groupId}-${speakerKey}`,
+    timeTotalId: `panic-audio-time-total-${groupId}-${speakerKey}`,
+    getBlob: async () => {
+      if (!line.voiceLineBlob) {
+        line.voiceLineBlob = await loadMinigameAudioFile(gameId, line.voiceLineFile);
+      }
+      return line.voiceLineBlob;
+    },
+  });
 }
 
 export function seekPanicAudio(gameId, groupId, speakerKey, value) {
-  const playerKey = `${gameId}_${groupId}_${speakerKey}`;
-  const audio = panicAudioPlayers[playerKey];
-  if (audio && audio.duration) {
-    audio.currentTime = (value / 100) * audio.duration;
-  }
+  seekAudioPreview(`${gameId}_${groupId}_${speakerKey}`, value);
 }
-
-export function updatePanicSeekBar(groupId, speakerKey, audio) {
-  const seekBar = document.getElementById(`panic-audio-seek-bar-${groupId}-${speakerKey}`);
-  const currentTimeEl = document.getElementById(
-    `panic-audio-time-current-${groupId}-${speakerKey}`
-  );
-  const totalTimeEl = document.getElementById(`panic-audio-time-total-${groupId}-${speakerKey}`);
-
-  if (seekBar && currentTimeEl && totalTimeEl) {
-    const current = audio.currentTime;
-    const duration = audio.duration || 0;
-    const percent = duration > 0 ? (current / duration) * 100 : 0;
-
-    seekBar.value = percent;
-    currentTimeEl.textContent = formatAudioTime(current);
-    totalTimeEl.textContent = formatAudioTime(duration);
-  }
-}
-
-// formatAudioTime lives in js/utils.js

@@ -9,11 +9,11 @@ import {
   saveMinigameAudioFile,
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
+import { seekAudioPreview, toggleAudioPreview } from '../../components/audioPreview.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
-import { generateId, escapeHtml, formatAudioTime } from '../../utils.js';
+import { generateId, escapeHtml } from '../../utils.js';
 import { renderMinigameDetails } from '../minigameView.js';
-const dialogueAudioPlayers = {};
 
 // Drag state for dialogue lines
 let draggedDialogueLineId = null;
@@ -495,7 +495,6 @@ export function moveDialogueLineUp(gameId, lineId) {
   autoSaveTrial();
 }
 
-
 export function moveDialogueLineDown(gameId, lineId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
@@ -503,7 +502,6 @@ export function moveDialogueLineDown(gameId, lineId) {
   renderMinigameDetails();
   autoSaveTrial();
 }
-
 
 // ==================== Drag-and-Drop for Dialogue Lines ====================
 
@@ -529,12 +527,16 @@ export function handleDialogueDropInGap(event, gameId, insertPosition) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !draggedDialogueLineId) return;
 
-  const changed = dropAtGap(mg.typeSpecific.dialogueLines, 'lineId', [draggedDialogueLineId], insertPosition);
+  const changed = dropAtGap(
+    mg.typeSpecific.dialogueLines,
+    'lineId',
+    [draggedDialogueLineId],
+    insertPosition
+  );
   draggedDialogueLineId = null;
   renderMinigameDetails();
   if (changed) autoSaveTrial();
 }
-
 
 export function handleDialogueGapDragOver(event) {
   event.preventDefault();
@@ -574,7 +576,6 @@ export async function handleDialogueVoiceUpload(gameId, lineId, event) {
   }
 }
 
-
 export async function clearDialogueVoiceLine(gameId, lineId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
@@ -590,106 +591,29 @@ export async function clearDialogueVoiceLine(gameId, lineId) {
   autoSaveTrial();
 }
 
-
 // ==================== Audio Playback ====================
 
-
-
 export async function playDialogueAudioPreview(gameId, lineId) {
-  const playerKey = `${gameId}_${lineId}`;
-  const player = dialogueAudioPlayers[playerKey];
-
-  // Toggle pause if already playing
-  if (player && !player.paused) {
-    player.pause();
-    player.currentTime = 0;
-    updateDialoguePlayButton(lineId, false);
-    return;
-  }
-
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);
   if (!line || !line.voiceLineFile) return;
 
-  // Load audio from disk if needed
-  let audioBlob = line.voiceLineBlob;
-  if (!audioBlob) {
-    audioBlob = await loadMinigameAudioFile(gameId, line.voiceLineFile);
-    if (!audioBlob) {
-      alert('Failed to load audio file');
-      return;
-    }
-    line.voiceLineBlob = audioBlob;
-  }
-
-  try {
-    const blobUrl = URL.createObjectURL(audioBlob);
-
-    // Create or reuse audio element
-    if (!dialogueAudioPlayers[playerKey]) {
-      const audio = new Audio();
-      dialogueAudioPlayers[playerKey] = audio;
-
-      audio.onended = () => {
-        updateDialoguePlayButton(lineId, false);
-        URL.revokeObjectURL(audio.src);
-      };
-
-      audio.onerror = () => {
-        alert('Audio playback error');
-        updateDialoguePlayButton(lineId, false);
-      };
-
-      audio.ontimeupdate = () => {
-        updateDialogueSeekBar(lineId, audio);
-      };
-
-      audio.onloadedmetadata = () => {
-        updateDialogueSeekBar(lineId, audio);
-      };
-    }
-
-    const audio = dialogueAudioPlayers[playerKey];
-    audio.src = blobUrl;
-    await audio.play();
-    updateDialoguePlayButton(lineId, true);
-  } catch (error) {
-    console.error('Error playing audio:', error);
-    alert(`Failed to play audio: ${error.message}`);
-  }
-}
-
-export function updateDialoguePlayButton(lineId, isPlaying) {
-  const btn = document.getElementById(`dialogue-play-btn-${lineId}`);
-  if (btn) {
-    btn.innerHTML = isPlaying ? '⏸️ Pause' : '▶️ Play';
-  }
+  await toggleAudioPreview(`${gameId}_${lineId}`, {
+    buttonId: `dialogue-play-btn-${lineId}`,
+    seekBarId: `dialogue-audio-seek-bar-${lineId}`,
+    timeCurrentId: `dialogue-audio-time-current-${lineId}`,
+    timeTotalId: `dialogue-audio-time-total-${lineId}`,
+    getBlob: async () => {
+      if (!line.voiceLineBlob) {
+        line.voiceLineBlob = await loadMinigameAudioFile(gameId, line.voiceLineFile);
+      }
+      return line.voiceLineBlob;
+    },
+  });
 }
 
 export function seekDialogueAudio(gameId, lineId, value) {
-  const playerKey = `${gameId}_${lineId}`;
-  const audio = dialogueAudioPlayers[playerKey];
-  if (audio && audio.duration) {
-    audio.currentTime = (value / 100) * audio.duration;
-  }
+  seekAudioPreview(`${gameId}_${lineId}`, value);
 }
-
-export function updateDialogueSeekBar(lineId, audio) {
-  const seekBar = document.getElementById(`dialogue-audio-seek-bar-${lineId}`);
-  const currentTimeEl = document.getElementById(`dialogue-audio-time-current-${lineId}`);
-  const totalTimeEl = document.getElementById(`dialogue-audio-time-total-${lineId}`);
-
-  if (seekBar && currentTimeEl && totalTimeEl) {
-    const current = audio.currentTime;
-    const duration = audio.duration || 0;
-    const percent = duration > 0 ? (current / duration) * 100 : 0;
-
-    seekBar.value = percent;
-    currentTimeEl.textContent = formatAudioTime(current);
-    totalTimeEl.textContent = formatAudioTime(duration);
-  }
-}
-
-// formatAudioTime lives in js/utils.js

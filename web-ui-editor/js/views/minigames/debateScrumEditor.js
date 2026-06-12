@@ -9,14 +9,12 @@ import {
   saveMinigameAudioFile,
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
+import { toggleAudioPreview } from '../../components/audioPreview.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { renderMinigameDetails } from '../minigameView.js';
 let draggedArgumentId = null;
-
-// Audio players state
-const debateScumAudioPlayers = {};
 
 // ==================== Main Rendering ====================
 
@@ -339,7 +337,6 @@ export function moveArgumentUp(gameId, argumentId) {
   autoSaveTrial();
 }
 
-
 export function moveArgumentDown(gameId, argumentId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
@@ -347,7 +344,6 @@ export function moveArgumentDown(gameId, argumentId) {
   renderMinigameDetails();
   autoSaveTrial();
 }
-
 
 // ==================== Drag-and-Drop for Arguments ====================
 
@@ -372,12 +368,16 @@ export function handleArgumentDropInGap(event, gameId, insertPosition) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !draggedArgumentId) return;
 
-  const changed = dropAtGap(mg.typeSpecific.arguments, 'argumentId', [draggedArgumentId], insertPosition);
+  const changed = dropAtGap(
+    mg.typeSpecific.arguments,
+    'argumentId',
+    [draggedArgumentId],
+    insertPosition
+  );
   draggedArgumentId = null;
   renderMinigameDetails();
   if (changed) autoSaveTrial();
 }
-
 
 export function handleArgumentGapDragOver(event) {
   event.preventDefault();
@@ -451,76 +451,25 @@ export async function clearDebateScumAudio(gameId, argumentId, side) {
 // ==================== Audio Playback ====================
 
 export async function playDebateScumAudio(gameId, argumentId, side) {
-  const playerKey = `${gameId}_${argumentId}_${side}`;
-  const player = debateScumAudioPlayers[playerKey];
-
-  // Toggle pause if already playing
-  if (player && !player.paused) {
-    player.pause();
-    player.currentTime = 0;
-    updateDebateScumPlayButton(argumentId, side, false);
-    return;
-  }
-
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
 
   const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
   if (!arg) return;
 
-  // Get audio file and blob
   const audioFile = side === 'opposition' ? arg.oppositionAudioFile : arg.defenseAudioFile;
-  let audioBlob = side === 'opposition' ? arg.oppositionAudioBlob : arg.defenseAudioBlob;
-
   if (!audioFile) return;
 
-  // Load audio from disk if needed
-  if (!audioBlob) {
-    audioBlob = await loadMinigameAudioFile(gameId, audioFile);
-    if (!audioBlob) {
-      alert('Failed to load audio file');
-      return;
-    }
-    // Store blob for future use
-    if (side === 'opposition') {
-      arg.oppositionAudioBlob = audioBlob;
-    } else {
-      arg.defenseAudioBlob = audioBlob;
-    }
-  }
-
-  try {
-    const blobUrl = URL.createObjectURL(audioBlob);
-
-    // Create or reuse audio element
-    if (!debateScumAudioPlayers[playerKey]) {
-      const audio = new Audio();
-      debateScumAudioPlayers[playerKey] = audio;
-
-      audio.onended = () => {
-        updateDebateScumPlayButton(argumentId, side, false);
-        URL.revokeObjectURL(audio.src);
-      };
-
-      audio.onerror = () => {
-        alert('Audio playback error');
-        updateDebateScumPlayButton(argumentId, side, false);
-      };
-    }
-
-    const audio = debateScumAudioPlayers[playerKey];
-    audio.src = blobUrl;
-    await audio.play();
-    updateDebateScumPlayButton(argumentId, side, true);
-  } catch (error) {
-    console.error('Error playing audio:', error);
-    alert(`Failed to play audio: ${error.message}`);
-  }
-}
-
-export function updateDebateScumPlayButton(argumentId, side, isPlaying) {
-  const btn = document.getElementById(`scrum-play-btn-${argumentId}-${side}`);
-  if (btn) {
-    btn.innerHTML = isPlaying ? '⏸️ Pause' : '▶️ Play';
-  }
+  await toggleAudioPreview(`${gameId}_${argumentId}_${side}`, {
+    buttonId: `scrum-play-btn-${argumentId}-${side}`,
+    getBlob: async () => {
+      let blob = side === 'opposition' ? arg.oppositionAudioBlob : arg.defenseAudioBlob;
+      if (!blob) {
+        blob = await loadMinigameAudioFile(gameId, audioFile);
+        if (side === 'opposition') arg.oppositionAudioBlob = blob;
+        else arg.defenseAudioBlob = blob;
+      }
+      return blob;
+    },
+  });
 }

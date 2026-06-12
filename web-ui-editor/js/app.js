@@ -230,7 +230,6 @@ export function handleDropInGap(event, insertPosition) {
   autoSaveTrial();
 }
 
-
 export function handleDragEnd(event) {
   event.target.classList.remove('dragging');
   cleanupDrag();
@@ -292,13 +291,11 @@ export function moveLineUp(lineId) {
   autoSaveTrial();
 }
 
-
 export function moveLineDown(lineId) {
   if (!moveItem(state.scriptLines, 'id', lineId, 1)) return;
   renderScriptEditor();
   autoSaveTrial();
 }
-
 
 export async function changeScriptLineType(lineId, newType) {
   const line = state.scriptLines.find((l) => l.id === lineId);

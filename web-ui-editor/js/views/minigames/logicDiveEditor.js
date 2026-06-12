@@ -300,7 +300,6 @@ export function moveQuestionUp(gameId, questionId) {
   autoSaveTrial();
 }
 
-
 export function moveQuestionDown(gameId, questionId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
@@ -308,7 +307,6 @@ export function moveQuestionDown(gameId, questionId) {
   renderMinigameDetails();
   autoSaveTrial();
 }
-
 
 // ==================== Drag-and-Drop for Questions ====================
 
@@ -333,12 +331,16 @@ export function handleQuestionDropInGap(event, gameId, insertPosition) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !draggedQuestionId) return;
 
-  const changed = dropAtGap(mg.typeSpecific.questions, 'questionId', [draggedQuestionId], insertPosition);
+  const changed = dropAtGap(
+    mg.typeSpecific.questions,
+    'questionId',
+    [draggedQuestionId],
+    insertPosition
+  );
   draggedQuestionId = null;
   renderMinigameDetails();
   if (changed) autoSaveTrial();
 }
-
 
 export function handleQuestionGapDragOver(event) {
   event.preventDefault();

@@ -1,10 +1,16 @@
 // Script Line modal for editing dialogue, audio, effects, and highlighting
+import {
+  isAudioPreviewPlaying,
+  seekAudioPreview,
+  stopAudioPreview,
+  toggleAudioPreview,
+} from '../components/audioPreview.js';
 import { renderScriptEditor } from '../app.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import { closeModal } from './modalCoordinator.js';
 import { appSettings } from '../settings.js';
-import { escapeHtml, formatAudioTime, normalizeHighlights, showLoader } from '../utils.js';
+import { escapeHtml, normalizeHighlights, showLoader } from '../utils.js';
 
 let activeLineId = null;
 let scriptLineTab = 'sprite';
@@ -35,10 +41,6 @@ let highlightingState = {
   endChar: 0,
   currentColor: '#FFFF00',
 };
-
-// Audio preview state
-let audioPreviewElement = null;
-let isAudioPlaying = false;
 
 export function getAvailableTabs(line) {
   if (line.type === 'narrator') {
@@ -341,7 +343,7 @@ export function renderAudioUploadTab(line) {
           </div>
 
           <div class="audio-controls">
-            <button class="btn btn-secondary" onclick="playAudioPreview()">${isAudioPlaying ? '⏸️ Pause' : '▶️ Play'}</button>
+            <button class="btn btn-secondary" id="audio-play-btn" onclick="playAudioPreview()">${isAudioPreviewPlaying(AUDIO_PREVIEW_KEY) ? '⏸️ Pause' : '▶️ Play'}</button>
             <button class="btn btn-secondary" onclick="clearAudio()">🗑️ Remove</button>
           </div>
         </div>
@@ -499,120 +501,30 @@ export async function loadAudioFileFromDisk(filename) {
   }
 }
 
+// Stable key for this modal's player in the shared audio preview registry.
+const AUDIO_PREVIEW_KEY = 'script-line-modal';
+
 export async function playAudioPreview() {
-  // Toggle pause if already playing
-  if (audioPreviewElement && !audioPreviewElement.paused) {
-    audioPreviewElement.pause();
-    audioPreviewElement.currentTime = 0;
-    isAudioPlaying = false;
-    updateAudioPlayButton();
-    return;
-  }
-
-  // Load audio from disk if we have filename but no blob
-  if (!scriptLineFields.audioBlob && scriptLineFields.audioFile) {
-    try {
-      const audioFile = await loadAudioFileFromDisk(scriptLineFields.audioFile);
-      if (audioFile) {
-        scriptLineFields.audioBlob = audioFile;
-      } else {
-        scriptLineModalErr = 'Failed to load audio file from disk.';
-        renderScriptLineModal();
-        return;
-      }
-    } catch (error) {
-      scriptLineModalErr = `Error loading audio: ${error.message}`;
+  await toggleAudioPreview(AUDIO_PREVIEW_KEY, {
+    buttonId: 'audio-play-btn',
+    seekBarId: 'audio-seek-bar',
+    timeCurrentId: 'audio-time-current',
+    timeTotalId: 'audio-time-total',
+    onError: (msg) => {
+      scriptLineModalErr = msg;
       renderScriptLineModal();
-      return;
-    }
-  }
-
-  if (!scriptLineFields.audioBlob) {
-    scriptLineModalErr = 'No audio file to play.';
-    renderScriptLineModal();
-    return;
-  }
-
-  try {
-    // Create blob URL for preview
-    const blobUrl = URL.createObjectURL(scriptLineFields.audioBlob);
-
-    // Create or reuse audio element
-    if (!audioPreviewElement) {
-      audioPreviewElement = new Audio();
-
-      // Event handlers
-      audioPreviewElement.onended = () => {
-        isAudioPlaying = false;
-        URL.revokeObjectURL(audioPreviewElement.src);
-        updateAudioPlayButton();
-      };
-
-      audioPreviewElement.onerror = (e) => {
-        isAudioPlaying = false;
-        scriptLineModalErr = `Audio playback error: ${audioPreviewElement.error.message}`;
-        renderScriptLineModal();
-      };
-
-      audioPreviewElement.ontimeupdate = () => {
-        updateAudioSeekBar();
-      };
-
-      audioPreviewElement.onloadedmetadata = () => {
-        updateAudioSeekBar();
-      };
-    }
-
-    audioPreviewElement.src = blobUrl;
-    audioPreviewElement
-      .play()
-      .then(() => {
-        isAudioPlaying = true;
-        updateAudioPlayButton();
-        updateAudioSeekBar();
-      })
-      .catch((err) => {
-        isAudioPlaying = false;
-        scriptLineModalErr = `Failed to play audio: ${err.message}`;
-        renderScriptLineModal();
-      });
-  } catch (error) {
-    scriptLineModalErr = `Error playing audio: ${error.message}`;
-    renderScriptLineModal();
-  }
-}
-
-// Update only the play button without full re-render
-export function updateAudioPlayButton() {
-  const playButton = document.querySelector('.audio-controls .btn-secondary');
-  if (playButton) {
-    playButton.innerHTML = isAudioPlaying ? '⏸️ Pause' : '▶️ Play';
-  }
+    },
+    getBlob: async () => {
+      if (!scriptLineFields.audioBlob && scriptLineFields.audioFile) {
+        scriptLineFields.audioBlob = await loadAudioFileFromDisk(scriptLineFields.audioFile);
+      }
+      return scriptLineFields.audioBlob;
+    },
+  });
 }
 
 export function seekAudio(value) {
-  if (audioPreviewElement) {
-    const duration = audioPreviewElement.duration;
-    audioPreviewElement.currentTime = (value / 100) * duration;
-  }
-}
-
-export function updateAudioSeekBar() {
-  if (!audioPreviewElement) return;
-
-  const seekBar = document.getElementById('audio-seek-bar');
-  const currentTimeEl = document.getElementById('audio-time-current');
-  const totalTimeEl = document.getElementById('audio-time-total');
-
-  if (seekBar && currentTimeEl && totalTimeEl) {
-    const current = audioPreviewElement.currentTime;
-    const duration = audioPreviewElement.duration || 0;
-    const percent = duration > 0 ? (current / duration) * 100 : 0;
-
-    seekBar.value = percent;
-    currentTimeEl.textContent = formatAudioTime(current);
-    totalTimeEl.textContent = formatAudioTime(duration);
-  }
+  seekAudioPreview(AUDIO_PREVIEW_KEY, value);
 }
 
 export function renderCameraMotionTab(line) {
@@ -1248,16 +1160,7 @@ export function removeHighlight(index) {
 
 // Close script line modal
 export function closeScriptLineModal() {
-  // Stop and cleanup audio if playing
-  if (audioPreviewElement) {
-    audioPreviewElement.pause();
-    if (audioPreviewElement.src) {
-      URL.revokeObjectURL(audioPreviewElement.src);
-    }
-    audioPreviewElement = null;
-    isAudioPlaying = false;
-  }
-
+  stopAudioPreview(AUDIO_PREVIEW_KEY);
   document.getElementById('modalroot').innerHTML = '';
   activeLineId = null;
 }

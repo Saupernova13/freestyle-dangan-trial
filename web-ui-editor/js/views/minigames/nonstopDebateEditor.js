@@ -2,6 +2,7 @@
 // Handles Truth Bullet selection and dialogue line configuration
 
 // Audio players state
+import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml, formatAudioTime } from '../../utils.js';
@@ -472,11 +473,7 @@ export function deleteDialogueLine(gameId, lineId) {
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.dialogueLines) return;
 
   mg.typeSpecific.dialogueLines = mg.typeSpecific.dialogueLines.filter((l) => l.lineId !== lineId);
-
-  // Re-index orders
-  mg.typeSpecific.dialogueLines.forEach((line, index) => {
-    line.order = index;
-  });
+  reindexOrder(mg.typeSpecific.dialogueLines);
 
   renderMinigameDetails();
   autoSaveTrial();
@@ -487,44 +484,20 @@ export function deleteDialogueLine(gameId, lineId) {
 export function moveDialogueLineUp(gameId, lineId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
-
-  const lines = mg.typeSpecific.dialogueLines;
-  const currentIndex = lines.findIndex((l) => l.lineId === lineId);
-
-  if (currentIndex <= 0) return; // Already at top
-
-  // Swap with previous line
-  [lines[currentIndex], lines[currentIndex - 1]] = [lines[currentIndex - 1], lines[currentIndex]];
-
-  // Update order fields
-  lines.forEach((line, index) => {
-    line.order = index;
-  });
-
+  if (!moveItem(mg.typeSpecific.dialogueLines, 'lineId', lineId, -1)) return;
   renderMinigameDetails();
   autoSaveTrial();
 }
+
 
 export function moveDialogueLineDown(gameId, lineId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
-
-  const lines = mg.typeSpecific.dialogueLines;
-  const currentIndex = lines.findIndex((l) => l.lineId === lineId);
-
-  if (currentIndex === -1 || currentIndex >= lines.length - 1) return;
-
-  // Swap with next line
-  [lines[currentIndex], lines[currentIndex + 1]] = [lines[currentIndex + 1], lines[currentIndex]];
-
-  // Update order fields
-  lines.forEach((line, index) => {
-    line.order = index;
-  });
-
+  if (!moveItem(mg.typeSpecific.dialogueLines, 'lineId', lineId, 1)) return;
   renderMinigameDetails();
   autoSaveTrial();
 }
+
 
 // ==================== Drag-and-Drop for Dialogue Lines ====================
 
@@ -550,38 +523,12 @@ export function handleDialogueDropInGap(event, gameId, insertPosition) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !draggedDialogueLineId) return;
 
-  const lines = mg.typeSpecific.dialogueLines;
-  const draggedIndex = lines.findIndex((l) => l.lineId === draggedDialogueLineId);
-
-  if (draggedIndex === -1) return;
-  if (insertPosition === draggedIndex || insertPosition === draggedIndex + 1) {
-    // Dropping in same position - no-op
-    draggedDialogueLineId = null;
-    renderMinigameDetails();
-    return;
-  }
-
-  // Remove from old position
-  const [draggedLine] = lines.splice(draggedIndex, 1);
-
-  // Adjust insert position
-  let adjustedPosition = insertPosition;
-  if (draggedIndex < insertPosition) {
-    adjustedPosition--;
-  }
-
-  // Insert at new position
-  lines.splice(adjustedPosition, 0, draggedLine);
-
-  // Update order field for all lines
-  lines.forEach((line, index) => {
-    line.order = index;
-  });
-
+  const changed = dropAtGap(mg.typeSpecific.dialogueLines, 'lineId', [draggedDialogueLineId], insertPosition);
   draggedDialogueLineId = null;
   renderMinigameDetails();
-  autoSaveTrial();
+  if (changed) autoSaveTrial();
 }
+
 
 export function handleDialogueGapDragOver(event) {
   event.preventDefault();

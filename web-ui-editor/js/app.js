@@ -4,6 +4,7 @@
 // Searchable dropdown state
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
 import { initSpriteMagnifier } from './components/spriteMagnifier.js';
+import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
 import { state } from './core/state.js';
 import { autoSaveTrial, scheduleAutoSave } from './core/storage.js';
 import { updateExportButtonState } from './export.js';
@@ -205,53 +206,11 @@ export function handleDropInGap(event, insertPosition) {
   event.preventDefault();
   event.stopPropagation();
 
-  // Get the lines being dragged
-  const draggedLines = state.draggedLineIds
-    .map((id) => state.scriptLines.find((l) => l.id === id))
-    .filter(Boolean);
-
-  if (draggedLines.length === 0) {
+  const changed = dropAtGap(state.scriptLines, 'id', state.draggedLineIds, insertPosition);
+  if (!changed) {
     cleanupDrag();
     return;
   }
-
-  // Calculate the indices of dragged lines
-  const draggedIndices = state.draggedLineIds
-    .map((id) => state.scriptLines.findIndex((l) => l.id === id))
-    .filter((idx) => idx !== -1)
-    .sort((a, b) => a - b); // Sort ascending for position calculation
-
-  // Check if we're dropping in the same position (no-op)
-  // The dragged block starts at draggedIndices[0] and ends at draggedIndices[draggedIndices.length - 1]
-  if (
-    insertPosition >= draggedIndices[0] &&
-    insertPosition <= draggedIndices[draggedIndices.length - 1] + 1
-  ) {
-    cleanupDrag();
-    return;
-  }
-
-  // Remove dragged lines from array (in reverse order to preserve indices)
-  const draggedIndicesSorted = [...draggedIndices].sort((a, b) => b - a);
-  draggedIndicesSorted.forEach((idx) => {
-    state.scriptLines.splice(idx, 1);
-  });
-
-  // Adjust insert position based on how many lines were removed before it
-  let adjustedPosition = insertPosition;
-  for (let idx of draggedIndices) {
-    if (idx < insertPosition) {
-      adjustedPosition--;
-    }
-  }
-
-  // Insert dragged lines at the new position
-  state.scriptLines.splice(adjustedPosition, 0, ...draggedLines);
-
-  // Update order field for all lines
-  state.scriptLines.forEach((line, index) => {
-    line.order = index;
-  });
 
   // Add animation class for smooth transition
   document.querySelectorAll('.script-line-bar').forEach((el) => {
@@ -270,6 +229,7 @@ export function handleDropInGap(event, insertPosition) {
   renderScriptEditor();
   autoSaveTrial();
 }
+
 
 export function handleDragEnd(event) {
   event.target.classList.remove('dragging');
@@ -309,10 +269,7 @@ export async function deleteScriptLine(lineId) {
   await removeLineAudioFile(line);
 
   state.scriptLines = state.scriptLines.filter((l) => l.id !== lineId);
-  // Reorder remaining lines
-  state.scriptLines.forEach((l, index) => {
-    l.order = index;
-  });
+  reindexOrder(state.scriptLines);
   renderScriptEditor();
   autoSaveTrial();
 }
@@ -330,40 +287,18 @@ async function removeLineAudioFile(line) {
 }
 
 export function moveLineUp(lineId) {
-  const currentIndex = state.scriptLines.findIndex((l) => l.id === lineId);
-  if (currentIndex <= 0) return; // Already at top
-
-  // Swap with previous line
-  const temp = state.scriptLines[currentIndex];
-  state.scriptLines[currentIndex] = state.scriptLines[currentIndex - 1];
-  state.scriptLines[currentIndex - 1] = temp;
-
-  // Update order fields
-  state.scriptLines.forEach((line, index) => {
-    line.order = index;
-  });
-
+  if (!moveItem(state.scriptLines, 'id', lineId, -1)) return;
   renderScriptEditor();
   autoSaveTrial();
 }
+
 
 export function moveLineDown(lineId) {
-  const currentIndex = state.scriptLines.findIndex((l) => l.id === lineId);
-  if (currentIndex === -1 || currentIndex >= state.scriptLines.length - 1) return; // Already at bottom
-
-  // Swap with next line
-  const temp = state.scriptLines[currentIndex];
-  state.scriptLines[currentIndex] = state.scriptLines[currentIndex + 1];
-  state.scriptLines[currentIndex + 1] = temp;
-
-  // Update order fields
-  state.scriptLines.forEach((line, index) => {
-    line.order = index;
-  });
-
+  if (!moveItem(state.scriptLines, 'id', lineId, 1)) return;
   renderScriptEditor();
   autoSaveTrial();
 }
+
 
 export async function changeScriptLineType(lineId, newType) {
   const line = state.scriptLines.find((l) => l.id === lineId);

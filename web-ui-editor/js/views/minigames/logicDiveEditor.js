@@ -2,6 +2,7 @@
 // Handles question creation, answers, and drag-drop reordering
 
 // Drag state for questions
+import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
@@ -204,11 +205,7 @@ export function deleteLogicDiveQuestion(gameId, questionId) {
   if (!mg) return;
 
   mg.typeSpecific.questions = mg.typeSpecific.questions.filter((q) => q.questionId !== questionId);
-
-  // Re-index order
-  mg.typeSpecific.questions.forEach((q, index) => {
-    q.order = index;
-  });
+  reindexOrder(mg.typeSpecific.questions);
 
   renderMinigameDetails();
   autoSaveTrial();
@@ -298,46 +295,20 @@ export function setCorrectAnswer(gameId, questionId, answerId) {
 export function moveQuestionUp(gameId, questionId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
-
-  const questions = mg.typeSpecific.questions;
-  const currentIndex = questions.findIndex((q) => q.questionId === questionId);
-
-  if (currentIndex <= 0) return;
-
-  [questions[currentIndex], questions[currentIndex - 1]] = [
-    questions[currentIndex - 1],
-    questions[currentIndex],
-  ];
-
-  questions.forEach((q, index) => {
-    q.order = index;
-  });
-
+  if (!moveItem(mg.typeSpecific.questions, 'questionId', questionId, -1)) return;
   renderMinigameDetails();
   autoSaveTrial();
 }
+
 
 export function moveQuestionDown(gameId, questionId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
-
-  const questions = mg.typeSpecific.questions;
-  const currentIndex = questions.findIndex((q) => q.questionId === questionId);
-
-  if (currentIndex === -1 || currentIndex >= questions.length - 1) return;
-
-  [questions[currentIndex], questions[currentIndex + 1]] = [
-    questions[currentIndex + 1],
-    questions[currentIndex],
-  ];
-
-  questions.forEach((q, index) => {
-    q.order = index;
-  });
-
+  if (!moveItem(mg.typeSpecific.questions, 'questionId', questionId, 1)) return;
   renderMinigameDetails();
   autoSaveTrial();
 }
+
 
 // ==================== Drag-and-Drop for Questions ====================
 
@@ -362,33 +333,12 @@ export function handleQuestionDropInGap(event, gameId, insertPosition) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !draggedQuestionId) return;
 
-  const questions = mg.typeSpecific.questions;
-  const draggedIndex = questions.findIndex((q) => q.questionId === draggedQuestionId);
-
-  if (draggedIndex === -1) return;
-  if (insertPosition === draggedIndex || insertPosition === draggedIndex + 1) {
-    draggedQuestionId = null;
-    renderMinigameDetails();
-    return;
-  }
-
-  const [draggedQuestion] = questions.splice(draggedIndex, 1);
-
-  let adjustedPosition = insertPosition;
-  if (draggedIndex < insertPosition) {
-    adjustedPosition--;
-  }
-
-  questions.splice(adjustedPosition, 0, draggedQuestion);
-
-  questions.forEach((q, index) => {
-    q.order = index;
-  });
-
+  const changed = dropAtGap(mg.typeSpecific.questions, 'questionId', [draggedQuestionId], insertPosition);
   draggedQuestionId = null;
   renderMinigameDetails();
-  autoSaveTrial();
+  if (changed) autoSaveTrial();
 }
+
 
 export function handleQuestionGapDragOver(event) {
   event.preventDefault();

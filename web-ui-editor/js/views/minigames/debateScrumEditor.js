@@ -2,6 +2,7 @@
 // Handles paired opposition/defense arguments with audio and keywords
 
 // Drag state for arguments
+import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
@@ -283,11 +284,7 @@ export function deleteDebateScumArgument(gameId, argumentId) {
   if (!mg) return;
 
   mg.typeSpecific.arguments = mg.typeSpecific.arguments.filter((a) => a.argumentId !== argumentId);
-
-  // Re-index order
-  mg.typeSpecific.arguments.forEach((a, index) => {
-    a.order = index;
-  });
+  reindexOrder(mg.typeSpecific.arguments);
 
   renderMinigameDetails();
   autoSaveTrial();
@@ -331,36 +328,20 @@ export function updateDebateScumArgumentKeywords(gameId, argumentId, side, value
 export function moveArgumentUp(gameId, argumentId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
-
-  const args = mg.typeSpecific.arguments;
-  const currentIndex = args.findIndex((a) => a.argumentId === argumentId);
-  if (currentIndex <= 0) return;
-
-  [args[currentIndex], args[currentIndex - 1]] = [args[currentIndex - 1], args[currentIndex]];
-  args.forEach((a, index) => {
-    a.order = index;
-  });
-
+  if (!moveItem(mg.typeSpecific.arguments, 'argumentId', argumentId, -1)) return;
   renderMinigameDetails();
   autoSaveTrial();
 }
+
 
 export function moveArgumentDown(gameId, argumentId) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg) return;
-
-  const args = mg.typeSpecific.arguments;
-  const currentIndex = args.findIndex((a) => a.argumentId === argumentId);
-  if (currentIndex === -1 || currentIndex >= args.length - 1) return;
-
-  [args[currentIndex], args[currentIndex + 1]] = [args[currentIndex + 1], args[currentIndex]];
-  args.forEach((a, index) => {
-    a.order = index;
-  });
-
+  if (!moveItem(mg.typeSpecific.arguments, 'argumentId', argumentId, 1)) return;
   renderMinigameDetails();
   autoSaveTrial();
 }
+
 
 // ==================== Drag-and-Drop for Arguments ====================
 
@@ -385,29 +366,12 @@ export function handleArgumentDropInGap(event, gameId, insertPosition) {
   const mg = state.minigames.find((m) => m.gameId === gameId);
   if (!mg || !draggedArgumentId) return;
 
-  const args = mg.typeSpecific.arguments;
-  const draggedIndex = args.findIndex((a) => a.argumentId === draggedArgumentId);
-
-  if (draggedIndex === -1) return;
-  if (insertPosition === draggedIndex || insertPosition === draggedIndex + 1) {
-    draggedArgumentId = null;
-    renderMinigameDetails();
-    return;
-  }
-
-  const [draggedArg] = args.splice(draggedIndex, 1);
-  let adjustedPosition = insertPosition;
-  if (draggedIndex < insertPosition) adjustedPosition--;
-
-  args.splice(adjustedPosition, 0, draggedArg);
-  args.forEach((a, index) => {
-    a.order = index;
-  });
-
+  const changed = dropAtGap(mg.typeSpecific.arguments, 'argumentId', [draggedArgumentId], insertPosition);
   draggedArgumentId = null;
   renderMinigameDetails();
-  autoSaveTrial();
+  if (changed) autoSaveTrial();
 }
+
 
 export function handleArgumentGapDragOver(event) {
   event.preventDefault();

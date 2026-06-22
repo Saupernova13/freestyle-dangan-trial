@@ -12,6 +12,14 @@ import { closeModal } from './modalCoordinator.js';
 import { appSettings } from '../settings.js';
 import { escapeHtml, normalizeHighlights, showLoader } from '../utils.js';
 
+// ==================== Constants ====================
+const AUDIO_PREVIEW_KEY = 'script-line-modal';
+const DEFAULT_HIGHLIGHT_COLOR = '#FFFF00';
+const DEFAULT_CAMERA_MOTION = { type: 'none', duration: 1.0, easing: 'ease-in-out' };
+const DEFAULT_DIALOGUE_BOX_STYLE = { style: 'default', borderColor: '#FFFFFF', bgOpacity: 0.9, borderThickness: 2 };
+const COLOR_REGEX = /^#[0-9a-fA-F]{6}$/i;
+
+// ==================== Module State ====================
 let activeLineId = null;
 let scriptLineTab = 'sprite';
 let scriptLineModalErr = '';
@@ -21,28 +29,19 @@ let scriptLineFields = {
   audioFile: null,
   audioBlob: null,
   highlights: [],
-  cameraMotion: {
-    type: 'none',
-    duration: 1.0,
-    easing: 'ease-in-out',
-  },
-  specialEffects: {
-    effects: [],
-  },
-  dialogueBoxStyle: {
-    style: 'default',
-    borderColor: '#FFFFFF',
-    bgOpacity: 0.9,
-    borderThickness: 2,
-  },
+  cameraMotion: { ...DEFAULT_CAMERA_MOTION },
+  specialEffects: { effects: [] },
+  dialogueBoxStyle: { ...DEFAULT_DIALOGUE_BOX_STYLE },
 };
 let highlightingState = {
   startChar: 0,
   endChar: 0,
-  currentColor: '#FFFF00',
+  currentColor: DEFAULT_HIGHLIGHT_COLOR,
 };
 
+/** Get available tabs for a script line based on its type */
 export function getAvailableTabs(line) {
+  if (!line || typeof line !== 'object') return [];
   if (line.type === 'narrator') {
     return ['audio', 'dialogueBox', 'highlighting', 'specialEffects'];
   } else if (line.type === 'speaking') {
@@ -51,9 +50,19 @@ export function getAvailableTabs(line) {
   return [];
 }
 
+/**
+ * Open the script line editor modal for a given line ID.
+ * Loads all related data (sprites, audio, etc.) and initializes the modal state.
+ * @param {string} lineId - The ID of the script line to edit
+ */
 export async function openScriptLineModal(lineId) {
   if (!state.dirHandle) {
     alert('Choose a folder first!');
+    return;
+  }
+
+  if (!lineId || typeof lineId !== 'string') {
+    alert('Invalid script line ID');
     return;
   }
 
@@ -63,7 +72,7 @@ export async function openScriptLineModal(lineId) {
 
   // Find the script line
   const line = state.scriptLines.find((l) => l.id === lineId);
-  if (!line) {
+  if (!line || typeof line !== 'object') {
     alert('Script line not found!');
     return;
   }
@@ -168,7 +177,7 @@ export function renderScriptLineModal() {
               ? `
             <div class="dr-tab ${scriptLineTab === 'sprite' ? 'active' : ''}"
                  onclick="switchScriptLineTab('sprite')">
-              🎭 Sprite
+              ${window.icon('sprite')} Sprite
             </div>
           `
               : ''
@@ -179,7 +188,7 @@ export function renderScriptLineModal() {
               ? `
             <div class="dr-tab ${scriptLineTab === 'audio' ? 'active' : ''}"
                  onclick="switchScriptLineTab('audio')">
-              🔊 Audio
+              ${window.icon('volume')} Audio
             </div>
           `
               : ''
@@ -190,7 +199,7 @@ export function renderScriptLineModal() {
               ? `
             <div class="dr-tab ${scriptLineTab === 'dialogueBox' ? 'active' : ''}"
                  onclick="switchScriptLineTab('dialogueBox')">
-              💬 Box Style
+              ${window.icon('message')} Box Style
             </div>
           `
               : ''
@@ -201,7 +210,7 @@ export function renderScriptLineModal() {
               ? `
             <div class="dr-tab ${scriptLineTab === 'highlighting' ? 'active' : ''}"
                  onclick="switchScriptLineTab('highlighting')">
-              🖍️ Highlighting
+              ${window.icon('highlight')} Highlighting
             </div>
           `
               : ''
@@ -212,7 +221,7 @@ export function renderScriptLineModal() {
               ? `
             <div class="dr-tab ${scriptLineTab === 'cameraMotion' ? 'active' : ''}"
                  onclick="switchScriptLineTab('cameraMotion')">
-              📹 Camera
+              ${window.icon('camera')} Camera
             </div>
           `
               : ''
@@ -223,7 +232,7 @@ export function renderScriptLineModal() {
               ? `
             <div class="dr-tab ${scriptLineTab === 'specialEffects' ? 'active' : ''}"
                  onclick="switchScriptLineTab('specialEffects')">
-              ✨ Effects
+              ${window.icon('sparkles')} Effects
             </div>
           `
               : ''
@@ -287,7 +296,7 @@ export function renderSpriteSelectionTab(character) {
            onclick="selectSprite(${idx + 1})"
            title="Sprite ${idx + 1}">
         <img src="${spr.dataURL}" alt="Sprite ${idx + 1}">
-        ${isSelected ? '<div class="sprite-check">✓</div>' : ''}
+        ${isSelected ? `<div class="sprite-check">${window.icon('check', { size: 16 })}</div>` : ''}
       </div>
     `;
     })
@@ -307,7 +316,17 @@ export function renderSpriteSelectionTab(character) {
 }
 
 export function selectSprite(index) {
-  scriptLineFields.spriteIndex = index;
+  const spriteIndex = parseInt(index, 10);
+
+  // Validate sprite index is a valid positive integer
+  if (!Number.isFinite(spriteIndex) || spriteIndex < 1) {
+    scriptLineModalErr = 'Invalid sprite selection';
+    renderScriptLineModal();
+    return;
+  }
+
+  scriptLineFields.spriteIndex = spriteIndex;
+  scriptLineModalErr = '';
   renderScriptLineModal();
 }
 
@@ -326,8 +345,8 @@ export function renderAudioUploadTab(line) {
           ? `
         <div class="audio-preview">
           <div class="audio-info">
-            <span class="audio-icon">🎵</span>
-            <span class="audio-filename">${scriptLineFields.audioFile || 'audio.mp3'}</span>
+            <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
+            <span class="audio-filename">${escapeHtml(scriptLineFields.audioFile || 'audio.mp3')}</span>
           </div>
 
           <div class="audio-seek-container">
@@ -343,8 +362,8 @@ export function renderAudioUploadTab(line) {
           </div>
 
           <div class="audio-controls">
-            <button class="btn btn-secondary" id="audio-play-btn" onclick="playAudioPreview()">${isAudioPreviewPlaying(AUDIO_PREVIEW_KEY) ? '⏸️ Pause' : '▶️ Play'}</button>
-            <button class="btn btn-secondary" onclick="clearAudio()">🗑️ Remove</button>
+            <button class="btn btn-secondary" id="audio-play-btn" onclick="playAudioPreview()">${isAudioPreviewPlaying(AUDIO_PREVIEW_KEY) ? `${window.icon('pause')} Pause` : `${window.icon('play')} Play`}</button>
+            <button class="btn btn-secondary" onclick="clearAudio()">${window.icon('trash')} Remove</button>
           </div>
         </div>
       `
@@ -358,7 +377,7 @@ export function renderAudioUploadTab(line) {
       <input type="file" accept="audio/*" id="audioFileInput"
              onchange="handleAudioUpload(event)" style="display: none;">
       <button class="btn btn-primary" onclick="triggerAudioInput()">
-        📁 ${hasAudio ? 'Replace' : 'Upload'} Audio
+        ${window.icon('upload')} ${hasAudio ? 'Replace' : 'Upload'} Audio
       </button>
     </div>
   `;
@@ -374,7 +393,15 @@ export function handleAudioUpload(event) {
 
   // Validate file type
   if (!file.type.startsWith('audio/')) {
-    scriptLineModalErr = 'Please select a valid audio file.';
+    scriptLineModalErr = 'Please select a valid audio file (mp3, wav, ogg, etc.)';
+    renderScriptLineModal();
+    return;
+  }
+
+  // Validate file size (max 50MB)
+  const MAX_AUDIO_SIZE = 50 * 1024 * 1024;
+  if (file.size > MAX_AUDIO_SIZE) {
+    scriptLineModalErr = `Audio file is too large. Maximum size is ${MAX_AUDIO_SIZE / (1024 * 1024)}MB.`;
     renderScriptLineModal();
     return;
   }
@@ -382,6 +409,7 @@ export function handleAudioUpload(event) {
   scriptLineFields.audioFile = file.name;
   scriptLineFields.audioBlob = file;
   scriptLineModalErr = '';
+  scriptLineModalMsg = `Loaded audio: ${escapeHtml(file.name)} (${(file.size / 1024).toFixed(2)} KB)`;
   renderScriptLineModal();
 }
 
@@ -423,7 +451,7 @@ export function renderDialogueBoxTab(line) {
       </p>
 
       <div class="dialoguebox-preview-box">
-        <div class="dialoguebox-preview-icon">💬</div>
+        <div class="dialoguebox-preview-icon">${window.icon('message', { size: 28 })}</div>
         <div class="dialoguebox-preview-text">
           <strong>${selectedStyle ? selectedStyle.label : 'Default'}</strong>
           <p>${selectedStyle ? selectedStyle.desc : 'Standard rectangular box'}</p>
@@ -479,6 +507,34 @@ export function renderDialogueBoxTab(line) {
 }
 
 export function updateDialogueBoxStyle(field, value) {
+  // Validate color input if it's a border color
+  if (field === 'borderColor' && !COLOR_REGEX.test(value)) {
+    scriptLineModalErr = 'Border color must be a valid hex color (e.g., #FFFFFF)';
+    renderScriptLineModal();
+    return;
+  }
+
+  // Validate opacity is between 0 and 1
+  if (field === 'bgOpacity') {
+    const opacity = parseFloat(value);
+    if (isNaN(opacity) || opacity < 0 || opacity > 1) {
+      scriptLineModalErr = 'Opacity must be between 0 and 1';
+      renderScriptLineModal();
+      return;
+    }
+  }
+
+  // Validate border thickness
+  if (field === 'borderThickness') {
+    const thickness = parseInt(value, 10);
+    if (isNaN(thickness) || thickness < 0 || thickness > 10) {
+      scriptLineModalErr = 'Border thickness must be between 0 and 10 pixels';
+      renderScriptLineModal();
+      return;
+    }
+  }
+
+  scriptLineModalErr = '';
   scriptLineFields.dialogueBoxStyle[field] = value;
 
   // Update only the dialogue box tab content
@@ -500,9 +556,6 @@ export async function loadAudioFileFromDisk(filename) {
     return null;
   }
 }
-
-// Stable key for this modal's player in the shared audio preview registry.
-const AUDIO_PREVIEW_KEY = 'script-line-modal';
 
 export async function playAudioPreview() {
   await toggleAudioPreview(AUDIO_PREVIEW_KEY, {
@@ -599,7 +652,7 @@ export function renderCameraMotionTab(line) {
       </p>
 
       <div class="camera-preview-box">
-        <div class="camera-preview-icon">📹</div>
+        <div class="camera-preview-icon">${window.icon('camera', { size: 28 })}</div>
         <div class="camera-preview-text">
           <strong>${selectedType ? selectedType.label : 'None'}</strong>
           <p>${selectedType ? selectedType.desc : 'No camera movement'}</p>
@@ -640,6 +693,17 @@ export function renderCameraMotionTab(line) {
 }
 
 export function updateCameraMotion(field, value) {
+  // Validate duration is positive
+  if (field === 'duration') {
+    const duration = parseFloat(value);
+    if (isNaN(duration) || duration < 0.1 || duration > 10) {
+      scriptLineModalErr = 'Duration must be between 0.1 and 10 seconds';
+      renderScriptLineModal();
+      return;
+    }
+  }
+
+  scriptLineModalErr = '';
   scriptLineFields.cameraMotion[field] = value;
 
   // Update only the camera tab content
@@ -653,25 +717,26 @@ export function updateCameraMotion(field, value) {
 export function renderSpecialEffectsTab(line) {
   const effects = scriptLineFields.specialEffects.effects;
 
+  // `icon` is an icon-set name (see js/ui/icons.js), rendered via window.icon().
   const availableEffects = [
-    { type: 'shake', label: 'Screen Shake', icon: '📳', hasIntensity: true },
-    { type: 'flash', label: 'Flash', icon: '⚡', hasColor: true },
-    { type: 'pulse', label: 'Pulse', icon: '💓', hasIntensity: true },
-    { type: 'fade_black', label: 'Fade to Black', icon: '⬛' },
-    { type: 'fade_white', label: 'Fade to White', icon: '⬜' },
-    { type: 'blur', label: 'Background Blur', icon: '💨', hasIntensity: true },
-    { type: 'distortion', label: 'Distortion/Ripple', icon: '🌀', hasIntensity: true },
-    { type: 'sepia', label: 'Sepia Filter', icon: '🟫' },
-    { type: 'grayscale', label: 'Grayscale', icon: '⚫' },
-    { type: 'invert', label: 'Color Invert', icon: '🔄' },
-    { type: 'vignette', label: 'Vignette', icon: '◉', hasIntensity: true },
-    { type: 'scanlines', label: 'Scanlines', icon: '📺', hasIntensity: true },
-    { type: 'objection', label: 'Objection Overlay', icon: '❗' },
-    { type: 'blood_splatter', label: 'Blood Splatter', icon: '🩸' },
-    { type: 'evidence_popup', label: 'Evidence Popup', icon: '🔍' },
-    { type: 'glitch', label: 'Glitch', icon: '👾' },
-    { type: 'chromatic_aberration', label: 'Chromatic Aberration', icon: '🌈' },
-    { type: 'impact_frame', label: 'Impact Frame', icon: '💥' },
+    { type: 'shake', label: 'Screen Shake', icon: 'vibrate', hasIntensity: true },
+    { type: 'flash', label: 'Flash', icon: 'zap', hasColor: true },
+    { type: 'pulse', label: 'Pulse', icon: 'pulse', hasIntensity: true },
+    { type: 'fade_black', label: 'Fade to Black', icon: 'square' },
+    { type: 'fade_white', label: 'Fade to White', icon: 'square' },
+    { type: 'blur', label: 'Background Blur', icon: 'wind', hasIntensity: true },
+    { type: 'distortion', label: 'Distortion/Ripple', icon: 'swirl', hasIntensity: true },
+    { type: 'sepia', label: 'Sepia Filter', icon: 'droplet' },
+    { type: 'grayscale', label: 'Grayscale', icon: 'contrast' },
+    { type: 'invert', label: 'Color Invert', icon: 'contrast' },
+    { type: 'vignette', label: 'Vignette', icon: 'target', hasIntensity: true },
+    { type: 'scanlines', label: 'Scanlines', icon: 'tv', hasIntensity: true },
+    { type: 'objection', label: 'Objection Overlay', icon: 'alert' },
+    { type: 'blood_splatter', label: 'Blood Splatter', icon: 'droplet' },
+    { type: 'evidence_popup', label: 'Evidence Popup', icon: 'search' },
+    { type: 'glitch', label: 'Glitch', icon: 'burst' },
+    { type: 'chromatic_aberration', label: 'Chromatic Aberration', icon: 'layers' },
+    { type: 'impact_frame', label: 'Impact Frame', icon: 'burst' },
   ];
 
   // Render active effects list
@@ -680,7 +745,7 @@ export function renderSpecialEffectsTab(line) {
       const effectDef = availableEffects.find((e) => e.type === effect.type);
       return `
       <div class="effect-active-item">
-        <span class="effect-icon">${effectDef ? effectDef.icon : '✨'}</span>
+        <span class="effect-icon">${window.icon(effectDef ? effectDef.icon : 'sparkles', { size: 18 })}</span>
         <div class="effect-details">
           <strong>${effectDef ? effectDef.label : effect.type}</strong>
           <div class="effect-params">
@@ -690,7 +755,7 @@ export function renderSpecialEffectsTab(line) {
           </div>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="removeEffect(${idx})">
-          🗑️
+          ${window.icon('trash', { size: 15 })}
         </button>
       </div>
     `;
@@ -704,9 +769,9 @@ export function renderSpecialEffectsTab(line) {
       return `
       <div class="effect-option ${isActive ? 'effect-active' : ''}"
            onclick="toggleEffect('${effect.type}')">
-        <div class="effect-option-icon">${effect.icon}</div>
+        <div class="effect-option-icon">${window.icon(effect.icon, { size: 22 })}</div>
         <div class="effect-option-label">${effect.label}</div>
-        ${isActive ? '<div class="effect-checkmark">✓</div>' : ''}
+        ${isActive ? `<div class="effect-checkmark">${window.icon('check', { size: 14 })}</div>` : ''}
       </div>
     `;
     })
@@ -738,7 +803,7 @@ export function renderSpecialEffectsTab(line) {
       </div>
 
       <div class="effects-help">
-        <small>💡 Click an effect to add/remove it. Effects will trigger when this dialogue line appears.</small>
+        <small>${window.icon('bulb', { size: 15 })} Click an effect to add/remove it. Effects will trigger when this dialogue line appears.</small>
       </div>
     </div>
   `;
@@ -809,7 +874,7 @@ export function renderHighlightingTab(line) {
           <span class="highlight-range">(chars ${h.startChar}-${h.endChar})</span>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="removeHighlight(${idx})">
-          🗑️
+          ${window.icon('trash', { size: 15 })}
         </button>
       </div>
     `;
@@ -896,10 +961,10 @@ export function renderHighlightingTab(line) {
 
         <div class="highlight-button-row">
           <button class="btn btn-primary" onclick="addHighlightFromSelection()" id="add-highlight-btn" disabled>
-            ➕ Add Highlight
+            ${window.icon('plus')} Add Highlight
           </button>
           <button class="btn btn-secondary" onclick="clearHighlightSelection()">
-            ❌ Clear Selection
+            ${window.icon('close')} Clear Selection
           </button>
         </div>
       </div>
@@ -1060,6 +1125,14 @@ export function clearHighlightSelection() {
 
 // Select color (updated to avoid full re-render)
 export function selectHighlightColor(color) {
+  // Validate color is a valid hex value
+  if (!COLOR_REGEX.test(color)) {
+    scriptLineModalErr = 'Invalid color. Please use a valid hex color (e.g., #FF0000)';
+    renderScriptLineModal();
+    return;
+  }
+
+  scriptLineModalErr = '';
   highlightingState.currentColor = color;
 
   // Update color preview without full re-render
@@ -1071,9 +1144,9 @@ export function selectHighlightColor(color) {
 
   // Update color preset active states
   document.querySelectorAll('.color-preset').forEach((btn) => {
-    const btnColor = btn.style.background.toLowerCase();
-    const targetColor = color.toLowerCase();
-    if (btnColor === targetColor || rgbToHex(btnColor) === targetColor) {
+    const btnColor = normalizeColorFormat(btn.style.background);
+    const targetColor = normalizeColorFormat(color);
+    if (btnColor && targetColor && btnColor.toLowerCase() === targetColor.toLowerCase()) {
       btn.classList.add('active');
     } else {
       btn.classList.remove('active');
@@ -1098,15 +1171,22 @@ export function selectHighlightColor(color) {
   }
 }
 
-// Helper function to convert RGB to hex for color comparison
-export function rgbToHex(rgb) {
-  if (rgb.startsWith('#')) return rgb.toLowerCase();
-  const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-  if (!match) return rgb;
-  const r = parseInt(match[1]).toString(16).padStart(2, '0');
-  const g = parseInt(match[2]).toString(16).padStart(2, '0');
-  const b = parseInt(match[3]).toString(16).padStart(2, '0');
+// Normalize color to hex format for consistent comparison
+function normalizeColorFormat(color) {
+  if (!color || typeof color !== 'string') return null;
+  color = color.trim();
+  if (color.startsWith('#')) return color;
+  const match = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/i);
+  if (!match) return null;
+  const r = parseInt(match[1], 10).toString(16).padStart(2, '0');
+  const g = parseInt(match[2], 10).toString(16).padStart(2, '0');
+  const b = parseInt(match[3], 10).toString(16).padStart(2, '0');
   return `#${r}${g}${b}`;
+}
+
+// Helper function to convert RGB to hex for color comparison (deprecated, use normalizeColorFormat)
+export function rgbToHex(rgb) {
+  return normalizeColorFormat(rgb);
 }
 
 // Add highlight from drag selection
@@ -1114,15 +1194,24 @@ export function addHighlightFromSelection() {
   const line = state.scriptLines.find((l) => l.id === activeLineId);
   const dialogue = line.dialogue || '';
 
-  // Validate
+  // Validate selection exists
   if (highlightingState.startChar >= highlightingState.endChar) {
     scriptLineModalErr = 'Please select text to highlight.';
     renderScriptLineModal();
     return;
   }
 
-  if (highlightingState.startChar < 0 || highlightingState.endChar > dialogue.length) {
-    scriptLineModalErr = 'Invalid selection range.';
+  // Validate ranges are in bounds
+  if (!Number.isFinite(highlightingState.startChar) || !Number.isFinite(highlightingState.endChar) ||
+      highlightingState.startChar < 0 || highlightingState.endChar > dialogue.length) {
+    scriptLineModalErr = 'Invalid selection range. Please select within the dialogue text.';
+    renderScriptLineModal();
+    return;
+  }
+
+  // Validate color
+  if (!COLOR_REGEX.test(highlightingState.currentColor)) {
+    scriptLineModalErr = 'Invalid highlight color.';
     renderScriptLineModal();
     return;
   }
@@ -1141,6 +1230,7 @@ export function addHighlightFromSelection() {
   highlightingState.startChar = 0;
   highlightingState.endChar = 0;
   scriptLineModalErr = '';
+  scriptLineModalMsg = 'Highlight added successfully';
 
   // Re-render to show updated highlights
   renderScriptLineModal();
@@ -1158,11 +1248,15 @@ export function removeHighlight(index) {
   setTimeout(() => initializeDragSelection(), 0);
 }
 
-// Close script line modal
+/** Close and clean up the script line modal */
 export function closeScriptLineModal() {
   stopAudioPreview(AUDIO_PREVIEW_KEY);
-  document.getElementById('modalroot').innerHTML = '';
+  const modalRoot = document.getElementById('modalroot');
+  if (modalRoot) modalRoot.innerHTML = '';
   activeLineId = null;
+  scriptLineTab = 'sprite';
+  scriptLineModalErr = '';
+  scriptLineModalMsg = '';
 }
 
 // ==================== Script Line Advanced Editing ====================
@@ -1170,8 +1264,17 @@ export function closeScriptLineModal() {
 export async function saveScriptLineAdvanced() {
   const line = state.scriptLines.find((l) => l.id === activeLineId);
   if (!line) {
-    alert('Script line not found!');
-    closeModal();
+    scriptLineModalErr = 'Script line not found. Please close and reopen the modal.';
+    renderScriptLineModal();
+    return;
+  }
+
+  // Validate state before saving
+  const dialogue = line.dialogue || line.text || '';
+  const validationError = validateScriptLineFields(dialogue);
+  if (validationError) {
+    scriptLineModalErr = validationError;
+    renderScriptLineModal();
     return;
   }
 
@@ -1189,18 +1292,25 @@ export async function saveScriptLineAdvanced() {
     // overlapping ranges can never be persisted to trial.json.
     line.highlights = normalizeHighlights(
       scriptLineFields.highlights,
-      (line.dialogue || line.text || '').length
+      dialogue.length
     );
     line.specialEffects = scriptLineFields.specialEffects;
     line.dialogueBoxStyle = scriptLineFields.dialogueBoxStyle;
 
     // Handle audio file upload
     if (scriptLineFields.audioBlob) {
+      if (!state.dirHandle) {
+        throw new Error('No trial folder selected. Please choose a folder first.');
+      }
+
       // Create Audio directory if it doesn't exist
       const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: true });
 
-      // Generate filename based on line ID
-      const audioFileName = `${line.id}.${scriptLineFields.audioBlob.name.split('.').pop()}`;
+      // Generate filename based on line ID, extract extension safely
+      const ext = scriptLineFields.audioBlob.name.includes('.')
+        ? scriptLineFields.audioBlob.name.split('.').pop()
+        : 'mp3';
+      const audioFileName = `${line.id}.${ext}`;
 
       // Write audio file
       const audioFileHandle = await audioDir.getFileHandle(audioFileName, { create: true });
@@ -1212,10 +1322,13 @@ export async function saveScriptLineAdvanced() {
     } else if (scriptLineFields.audioFile === null && line.audioFile) {
       // Audio was cleared, remove the file
       try {
-        const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
-        await audioDir.removeEntry(line.audioFile);
+        if (state.dirHandle) {
+          const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
+          await audioDir.removeEntry(line.audioFile);
+        }
       } catch (e) {
         console.warn('Could not remove audio file:', e);
+        // Don't fail the save operation if we can't delete the old file
       }
       line.audioFile = null;
     }
@@ -1224,15 +1337,55 @@ export async function saveScriptLineAdvanced() {
     await autoSaveTrial();
 
     showLoader(false);
+    scriptLineModalErr = '';
+    scriptLineModalMsg = 'Changes saved successfully';
     closeModal();
     renderScriptEditor();
   } catch (error) {
     console.error('Error saving script line:', error);
     showLoader(false);
-    // scriptLineModalErr is what renderScriptLineModal displays; the previous
-    // code set modalErr (the character modal's error slot) so save failures
-    // were silently swallowed.
-    scriptLineModalErr = 'Failed to save: ' + error.message;
+    scriptLineModalErr = `Failed to save: ${error.message || 'Unknown error'}`;
     renderScriptLineModal();
   }
+}
+
+// Validate all fields in scriptLineFields before saving
+function validateScriptLineFields(dialogue) {
+  // Validate highlights are in bounds
+  if (Array.isArray(scriptLineFields.highlights)) {
+    for (const h of scriptLineFields.highlights) {
+      if (h.startChar < 0 || h.endChar > dialogue.length || h.startChar >= h.endChar) {
+        return 'Invalid highlight range detected.';
+      }
+      if (!COLOR_REGEX.test(h.color || '')) {
+        return 'Invalid highlight color detected.';
+      }
+    }
+  }
+
+  // Validate camera motion if present
+  if (scriptLineFields.cameraMotion) {
+    const duration = scriptLineFields.cameraMotion.duration;
+    if (duration !== undefined && (duration < 0.1 || duration > 10)) {
+      return 'Camera duration must be between 0.1 and 10 seconds.';
+    }
+  }
+
+  // Validate dialogue box style
+  if (scriptLineFields.dialogueBoxStyle) {
+    const opacity = scriptLineFields.dialogueBoxStyle.bgOpacity;
+    if (opacity !== undefined && (opacity < 0 || opacity > 1)) {
+      return 'Background opacity must be between 0 and 1.';
+    }
+    const thickness = scriptLineFields.dialogueBoxStyle.borderThickness;
+    if (thickness !== undefined && (thickness < 0 || thickness > 10)) {
+      return 'Border thickness must be between 0 and 10 pixels.';
+    }
+    const color = scriptLineFields.dialogueBoxStyle.borderColor;
+    if (color && !COLOR_REGEX.test(color)) {
+      return 'Border color must be a valid hex color.';
+    }
+  }
+
+  return null;
 }

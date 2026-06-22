@@ -31,9 +31,9 @@ export function renderActiveView() {
   if (!state.dirHandle) {
     mainGrid.innerHTML = `
       <div class="welcome-screen">
-        <h2>Welcome to Danganronpa Cast Manager</h2>
+        <h2>Welcome to the Class Trial Editor</h2>
         <p>To get started, choose a folder to store your trial data.</p>
-        <button class="btn btn-primary" onclick="chooseTrialDir()">📁 Choose Folder</button>
+        <button class="btn btn-primary" onclick="chooseTrialDir()">${window.icon('folder')} Choose Folder</button>
       </div>
     `;
     return;

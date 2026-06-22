@@ -12,11 +12,11 @@ export function renderTruthBulletsView() {
     grid.innerHTML = `
       <div id="truthBulletsContainer">
         <div class="script-empty-state">
-          <div class="script-empty-icon">🎯</div>
+          <div class="script-empty-icon">${window.icon('target', { size: 56 })}</div>
           <h2>No Truth Bullets</h2>
           <p>Create truth bullets that can be used as evidence in debates</p>
           <button class="btn btn-primary script-add-btn" onclick="addTruthBullet()">
-            ➕ Add Truth Bullet
+            ${window.icon('plus')} Add Truth Bullet
           </button>
         </div>
       </div>
@@ -81,8 +81,8 @@ export function renderTruthBulletListItem(bullet) {
          onclick="selectTruthBullet('${bullet.bulletId}')">
       <span class="bullet-list-name">${displayName}</span>
       <div class="bullet-list-actions">
-        <button onclick="openTruthBulletModal('${bullet.bulletId}'); event.stopPropagation()" title="Edit bullet">✏️</button>
-        <button onclick="deleteTruthBullet('${bullet.bulletId}'); event.stopPropagation()" title="Delete bullet">🗑️</button>
+        <button onclick="openTruthBulletModal('${bullet.bulletId}'); event.stopPropagation()" title="Edit bullet">${window.icon('edit', { size: 16 })}</button>
+        <button onclick="deleteTruthBullet('${bullet.bulletId}'); event.stopPropagation()" title="Delete bullet">${window.icon('trash', { size: 16 })}</button>
       </div>
     </div>
   `;
@@ -97,7 +97,7 @@ export function renderTruthBulletDetail(bullet) {
       ${
         hasImage
           ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name || 'Bullet image')}" />`
-          : '<div class="truth-bullet-no-image-large">📷</div>'
+          : `<div class="truth-bullet-no-image-large">${window.icon('image', { size: 48 })}</div>`
       }
     </div>
 
@@ -125,8 +125,8 @@ export function renderTruthBulletDetail(bullet) {
       }
 
       <div class="detail-actions">
-        <button class="btn btn-primary" onclick="openTruthBulletModal('${bullet.bulletId}')">✏️ Edit Bullet</button>
-        <button class="btn btn-danger" onclick="deleteTruthBullet('${bullet.bulletId}')">🗑️ Delete Bullet</button>
+        <button class="btn btn-primary" onclick="openTruthBulletModal('${bullet.bulletId}')">${window.icon('edit')} Edit Bullet</button>
+        <button class="btn btn-danger" onclick="deleteTruthBullet('${bullet.bulletId}')">${window.icon('trash')} Delete Bullet</button>
       </div>
     </div>
   `;

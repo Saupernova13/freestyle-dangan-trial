@@ -53,7 +53,7 @@ export function renderDebateScumEditor(mg) {
       <button class="minigame-floating-btn"
               onclick="addDebateScumArgument('${mg.gameId}')"
               title="Add Argument">
-        ➕ <span class="minigame-floating-btn-text">Add Argument</span>
+        ${window.icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Argument</span>
       </button>
     `;
   }
@@ -99,20 +99,20 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
         <div class="argument-drag-handle">
           <div class="arrow-btn arrow-up"
                onclick="event.stopPropagation(); moveArgumentUp('${gameId}', '${arg.argumentId}')"
-               title="Move up">▲</div>
+               title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
           <div class="arrow-btn arrow-down"
                onclick="event.stopPropagation(); moveArgumentDown('${gameId}', '${arg.argumentId}')"
-               title="Move down">▼</div>
+               title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
         </div>
         <div class="argument-number">Argument #${index + 1}</div>
         <button class="btn-icon"
                 onclick="event.stopPropagation(); deleteDebateScumArgument('${gameId}', '${arg.argumentId}')"
-                title="Delete argument">🗑️</button>
+                title="Delete argument">${window.icon('trash', { size: 16 })}</button>
       </div>
 
       <div class="argument-body">
         <div class="argument-side opposition-side">
-          <h4>🔴 Opposition Side</h4>
+          <h4><span style="color: var(--error)">${window.icon('dot', { size: 12 })}</span> Opposition Side</h4>
 
           <div class="form-group">
             <label>Character</label>
@@ -145,16 +145,16 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
               arg.oppositionAudioFile
                 ? `
               <div class="audio-preview-mini">
-                <span class="audio-icon">🎵</span>
+                <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
                 <span class="audio-filename">${arg.oppositionAudioFile}</span>
                 <button class="btn btn-secondary btn-sm"
                         id="scrum-play-btn-${arg.argumentId}-opposition"
                         onclick="playDebateScumAudio('${gameId}', '${arg.argumentId}', 'opposition')">
-                  ▶️ Play
+                  ${window.icon('play')} Play
                 </button>
                 <button class="btn btn-secondary btn-sm"
                         onclick="clearDebateScumAudio('${gameId}', '${arg.argumentId}', 'opposition')">
-                  🗑️ Remove
+                  ${window.icon('trash')} Remove
                 </button>
               </div>
             `
@@ -168,7 +168,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
         </div>
 
         <div class="argument-side defense-side">
-          <h4>🔵 Defense Side</h4>
+          <h4><span style="color: var(--secondary)">${window.icon('dot', { size: 12 })}</span> Defense Side</h4>
 
           <div class="form-group">
             <label>Character</label>
@@ -201,16 +201,16 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
               arg.defenseAudioFile
                 ? `
               <div class="audio-preview-mini">
-                <span class="audio-icon">🎵</span>
+                <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
                 <span class="audio-filename">${arg.defenseAudioFile}</span>
                 <button class="btn btn-secondary btn-sm"
                         id="scrum-play-btn-${arg.argumentId}-defense"
                         onclick="playDebateScumAudio('${gameId}', '${arg.argumentId}', 'defense')">
-                  ▶️ Play
+                  ${window.icon('play')} Play
                 </button>
                 <button class="btn btn-secondary btn-sm"
                         onclick="clearDebateScumAudio('${gameId}', '${arg.argumentId}', 'defense')">
-                  🗑️ Remove
+                  ${window.icon('trash')} Remove
                 </button>
               </div>
             `

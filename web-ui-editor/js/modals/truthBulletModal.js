@@ -97,7 +97,7 @@ export function renderTruthBulletModal() {
                     <div class="bullet-image-preview-container">
                       <img src="${bullet.imageDataURL || ''}" alt="Bullet image">
                     </div>
-                    <button class="btn btn-secondary" onclick="clearBulletImage()">🗑️ Remove Image</button>
+                    <button class="btn btn-secondary" onclick="clearBulletImage()">${window.icon('trash')} Remove Image</button>
                   </div>
                 `
                     : `
@@ -109,7 +109,7 @@ export function renderTruthBulletModal() {
                 <input type="file" accept="image/*" id="bulletImageInput"
                        onchange="handleBulletImageUpload(event)" style="display: none;">
                 <button class="btn btn-primary" onclick="triggerBulletImageInput()">
-                  📁 ${hasImage ? 'Replace' : 'Upload'} Image
+                  ${window.icon('upload')} ${hasImage ? 'Replace' : 'Upload'} Image
                 </button>
               </div>
             </div>

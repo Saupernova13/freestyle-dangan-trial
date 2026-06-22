@@ -67,9 +67,9 @@ export function renderNonstopDebateEditor(mg) {
       html += `
         <div class="bullet-select-card ${isSelected ? 'selected' : ''}"
              onclick="toggleBulletForMinigame('${mg.gameId}', '${bullet.bulletId}')">
-          <div class="bullet-select-checkbox">${isSelected ? '✓' : ''}</div>
+          <div class="bullet-select-checkbox">${isSelected ? window.icon('check', { size: 14 }) : ''}</div>
           <div class="bullet-select-image">
-            ${bullet.imageDataURL ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name)}">` : '📷'}
+            ${bullet.imageDataURL ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name)}">` : window.icon('image', { size: 28 })}
           </div>
           <div class="bullet-select-info">
             <div class="bullet-select-name">${escapeHtml(bullet.name || 'Unnamed')}</div>
@@ -129,7 +129,7 @@ export function renderNonstopDebateEditor(mg) {
       <button class="minigame-floating-btn"
               onclick="addDialogueLine('${mg.gameId}')"
               title="Add Dialogue Line">
-        ➕ <span class="minigame-floating-btn-text">Add Dialogue Line</span>
+        ${window.icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Dialogue Line</span>
       </button>
     `;
   }
@@ -146,14 +146,14 @@ export function renderDialogueLineEditor(gameId, line, index) {
         <div class="dialogue-drag-handle">
           <div class="arrow-btn arrow-up"
                onclick="event.stopPropagation(); moveDialogueLineUp('${gameId}', '${line.lineId}')"
-               title="Move up">▲</div>
+               title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
           <div class="arrow-btn arrow-down"
                onclick="event.stopPropagation(); moveDialogueLineDown('${gameId}', '${line.lineId}')"
-               title="Move down">▼</div>
+               title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
         </div>
         <div class="dialogue-line-number">#${index + 1}</div>
         <div class="dialogue-line-preview">${fullSentence ? escapeHtml(fullSentence) : '&lt;empty line&gt;'}</div>
-        <button class="btn-icon" onclick="event.stopPropagation(); deleteDialogueLine('${gameId}', '${line.lineId}')" title="Delete line">🗑️</button>
+        <button class="btn-icon" onclick="event.stopPropagation(); deleteDialogueLine('${gameId}', '${line.lineId}')" title="Delete line">${window.icon('trash', { size: 16 })}</button>
       </div>
 
       <div class="dialogue-line-body">
@@ -230,7 +230,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
               ? `
             <div class="audio-preview">
               <div class="audio-info">
-                <span class="audio-icon">🎵</span>
+                <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
                 <span class="audio-filename">${line.voiceLineFile}</span>
               </div>
 
@@ -250,11 +250,11 @@ export function renderDialogueLineEditor(gameId, line, index) {
                 <button class="btn btn-secondary"
                         id="dialogue-play-btn-${line.lineId}"
                         onclick="playDialogueAudioPreview('${gameId}', '${line.lineId}')">
-                  ▶️ Play
+                  ${window.icon('play')} Play
                 </button>
                 <button class="btn btn-secondary"
                         onclick="clearDialogueVoiceLine('${gameId}', '${line.lineId}')">
-                  🗑️ Remove
+                  ${window.icon('trash')} Remove
                 </button>
               </div>
             </div>
@@ -275,7 +275,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
           <button type="button"
                   class="collapsible-header ${isSectionExpanded(line.lineId, 'textStyling') ? 'expanded' : ''}"
                   onclick="toggleSection('${line.lineId}', 'textStyling')">
-            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'textStyling') ? '▼' : '▶'}</span>
+            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'textStyling') ? window.icon('chevronDown', { size: 12 }) : window.icon('chevronRight', { size: 12 })}</span>
             <span class="collapsible-title">Advanced Text Styling</span>
             <span class="collapsible-badge">Optional</span>
           </button>
@@ -324,7 +324,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
           <button type="button"
                   class="collapsible-header ${isSectionExpanded(line.lineId, 'characterDisplay') ? 'expanded' : ''}"
                   onclick="toggleSection('${line.lineId}', 'characterDisplay')">
-            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'characterDisplay') ? '▼' : '▶'}</span>
+            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'characterDisplay') ? window.icon('chevronDown', { size: 12 }) : window.icon('chevronRight', { size: 12 })}</span>
             <span class="collapsible-title">Character Display</span>
             <span class="collapsible-badge">Optional</span>
           </button>
@@ -351,7 +351,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
           <button type="button"
                   class="collapsible-header ${isSectionExpanded(line.lineId, 'feedback') ? 'expanded' : ''}"
                   onclick="toggleSection('${line.lineId}', 'feedback')">
-            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'feedback') ? '▼' : '▶'}</span>
+            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'feedback') ? window.icon('chevronDown', { size: 12 }) : window.icon('chevronRight', { size: 12 })}</span>
             <span class="collapsible-title">User Feedback Messages</span>
             <span class="collapsible-badge">Optional</span>
           </button>

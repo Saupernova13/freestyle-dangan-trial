@@ -13,7 +13,9 @@ export function fileToDataUrl(file) {
 }
 
 export function renderDirDisplay(dH) {
-  document.getElementById('dirDisplay').innerText = dH ? `📂 ${dH.name}` : '';
+  document.getElementById('dirDisplay').innerHTML = dH
+    ? `${window.icon('folder', { size: 15 })} ${escapeHtml(dH.name)}`
+    : '';
 }
 
 // Format seconds as M:SS for audio player time displays.

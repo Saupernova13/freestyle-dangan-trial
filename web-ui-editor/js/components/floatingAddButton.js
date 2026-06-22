@@ -11,7 +11,7 @@ export function initFloatingAddButton() {
     floatingButton = document.createElement('button');
     floatingButton.id = 'floatingAddButton';
     floatingButton.className = 'floating-add-btn';
-    floatingButton.innerHTML = '➕';
+    floatingButton.innerHTML = window.icon('plus', { size: 24 });
     floatingButton.style.display = 'none';
     document.body.appendChild(floatingButton);
   }
@@ -62,10 +62,10 @@ export function updateFloatingAddButton() {
     // Update button text if extended mode
     if (buttonConfig.text) {
       floatingButton.classList.add('extended');
-      floatingButton.innerHTML = `➕ <span class="floating-add-btn-text">${buttonConfig.text}</span>`;
+      floatingButton.innerHTML = `${window.icon('plus', { size: 22 })} <span class="floating-add-btn-text">${buttonConfig.text}</span>`;
     } else {
       floatingButton.classList.remove('extended');
-      floatingButton.innerHTML = '➕';
+      floatingButton.innerHTML = window.icon('plus', { size: 24 });
     }
   } else {
     floatingButton.style.display = 'none';

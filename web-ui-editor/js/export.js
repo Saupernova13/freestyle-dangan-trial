@@ -129,12 +129,12 @@ export async function exportToPlayableFile() {
     // Show success message
     const fileSizeMB = (blob.size / (1024 * 1024)).toFixed(2);
     alert(
-      `✅ Trial exported successfully!\n\nFile: ${filename}\nSize: ${fileSizeMB} MB\nFiles packaged: ${filesAdded}`
+      `Trial exported successfully.\n\nFile: ${filename}\nSize: ${fileSizeMB} MB\nFiles packaged: ${filesAdded}`
     );
   } catch (error) {
     console.error('Export failed:', error);
     showLoader(false);
-    alert(`❌ Export failed: ${error.message}`);
+    alert(`Export failed: ${error.message}`);
   }
 }
 

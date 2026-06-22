@@ -99,7 +99,7 @@ export function renderCharacterModal() {
         <button class="dr-close" onclick="closeCharModal()">&times;</button>
         <div class="dr-tabs">
           <button class="dr-tab${modalTab === 'details' ? ' active' : ''}" onclick="switchCharModalTab('details')">
-            ${isHeadmasterChar ? '👑' : '🎓'} Character Details (${characterType.charAt(0).toUpperCase() + characterType.slice(1)})
+            ${isHeadmasterChar ? window.icon('crown') : window.icon('cap')} Character Details (${characterType.charAt(0).toUpperCase() + characterType.slice(1)})
           </button>
           <button class="dr-tab${modalTab === 'sprites' ? ' active' : ''}" onclick="switchCharModalTab('sprites')">Sprites</button>
         </div>
@@ -137,8 +137,8 @@ export function renderCharDetailsTab() {
   const isHeadmasterChar = isHeadmaster(activeIdx);
 
   return `<form class="dr-form" onsubmit="event.preventDefault();">
-    <div style="background: ${isHeadmasterChar ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, var(--primary), var(--primary-dark))'}; color: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; text-align: center; font-weight: 600;">
-      ${isHeadmasterChar ? '👑 HEADMASTER CHARACTER' : '🎓 STUDENT CHARACTER'}
+    <div class="dr-role-banner${isHeadmasterChar ? ' dr-role-banner--headmaster' : ''}">
+      ${isHeadmasterChar ? `${window.icon('crown')} HEADMASTER CHARACTER` : `${window.icon('cap')} STUDENT CHARACTER`}
     </div>
     <div class="dr-fg-row">
       <div class="dr-fg-field">
@@ -212,7 +212,7 @@ export function renderCharSpritesTab() {
 
   return `
     <div class="dr-form">
-      <button class="btn btn-primary dr-sprslot-bulk" type="button" onclick="bulkImportSprites()">📁 Bulk Import All ${appSettings.maxSprites} ${isHeadmasterChar ? 'Headmaster' : 'Student'} Sprites</button>
+      <button class="btn btn-primary dr-sprslot-bulk" type="button" onclick="bulkImportSprites()">${window.icon('folder')} Bulk Import All ${appSettings.maxSprites} ${isHeadmasterChar ? 'Headmaster' : 'Student'} Sprites</button>
       <div class="dr-sprgrid">
         ${charSprites
           .map(

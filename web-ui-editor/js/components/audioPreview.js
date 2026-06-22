@@ -11,7 +11,10 @@ const players = {};
 
 function setPlayButton(entry, isPlaying) {
   const btn = entry.opts.buttonId && document.getElementById(entry.opts.buttonId);
-  if (btn) btn.innerHTML = isPlaying ? '⏸️ Pause' : '▶️ Play';
+  if (btn)
+    btn.innerHTML = isPlaying
+      ? `${window.icon('pause')} Pause`
+      : `${window.icon('play')} Play`;
 }
 
 function updateSeekDisplay(entry) {

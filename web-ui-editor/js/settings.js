@@ -22,7 +22,7 @@ export function openSettings() {
       <div class="dr-modal">
         <button class="dr-close" onclick="closeModal()">&times;</button>
         <div class="dr-tabs">
-          <div class="dr-tab active">⚙️ Settings</div>
+          <div class="dr-tab active">${window.icon('settings')} Settings</div>
         </div>
         <div class="dr-modal-content">
           <div class="dr-form">

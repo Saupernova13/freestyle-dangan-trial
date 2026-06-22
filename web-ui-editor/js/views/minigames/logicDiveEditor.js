@@ -42,7 +42,7 @@ export function renderLogicDiveEditor(mg) {
       <button class="minigame-floating-btn"
               onclick="addLogicDiveQuestion('${mg.gameId}')"
               title="Add Question">
-        ➕ <span class="minigame-floating-btn-text">Add Question</span>
+        ${window.icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Question</span>
       </button>
     </div>
   `;
@@ -89,14 +89,14 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
         <div class="question-drag-handle">
           <div class="arrow-btn arrow-up"
                onclick="event.stopPropagation(); moveQuestionUp('${gameId}', '${question.questionId}')"
-               title="Move up">▲</div>
+               title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
           <div class="arrow-btn arrow-down"
                onclick="event.stopPropagation(); moveQuestionDown('${gameId}', '${question.questionId}')"
-               title="Move down">▼</div>
+               title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
         </div>
         <div class="question-number">Question #${index + 1}</div>
         <button class="btn-icon" onclick="deleteLogicDiveQuestion('${gameId}', '${question.questionId}')"
-                title="Delete question">🗑️</button>
+                title="Delete question">${window.icon('trash', { size: 16 })}</button>
       </div>
 
       <div class="question-body">
@@ -116,7 +116,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
                 ? `
               <button class="btn btn-secondary btn-sm"
                       onclick="addLogicDiveAnswer('${gameId}', '${question.questionId}')">
-                ➕ Add Answer
+                ${window.icon('plus', { size: 15 })} Add Answer
               </button>
             `
                 : ''
@@ -145,7 +145,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
                     ? `
                   <button class="btn-icon btn-icon-danger"
                           onclick="deleteLogicDiveAnswer('${gameId}', '${question.questionId}', '${answer.answerId}')"
-                          title="Delete answer">🗑️</button>
+                          title="Delete answer">${window.icon('trash', { size: 15 })}</button>
                 `
                     : ''
                 }
@@ -158,7 +158,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
           ${
             question.answers.length < 2
               ? `
-            <p class="validation-warning">⚠️ Add at least 2 answers</p>
+            <p class="validation-warning">${window.icon('warning', { size: 15 })} Add at least 2 answers</p>
           `
               : ''
           }

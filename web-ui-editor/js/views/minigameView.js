@@ -22,11 +22,11 @@ export function renderMinigameDetails() {
     grid.innerHTML = `
       <div id="minigameDetailsContainer">
         <div class="script-empty-state">
-          <div class="script-empty-icon">🎮</div>
+          <div class="script-empty-icon">${window.icon('gamepad', { size: 56 })}</div>
           <h2>No Minigames Configured</h2>
           <p>Click the button below to create your first minigame instance</p>
           <button class="btn btn-primary script-add-btn" onclick="addMinigame()">
-            ➕ Create Minigame
+            ${window.icon('plus')} Create Minigame
           </button>
         </div>
       </div>
@@ -51,9 +51,9 @@ export function renderMinigameCard(mg, index) {
   const isExpanded = expandedMinigameId === mg.gameId;
 
   const difficultyColors = {
-    easy: '#10b981',
-    medium: '#f59e0b',
-    hard: '#ef4444',
+    easy: 'var(--success)',
+    medium: 'var(--warning)',
+    hard: 'var(--error)',
   };
 
   let cardContent = `
@@ -66,13 +66,13 @@ export function renderMinigameCard(mg, index) {
             <span class="minigame-difficulty" style="color: ${difficultyColors[mg.difficulty]}">
               ${mg.difficulty}
             </span>
-            <span class="minigame-time">⏱️ ${mg.timeLimit}s</span>
+            <span class="minigame-time">${window.icon('timer', { size: 14 })} ${mg.timeLimit}s</span>
           </div>
         </div>
 
         <div class="minigame-card-actions">
-          <button class="btn-icon" onclick="event.stopPropagation(); deleteMinigame('${mg.gameId}')" title="Delete minigame">🗑️</button>
-          <span class="expand-icon">${isExpanded ? '▼' : '▶'}</span>
+          <button class="btn-icon" onclick="event.stopPropagation(); deleteMinigame('${mg.gameId}')" title="Delete minigame">${window.icon('trash', { size: 16 })}</button>
+          <span class="expand-icon">${isExpanded ? window.icon('chevronDown', { size: 14 }) : window.icon('chevronRight', { size: 14 })}</span>
         </div>
       </div>
   `;

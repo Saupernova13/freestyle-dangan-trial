@@ -7,6 +7,7 @@
 // Modules call each other through explicit imports; the window bridge exists
 // only for the inline handlers in generated markup and index.html.
 import * as utils from './utils.js';
+import * as icons from './ui/icons.js';
 import * as theme from './ui/theme.js';
 import * as settings from './settings.js';
 import * as storage from './core/storage.js';
@@ -31,6 +32,7 @@ import * as app from './app.js';
 
 const modules = [
   utils,
+  icons,
   theme,
   settings,
   storage,

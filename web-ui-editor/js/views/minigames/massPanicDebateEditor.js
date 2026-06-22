@@ -33,7 +33,7 @@ export function renderMassPanicDebateEditor(mg) {
 
   return `
     <div class="minigame-editor-section mass-panic-section">
-      <h3>💥 Mass Panic Debate - Simultaneous Speakers</h3>
+      <h3>${window.icon('burst', { size: 20 })} Mass Panic Debate - Simultaneous Speakers</h3>
       <p class="section-description">
         Configure 3 characters who speak simultaneously. Each line group has all 3 speakers talking at once.
         Only one speaker can have a loud assertion per line group.
@@ -78,7 +78,7 @@ export function renderMassPanicDebateEditor(mg) {
       <button class="minigame-floating-btn"
               onclick="addMassPanicLineGroup('${mg.gameId}')"
               title="Add Line Group (All 3 Speakers)">
-        ➕ <span class="minigame-floating-btn-text">Add Line Group</span>
+        ${window.icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Line Group</span>
       </button>
     </div>
   `;
@@ -96,7 +96,7 @@ export function renderMassPanicLineGroup(gameId, group, groupIndex) {
     <div class="mass-panic-group-card">
       <div class="mass-panic-group-header">
         <span class="group-number">Line Group #${groupIndex + 1}</span>
-        <button class="btn-icon" onclick="deleteMassPanicLineGroup('${gameId}', '${group.groupId}')" title="Delete line group">🗑️</button>
+        <button class="btn-icon" onclick="deleteMassPanicLineGroup('${gameId}', '${group.groupId}')" title="Delete line group">${window.icon('trash', { size: 16 })}</button>
       </div>
 
       <div class="mass-panic-group-body">
@@ -137,7 +137,7 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
     <div class="mass-panic-speaker-line" style="border-left: 4px solid ${color};">
       <div class="speaker-line-header">
         <h5>${escapeHtml(enhancedLabel)}</h5>
-        ${line.isLoudAssertion ? '<span class="badge badge-loud">📢 LOUD</span>' : ''}
+        ${line.isLoudAssertion ? `<span class="badge badge-loud">${window.icon('megaphone', { size: 13 })} LOUD</span>` : ''}
       </div>
 
       <div class="sentence-structure">
@@ -221,7 +221,7 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
             ? `
           <div class="audio-preview">
             <div class="audio-info">
-              <span class="audio-icon">🎵</span>
+              <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
               <span class="audio-filename">${line.voiceLineFile}</span>
             </div>
             <div class="audio-seek-container">
@@ -239,11 +239,11 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
               <button class="btn btn-secondary"
                       id="panic-play-btn-${group.groupId}-${speakerKey}"
                       onclick="playPanicAudioPreview('${gameId}', '${group.groupId}', '${speakerKey}')">
-                ▶️ Play
+                ${window.icon('play')} Play
               </button>
               <button class="btn btn-secondary"
                       onclick="clearPanicVoiceLine('${gameId}', '${group.groupId}', '${speakerKey}')">
-                🗑️ Remove
+                ${window.icon('trash')} Remove
               </button>
             </div>
           </div>

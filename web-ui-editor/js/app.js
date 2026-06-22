@@ -71,11 +71,11 @@ export function renderScriptEditor() {
     grid.innerHTML = `
       <div id="scriptEditorContainer">
         <div class="script-empty-state">
-          <div class="script-empty-icon">📝</div>
+          <div class="script-empty-icon">${window.icon('script', { size: 56 })}</div>
           <h2>No Script Lines Yet</h2>
           <p>Click the button below to add your first script line</p>
           <button class="btn btn-primary script-add-btn" onclick="addScriptLine()">
-            ➕ Add Script Line
+            ${window.icon('plus')} Add Script Line
           </button>
         </div>
       </div>
@@ -584,8 +584,8 @@ export function renderScriptLineBar(line, index) {
          onclick="toggleLineSelection(event, '${line.id}')">
 
       <div class="script-drag-handle">
-        <div class="arrow-btn arrow-up" onclick="event.stopPropagation(); moveLineUp('${line.id}')" title="Move up">▲</div>
-        <div class="arrow-btn arrow-down" onclick="event.stopPropagation(); moveLineDown('${line.id}')" title="Move down">▼</div>
+        <div class="arrow-btn arrow-up" onclick="event.stopPropagation(); moveLineUp('${line.id}')" title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
+        <div class="arrow-btn arrow-down" onclick="event.stopPropagation(); moveLineDown('${line.id}')" title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
       </div>
 
       <div class="script-line-number">#${lineNumber}</div>
@@ -602,9 +602,9 @@ export function renderScriptLineBar(line, index) {
         </select>
       </div>
 
-      ${line.type === 'speaking' || line.type === 'narrator' ? `<button class="script-line-edit" onclick="event.stopPropagation(); openScriptLineModal('${line.id}')" title="Edit advanced properties">✏️</button>` : ''}
+      ${line.type === 'speaking' || line.type === 'narrator' ? `<button class="script-line-edit" onclick="event.stopPropagation(); openScriptLineModal('${line.id}')" title="Edit advanced properties">${window.icon('edit', { size: 16 })}</button>` : ''}
 
-      <button class="script-line-delete" onclick="event.stopPropagation(); deleteScriptLine('${line.id}')" title="Delete line">🗑️</button>
+      <button class="script-line-delete" onclick="event.stopPropagation(); deleteScriptLine('${line.id}')" title="Delete line">${window.icon('trash', { size: 16 })}</button>
     </div>
   `;
 }

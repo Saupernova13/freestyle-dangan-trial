@@ -1,23 +1,13 @@
 // Theme management
+//
+// The Class Trial UI is dark-only by design, so there is no longer a
+// light theme to toggle to. `toggleTheme` is kept as a no-op so any
+// lingering inline handler stays harmless, and init just pins dark.
 
 export function toggleTheme() {
-  const currentTheme = document.body.getAttribute('data-theme');
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  document.body.setAttribute('data-theme', newTheme);
-
-  const themeIcon = document.querySelector('.theme-icon');
-  if (themeIcon) {
-    themeIcon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-  }
-
-  localStorage.setItem('theme', newTheme);
+  // intentionally a no-op: the editor ships a single, deliberate dark theme.
 }
 
 export function initializeTheme() {
-  const savedTheme = localStorage.getItem('theme') || 'light';
-  document.body.setAttribute('data-theme', savedTheme);
-  const themeIcon = document.querySelector('.theme-icon');
-  if (themeIcon) {
-    themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-  }
+  document.body.setAttribute('data-theme', 'dark');
 }

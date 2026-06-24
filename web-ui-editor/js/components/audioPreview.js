@@ -5,6 +5,7 @@
 // play/pause toggle, seek bar sync, and button repaint. This component owns
 // a registry of players keyed by caller-chosen ids; callers supply the DOM
 // ids of their controls and a lazy blob loader.
+import { showToast } from '../ui/dialogs.js';
 import { formatAudioTime } from '../utils.js';
 
 const players = {};
@@ -35,9 +36,9 @@ function updateSeekDisplay(entry) {
 //   getBlob       async () => Blob|null - lazy audio source (may hit disk)
 //   buttonId      id of the play/pause button to repaint
 //   seekBarId, timeCurrentId, timeTotalId  optional seek-bar control ids
-//   onError       optional (message) => void; defaults to alert()
+//   onError       optional (message) => void; defaults to an error toast
 export async function toggleAudioPreview(key, opts) {
-  const fail = (msg) => (opts.onError ? opts.onError(msg) : alert(msg));
+  const fail = (msg) => (opts.onError ? opts.onError(msg) : showToast(msg, { type: 'error' }));
 
   const existing = players[key];
   if (existing && !existing.audio.paused) {

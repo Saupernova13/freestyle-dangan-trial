@@ -3,6 +3,7 @@ import { updateFloatingAddButton } from '../components/floatingAddButton.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { openTruthBulletModal } from '../modals/truthBulletModal.js';
+import { confirmDialog } from '../ui/dialogs.js';
 import { generateId, escapeHtml } from '../utils.js';
 
 export function renderTruthBulletsView() {
@@ -154,12 +155,14 @@ export function addTruthBullet() {
   openTruthBulletModal(newBullet.bulletId);
 }
 
-export function deleteTruthBullet(bulletId) {
-  if (
-    !confirm('Delete this truth bullet? It will be removed from any debates that reference it.')
-  ) {
-    return;
-  }
+export async function deleteTruthBullet(bulletId) {
+  const confirmed = await confirmDialog({
+    title: 'Delete truth bullet',
+    message: 'Delete this truth bullet? It will be removed from any debates that reference it.',
+    confirmLabel: 'Delete',
+    danger: true,
+  });
+  if (!confirmed) return;
 
   // Find the index of the bullet being deleted
   const bulletIndex = state.truthBullets.findIndex((b) => b.bulletId === bulletId);

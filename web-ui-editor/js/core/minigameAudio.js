@@ -4,6 +4,7 @@
 // the trial folder; this module owns that layout so editors don't each
 // re-implement the directory walk, write, delete, and lazy-load logic.
 import { state } from './state.js';
+import { showToast } from '../ui/dialogs.js';
 
 async function getMinigameAudioDir(gameId, create) {
   const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create });
@@ -44,12 +45,12 @@ export async function loadMinigameAudioFile(gameId, fileName) {
 }
 
 // Validate an <input type="file"> change event holds an audio file.
-// Returns the File, or null after alerting and resetting the input.
+// Returns the File, or null after warning and resetting the input.
 export function validateAudioUpload(event) {
   const file = event.target.files[0];
   if (!file) return null;
   if (!file.type.startsWith('audio/')) {
-    alert('Please select an audio file');
+    showToast('Please select an audio file.', { type: 'warning' });
     event.target.value = '';
     return null;
   }

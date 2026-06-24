@@ -1,5 +1,6 @@
 // Settings management
 import { closeModal } from './modals/modalCoordinator.js';
+import { alertDialog, showToast } from './ui/dialogs.js';
 export const appSettings = {
   maxSprites: 25,
 };
@@ -54,25 +55,12 @@ export function saveAppSettings() {
   const newMaxSprites = parseInt(maxSpritesInput.value);
 
   if (isNaN(newMaxSprites) || newMaxSprites < 1 || newMaxSprites > 100) {
-    alert('Please enter a valid number between 1 and 100');
+    alertDialog({ type: 'warning', message: 'Please enter a valid number between 1 and 100.' });
     return;
   }
 
   appSettings.maxSprites = newMaxSprites;
   saveSettings();
   closeModal();
-
-  // Show success message briefly
-  const successDiv = document.createElement('div');
-  successDiv.className = 'dr-success';
-  successDiv.textContent = 'Settings saved successfully!';
-  successDiv.style.position = 'fixed';
-  successDiv.style.top = '2rem';
-  successDiv.style.right = '2rem';
-  successDiv.style.zIndex = '1000';
-  document.body.appendChild(successDiv);
-
-  setTimeout(() => {
-    document.body.removeChild(successDiv);
-  }, 3000);
+  showToast('Settings saved', { type: 'success' });
 }

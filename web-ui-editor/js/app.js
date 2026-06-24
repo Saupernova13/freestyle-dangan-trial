@@ -7,6 +7,7 @@ import { initSpriteMagnifier } from './components/spriteMagnifier.js';
 import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
 import { state } from './core/state.js';
 import { autoSaveTrial, scheduleAutoSave } from './core/storage.js';
+import { confirmDialog } from './ui/dialogs.js';
 import { updateExportButtonState } from './export.js';
 import { loadSettings } from './settings.js';
 import { initializeTheme } from './ui/theme.js';
@@ -229,7 +230,13 @@ export async function deleteScriptLine(lineId) {
   if (!line) return;
 
   const label = line.dialogue || line.text || 'this line';
-  if (!confirm(`Delete script line "${label}"?`)) return;
+  const confirmed = await confirmDialog({
+    title: 'Delete script line',
+    message: `Delete script line "${label}"? This also removes its voice audio.`,
+    confirmLabel: 'Delete',
+    danger: true,
+  });
+  if (!confirmed) return;
 
   // Remove the line's voice audio so the trial folder doesn't accumulate
   // orphaned files that would be bundled into every export.

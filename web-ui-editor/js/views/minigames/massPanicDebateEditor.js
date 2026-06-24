@@ -9,6 +9,7 @@ import {
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
 import { seekAudioPreview, toggleAudioPreview } from '../../components/audioPreview.js';
+import { confirmDialog, showToast } from '../../ui/dialogs.js';
 import { renderCharacterOptions } from '../../models/characterModel.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
@@ -282,8 +283,9 @@ export function validateSpeakerSelection(gameId, speakerField, selectedCharacter
   if (isDuplicate) {
     const character = state.cast.find((c) => c && c.id === selectedCharacterId);
     const characterName = character ? `${character.name} ${character.surname}` : 'This character';
-    alert(
-      `${characterName} is already selected for another speaker. Please choose a different character.`
+    showToast(
+      `${characterName} is already selected for another speaker. Choose a different character.`,
+      { type: 'warning' }
     );
     return false;
   }
@@ -347,7 +349,13 @@ export function createEmptyPanicLine() {
 }
 
 export async function deleteMassPanicLineGroup(gameId, groupId) {
-  if (!confirm('Delete this entire line group (all 3 speakers)?')) return;
+  const confirmed = await confirmDialog({
+    title: 'Delete line group',
+    message: 'Delete this entire line group (all 3 speakers)?',
+    confirmLabel: 'Delete',
+    danger: true,
+  });
+  if (!confirmed) return;
 
   const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
@@ -456,7 +464,7 @@ export async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event)
     autoSaveTrial();
   } catch (error) {
     console.error('Error saving audio:', error);
-    alert(`Failed to save audio: ${error.message}`);
+    showToast(`Failed to save audio: ${error.message}`, { type: 'error' });
   }
 }
 

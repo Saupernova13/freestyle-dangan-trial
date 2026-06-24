@@ -1,6 +1,7 @@
 // Truth Bullet modal for editing bullet details
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
+import { showToast } from '../ui/dialogs.js';
 import { escapeHtml, showLoader } from '../utils.js';
 import { renderTruthBulletsView } from '../views/truthBulletsView.js';
 
@@ -17,7 +18,7 @@ let bulletFields = {
 
 export function openTruthBulletModal(bulletId) {
   if (!state.dirHandle) {
-    alert('Choose a folder first!');
+    showToast('Choose a trial folder first.', { type: 'warning' });
     return;
   }
 
@@ -27,7 +28,7 @@ export function openTruthBulletModal(bulletId) {
 
   const bullet = state.truthBullets.find((b) => b.bulletId === bulletId);
   if (!bullet) {
-    alert('Truth bullet not found!');
+    showToast('Truth bullet not found.', { type: 'error' });
     return;
   }
 
@@ -182,7 +183,7 @@ export function closeTruthBulletModal() {
 export async function saveTruthBullet() {
   const bullet = state.truthBullets.find((b) => b.bulletId === activeBulletId);
   if (!bullet) {
-    alert('Bullet not found!');
+    showToast('Truth bullet not found.', { type: 'error' });
     closeTruthBulletModal();
     return;
   }

@@ -3,6 +3,8 @@ import { BLOCK_COUNT, blockTypes } from './constants.js';
 import { state } from './state.js';
 import { updateExportButtonState } from '../export.js';
 import { appSettings } from '../settings.js';
+import { alertDialog } from '../ui/dialogs.js';
+import { setSaveStatus } from '../ui/saveStatus.js';
 import { fileToDataUrl, renderDirDisplay, showLoader } from '../utils.js';
 import { renderActiveView } from '../views/viewManager.js';
 
@@ -52,13 +54,16 @@ export async function chooseTrialDir() {
         console.error('Failed to parse trial.json:', error);
         // Warn the user before presenting an empty editor — continuing to
         // edit and auto-save would overwrite the (possibly recoverable) file.
-        alert(
-          'trial.json in this folder could not be read (' +
+        await alertDialog({
+          title: 'Could not read trial.json',
+          type: 'warning',
+          message:
+            'trial.json in this folder could not be read (' +
             error.message +
             ').\n\n' +
             'The editor will open empty. If this trial matters to you, back up ' +
-            'the folder before making changes, since saving will overwrite trial.json.'
-        );
+            'the folder before making changes, since saving will overwrite trial.json.',
+        });
         // Initialize with empty trial if corrupted
         state.trialName = '';
         document.getElementById('trialNameInput').value = '';
@@ -87,7 +92,11 @@ export async function chooseTrialDir() {
     // AbortError means the user cancelled the directory picker — not an error.
     if (err && err.name === 'AbortError') return;
     console.error('Failed to open trial folder:', err);
-    alert(`Failed to open trial folder: ${err.message}`);
+    await alertDialog({
+      title: 'Could not open folder',
+      type: 'error',
+      message: `Failed to open trial folder: ${err.message}`,
+    });
   }
 }
 
@@ -276,28 +285,33 @@ let autoSaveFailureNotified = false;
 // trial name). Writing trial.json on every keypress hammers the disk and
 // can interleave writes; one trailing save after the user pauses is enough.
 export function scheduleAutoSave(delayMs = 600) {
+  if (state.dirHandle) setSaveStatus('saving');
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(autoSaveTrial, delayMs);
 }
 
 export async function autoSaveTrial() {
   if (!state.dirHandle) return;
+  setSaveStatus('saving');
   try {
     await writeTrialJson();
     autoSaveFailureNotified = false;
+    setSaveStatus('saved');
   } catch (err) {
     // Surface the first failure loudly (revoked permission, disk full, ...)
     // but don't re-alert on every subsequent keystroke until a save succeeds.
     console.error('Auto-save failed:', err);
+    setSaveStatus('error');
     if (!autoSaveFailureNotified) {
       autoSaveFailureNotified = true;
-      alert(
-        `Auto-save failed: ${err.message}
-
-` +
+      await alertDialog({
+        title: 'Auto-save failed',
+        type: 'error',
+        message:
+          `Auto-save failed: ${err.message}\n\n` +
           'Your latest changes are NOT saved. Check folder permissions and ' +
-          'free disk space, then make another edit to retry.'
-      );
+          'free disk space, then make another edit to retry.',
+      });
     }
   }
 }

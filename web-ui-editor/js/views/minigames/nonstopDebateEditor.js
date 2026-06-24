@@ -10,6 +10,7 @@ import {
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
 import { seekAudioPreview, toggleAudioPreview } from '../../components/audioPreview.js';
+import { confirmDialog, showToast } from '../../ui/dialogs.js';
 import { renderCharacterOptions } from '../../models/characterModel.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
@@ -403,7 +404,7 @@ export function toggleBulletForMinigame(gameId, bulletId) {
   } else {
     // Select (max 6)
     if (selectedBullets.length >= 6) {
-      alert('Maximum 6 truth bullets can be selected.');
+      showToast('Maximum 6 truth bullets can be selected.', { type: 'warning' });
       return;
     }
     selectedBullets.push(bulletId);
@@ -465,8 +466,14 @@ export function updateDialogueLine(gameId, lineId, field, value) {
   }
 }
 
-export function deleteDialogueLine(gameId, lineId) {
-  if (!confirm('Delete this dialogue line?')) return;
+export async function deleteDialogueLine(gameId, lineId) {
+  const confirmed = await confirmDialog({
+    title: 'Delete dialogue line',
+    message: 'Delete this dialogue line?',
+    confirmLabel: 'Delete',
+    danger: true,
+  });
+  if (!confirmed) return;
 
   const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.dialogueLines) return;
@@ -565,7 +572,7 @@ export async function handleDialogueVoiceUpload(gameId, lineId, event) {
     autoSaveTrial();
   } catch (error) {
     console.error('Error saving audio file:', error);
-    alert(`Failed to save audio: ${error.message}`);
+    showToast(`Failed to save audio: ${error.message}`, { type: 'error' });
   }
 }
 

@@ -1,6 +1,7 @@
 // Minigame view coordinator - delegates to specific minigame editor modules
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
+import { confirmDialog } from '../ui/dialogs.js';
 import { generateId, escapeHtml } from '../utils.js';
 import { renderDebateScrumEditor } from './minigames/debateScrumEditor.js';
 import { renderHangmansGambitEditor } from './minigames/hangmansGambitEditor.js';
@@ -236,14 +237,15 @@ export function addMinigame() {
   autoSaveTrial();
 }
 
-export function deleteMinigame(gameId) {
-  if (
-    !confirm(
-      'Delete this minigame? This will also remove it from any script lines that reference it.'
-    )
-  ) {
-    return;
-  }
+export async function deleteMinigame(gameId) {
+  const confirmed = await confirmDialog({
+    title: 'Delete minigame',
+    message:
+      'Delete this minigame? This will also remove it from any script lines that reference it.',
+    confirmLabel: 'Delete',
+    danger: true,
+  });
+  if (!confirmed) return;
 
   state.minigames = state.minigames.filter((mg) => mg.gameId !== gameId);
 

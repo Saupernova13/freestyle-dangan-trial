@@ -10,6 +10,7 @@ import { renderScriptEditor } from '../app.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import { appSettings } from '../settings.js';
+import { showToast } from '../ui/dialogs.js';
 import { normalizeHighlights, showLoader } from '../utils.js';
 import { closeModal } from './modalCoordinator.js';
 import { AUDIO_PREVIEW_KEY, COLOR_REGEX, activeLine, resetFields, sl } from './scriptLine/state.js';
@@ -45,12 +46,12 @@ export function getAvailableTabs(line) {
  */
 export async function openScriptLineModal(lineId) {
   if (!state.dirHandle) {
-    alert('Choose a folder first!');
+    showToast('Choose a trial folder first.', { type: 'warning' });
     return;
   }
 
   if (!lineId || typeof lineId !== 'string') {
-    alert('Invalid script line ID');
+    showToast('Invalid script line.', { type: 'error' });
     return;
   }
 
@@ -60,7 +61,7 @@ export async function openScriptLineModal(lineId) {
 
   const line = state.scriptLines.find((l) => l.id === lineId);
   if (!line || typeof line !== 'object') {
-    alert('Script line not found!');
+    showToast('Script line not found.', { type: 'error' });
     return;
   }
 
@@ -93,7 +94,7 @@ export function renderScriptLineModal() {
   if (line.type === 'speaking') {
     const character = state.cast.find((c) => c && c.id === line.characterId);
     if (!character) {
-      alert('No character selected for this line!');
+      showToast('Select a character for this line first.', { type: 'warning' });
       closeModal();
       return;
     }

@@ -1,6 +1,7 @@
 // Export module - handles packaging trial files into .drtrial format
 import JSZip from 'jszip';
 import { state } from './core/state.js';
+import { alertDialog, showToast } from './ui/dialogs.js';
 import { normalizeHighlights, showLoader } from './utils.js';
 
 /**
@@ -34,12 +35,12 @@ export function sanitizeTrialJson(content) {
  */
 export async function exportToPlayableFile() {
   if (!state.dirHandle) {
-    alert('Please choose a trial folder first!');
+    showToast('Choose a trial folder first.', { type: 'warning' });
     return;
   }
 
   if (!state.trialName || state.trialName.trim() === '') {
-    alert('Please enter a trial name before exporting!');
+    showToast('Enter a trial name before exporting.', { type: 'warning' });
     return;
   }
 
@@ -128,13 +129,14 @@ export async function exportToPlayableFile() {
 
     // Show success message
     const fileSizeMB = (blob.size / (1024 * 1024)).toFixed(2);
-    alert(
-      `Trial exported successfully.\n\nFile: ${filename}\nSize: ${fileSizeMB} MB\nFiles packaged: ${filesAdded}`
-    );
+    showToast(`Exported ${filename} (${fileSizeMB} MB, ${filesAdded} files)`, {
+      type: 'success',
+      duration: 5000,
+    });
   } catch (error) {
     console.error('Export failed:', error);
     showLoader(false);
-    alert(`Export failed: ${error.message}`);
+    await alertDialog({ title: 'Export failed', type: 'error', message: error.message });
   }
 }
 

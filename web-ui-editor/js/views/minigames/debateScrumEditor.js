@@ -10,6 +10,7 @@ import {
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
 import { toggleAudioPreview } from '../../components/audioPreview.js';
+import { showToast } from '../../ui/dialogs.js';
 import { renderCharacterOptions } from '../../models/characterModel.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
@@ -237,7 +238,7 @@ export function addDebateScrumArgument(gameId) {
   if (!mg.typeSpecific.arguments) mg.typeSpecific.arguments = [];
 
   if (mg.typeSpecific.arguments.length >= 8) {
-    alert('Maximum 8 arguments allowed');
+    showToast('Maximum 8 arguments allowed.', { type: 'warning' });
     return;
   }
 
@@ -400,7 +401,7 @@ export async function handleDebateScrumAudioUpload(gameId, argumentId, side, eve
     autoSaveTrial();
   } catch (error) {
     console.error('Error saving audio:', error);
-    alert(`Failed to save audio: ${error.message}`);
+    showToast(`Failed to save audio: ${error.message}`, { type: 'error' });
   }
 }
 

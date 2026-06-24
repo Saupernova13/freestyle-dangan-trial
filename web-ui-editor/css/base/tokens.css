@@ -72,13 +72,5 @@
   --shadow-accent: 5px 5px 0 var(--primary); /* active hero element */
 
   /* Angular clip -- notched corner used on hero panels/buttons */
-  --clip-notch: polygon(
-    0 0,
-    calc(100% - 9px) 0,
-    100% 9px,
-    100% 100%,
-    9px 100%,
-    0 calc(100% - 9px)
-  );
+  --clip-notch: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
 }
-

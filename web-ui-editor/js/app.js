@@ -8,6 +8,7 @@ import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
 import { state } from './core/state.js';
 import { autoSaveTrial, scheduleAutoSave } from './core/storage.js';
 import { confirmDialog } from './ui/dialogs.js';
+import { initModalBehaviors } from './ui/modalBehaviors.js';
 import { updateExportButtonState } from './export.js';
 import { loadSettings } from './settings.js';
 import { initializeTheme } from './ui/theme.js';
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
   loadSettings();
   initSpriteMagnifier();
   initCharacterSearchDropdown();
+  initModalBehaviors();
   renderActiveView();
 
   // Trial name input handler

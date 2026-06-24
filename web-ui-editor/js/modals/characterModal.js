@@ -4,6 +4,7 @@ import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import { getCharacterType, isHeadmaster } from '../models/characterModel.js';
 import { appSettings } from '../settings.js';
 import { showToast } from '../ui/dialogs.js';
+import { focusFirstField } from '../ui/modalBehaviors.js';
 import { escapeHtml, showLoader } from '../utils.js';
 import { renderCastGrid } from '../views/castView.js';
 
@@ -87,6 +88,7 @@ export async function openCharModal(idx) {
   }
 
   renderCharacterModal();
+  focusFirstField();
 }
 
 export function renderCharacterModal() {

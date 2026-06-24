@@ -1,6 +1,7 @@
 // Settings management
 import { closeModal } from './modals/modalCoordinator.js';
 import { alertDialog, showToast } from './ui/dialogs.js';
+import { focusFirstField } from './ui/modalBehaviors.js';
 export const appSettings = {
   maxSprites: 25,
 };
@@ -46,6 +47,7 @@ export function openSettings() {
       </div>
     </div>
   `;
+  focusFirstField();
 }
 
 export function saveAppSettings() {

@@ -2,6 +2,7 @@
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { showToast } from '../ui/dialogs.js';
+import { focusFirstField } from '../ui/modalBehaviors.js';
 import { escapeHtml, showLoader } from '../utils.js';
 import { renderTruthBulletsView } from '../views/truthBulletsView.js';
 
@@ -41,6 +42,7 @@ export function openTruthBulletModal(bulletId) {
   };
 
   renderTruthBulletModal();
+  focusFirstField();
 }
 
 export function renderTruthBulletModal() {

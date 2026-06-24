@@ -11,6 +11,7 @@ import { state } from '../core/state.js';
 import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import { appSettings } from '../settings.js';
 import { showToast } from '../ui/dialogs.js';
+import { focusFirstField } from '../ui/modalBehaviors.js';
 import { normalizeHighlights, showLoader } from '../utils.js';
 import { closeModal } from './modalCoordinator.js';
 import { AUDIO_PREVIEW_KEY, COLOR_REGEX, activeLine, resetFields, sl } from './scriptLine/state.js';
@@ -84,6 +85,7 @@ export async function openScriptLineModal(lineId) {
   resetFields(line);
 
   renderScriptLineModal();
+  focusFirstField();
 }
 
 export function renderScriptLineModal() {

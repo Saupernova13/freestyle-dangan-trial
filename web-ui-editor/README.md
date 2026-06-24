@@ -60,7 +60,8 @@ js/
 ├── export.js               # .drtrial (ZIP) packaging
 ├── settings.js             # App settings modal + localStorage persistence
 ├── utils.js                # Pure helpers (escaping, highlight normalization)
-├── ui/                     # Theme + inline SVG icon set
+├── ui/                     # Theme, inline SVG icons, themed dialogs/toasts,
+│                           #   save-status indicator, modal + a11y behaviors
 ├── components/             # Floating add button, sprite magnifier,
 │                           #   shared audio preview, character search dropdown
 ├── models/                 # Character helpers

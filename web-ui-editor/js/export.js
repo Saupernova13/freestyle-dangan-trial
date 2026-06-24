@@ -1,8 +1,78 @@
 // Export module - handles packaging trial files into .drtrial format
 import JSZip from 'jszip';
 import { state } from './core/state.js';
-import { alertDialog, showToast } from './ui/dialogs.js';
+import { MINIGAME_TYPE_LABELS } from './core/constants.js';
+import { isCharacterComplete, missingCharacterFields } from './models/characterModel.js';
+import { alertDialog, confirmDialog, showToast } from './ui/dialogs.js';
 import { normalizeHighlights, showLoader } from './utils.js';
+
+// Does a minigame instance have any authored content for its type?
+function minigameIsEmpty(mg) {
+  const ts = mg.typeSpecific || {};
+  switch (mg.gameType) {
+    case 'nonstop_debate':
+      return !ts.dialogueLines || ts.dialogueLines.length === 0;
+    case 'mass_panic_debate':
+      return !ts.lineGroups || ts.lineGroups.length === 0;
+    case 'debate_scrum':
+      return !ts.arguments || ts.arguments.length === 0;
+    case 'logic_dive':
+      return !ts.questions || ts.questions.length === 0;
+    case 'hangmans_gambit':
+      return !ts.answerKey || String(ts.answerKey).trim() === '';
+    default:
+      return false;
+  }
+}
+
+// Scan the in-memory trial for problems that would make the exported file
+// broken or unplayable. Returns an array of human-readable issue strings.
+export function validateTrialForExport() {
+  const issues = [];
+  const minigameIds = new Set(state.minigames.map((mg) => mg.gameId));
+
+  if (state.scriptLines.length === 0) {
+    issues.push('The trial has no script lines.');
+  }
+
+  state.scriptLines.forEach((line, i) => {
+    const n = i + 1;
+    if (line.type === 'speaking') {
+      if (!line.characterId) issues.push(`Line ${n}: speaking line has no character selected.`);
+      if (!line.dialogue || !line.dialogue.trim()) issues.push(`Line ${n}: dialogue is empty.`);
+    } else if (line.type === 'narrator') {
+      if (!line.text || !line.text.trim()) issues.push(`Line ${n}: narration text is empty.`);
+    } else if (line.type === 'minigame') {
+      if (!line.minigameId) issues.push(`Line ${n}: minigame trigger has no minigame selected.`);
+      else if (!minigameIds.has(line.minigameId))
+        issues.push(`Line ${n}: references a minigame that no longer exists.`);
+    }
+  });
+
+  state.cast.forEach((c) => {
+    if (c && !isCharacterComplete(c)) {
+      const missing = missingCharacterFields(
+        c,
+        Array.isArray(c.sprites) && c.sprites.some(Boolean)
+      );
+      const name = `${c.name || ''} ${c.surname || ''}`.trim() || 'Unnamed character';
+      issues.push(`Character "${name}" is a draft (missing: ${missing.join(', ')}).`);
+    }
+  });
+
+  state.minigames.forEach((mg) => {
+    const label = MINIGAME_TYPE_LABELS[mg.gameType] || mg.gameType;
+    const name = mg.name && mg.name.trim() ? mg.name : `Unnamed ${label}`;
+    if (!mg.name || !mg.name.trim()) issues.push(`Minigame "${label}" has no question/name.`);
+    if (minigameIsEmpty(mg)) issues.push(`Minigame "${name}" has no content configured.`);
+  });
+
+  state.truthBullets.forEach((b, i) => {
+    if (!b.name || !b.name.trim()) issues.push(`Truth bullet ${i + 1} has no name.`);
+  });
+
+  return issues;
+}
 
 /**
  * Final data gate before packaging: normalize every script line's highlight
@@ -44,8 +114,24 @@ export async function exportToPlayableFile() {
     return;
   }
 
+  // Pre-flight check: warn about anything that would make the trial broken or
+  // unplayable, and let the author decide whether to export anyway.
+  const issues = validateTrialForExport();
+  if (issues.length > 0) {
+    const shown = issues.slice(0, 8);
+    const extra = issues.length - shown.length;
+    const list = shown.map((m) => `• ${m}`).join('\n') + (extra > 0 ? `\n• …and ${extra} more` : '');
+    const proceed = await confirmDialog({
+      title: `Export check — ${issues.length} issue${issues.length === 1 ? '' : 's'}`,
+      message: `${list}\n\nExport anyway?`,
+      confirmLabel: 'Export anyway',
+      cancelLabel: 'Go back',
+    });
+    if (!proceed) return;
+  }
+
   try {
-    showLoader(true);
+    showLoader(true, 'Packaging trial…');
 
     // Create ZIP instance
     const zip = new JSZip();
@@ -88,13 +174,12 @@ export async function exportToPlayableFile() {
     }
 
     // Add all other files and directories
-    await addDirectoryToZip(zip, state.dirHandle, '', (current, total) => {
+    await addDirectoryToZip(zip, state.dirHandle, '', (current) => {
       filesAdded = current;
-      console.log(`Packaging... ${current}/${total} files`);
+      showLoader(true, `Packaging… ${current}/${totalFiles} files`);
     });
 
     // Generate ZIP file
-    console.log('Generating ZIP archive...');
     const blob = await zip.generateAsync(
       {
         type: 'blob',
@@ -106,7 +191,7 @@ export async function exportToPlayableFile() {
       (metadata) => {
         // Progress callback
         if (metadata.percent) {
-          console.log(`Compressing... ${Math.round(metadata.percent)}%`);
+          showLoader(true, `Compressing… ${Math.round(metadata.percent)}%`);
         }
       }
     );

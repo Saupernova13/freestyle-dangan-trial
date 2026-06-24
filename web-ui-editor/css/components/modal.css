@@ -215,6 +215,29 @@
   min-width: 120px;
 }
 
+/* Destructive action (e.g. Remove character) sits at the far left. */
+.dr-btn-row .dr-btn-remove {
+  margin-right: auto;
+}
+
+/* Inline form validation: marker on empty required fields + invalid border. */
+.req-flag {
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--warning);
+  opacity: 0.85;
+}
+
+.dr-form input.is-invalid,
+.dr-form select.is-invalid,
+.dr-form textarea.is-invalid {
+  border-color: var(--error);
+  box-shadow: 0 0 0 2px rgba(var(--error-rgb), 0.15);
+}
+
 /* Sprite Grid */
 .dr-sprgrid {
   display: grid;

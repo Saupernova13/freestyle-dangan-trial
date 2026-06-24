@@ -61,6 +61,24 @@
   background: var(--bg-primary);
 }
 
+/* Draft marker for an incomplete character profile */
+.cast-draft-badge {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  background: var(--warning);
+  color: var(--bg-base);
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
 .blk-ppic {
   width: 80px;
   height: 140px;

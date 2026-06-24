@@ -2,6 +2,7 @@
 import { BLOCK_COUNT, blockNames, blockTypes } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { openCharModal } from '../modals/characterModal.js';
+import { isCharacterComplete } from '../models/characterModel.js';
 import { escapeHtml } from '../utils.js';
 
 export function renderCastGrid() {
@@ -27,7 +28,11 @@ export function renderCastGrid() {
         spriteHtml = `<div class="blk-ppic" style="display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">No Image</div>`;
       }
 
+      const isDraft = !isCharacterComplete(c);
+      div.setAttribute('data-draft', isDraft ? '1' : '0');
+
       div.innerHTML = `
+        ${isDraft ? `<span class="cast-draft-badge" title="Profile incomplete">Draft</span>` : ''}
         ${spriteHtml}
         <div class="cast-name">${escapeHtml(`${c.name || ''} ${c.surname || ''}`)}</div>
         <div class="cast-block-title">${blockNames[i]}</div>

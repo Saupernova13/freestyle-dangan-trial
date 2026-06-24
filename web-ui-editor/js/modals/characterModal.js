@@ -1,9 +1,13 @@
 // Character modal for creating/editing state.cast members
 import { state } from '../core/state.js';
 import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
-import { getCharacterType, isHeadmaster } from '../models/characterModel.js';
+import {
+  getCharacterType,
+  isHeadmaster,
+  missingCharacterFields,
+} from '../models/characterModel.js';
 import { appSettings } from '../settings.js';
-import { showToast } from '../ui/dialogs.js';
+import { confirmDialog, showToast } from '../ui/dialogs.js';
 import { focusFirstField } from '../ui/modalBehaviors.js';
 import { escapeHtml, showLoader } from '../utils.js';
 import { renderCastGrid } from '../views/castView.js';
@@ -26,6 +30,14 @@ let charSprites = [];
 let modalTab = 'details';
 let modalErr = '';
 let modalMsg = '';
+// Set once the user attempts a save, so empty required fields can be flagged
+// in red. Markers showing which fields are still needed are shown regardless.
+let saveAttempted = false;
+
+// Does the sprite buffer hold at least one usable image?
+function hasAnySprite() {
+  return charSprites.some((s) => s && (s.blob || s.dataURL));
+}
 
 // Generate human-readable ID for characters
 export function generateCharacterId(name, surname, dob) {
@@ -56,6 +68,7 @@ export async function openCharModal(idx) {
   modalTab = 'details';
   modalErr = '';
   modalMsg = '';
+  saveAttempted = false;
 
   let c = state.cast[idx] || {};
   charFields = {
@@ -112,6 +125,7 @@ export function renderCharacterModal() {
           ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ''}
         </div>
         <div class="dr-btn-row">
+          ${state.cast[activeIdx] ? `<button class="btn btn-danger dr-btn-remove" onclick="removeCharacter()">${window.icon('trash')} Remove</button>` : ''}
           <button class="btn btn-secondary" onclick="closeCharModal()">Cancel</button>
           <button class="btn btn-primary" onclick="trySaveChar()" ${!state.dirHandle ? 'disabled' : ''}>Save ${isHeadmasterChar ? 'Headmaster' : 'Student'}</button>
         </div>
@@ -136,6 +150,16 @@ export function fieldUpdate(field, val) {
   charFields[field] = val;
 }
 
+// Inline helpers for the details form: a red border once a save was attempted
+// with the field still empty, and a small "needed" marker on empty fields.
+function invalidClass(key) {
+  return saveAttempted && !String(charFields[key] ?? '').trim() ? ' is-invalid' : '';
+}
+
+function neededMark(key) {
+  return !String(charFields[key] ?? '').trim() ? ' <span class="req-flag">needed</span>' : '';
+}
+
 export function renderCharDetailsTab() {
   const isHeadmasterChar = isHeadmaster(activeIdx);
 
@@ -145,18 +169,18 @@ export function renderCharDetailsTab() {
     </div>
     <div class="dr-fg-row">
       <div class="dr-fg-field">
-          <label>First Name</label>
-          <input required value="${escapeHtml(charFields.name || '')}" onchange="fieldUpdate('name',this.value)" oninput="fieldUpdate('name',this.value)">
+          <label>First Name${neededMark('name')}</label>
+          <input class="${invalidClass('name')}" value="${escapeHtml(charFields.name || '')}" onchange="fieldUpdate('name',this.value)" oninput="fieldUpdate('name',this.value)">
       </div>
       <div class="dr-fg-field">
-          <label>Last Name</label>
-          <input required value="${escapeHtml(charFields.surname || '')}" onchange="fieldUpdate('surname',this.value)" oninput="fieldUpdate('surname',this.value)">
+          <label>Last Name${neededMark('surname')}</label>
+          <input class="${invalidClass('surname')}" value="${escapeHtml(charFields.surname || '')}" onchange="fieldUpdate('surname',this.value)" oninput="fieldUpdate('surname',this.value)">
       </div>
     </div>
     <div class="dr-fg-row">
       <div class="dr-fg-field">
-          <label>Date of Birth</label>
-          <input type="date" required value="${charFields.dob || ''}" onchange="fieldUpdate('dob',this.value)" oninput="fieldUpdate('dob',this.value)">
+          <label>Date of Birth${neededMark('dob')}</label>
+          <input type="date" class="${invalidClass('dob')}" value="${charFields.dob || ''}" onchange="fieldUpdate('dob',this.value)" oninput="fieldUpdate('dob',this.value)">
       </div>
       <div class="dr-fg-field">
         <label>Blood Type</label>
@@ -180,31 +204,31 @@ export function renderCharDetailsTab() {
         </div>
       </div>
       <div class="dr-fg-field">
-        <label>Weight (kg)</label>
-        <input type="number" min="0" max="300" required value="${charFields.weight || ''}" onchange="fieldUpdate('weight',this.value)" oninput="fieldUpdate('weight',this.value)">
+        <label>Weight (kg)${neededMark('weight')}</label>
+        <input type="number" min="0" max="300" class="${invalidClass('weight')}" value="${charFields.weight || ''}" onchange="fieldUpdate('weight',this.value)" oninput="fieldUpdate('weight',this.value)">
       </div>
     </div>
     <div class="dr-fg-row">
       <div class="dr-fg-field">
-        <label>Chest (cm)</label>
-        <input type="number" min="0" max="200" required value="${charFields.chest || ''}" onchange="fieldUpdate('chest',this.value)" oninput="fieldUpdate('chest',this.value)">
+        <label>Chest (cm)${neededMark('chest')}</label>
+        <input type="number" min="0" max="200" class="${invalidClass('chest')}" value="${charFields.chest || ''}" onchange="fieldUpdate('chest',this.value)" oninput="fieldUpdate('chest',this.value)">
       </div>
       <div class="dr-fg-field"></div>
     </div>
     <div class="dr-fg-row">
       <div class="dr-fg-field">
-        <label>Likes</label>
-        <textarea required onchange="fieldUpdate('likes',this.value)" oninput="fieldUpdate('likes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster enjoy?' : 'What does this student like?'}">${escapeHtml(charFields.likes || '')}</textarea>
+        <label>Likes${neededMark('likes')}</label>
+        <textarea class="${invalidClass('likes')}" onchange="fieldUpdate('likes',this.value)" oninput="fieldUpdate('likes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster enjoy?' : 'What does this student like?'}">${escapeHtml(charFields.likes || '')}</textarea>
       </div>
       <div class="dr-fg-field">
-        <label>Dislikes</label>
-        <textarea required onchange="fieldUpdate('dislikes',this.value)" oninput="fieldUpdate('dislikes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster dislike?' : 'What does this student dislike?'}">${escapeHtml(charFields.dislikes || '')}</textarea>
+        <label>Dislikes${neededMark('dislikes')}</label>
+        <textarea class="${invalidClass('dislikes')}" onchange="fieldUpdate('dislikes',this.value)" oninput="fieldUpdate('dislikes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster dislike?' : 'What does this student dislike?'}">${escapeHtml(charFields.dislikes || '')}</textarea>
       </div>
     </div>
     <div class="dr-fg-row single">
       <div class="dr-fg-field">
-        <label>Notes</label>
-        <textarea required onchange="fieldUpdate('notes',this.value)" oninput="fieldUpdate('notes',this.value)" placeholder="${isHeadmasterChar ? 'Additional notes about this headmaster...' : 'Additional notes about this student...'}">${escapeHtml(charFields.notes || '')}</textarea>
+        <label>Notes${neededMark('notes')}</label>
+        <textarea class="${invalidClass('notes')}" onchange="fieldUpdate('notes',this.value)" oninput="fieldUpdate('notes',this.value)" placeholder="${isHeadmasterChar ? 'Additional notes about this headmaster...' : 'Additional notes about this student...'}">${escapeHtml(charFields.notes || '')}</textarea>
       </div>
     </div>
   </form>`;
@@ -215,7 +239,7 @@ export function renderCharSpritesTab() {
 
   return `
     <div class="dr-form">
-      <button class="btn btn-primary dr-sprslot-bulk" type="button" onclick="bulkImportSprites()">${window.icon('folder')} Bulk Import All ${appSettings.maxSprites} ${isHeadmasterChar ? 'Headmaster' : 'Student'} Sprites</button>
+      <button class="btn btn-primary dr-sprslot-bulk" type="button" onclick="bulkImportSprites()">${window.icon('folder')} Bulk Import ${isHeadmasterChar ? 'Headmaster' : 'Student'} Sprites</button>
       <div class="dr-sprgrid">
         ${charSprites
           .map(
@@ -232,7 +256,8 @@ export function renderCharSpritesTab() {
           .join('')}
       </div>
       <p style="font-size: 0.875rem; color: var(--text-tertiary); margin-top: 1rem;">
-        Upload images in any format. They will be automatically processed and saved as PNG files.
+        Upload images in any format — they are saved as PNG. Bulk import fills the
+        slots in order, so you can add as many or as few as you have ready.
         ${isHeadmasterChar ? '<br><strong>Note:</strong> This is for the Headmaster character.' : ''}
       </p>
     </div>
@@ -258,51 +283,38 @@ export function bulkImportSprites() {
   inp.accept = 'image/*';
   inp.multiple = true;
 
-  inp.onchange = (e) => {
-    let files = Array.from(inp.files);
-    if (files.length !== appSettings.maxSprites) {
-      modalErr = `Please select exactly ${appSettings.maxSprites} images.`;
-      renderCharacterModal();
-      return;
-    }
+  inp.onchange = () => {
+    const files = Array.from(inp.files);
+    if (files.length === 0) return;
 
-    files.forEach((f, idx) => {
-      let url = URL.createObjectURL(f);
+    // Fill the slots in order, up to the per-character cap. Extra files are
+    // ignored (with a heads-up) rather than rejecting the whole selection.
+    const slots = Math.max(charSprites.length, appSettings.maxSprites);
+    const usable = files.slice(0, slots);
+    usable.forEach((f, idx) => {
+      const url = URL.createObjectURL(f);
       charSprites[idx] = { dataURL: url, fname: f.name, blob: f };
-      if (idx === appSettings.maxSprites - 1) renderCharacterModal();
     });
+
+    if (files.length > slots) {
+      showToast(`Imported the first ${slots} of ${files.length} images.`, { type: 'warning' });
+    }
+    renderCharacterModal();
   };
 
   inp.click();
 }
 
 export async function trySaveChar() {
-  let missingF =
-    !charFields.name ||
-    !charFields.surname ||
-    !charFields.weight ||
-    !charFields.chest ||
-    !charFields.dob ||
-    !charFields.likes ||
-    !charFields.dislikes ||
-    !charFields.notes;
-  let badh = isNaN(parseFloat(charFields.heightM)) || isNaN(parseInt(charFields.heightCM));
-  let allSprites =
-    charSprites.length === appSettings.maxSprites && charSprites.every((s) => s && s.blob);
-
-  if (missingF || badh || !allSprites) {
-    modalErr = '';
-    if (missingF || badh) modalErr += 'All fields must be filled correctly.<br>';
-    if (!allSprites) modalErr += `All ${appSettings.maxSprites} sprites must be uploaded.`;
-    renderCharacterModal();
-    return;
-  }
-
   if (!state.dirHandle) {
-    modalErr = 'Choose a folder first!';
-    renderCharacterModal();
+    showToast('Choose a trial folder first.', { type: 'warning' });
     return;
   }
+
+  // Drafts are allowed: a character saves with whatever is filled in. We still
+  // compute what's missing so the grid can flag it and the user gets a heads-up.
+  saveAttempted = true;
+  const missing = missingCharacterFields(charFields, hasAnySprite());
 
   try {
     showLoader(true, 'Saving character…');
@@ -313,10 +325,12 @@ export async function trySaveChar() {
       ? existingChar.id
       : generateCharacterId(charFields.name, charFields.surname, charFields.dob);
 
-    let charDirname = (charFields.name + '_' + charFields.surname).replace(
-      /[^a-zA-Z0-9_\- ]/g,
-      '_'
-    );
+    // Fall back to the id for the folder name when there's no name yet, so
+    // unnamed drafts don't all collide on the same "_" directory.
+    const nameBased = (charFields.name + '_' + charFields.surname)
+      .replace(/[^a-zA-Z0-9_\- ]/g, '_')
+      .replace(/^[_\s]+|[_\s]+$/g, '');
+    const charDirname = existingChar?._folderHandle?.name || nameBased || characterId;
     let charsDir = await state.dirHandle.getDirectoryHandle('Characters', { create: true });
     let charDir = await charsDir.getDirectoryHandle(charDirname, { create: true });
 
@@ -345,9 +359,11 @@ export async function trySaveChar() {
     await writer.write(JSON.stringify(charJson, null, 2));
     await writer.close();
 
-    // Save sprites with proper error handling
+    // Save sprites with proper error handling. Iterate the buffer length (not
+    // maxSprites) so lowering the setting never drops an existing character's
+    // extra sprites.
     let savedSprites = [];
-    for (let k = 0; k < appSettings.maxSprites; k++) {
+    for (let k = 0; k < charSprites.length; k++) {
       let s = charSprites[k];
       if (s && s.blob) {
         try {
@@ -366,10 +382,12 @@ export async function trySaveChar() {
       }
     }
 
-    // Update state.cast with new character data
+    // Update state.cast with new character data. Keep the folder handle so a
+    // later edit or removal acts on the same directory.
     state.cast[activeIdx] = {
       ...charJson,
       sprites: savedSprites,
+      _folderHandle: charDir,
     };
 
     // Save trial data
@@ -378,10 +396,72 @@ export async function trySaveChar() {
     showLoader(false);
     closeCharModal();
     renderCastGrid();
+
+    if (missing.length > 0) {
+      showToast(`Saved as draft — still needs: ${missing.join(', ')}.`, {
+        type: 'warning',
+        duration: 5000,
+      });
+    } else {
+      showToast('Character saved', { type: 'success' });
+    }
   } catch (error) {
     showLoader(false);
     modalErr = `Failed to save character: ${error.message}`;
     renderCharacterModal();
     console.error('Character save error:', error);
+  }
+}
+
+// Remove the active character: delete its folder, clear the cast slot, and
+// detach it from any speaking lines that referenced it.
+export async function removeCharacter() {
+  const existing = state.cast[activeIdx];
+  if (!existing) {
+    closeCharModal();
+    return;
+  }
+
+  const fullName = `${existing.name || ''} ${existing.surname || ''}`.trim() || 'this character';
+  const confirmed = await confirmDialog({
+    title: 'Remove character',
+    message: `Remove ${fullName}? This deletes their files and clears any script lines that use them.`,
+    confirmLabel: 'Remove',
+    danger: true,
+  });
+  if (!confirmed) return;
+
+  try {
+    showLoader(true, 'Removing character…');
+
+    const charsDir = await state.dirHandle
+      .getDirectoryHandle('Characters', { create: false })
+      .catch(() => null);
+    const folderName =
+      existing._folderHandle?.name ||
+      (existing.name + '_' + existing.surname).replace(/[^a-zA-Z0-9_\- ]/g, '_');
+    if (charsDir && folderName) {
+      try {
+        await charsDir.removeEntry(folderName, { recursive: true });
+      } catch (e) {
+        console.warn('Could not remove character folder:', e);
+      }
+    }
+
+    state.scriptLines.forEach((l) => {
+      if (l.type === 'speaking' && l.characterId === existing.id) l.characterId = '';
+    });
+
+    state.cast[activeIdx] = null;
+    await autoSaveTrial();
+
+    showLoader(false);
+    closeCharModal();
+    renderCastGrid();
+    showToast('Character removed', { type: 'success' });
+  } catch (error) {
+    showLoader(false);
+    console.error('Failed to remove character:', error);
+    showToast(`Failed to remove character: ${error.message}`, { type: 'error' });
   }
 }

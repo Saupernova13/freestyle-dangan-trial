@@ -568,7 +568,7 @@ export function renderScriptLineBar(line, index) {
       <select class="script-minigame-select" onchange="updateScriptLine('${line.id}', 'minigameId', this.value)" onclick="event.stopPropagation()">
         <option value="">Select Minigame Instance...</option>
         ${minigameOptions}
-        ${state.minigames.length === 0 ? '<option value="" disabled>No state.minigames configured - visit Minigame Details to create one</option>' : ''}
+        ${state.minigames.length === 0 ? '<option value="" disabled>No minigames configured - visit Minigame Details to create one</option>' : ''}
       </select>
     `;
   }

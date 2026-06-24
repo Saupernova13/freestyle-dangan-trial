@@ -12,7 +12,7 @@ let expandedMinigameId = null;
 
 // Look up a minigame instance by id.
 export function findMinigame(gameId) {
-  return findMinigame(gameId);
+  return state.minigames.find((mg) => mg.gameId === gameId);
 }
 
 export function renderMinigameDetails() {

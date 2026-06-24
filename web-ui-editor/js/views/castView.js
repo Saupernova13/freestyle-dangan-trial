@@ -3,6 +3,7 @@ import { BLOCK_COUNT, blockNames, blockTypes } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { openCharModal } from '../modals/characterModal.js';
 import { isCharacterComplete } from '../models/characterModel.js';
+import { showToast } from '../ui/dialogs.js';
 import { escapeHtml } from '../utils.js';
 
 export function renderCastGrid() {
@@ -15,9 +16,17 @@ export function renderCastGrid() {
     const div = document.createElement('div');
     div.className = 'cast-block';
     div.setAttribute('tabindex', 0);
+    div.setAttribute('role', 'button');
+    div.setAttribute('aria-label', `${blockNames[i]}: ${c ? `${c.name || ''} ${c.surname || ''}`.trim() || 'unnamed' : 'empty slot'}`);
     div.setAttribute('data-filled', c ? '1' : '0');
     div.setAttribute('data-type', isHeadmaster ? 'headmaster' : 'student');
-    div.onclick = () => (state.dirHandle ? openCharModal(i) : null);
+    div.onclick = () => {
+      if (state.dirHandle) {
+        openCharModal(i);
+      } else {
+        showToast('Choose a trial folder first.', { type: 'warning' });
+      }
+    };
 
     if (c) {
       // Character exists - show sprite and name

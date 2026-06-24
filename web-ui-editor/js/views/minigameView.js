@@ -38,7 +38,7 @@ export function renderMinigameDetails() {
     grid.innerHTML = `
       <div id="minigameDetailsContainer">
         <div class="script-header">
-          <h2>Minigame Instances</h2>
+          <h2>Minigames</h2>
         </div>
         <div class="minigame-cards-container">
           ${minigamesHtml}
@@ -106,12 +106,12 @@ export function renderMinigameEditor(mg) {
       <h3>Common Settings</h3>
 
       <div class="form-group">
-        <label>Minigame Question</label>
+        <label>Question / Name</label>
         <input type="text"
                class="form-input"
                value="${escapeHtml(mg.name || '')}"
                onchange="updateMinigameField('${mg.gameId}', 'name', this.value)"
-               placeholder="Enter minigame question">
+               placeholder="The question shown to the player">
       </div>
 
       <div class="form-row">

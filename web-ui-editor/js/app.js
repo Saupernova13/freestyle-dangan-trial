@@ -9,6 +9,7 @@ import { state } from './core/state.js';
 import { autoSaveTrial, scheduleAutoSave } from './core/storage.js';
 import { confirmDialog } from './ui/dialogs.js';
 import { initModalBehaviors } from './ui/modalBehaviors.js';
+import { initKeyboardActivation } from './ui/a11y.js';
 import { updateExportButtonState } from './export.js';
 import { loadSettings } from './settings.js';
 import { initializeTheme } from './ui/theme.js';
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
   initSpriteMagnifier();
   initCharacterSearchDropdown();
   initModalBehaviors();
+  initKeyboardActivation();
   renderActiveView();
 
   // Trial name input handler
@@ -484,9 +486,9 @@ export function renderScriptLineBar(line, index) {
 
     contentHtml = `
       <select class="script-minigame-select" onchange="updateScriptLine('${line.id}', 'minigameId', this.value)" onclick="event.stopPropagation()">
-        <option value="">Select Minigame Instance...</option>
+        <option value="">Select a minigame…</option>
         ${minigameOptions}
-        ${state.minigames.length === 0 ? '<option value="" disabled>No minigames configured - visit Minigame Details to create one</option>' : ''}
+        ${state.minigames.length === 0 ? '<option value="" disabled>No minigames yet — create one in the Minigames tab</option>' : ''}
       </select>
     `;
   }
@@ -540,7 +542,7 @@ export function renderScriptLineBar(line, index) {
         <select onchange="changeScriptLineType('${line.id}', this.value)" onclick="event.stopPropagation()">
           <option value="speaking" ${line.type === 'speaking' ? 'selected' : ''}>Speaking</option>
           <option value="narrator" ${line.type === 'narrator' ? 'selected' : ''}>Narrator</option>
-          <option value="minigame" ${line.type === 'minigame' ? 'selected' : ''}>Minigame Start</option>
+          <option value="minigame" ${line.type === 'minigame' ? 'selected' : ''}>Minigame</option>
         </select>
       </div>
 

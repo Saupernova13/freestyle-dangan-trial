@@ -64,20 +64,98 @@ export function renderScriptEditor() {
       linesHtml += `<div class="script-drop-zone" data-insert-position="${index + 1}" ondragover="handleGapDragOver(event)" ondrop="handleDropInGap(event, ${index + 1})" ondragleave="handleGapDragLeave(event)"></div>`;
     });
 
+    const selCount = state.selectedLineIds.size;
+    const hintHtml =
+      selCount > 0
+        ? `<span>${selCount} selected — drag any selected line to move them together.</span>
+           <button class="script-hint-clear" onclick="clearSelection()">Clear selection</button>`
+        : `<span>Tip: Ctrl/Cmd-click lines to select several, then drag to reorder.</span>`;
+
     grid.innerHTML = `
       <div id="scriptEditorContainer">
         <div class="script-header">
           <h2>Trial Script</h2>
+          <div class="script-search">
+            ${window.icon('search', { size: 16 })}
+            <input type="text" id="scriptSearch" placeholder="Search lines…"
+                   value="${escapeHtml(scriptFilter)}" oninput="filterScript(this.value)"
+                   spellcheck="false">
+          </div>
         </div>
+        <div class="script-hint">${hintHtml}</div>
         <div class="script-lines-container">
           ${linesHtml}
+          <div class="script-no-matches" id="scriptNoMatches" style="display: none;">
+            No lines match your search.
+          </div>
         </div>
       </div>
     `;
   }
 
+  // Re-apply any active search filter to the freshly rendered rows.
+  applyScriptFilter();
+
   // Update floating add button
   updateFloatingAddButton();
+}
+
+// --- Search / filter -------------------------------------------------------
+// Filter is applied by toggling row visibility (not re-rendering) so the
+// search box keeps focus and caret position while typing.
+let scriptFilter = '';
+
+export function filterScript(value) {
+  scriptFilter = value;
+  applyScriptFilter();
+}
+
+function applyScriptFilter() {
+  const container = document.querySelector('.script-lines-container');
+  if (!container) return;
+
+  const q = scriptFilter.trim().toLowerCase();
+  container.classList.toggle('filtering', q.length > 0);
+
+  let matches = 0;
+  state.scriptLines.forEach((line) => {
+    const bar = container.querySelector(`.script-line-bar[data-line-id="${line.id}"]`);
+    if (!bar) return;
+    const hidden = q.length > 0 && !lineMatchesQuery(line, q);
+    bar.classList.toggle('filtered-out', hidden);
+    if (!hidden) matches++;
+  });
+
+  const noMatches = document.getElementById('scriptNoMatches');
+  if (noMatches) noMatches.style.display = q.length > 0 && matches === 0 ? 'block' : 'none';
+}
+
+// Match against the speaker name, dialogue/narration text, and type label.
+function lineMatchesQuery(line, q) {
+  const parts = [line.type];
+  if (line.type === 'speaking') {
+    const c = state.cast.find((ch) => ch && ch.id === line.characterId);
+    if (c) parts.push(`${c.name || ''} ${c.surname || ''}`);
+    parts.push(line.dialogue || '');
+  } else if (line.type === 'narrator') {
+    parts.push(line.text || '');
+  } else if (line.type === 'minigame') {
+    const mg = state.minigames.find((m) => m.gameId === line.minigameId);
+    if (mg) parts.push(mg.name || '');
+  }
+  return parts.join(' ').toLowerCase().includes(q);
+}
+
+export function moveLineTop(lineId) {
+  if (!dropAtGap(state.scriptLines, 'id', [lineId], 0)) return;
+  renderScriptEditor();
+  autoSaveTrial();
+}
+
+export function moveLineBottom(lineId) {
+  if (!dropAtGap(state.scriptLines, 'id', [lineId], state.scriptLines.length)) return;
+  renderScriptEditor();
+  autoSaveTrial();
 }
 
 export function addScriptLine() {
@@ -277,6 +355,35 @@ export function moveLineDown(lineId) {
 export async function changeScriptLineType(lineId, newType) {
   const line = state.scriptLines.find((l) => l.id === lineId);
   if (!line) return;
+  if (line.type === newType) return;
+
+  // Switching type clears type-specific content and settings. Confirm first if
+  // the line actually has something to lose, and re-render to restore the
+  // dropdown if the user backs out.
+  const hasData = !!(
+    (line.dialogue && line.dialogue.trim()) ||
+    (line.text && line.text.trim()) ||
+    line.characterId ||
+    line.minigameId ||
+    line.audioFile ||
+    line.spriteIndex != null ||
+    line.cameraMotion ||
+    (line.highlights && line.highlights.length) ||
+    (line.specialEffects && line.specialEffects.length) ||
+    line.dialogueBoxStyle
+  );
+  if (hasData) {
+    const proceed = await confirmDialog({
+      title: 'Change line type',
+      message: "This clears the line's current content and any advanced settings. Continue?",
+      confirmLabel: 'Change type',
+      danger: true,
+    });
+    if (!proceed) {
+      renderScriptEditor();
+      return;
+    }
+  }
 
   // Clear type-specific fields
   delete line.characterId;
@@ -348,25 +455,23 @@ export function renderScriptLineBar(line, index) {
         />
         <div id="char-dropdown-list-${line.id}" class="searchable-dropdown-list" style="display: none;"></div>
       </div>
-      <input
-        type="text"
+      <textarea
         class="script-dialogue-input"
+        rows="1"
         placeholder="Enter dialogue..."
-        value="${escapeHtml(line.dialogue || '')}"
         oninput="updateScriptLine('${line.id}', 'dialogue', this.value)"
         onclick="event.stopPropagation()"
-      >
+      >${escapeHtml(line.dialogue || '')}</textarea>
     `;
   } else if (line.type === 'narrator') {
     contentHtml = `
-      <input
-        type="text"
+      <textarea
         class="script-narration-input"
+        rows="1"
         placeholder="Enter narration text..."
-        value="${escapeHtml(line.text || '')}"
         oninput="updateScriptLine('${line.id}', 'text', this.value)"
         onclick="event.stopPropagation()"
-      >
+      >${escapeHtml(line.text || '')}</textarea>
     `;
   } else if (line.type === 'minigame') {
     const minigameOptions = state.minigames
@@ -388,6 +493,26 @@ export function renderScriptLineBar(line, index) {
 
   const isSelected = state.selectedLineIds.has(line.id);
 
+  // Badges advertise which advanced properties this line carries, so authors
+  // can see at a glance what's configured without opening the editor.
+  const badgeDefs = [];
+  if (line.type === 'speaking' && line.spriteIndex != null)
+    badgeDefs.push(['sprite', 'Sprite selected']);
+  if (line.audioFile) badgeDefs.push(['volume', 'Voice audio']);
+  if (line.highlights && line.highlights.length) badgeDefs.push(['highlight', 'Highlighted text']);
+  if (line.type === 'speaking' && line.cameraMotion) badgeDefs.push(['camera', 'Camera motion']);
+  if (line.specialEffects && line.specialEffects.length)
+    badgeDefs.push(['sparkles', 'Special effects']);
+  if (line.dialogueBoxStyle) badgeDefs.push(['message', 'Custom box style']);
+  const badgesHtml = badgeDefs.length
+    ? `<div class="script-line-badges">${badgeDefs
+        .map(
+          ([ic, title]) =>
+            `<span class="script-line-badge" title="${title}">${window.icon(ic, { size: 13 })}</span>`
+        )
+        .join('')}</div>`
+    : '';
+
   return `
     <div class="script-line-bar ${isSelected ? 'selected' : ''}"
          data-line-id="${line.id}"
@@ -397,8 +522,10 @@ export function renderScriptLineBar(line, index) {
          onclick="toggleLineSelection(event, '${line.id}')">
 
       <div class="script-drag-handle">
+        <div class="arrow-btn" onclick="event.stopPropagation(); moveLineTop('${line.id}')" title="Move to top">${window.icon('chevronsUp', { size: 13 })}</div>
         <div class="arrow-btn arrow-up" onclick="event.stopPropagation(); moveLineUp('${line.id}')" title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
         <div class="arrow-btn arrow-down" onclick="event.stopPropagation(); moveLineDown('${line.id}')" title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
+        <div class="arrow-btn" onclick="event.stopPropagation(); moveLineBottom('${line.id}')" title="Move to bottom">${window.icon('chevronsDown', { size: 13 })}</div>
       </div>
 
       <div class="script-line-number">#${lineNumber}</div>
@@ -406,6 +533,8 @@ export function renderScriptLineBar(line, index) {
       <div class="script-line-content">
         ${contentHtml}
       </div>
+
+      ${badgesHtml}
 
       <div class="script-line-type-select">
         <select onchange="changeScriptLineType('${line.id}', this.value)" onclick="event.stopPropagation()">

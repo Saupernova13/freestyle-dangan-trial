@@ -189,6 +189,105 @@
   box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.15);
 }
 
+/* Dialogue/narration are textareas that grow with their content (Chromium
+   field-sizing), so long lines wrap and stay readable instead of scrolling
+   inside a one-line box. */
+.script-dialogue-input,
+.script-narration-input {
+  field-sizing: content;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.4;
+  min-height: 2.5rem;
+  max-height: 10rem;
+  overflow-y: auto;
+}
+
+/* Advanced-property badges on a line bar */
+.script-line-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.script-line-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: var(--radius);
+  background: rgba(var(--primary-rgb), 0.12);
+  color: var(--primary-light);
+}
+
+/* Search box in the script header */
+.script-search {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  padding: 0.35rem 0.6rem;
+  color: var(--text-tertiary);
+}
+
+.script-search:focus-within {
+  border-color: var(--primary);
+}
+
+.script-search input {
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+  width: 200px;
+  max-width: 40vw;
+}
+
+/* Selection / multi-select hint row */
+.script-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: -1rem 0 1.25rem;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+.script-hint-clear {
+  background: none;
+  border: 1px solid var(--border-secondary);
+  color: var(--text-secondary);
+  border-radius: var(--radius);
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.script-hint-clear:hover {
+  border-color: var(--primary);
+  color: var(--primary-light);
+}
+
+/* Search filtering: hide non-matching rows and the reorder gaps */
+.script-line-bar.filtered-out {
+  display: none;
+}
+
+.script-lines-container.filtering .script-drop-zone {
+  display: none;
+}
+
+.script-no-matches {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
 /* Minigame Select */
 .script-minigame-select {
   flex: 1;

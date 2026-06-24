@@ -37,6 +37,8 @@ const PATHS = {
   chevronDown: '<path d="m6 9 6 6 6-6"/>',
   chevronRight: '<path d="m9 6 6 6-6 6"/>',
   chevronUp: '<path d="m6 15 6-6 6 6"/>',
+  chevronsUp: '<path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/>',
+  chevronsDown: '<path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/>',
   play: '<path d="M6 4l14 8-14 8z"/>',
   pause: '<path d="M7 4h3v16H7zM14 4h3v16h-3z"/>',
   image:

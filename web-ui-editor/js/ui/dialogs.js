@@ -169,3 +169,80 @@ export function alertDialog(opts = {}) {
     buttons: [{ label: okLabel, value: true, class: 'btn-primary', default: true, escapes: true }],
   }).then(() => undefined);
 }
+
+// Themed text-input prompt. Resolves with the trimmed value, or null if the
+// user cancels / dismisses / leaves it blank.
+export function promptDialog(opts = {}) {
+  const {
+    title = 'Enter a value',
+    message = '',
+    label = '',
+    value = '',
+    placeholder = '',
+    confirmLabel = 'OK',
+    cancelLabel = 'Cancel',
+  } = opts;
+
+  return new Promise((resolve) => {
+    const root = document.getElementById('dialogroot');
+    if (!root) {
+      resolve(null);
+      return;
+    }
+
+    const wrap = document.createElement('div');
+    wrap.className = 'dr-dialog-bg';
+    wrap.setAttribute('role', 'dialog');
+    wrap.setAttribute('aria-modal', 'true');
+    wrap.innerHTML = `
+      <div class="dr-dialog">
+        <div class="dr-dialog-head">
+          <span class="dr-dialog-icon">${window.icon('edit', { size: 22 })}</span>
+          <h3 class="dr-dialog-title">${escapeHtml(title)}</h3>
+        </div>
+        ${message ? `<div class="dr-dialog-msg">${formatMessage(message)}</div>` : ''}
+        <label class="dr-dialog-field">
+          ${label ? `<span>${escapeHtml(label)}</span>` : ''}
+          <input type="text" class="dr-dialog-input" value="${escapeHtml(value)}"
+                 placeholder="${escapeHtml(placeholder)}">
+        </label>
+        <div class="dr-dialog-actions">
+          <button class="btn btn-secondary" data-act="cancel">${escapeHtml(cancelLabel)}</button>
+          <button class="btn btn-primary" data-act="ok">${escapeHtml(confirmLabel)}</button>
+        </div>
+      </div>
+    `;
+    root.appendChild(wrap);
+    const input = wrap.querySelector('.dr-dialog-input');
+
+    let settled = false;
+    const settle = (val) => {
+      if (settled) return;
+      settled = true;
+      document.removeEventListener('keydown', onKeydown, true);
+      wrap.remove();
+      resolve(val);
+    };
+    const accept = () => settle(input.value.trim() || null);
+
+    wrap.querySelector('[data-act="cancel"]').addEventListener('click', () => settle(null));
+    wrap.querySelector('[data-act="ok"]').addEventListener('click', accept);
+    wrap.addEventListener('mousedown', (e) => {
+      if (e.target === wrap) settle(null);
+    });
+
+    function onKeydown(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        settle(null);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        accept();
+      }
+    }
+    document.addEventListener('keydown', onKeydown, true);
+
+    input.focus();
+    input.select();
+  });
+}

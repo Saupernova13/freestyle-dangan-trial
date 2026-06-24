@@ -14,9 +14,11 @@ export function fileToDataUrl(file) {
   });
 }
 
-export function renderDirDisplay(dH) {
-  document.getElementById('dirDisplay').innerHTML = dH
-    ? `${window.icon('folder', { size: 15 })} ${escapeHtml(dH.name)}`
+export function renderDirDisplay(dH, label) {
+  const el = document.getElementById('dirDisplay');
+  if (!el) return;
+  el.innerHTML = dH
+    ? `${window.icon('folder', { size: 15 })} ${escapeHtml(label || dH.name)}`
     : '';
 }
 

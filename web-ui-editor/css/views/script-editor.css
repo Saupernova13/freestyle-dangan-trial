@@ -591,6 +591,8 @@
   line-height: 2;
   color: var(--text-primary);
   user-select: none;
+  /* let pointer drag select characters instead of scrolling on touch */
+  touch-action: none;
   cursor: text;
   padding: 0.5rem;
   background: var(--bg-tertiary);

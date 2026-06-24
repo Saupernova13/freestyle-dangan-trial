@@ -120,8 +120,24 @@ export function renderHighlightingTab(line) {
   `;
 }
 
-// Wire up drag selection after the highlighting tab is in the DOM.
+// Removes the document-level listener from the previous wiring. The tab is
+// re-rendered (and re-wired) on every highlight add/remove and tab switch, so
+// without this the document pointerup handlers would pile up.
+let detachDragSelection = null;
+
+// Drop any active drag-selection listeners (called when the modal closes).
+export function teardownDragSelection() {
+  if (detachDragSelection) {
+    detachDragSelection();
+    detachDragSelection = null;
+  }
+}
+
+// Wire up drag selection after the highlighting tab is in the DOM. Uses pointer
+// events (+ elementFromPoint) so it works with both mouse and touch.
 export function initializeDragSelection() {
+  teardownDragSelection();
+
   const dialogueSelector = document.getElementById('dialogue-selector');
   if (!dialogueSelector) return;
 
@@ -131,49 +147,56 @@ export function initializeDragSelection() {
 
   let isSelecting = false;
   let startIndex = -1;
-  let currentEndIndex = -1;
 
-  dialogueText.addEventListener('mousedown', (e) => {
-    if (!e.target.classList.contains('char-selectable')) return;
-
-    isSelecting = true;
-    startIndex = parseInt(e.target.dataset.charIndex);
-    currentEndIndex = startIndex;
-
-    clearPreviousSelection();
-    sl.highlighting.startChar = startIndex;
-    sl.highlighting.endChar = startIndex + 1;
-
-    updateSelectionDisplay();
-  });
-
-  dialogueText.addEventListener('mousemove', (e) => {
-    if (!isSelecting) return;
-    if (!e.target.classList.contains('char-selectable')) return;
-
-    currentEndIndex = parseInt(e.target.dataset.charIndex);
-
-    // Handle backward selection (drag right-to-left).
-    const selStart = Math.min(startIndex, currentEndIndex);
-    const selEnd = Math.max(startIndex, currentEndIndex) + 1;
-
-    sl.highlighting.startChar = selStart;
-    sl.highlighting.endChar = selEnd;
-
-    clearPreviousSelection();
-    updateSelectionDisplay();
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (isSelecting) {
-      isSelecting = false;
-
-      const validSelection = sl.highlighting.endChar > sl.highlighting.startChar;
-      if (addButton) {
-        addButton.disabled = !validSelection;
-      }
+  // The span under a point. For touch, the implicit pointer capture keeps
+  // e.target on the start span, so resolve the element by coordinates instead.
+  const charIndexAt = (x, y) => {
+    const el = document.elementFromPoint(x, y);
+    if (el && el.classList.contains('char-selectable')) {
+      return parseInt(el.dataset.charIndex, 10);
     }
-  });
+    return -1;
+  };
+
+  const onPointerDown = (e) => {
+    const idx = charIndexAt(e.clientX, e.clientY);
+    if (idx < 0) return;
+    e.preventDefault();
+    isSelecting = true;
+    startIndex = idx;
+    sl.highlighting.startChar = idx;
+    sl.highlighting.endChar = idx + 1;
+    clearPreviousSelection();
+    updateSelectionDisplay();
+  };
+
+  const onPointerMove = (e) => {
+    if (!isSelecting) return;
+    const idx = charIndexAt(e.clientX, e.clientY);
+    if (idx < 0) return;
+    e.preventDefault();
+    // Handle backward selection (drag right-to-left).
+    sl.highlighting.startChar = Math.min(startIndex, idx);
+    sl.highlighting.endChar = Math.max(startIndex, idx) + 1;
+    clearPreviousSelection();
+    updateSelectionDisplay();
+  };
+
+  const onPointerUp = () => {
+    if (!isSelecting) return;
+    isSelecting = false;
+    if (addButton) addButton.disabled = !(sl.highlighting.endChar > sl.highlighting.startChar);
+  };
+
+  dialogueText.addEventListener('pointerdown', onPointerDown);
+  dialogueText.addEventListener('pointermove', onPointerMove);
+  document.addEventListener('pointerup', onPointerUp);
+
+  detachDragSelection = () => {
+    dialogueText.removeEventListener('pointerdown', onPointerDown);
+    dialogueText.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+  };
 
   function clearPreviousSelection() {
     dialogueText.querySelectorAll('.char-selectable').forEach((span) => {
@@ -183,7 +206,7 @@ export function initializeDragSelection() {
 
   function updateSelectionDisplay() {
     const line = activeLine();
-    const dialogue = line.dialogue || '';
+    const dialogue = line.dialogue || line.text || '';
 
     const spans = dialogueText.querySelectorAll('.char-selectable');
     for (let i = sl.highlighting.startChar; i < sl.highlighting.endChar; i++) {
@@ -195,7 +218,7 @@ export function initializeDragSelection() {
     const selectedText = dialogue.substring(sl.highlighting.startChar, sl.highlighting.endChar);
     selectionRange.innerHTML =
       sl.highlighting.endChar > sl.highlighting.startChar
-        ? `"${selectedText}" (${sl.highlighting.startChar}-${sl.highlighting.endChar})`
+        ? `"${escapeHtml(selectedText)}" (${sl.highlighting.startChar}-${sl.highlighting.endChar})`
         : 'None';
 
     const unifiedPreview = document.getElementById('highlight-unified-preview');

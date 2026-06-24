@@ -20,7 +20,11 @@ import { renderAudioUploadTab } from './scriptLine/audioTab.js';
 import { renderDialogueBoxTab } from './scriptLine/dialogueBoxTab.js';
 import { renderCameraMotionTab } from './scriptLine/cameraTab.js';
 import { renderSpecialEffectsTab } from './scriptLine/effectsTab.js';
-import { initializeDragSelection, renderHighlightingTab } from './scriptLine/highlightingTab.js';
+import {
+  initializeDragSelection,
+  renderHighlightingTab,
+  teardownDragSelection,
+} from './scriptLine/highlightingTab.js';
 
 // Re-export every tab's handlers so they reach window via main.js's bridge.
 export * from './scriptLine/spriteTab.js';
@@ -178,6 +182,7 @@ export function switchScriptLineTab(tab) {
 /** Close and reset the modal. Safe to call when nothing is open. */
 export function closeScriptLineModal() {
   stopAudioPreview(AUDIO_PREVIEW_KEY);
+  teardownDragSelection();
   const modalRoot = document.getElementById('modalroot');
   if (modalRoot) modalRoot.innerHTML = '';
   sl.activeLineId = null;

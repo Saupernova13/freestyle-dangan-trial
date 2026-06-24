@@ -2,7 +2,7 @@
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { generateId, escapeHtml } from '../utils.js';
-import { renderDebateScumEditor } from './minigames/debateScrumEditor.js';
+import { renderDebateScrumEditor } from './minigames/debateScrumEditor.js';
 import { renderHangmansGambitEditor } from './minigames/hangmansGambitEditor.js';
 import { renderLogicDiveEditor } from './minigames/logicDiveEditor.js';
 import { renderMassPanicDebateEditor } from './minigames/massPanicDebateEditor.js';
@@ -165,7 +165,7 @@ export function renderMinigameEditor(mg) {
   } else if (mg.gameType === 'hangmans_gambit') {
     editorHtml += renderHangmansGambitEditor(mg);
   } else if (mg.gameType === 'debate_scrum') {
-    editorHtml += renderDebateScumEditor(mg);
+    editorHtml += renderDebateScrumEditor(mg);
   } else {
     // Placeholder for other types
     editorHtml += `

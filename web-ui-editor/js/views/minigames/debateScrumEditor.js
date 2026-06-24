@@ -18,7 +18,7 @@ let draggedArgumentId = null;
 
 // ==================== Main Rendering ====================
 
-export function renderDebateScumEditor(mg) {
+export function renderDebateScrumEditor(mg) {
   // Initialize typeSpecific
   if (!mg.typeSpecific) {
     mg.typeSpecific = {};
@@ -42,7 +42,7 @@ export function renderDebateScumEditor(mg) {
       </div>
     `;
   } else {
-    html += renderDebateScumArguments(mg.gameId, args);
+    html += renderDebateScrumArguments(mg.gameId, args);
   }
 
   html += `</div>`;
@@ -51,7 +51,7 @@ export function renderDebateScumEditor(mg) {
   if (args.length < 8) {
     html += `
       <button class="minigame-floating-btn"
-              onclick="addDebateScumArgument('${mg.gameId}')"
+              onclick="addDebateScrumArgument('${mg.gameId}')"
               title="Add Argument">
         ${window.icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Argument</span>
       </button>
@@ -61,7 +61,7 @@ export function renderDebateScumEditor(mg) {
   return html;
 }
 
-export function renderDebateScumArguments(gameId, args) {
+export function renderDebateScrumArguments(gameId, args) {
   let html = '';
 
   // Add drop zone at top
@@ -79,7 +79,7 @@ export function renderDebateScumArguments(gameId, args) {
            draggable="true"
            ondragstart="handleArgumentDragStart(event, '${gameId}', '${arg.argumentId}')"
            ondragend="handleArgumentDragEnd(event)">
-        ${renderDebateScumArgumentEditor(gameId, arg, index)}
+        ${renderDebateScrumArgumentEditor(gameId, arg, index)}
       </div>
       <div class="argument-drop-zone"
            data-insert-position="${index + 1}"
@@ -92,7 +92,7 @@ export function renderDebateScumArguments(gameId, args) {
   return html;
 }
 
-export function renderDebateScumArgumentEditor(gameId, arg, index) {
+export function renderDebateScrumArgumentEditor(gameId, arg, index) {
   return `
     <div class="debate-argument-card" data-argument-id="${arg.argumentId}">
       <div class="argument-header">
@@ -106,7 +106,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
         </div>
         <div class="argument-number">Argument #${index + 1}</div>
         <button class="btn-icon"
-                onclick="event.stopPropagation(); deleteDebateScumArgument('${gameId}', '${arg.argumentId}')"
+                onclick="event.stopPropagation(); deleteDebateScrumArgument('${gameId}', '${arg.argumentId}')"
                 title="Delete argument">${window.icon('trash', { size: 16 })}</button>
       </div>
 
@@ -117,7 +117,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
           <div class="form-group">
             <label>Character</label>
             <select class="form-input"
-                    onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'oppositionCharacterId', this.value)">
+                    onchange="updateDebateScrumArgument('${gameId}', '${arg.argumentId}', 'oppositionCharacterId', this.value)">
               ${renderCharacterOptions(arg.oppositionCharacterId)}
             </select>
           </div>
@@ -127,7 +127,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input"
                       rows="3"
                       placeholder="Opposition statement..."
-                      onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'oppositionStatement', this.value)">${escapeHtml(arg.oppositionStatement || '')}</textarea>
+                      onchange="updateDebateScrumArgument('${gameId}', '${arg.argumentId}', 'oppositionStatement', this.value)">${escapeHtml(arg.oppositionStatement || '')}</textarea>
           </div>
 
           <div class="form-group">
@@ -135,7 +135,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input keywords-input"
                       rows="2"
                       placeholder="Enter keywords, one per line..."
-                      onchange="updateDebateScumArgumentKeywords('${gameId}', '${arg.argumentId}', 'opposition', this.value)">${escapeHtml((arg.oppositionKeywords || []).join('\n'))}</textarea>
+                      onchange="updateDebateScrumArgumentKeywords('${gameId}', '${arg.argumentId}', 'opposition', this.value)">${escapeHtml((arg.oppositionKeywords || []).join('\n'))}</textarea>
             <small style="color: var(--text-tertiary);">Keywords that will be highlighted during this argument</small>
           </div>
 
@@ -149,11 +149,11 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
                 <span class="audio-filename">${arg.oppositionAudioFile}</span>
                 <button class="btn btn-secondary btn-sm"
                         id="scrum-play-btn-${arg.argumentId}-opposition"
-                        onclick="playDebateScumAudio('${gameId}', '${arg.argumentId}', 'opposition')">
+                        onclick="playDebateScrumAudio('${gameId}', '${arg.argumentId}', 'opposition')">
                   ${window.icon('play')} Play
                 </button>
                 <button class="btn btn-secondary btn-sm"
-                        onclick="clearDebateScumAudio('${gameId}', '${arg.argumentId}', 'opposition')">
+                        onclick="clearDebateScrumAudio('${gameId}', '${arg.argumentId}', 'opposition')">
                   ${window.icon('trash')} Remove
                 </button>
               </div>
@@ -161,7 +161,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
                 : `
               <input type="file"
                      accept="audio/*"
-                     onchange="handleDebateScumAudioUpload('${gameId}', '${arg.argumentId}', 'opposition', event)">
+                     onchange="handleDebateScrumAudioUpload('${gameId}', '${arg.argumentId}', 'opposition', event)">
             `
             }
           </div>
@@ -173,7 +173,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
           <div class="form-group">
             <label>Character</label>
             <select class="form-input"
-                    onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'defenseCharacterId', this.value)">
+                    onchange="updateDebateScrumArgument('${gameId}', '${arg.argumentId}', 'defenseCharacterId', this.value)">
               ${renderCharacterOptions(arg.defenseCharacterId)}
             </select>
           </div>
@@ -183,7 +183,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input"
                       rows="3"
                       placeholder="Defense counter statement..."
-                      onchange="updateDebateScumArgument('${gameId}', '${arg.argumentId}', 'defenseStatement', this.value)">${escapeHtml(arg.defenseStatement || '')}</textarea>
+                      onchange="updateDebateScrumArgument('${gameId}', '${arg.argumentId}', 'defenseStatement', this.value)">${escapeHtml(arg.defenseStatement || '')}</textarea>
           </div>
 
           <div class="form-group">
@@ -191,7 +191,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input keywords-input"
                       rows="2"
                       placeholder="Enter keywords, one per line..."
-                      onchange="updateDebateScumArgumentKeywords('${gameId}', '${arg.argumentId}', 'defense', this.value)">${escapeHtml((arg.defenseKeywords || []).join('\n'))}</textarea>
+                      onchange="updateDebateScrumArgumentKeywords('${gameId}', '${arg.argumentId}', 'defense', this.value)">${escapeHtml((arg.defenseKeywords || []).join('\n'))}</textarea>
             <small style="color: var(--text-tertiary);">Keywords that will be highlighted during this argument</small>
           </div>
 
@@ -205,11 +205,11 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
                 <span class="audio-filename">${arg.defenseAudioFile}</span>
                 <button class="btn btn-secondary btn-sm"
                         id="scrum-play-btn-${arg.argumentId}-defense"
-                        onclick="playDebateScumAudio('${gameId}', '${arg.argumentId}', 'defense')">
+                        onclick="playDebateScrumAudio('${gameId}', '${arg.argumentId}', 'defense')">
                   ${window.icon('play')} Play
                 </button>
                 <button class="btn btn-secondary btn-sm"
-                        onclick="clearDebateScumAudio('${gameId}', '${arg.argumentId}', 'defense')">
+                        onclick="clearDebateScrumAudio('${gameId}', '${arg.argumentId}', 'defense')">
                   ${window.icon('trash')} Remove
                 </button>
               </div>
@@ -217,7 +217,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
                 : `
               <input type="file"
                      accept="audio/*"
-                     onchange="handleDebateScumAudioUpload('${gameId}', '${arg.argumentId}', 'defense', event)">
+                     onchange="handleDebateScrumAudioUpload('${gameId}', '${arg.argumentId}', 'defense', event)">
             `
             }
           </div>
@@ -229,7 +229,7 @@ export function renderDebateScumArgumentEditor(gameId, arg, index) {
 
 // ==================== Argument Management ====================
 
-export function addDebateScumArgument(gameId) {
+export function addDebateScrumArgument(gameId) {
   const mg = findMinigame(gameId);
   if (!mg) return;
 
@@ -263,7 +263,7 @@ export function addDebateScumArgument(gameId) {
   autoSaveTrial();
 }
 
-export function deleteDebateScumArgument(gameId, argumentId) {
+export function deleteDebateScrumArgument(gameId, argumentId) {
   const mg = findMinigame(gameId);
   if (!mg) return;
 
@@ -274,7 +274,7 @@ export function deleteDebateScumArgument(gameId, argumentId) {
   autoSaveTrial();
 }
 
-export function updateDebateScumArgument(gameId, argumentId, field, value) {
+export function updateDebateScrumArgument(gameId, argumentId, field, value) {
   const mg = findMinigame(gameId);
   if (!mg) return;
 
@@ -285,7 +285,7 @@ export function updateDebateScumArgument(gameId, argumentId, field, value) {
   autoSaveTrial();
 }
 
-export function updateDebateScumArgumentKeywords(gameId, argumentId, side, value) {
+export function updateDebateScrumArgumentKeywords(gameId, argumentId, side, value) {
   const mg = findMinigame(gameId);
   if (!mg) return;
 
@@ -371,7 +371,7 @@ export function handleArgumentGapDragLeave(event) {
 
 // ==================== Audio Handling ====================
 
-export async function handleDebateScumAudioUpload(gameId, argumentId, side, event) {
+export async function handleDebateScrumAudioUpload(gameId, argumentId, side, event) {
   const file = validateAudioUpload(event);
   if (!file) return;
 
@@ -404,7 +404,7 @@ export async function handleDebateScumAudioUpload(gameId, argumentId, side, even
   }
 }
 
-export async function clearDebateScumAudio(gameId, argumentId, side) {
+export async function clearDebateScrumAudio(gameId, argumentId, side) {
   const mg = findMinigame(gameId);
   if (!mg) return;
 
@@ -430,7 +430,7 @@ export async function clearDebateScumAudio(gameId, argumentId, side) {
 
 // ==================== Audio Playback ====================
 
-export async function playDebateScumAudio(gameId, argumentId, side) {
+export async function playDebateScrumAudio(gameId, argumentId, side) {
   const mg = findMinigame(gameId);
   if (!mg) return;
 

@@ -1,0 +1,175 @@
+/* ============================================================
+   Themed confirm/alert dialogs + toasts
+   Replacements for the native alert()/confirm(). Layered above
+   the editor modal (z 100) and loader (z 200).
+   ============================================================ */
+
+/* --- Confirm / alert dialog --- */
+.dr-dialog-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 2rem;
+}
+
+.dr-dialog {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  border-top: 3px solid var(--primary);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 440px;
+  padding: 1.5rem 1.5rem 1.25rem;
+  clip-path: var(--clip-notch);
+  animation: dr-dialog-in 0.16s ease;
+}
+
+@keyframes dr-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.dr-dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+.dr-dialog-icon {
+  color: var(--primary);
+  display: flex;
+  flex-shrink: 0;
+}
+
+.dr-dialog-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+
+.dr-dialog-msg {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.dr-dialog-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.dr-dialog-actions .btn {
+  min-width: 100px;
+}
+
+/* --- Toasts --- */
+#toastroot {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.dr-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 220px;
+  max-width: 360px;
+  padding: 0.75rem 1rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  border-left: 3px solid var(--text-tertiary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateX(16px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dr-toast.visible {
+  opacity: 1;
+  transform: none;
+}
+
+.dr-toast-icon {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.dr-toast-msg {
+  flex: 1;
+  min-width: 0;
+}
+
+.dr-toast--success {
+  border-left-color: var(--success);
+}
+
+.dr-toast--success .dr-toast-icon {
+  color: var(--success);
+}
+
+.dr-toast--error {
+  border-left-color: var(--error);
+}
+
+.dr-toast--error .dr-toast-icon {
+  color: var(--error);
+}
+
+.dr-toast--warning {
+  border-left-color: var(--warning);
+}
+
+.dr-toast--warning .dr-toast-icon {
+  color: var(--warning);
+}
+
+.dr-toast--info {
+  border-left-color: var(--secondary);
+}
+
+.dr-toast--info .dr-toast-icon {
+  color: var(--secondary);
+}
+
+@media (max-width: 768px) {
+  #toastroot {
+    left: 1rem;
+    right: 1rem;
+  }
+
+  .dr-toast {
+    max-width: none;
+  }
+}

@@ -1,6 +1,8 @@
 // Utility functions
-export function showLoader(on) {
+export function showLoader(on, text = '') {
   document.getElementById('loaderOverlay').classList.toggle('visible', !!on);
+  const label = document.getElementById('loaderText');
+  if (label) label.textContent = on ? text : '';
 }
 
 export function fileToDataUrl(file) {

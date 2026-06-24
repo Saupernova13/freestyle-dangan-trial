@@ -52,18 +52,30 @@ js/
 ├── main.js                 # Entry point; bridges handlers onto window
 ├── app.js                  # Script editor view + app initialization
 ├── core/
-│   ├── constants.js        # Cast slot constants
+│   ├── constants.js        # Cast slot + minigame label constants
 │   ├── state.js            # Central mutable state (the only shared state)
-│   └── storage.js          # File System Access API persistence
+│   ├── storage.js          # File System Access API persistence
+│   ├── listOps.js          # Shared list reorder/drag helpers
+│   └── minigameAudio.js    # Minigame voice-line file storage
 ├── export.js               # .drtrial (ZIP) packaging
 ├── settings.js             # App settings modal + localStorage persistence
 ├── utils.js                # Pure helpers (escaping, highlight normalization)
-├── ui/theme.js             # Dark/light theme
-├── components/             # Floating add button, sprite magnifier
+├── ui/                     # Theme + inline SVG icon set
+├── components/             # Floating add button, sprite magnifier,
+│                           #   shared audio preview, character search dropdown
 ├── models/                 # Character helpers
-├── views/                  # One module per view + minigame editors
-└── modals/                 # Character / truth bullet / script line modals
+├── views/                  # One module per view + one per minigame editor
+└── modals/
+    ├── characterModal.js
+    ├── truthBulletModal.js
+    ├── modalCoordinator.js
+    ├── scriptLineModal.js  # Coordinator: shell, lifecycle, save
+    └── scriptLine/         # One module per modal tab (sprite, audio, box
+                            #   style, camera, effects, highlighting) + state
 ```
+
+CSS mirrors this: `css/styles.css` is an `@import` index that defines the
+cascade, with one partial per section under `css/{base,layout,components,views}`.
 
 Conventions:
 

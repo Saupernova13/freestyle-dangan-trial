@@ -223,6 +223,10 @@
   -webkit-box-orient: vertical;
 }
 
+.bullet-select-info {
+  text-align: center;
+}
+
 /* Dialogue Line Cards */
 .dialogue-line-card {
   background: var(--bg-secondary);

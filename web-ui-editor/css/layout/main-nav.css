@@ -1,0 +1,68 @@
+/* Main Layout */
+main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+/* Navigation */
+nav {
+  width: 250px;
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border-primary);
+  padding: 1.5rem 0.85rem;
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: var(--radius);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.12s ease;
+  margin-bottom: 0.4rem;
+}
+
+.nav-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  transform: translateX(2px);
+}
+
+.nav-item.selected {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: var(--shadow-hard);
+}
+
+/* skewed accent tab on the selected item */
+.nav-item.selected::before {
+  content: '';
+  position: absolute;
+  left: -0.85rem;
+  top: 50%;
+  transform: translateY(-50%) skewX(-12deg);
+  width: 5px;
+  height: 62%;
+  background: var(--primary-light);
+  box-shadow: 0 0 8px rgba(var(--primary-rgb), 0.5); /* unslop-ignore: deliberate sparing neon accent, Class Trial theme */
+}
+
+.nav-item .icon {
+  width: 20px;
+  height: 20px;
+}
+

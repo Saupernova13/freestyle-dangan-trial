@@ -1,0 +1,101 @@
+/* ==================== Debate Scrum Styles ==================== */
+
+.argument-wrapper {
+  margin-bottom: 1rem;
+}
+
+.argument-wrapper.dragging {
+  opacity: 0.5;
+}
+
+.debate-argument-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.argument-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+}
+
+.argument-drag-handle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.argument-number {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.argument-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.argument-side {
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.opposition-side {
+  border-left: 4px solid rgba(var(--error-rgb), 0.5);
+}
+
+.defense-side {
+  border-left: 4px solid rgba(var(--secondary-rgb), 0.5);
+}
+
+.argument-side h4 {
+  margin: 0 0 1rem 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.keywords-input {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+.audio-preview-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+  min-width: 0;
+}
+
+.audio-preview-mini .audio-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.audio-preview-mini .audio-filename {
+  flex: 1;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+

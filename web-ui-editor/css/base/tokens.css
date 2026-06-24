@@ -1,0 +1,84 @@
+/* ============================================================
+   FREESTYLE DANGAN TRIAL -- CLASS TRIAL UI
+   Reference: Danganronpa's class-trial interface.
+   Magenta on near-black, angular clipped panels, condensed
+   display type.
+   ============================================================ */
+
+:root {
+  /* Brand -- hot magenta is the single confident accent */
+  --primary: #ff1e6f;
+  --primary-dark: #d60d57;
+  --primary-light: #ff5b95;
+  --primary-rgb: 255, 30, 111;
+  --accent: #ff5b95; /* lighter pink: one-hue gradient partner only */
+  --secondary: #28d7d7; /* evidence cyan, used sparingly */
+
+  /* Semantic -- rgb partners for building tints and alpha variants */
+  --success: #3ddc97;
+  --success-rgb: 61, 220, 151;
+  --warning: #ffb13d;
+  --warning-dark: #d6920f;
+  --warning-rgb: 255, 177, 61;
+  --error: #ff4747;
+  --error-rgb: 255, 71, 71;
+  --secondary-rgb: 40, 215, 215;
+
+  /* Neutral ramp -- named gray-50..900 kept for back-compat, but
+     oriented dark->light (50 = darkest) as the dark UI expects. */
+  --gray-50: #1a1820;
+  --gray-100: #211e29;
+  --gray-200: #2c2836;
+  --gray-300: #3a3547;
+  --gray-400: #564f66;
+  --gray-500: #7d7890;
+  --gray-600: #a39eb2;
+  --gray-700: #c8c4d2;
+  --gray-800: #e6e3ee;
+  --gray-900: #f5f3f9;
+
+  /* Surfaces */
+  --bg-base: #0e0d12; /* app backdrop */
+  --bg-primary: #1a1820; /* panels / cards */
+  --bg-secondary: #131119; /* canvas behind panels */
+  --bg-tertiary: #242029; /* insets / inputs */
+
+  /* Text */
+  --text-primary: #f3f1f7;
+  --text-secondary: #b7b2c4;
+  --text-tertiary: #837e94;
+
+  /* Borders */
+  --border-primary: #2c2836;
+  --border-secondary: #3a3547;
+
+  /* Type */
+  --font-display: 'Saira Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  /* Radius -- small + deliberate; angularity comes from clip-paths */
+  --radius-sm: 2px;
+  --radius: 3px;
+  --radius-md: 5px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow: 0 2px 6px rgb(0 0 0 / 0.45);
+  --shadow-md: 0 6px 16px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 14px 30px rgb(0 0 0 / 0.55);
+  --shadow-xl: 0 24px 50px rgb(0 0 0 / 0.6);
+  --shadow-hard: 4px 4px 0 rgb(0 0 0 / 0.55); /* pop-art offset */
+  --shadow-accent: 5px 5px 0 var(--primary); /* active hero element */
+
+  /* Angular clip -- notched corner used on hero panels/buttons */
+  --clip-notch: polygon(
+    0 0,
+    calc(100% - 9px) 0,
+    100% 9px,
+    100% 100%,
+    9px 100%,
+    0 calc(100% - 9px)
+  );
+}
+

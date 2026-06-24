@@ -1,0 +1,413 @@
+/* Modal */
+.dr-modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 2rem;
+}
+
+.dr-modal {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  border-top: 3px solid var(--primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 900px;
+  height: calc(100vh - 4rem);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* notched corner -- the Class Trial "evidence panel" silhouette */
+  clip-path: var(--clip-notch);
+}
+
+.dr-modal-small {
+  max-width: 600px;
+}
+
+.dr-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  z-index: 10;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.dr-close:hover {
+  color: var(--error);
+  background: rgba(var(--error-rgb), 0.1);
+}
+
+.dr-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-primary);
+  margin: 0;
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+}
+
+.dr-tab {
+  flex: 1;
+  padding: 0.95rem 1.5rem;
+  background: none;
+  border: none;
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+}
+
+.dr-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.dr-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* Modal content area */
+.dr-modal-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Forms */
+.dr-form {
+  padding: 2rem;
+  max-width: 1000px;
+}
+
+/* Character role banner */
+.dr-role-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--primary);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  clip-path: var(--clip-notch);
+  box-shadow: var(--shadow-hard);
+}
+
+.dr-role-banner--headmaster {
+  background: var(--warning);
+  color: var(--bg-base);
+}
+
+.dr-fg-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.dr-fg-row.single {
+  grid-template-columns: 1fr;
+}
+
+.dr-fg-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.dr-fg-field.input2 {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.dr-fg-field label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.625rem;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dr-form input,
+.dr-form select,
+.dr-form textarea {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dr-form input:focus,
+.dr-form select:focus,
+.dr-form textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.15);
+}
+
+.dr-form textarea {
+  min-height: 90px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.dr-fg-field.input2 input {
+  width: 70px;
+}
+
+.dr-fg-field.input2 span {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.dr-btn-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.dr-btn-row .btn {
+  min-width: 120px;
+}
+
+/* Sprite Grid */
+.dr-sprgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.dr-sprslot {
+  aspect-ratio: 1/2;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+.dr-sprslot:hover {
+  border-color: var(--primary);
+  background: var(--bg-secondary);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.15);
+}
+
+.dr-sprslot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.dr-sprslot-num {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.dr-sprslot input {
+  display: none;
+}
+
+.dr-sprslot img {
+  cursor: zoom-in;
+}
+
+/* ==================== Sprite Magnifier Lens ==================== */
+.sprite-magnifier-lens {
+  position: fixed;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 3px solid var(--bg-primary);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.35),
+    0 0 0 1px var(--border-secondary);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10000;
+  background: var(--bg-tertiary);
+}
+
+.sprite-magnifier-img {
+  position: absolute;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dr-sprslot-bulk {
+  grid-column: 1 / -1;
+  aspect-ratio: auto;
+  padding: 0.875rem 1rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.dr-sprslot-bulk:hover {
+  background: var(--primary-dark);
+}
+
+/* Settings specific styles */
+.settings-section {
+  margin-bottom: 2rem;
+}
+
+.settings-section h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.settings-field {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.875rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+}
+
+.settings-field label {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.settings-field input {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Alerts */
+.dr-err {
+  background: rgba(var(--error-rgb), 0.08);
+  color: var(--error);
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--error);
+  margin: 1rem 2rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.dr-success {
+  background: rgba(var(--success-rgb), 0.08);
+  color: var(--success);
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--success);
+  margin: 1rem 2rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+/* Loader */
+#loaderOverlay {
+  position: fixed;
+  inset: 0;
+  /* dark-only app: dim toward the app backdrop, not a white flash */
+  background: rgba(14, 13, 18, 0.82);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+#loaderOverlay.visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+.spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid var(--border-secondary);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+

@@ -1,0 +1,89 @@
+/* ==================== Floating Add Button ==================== */
+.floating-add-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  box-shadow: var(--shadow-hard);
+  cursor: pointer;
+  z-index: 9999;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.floating-add-btn:hover {
+  background: var(--primary-light);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 rgb(0 0 0 / 0.55);
+}
+
+.floating-add-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 rgb(0 0 0 / 0.55);
+}
+
+/* Extended variant with text */
+.floating-add-btn.extended {
+  width: auto;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md);
+  gap: 0.5rem;
+}
+
+.floating-add-btn-text {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* ==================== Minigame-Specific Floating Buttons ==================== */
+/* These buttons appear within expanded minigame cards (absolute positioning) */
+.minigame-floating-btn {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.minigame-floating-btn:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.minigame-floating-btn:active {
+  transform: scale(0.98);
+}
+
+.minigame-floating-btn-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+

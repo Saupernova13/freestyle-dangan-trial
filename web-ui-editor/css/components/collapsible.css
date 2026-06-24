@@ -1,0 +1,75 @@
+/* ==================== Collapsible Sections ==================== */
+
+.collapsible-section {
+  margin-top: 1rem;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.collapsible-header {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: background 0.2s ease;
+  text-align: left;
+  font-size: 0.9375rem;
+}
+
+.collapsible-header:hover {
+  background: var(--bg-tertiary);
+}
+
+.collapsible-header.expanded {
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+}
+
+.collapsible-icon {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+  width: 1rem;
+  text-align: center;
+}
+
+.collapsible-title {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.collapsible-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--primary);
+  color: white;
+  border-radius: var(--radius);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.collapsible-content {
+  padding: 1rem;
+  background: var(--bg-primary);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,140 @@
+/* Cast Grid */
+#mainGrid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-auto-rows: min-content;
+  gap: 1.5rem;
+  padding: 2rem;
+  align-content: start;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Full-width containers that should span entire grid */
+#minigameDetailsContainer,
+#truthBulletsContainer,
+#scriptEditorContainer {
+  grid-column: 1 / -1;
+}
+
+.cast-block {
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    border-color 0.14s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-primary);
+}
+
+.cast-block:hover {
+  box-shadow: var(--shadow-hard);
+  transform: translate(-2px, -2px);
+  border-color: var(--primary);
+}
+
+.cast-block[data-filled='1'] {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.cast-block[data-filled='1']:hover {
+  box-shadow: 5px 5px 0 rgb(0 0 0 / 0.5);
+}
+
+.cast-block[data-filled='0'] {
+  border: 1px dashed var(--border-secondary);
+  background: var(--bg-tertiary);
+}
+
+.cast-block[data-filled='0']:hover {
+  border-color: var(--primary);
+  background: var(--bg-primary);
+}
+
+.blk-ppic {
+  width: 80px;
+  height: 140px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin: 0 auto 1rem;
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+  display: block;
+}
+
+.cast-block[data-filled='1'] .blk-ppic {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.cast-name {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  text-align: center;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cast-block[data-filled='1'] .cast-name {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--primary-dark);
+}
+
+.cast-block[data-filled='0'] .cast-name {
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+}
+
+.blk-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  font-size: 3rem;
+  color: var(--text-tertiary);
+  font-weight: 300;
+}
+
+.cast-block:hover .blk-plus {
+  color: var(--primary);
+  transform: scale(1.1);
+}
+
+.cast-block-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  color: white;
+  padding: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cast-block[data-filled='0'] .cast-block-title {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+

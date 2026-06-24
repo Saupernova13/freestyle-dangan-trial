@@ -1,0 +1,95 @@
+/* ==================== Minigame Styles ==================== */
+
+/* Minigame bars */
+.minigame-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.minigame-id-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  background: var(--bg-tertiary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-secondary);
+  font-weight: 500;
+}
+
+.minigame-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.minigame-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.minigame-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.minigame-type {
+  font-weight: 500;
+}
+
+.minigame-difficulty {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.minigame-time {
+  color: var(--text-tertiary);
+}
+
+/* Minigame modal */
+.minigame-id-display {
+  background: var(--bg-tertiary);
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  margin-bottom: 1rem;
+}
+
+.minigame-id-display label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.minigame-id-display code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--primary);
+  background: var(--bg-primary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius);
+}
+
+.placeholder-content {
+  background: var(--bg-tertiary);
+  padding: 2rem;
+  border-radius: var(--radius-md);
+  text-align: center;
+  color: var(--text-tertiary);
+  border: 1px dashed var(--border-primary);
+}
+
+.placeholder-content p {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+}
+

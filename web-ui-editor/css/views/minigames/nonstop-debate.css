@@ -239,40 +239,4 @@
   color: var(--error);
 }
 
-/* Note: Duplicate audio styles below are for debate dialogue modal context (legacy/unused after modal removal) */
-.audio-preview {
-  background: var(--bg-tertiary);
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.audio-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.audio-icon {
-  font-size: 1.5rem;
-}
-
-.audio-filename {
-  font-size: 0.875rem;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-.audio-empty {
-  background: var(--bg-tertiary);
-  padding: 2rem;
-  border-radius: var(--radius-md);
-  text-align: center;
-  color: var(--text-tertiary);
-  border: 2px dashed var(--border-primary);
-  margin-bottom: 1rem;
-}
 

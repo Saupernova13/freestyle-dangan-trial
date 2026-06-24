@@ -70,27 +70,4 @@
   .dr-btn-row {
     flex-direction: column-reverse;
   }
-
-  /* Character type indicators */
-  .cast-block[data-type='headmaster'] {
-    border: 2px solid var(--warning);
-  }
-
-  .cast-block[data-type='headmaster']:hover {
-    border-color: var(--warning-dark);
-    box-shadow: var(--shadow-hard);
-  }
-
-  .cast-block[data-type='headmaster'][data-filled='1'] {
-    background: linear-gradient(135deg, var(--warning) 0%, var(--warning-dark) 100%);
-  }
-
-  .cast-block[data-type='headmaster'][data-filled='0'] {
-    border: 2px dashed var(--warning);
-    background: rgba(var(--warning-rgb), 0.1);
-  }
-
-  .cast-block[data-type='student'] {
-    border: 2px solid transparent;
-  }
 }

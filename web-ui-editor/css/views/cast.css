@@ -138,3 +138,54 @@
   color: var(--bg-primary);
 }
 
+/* Character type indicators: the headmaster slot reads in the warning hue at
+   every width. These previously lived inside the max-width:768px media query,
+   so the distinction only showed on narrow screens. */
+.cast-block[data-type='headmaster'] {
+  border: 2px solid var(--warning);
+}
+
+.cast-block[data-type='headmaster']:hover {
+  border-color: var(--warning-dark);
+  box-shadow: var(--shadow-hard);
+}
+
+.cast-block[data-type='headmaster'][data-filled='1'] {
+  background: linear-gradient(135deg, var(--warning) 0%, var(--warning-dark) 100%);
+}
+
+.cast-block[data-type='headmaster'][data-filled='0'] {
+  border: 2px dashed var(--warning);
+  background: rgba(var(--warning-rgb), 0.1);
+}
+
+.cast-block[data-type='student'] {
+  border: 2px solid transparent;
+}
+
+/* First-run prompt shown in #mainGrid before a trial folder is chosen
+   (see views/viewManager.js). */
+.welcome-screen {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  text-align: center;
+  padding: 4rem 2rem;
+  min-height: 50vh;
+}
+
+.welcome-screen h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.6rem;
+}
+
+.welcome-screen p {
+  margin: 0 0 1rem;
+  color: var(--text-tertiary);
+  max-width: 42ch;
+}
+

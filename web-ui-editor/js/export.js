@@ -141,7 +141,7 @@ export async function exportToPlayableFile() {
 /**
  * Recursively add directory contents to ZIP archive
  * @param {JSZip} zip - The JSZip instance
- * @param {FileSystemDirectoryHandle} state.dirHandle - Directory handle to process
+ * @param {FileSystemDirectoryHandle} dir - Directory handle to process
  * @param {string} zipPath - Path within the ZIP file
  * @param {Function} progressCallback - Optional callback for progress updates
  * @param {Object} progress - Mutable counter used across recursive calls
@@ -191,7 +191,7 @@ export async function addDirectoryToZip(
 
 /**
  * Count total files in directory (for progress tracking)
- * @param {FileSystemDirectoryHandle} state.dirHandle - Directory to count
+ * @param {FileSystemDirectoryHandle} dir - Directory to count
  * @returns {Promise<number>} Total number of files
  */
 export async function countFilesInDirectory(dir) {

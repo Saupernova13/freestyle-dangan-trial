@@ -1,7 +1,5 @@
-// Main application initialization
-// (Constants and state are now in separate files)
-
-// Searchable dropdown state
+// Script editor view: renders the script line list, owns line CRUD,
+// drag-and-drop reordering, and the per-line character search dropdown.
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
 import { initSpriteMagnifier } from './components/spriteMagnifier.js';
 import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
@@ -13,6 +11,8 @@ import { initializeTheme } from './ui/theme.js';
 import { generateId, escapeHtml } from './utils.js';
 import { renderActiveView } from './views/viewManager.js';
 import { MINIGAME_TYPE_LABELS } from './core/constants.js';
+
+// Character search dropdown state (one dropdown open at a time).
 let activeDropdownLineId = null;
 let filteredCharacters = [];
 let highlightedIndex = -1;
@@ -608,9 +608,3 @@ export function renderScriptLineBar(line, index) {
     </div>
   `;
 }
-
-// Storage functions now in js/core/storage.js
-// Cast view now in js/views/castView.js
-// Character model functions now in js/models/characterModel.js
-// Minigame view and functions now in js/views/minigameView.js
-// Truth bullets view and functions now in js/views/truthBulletsView.js

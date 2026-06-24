@@ -16,7 +16,12 @@ import { escapeHtml, normalizeHighlights, showLoader } from '../utils.js';
 const AUDIO_PREVIEW_KEY = 'script-line-modal';
 const DEFAULT_HIGHLIGHT_COLOR = '#FFFF00';
 const DEFAULT_CAMERA_MOTION = { type: 'none', duration: 1.0, easing: 'ease-in-out' };
-const DEFAULT_DIALOGUE_BOX_STYLE = { style: 'default', borderColor: '#FFFFFF', bgOpacity: 0.9, borderThickness: 2 };
+const DEFAULT_DIALOGUE_BOX_STYLE = {
+  style: 'default',
+  borderColor: '#FFFFFF',
+  bgOpacity: 0.9,
+  borderThickness: 2,
+};
 const COLOR_REGEX = /^#[0-9a-fA-F]{6}$/i;
 
 // ==================== Module State ====================
@@ -123,7 +128,7 @@ export async function openScriptLineModal(lineId) {
   highlightingState = {
     startChar: 0,
     endChar: 0,
-    currentColor: '#FFFF00',
+    currentColor: DEFAULT_HIGHLIGHT_COLOR,
   };
 
   renderScriptLineModal();
@@ -1184,11 +1189,6 @@ function normalizeColorFormat(color) {
   return `#${r}${g}${b}`;
 }
 
-// Helper function to convert RGB to hex for color comparison (deprecated, use normalizeColorFormat)
-export function rgbToHex(rgb) {
-  return normalizeColorFormat(rgb);
-}
-
 // Add highlight from drag selection
 export function addHighlightFromSelection() {
   const line = state.scriptLines.find((l) => l.id === activeLineId);
@@ -1202,8 +1202,12 @@ export function addHighlightFromSelection() {
   }
 
   // Validate ranges are in bounds
-  if (!Number.isFinite(highlightingState.startChar) || !Number.isFinite(highlightingState.endChar) ||
-      highlightingState.startChar < 0 || highlightingState.endChar > dialogue.length) {
+  if (
+    !Number.isFinite(highlightingState.startChar) ||
+    !Number.isFinite(highlightingState.endChar) ||
+    highlightingState.startChar < 0 ||
+    highlightingState.endChar > dialogue.length
+  ) {
     scriptLineModalErr = 'Invalid selection range. Please select within the dialogue text.';
     renderScriptLineModal();
     return;
@@ -1290,10 +1294,7 @@ export async function saveScriptLineAdvanced() {
     // Common fields for both narrator and speaking.
     // Highlights are normalized against the line's current text so stale or
     // overlapping ranges can never be persisted to trial.json.
-    line.highlights = normalizeHighlights(
-      scriptLineFields.highlights,
-      dialogue.length
-    );
+    line.highlights = normalizeHighlights(scriptLineFields.highlights, dialogue.length);
     line.specialEffects = scriptLineFields.specialEffects;
     line.dialogueBoxStyle = scriptLineFields.dialogueBoxStyle;
 

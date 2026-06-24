@@ -33,7 +33,7 @@ export async function chooseTrialDir() {
           state.scriptLines = [];
         }
 
-        // Load state.minigames
+        // Load minigames
         if (data.minigames && Array.isArray(data.minigames)) {
           state.minigames = data.minigames;
           await loadMinigameAudio();

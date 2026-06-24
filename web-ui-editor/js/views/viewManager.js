@@ -28,6 +28,22 @@ export function renderActiveView() {
   const mainGrid = document.getElementById('mainGrid');
   if (!mainGrid) return;
 
+  // The editor reads and writes trial folders through the File System Access
+  // API, which only Chromium-based browsers implement. Fail with a clear
+  // explanation rather than a confusing error the moment the user clicks.
+  if (!window.showDirectoryPicker) {
+    mainGrid.innerHTML = `
+      <div class="welcome-screen">
+        <div class="script-empty-icon">${window.icon('warning', { size: 56 })}</div>
+        <h2>This browser isn't supported</h2>
+        <p>The editor saves trials directly to a folder on disk using the File
+        System Access API, which only Chromium browsers implement. Please open
+        this editor in <strong>Chrome, Edge, or Opera</strong>.</p>
+      </div>
+    `;
+    return;
+  }
+
   if (!state.dirHandle) {
     mainGrid.innerHTML = `
       <div class="welcome-screen">

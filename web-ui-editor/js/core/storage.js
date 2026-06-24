@@ -9,6 +9,16 @@ import { fileToDataUrl, renderDirDisplay, showLoader } from '../utils.js';
 import { renderActiveView } from '../views/viewManager.js';
 
 export async function chooseTrialDir() {
+  if (!window.showDirectoryPicker) {
+    await alertDialog({
+      title: 'Unsupported browser',
+      type: 'error',
+      message:
+        'This browser cannot open trial folders. Please use a Chromium browser ' +
+        '(Chrome, Edge, or Opera).',
+    });
+    return;
+  }
   try {
     let dH = await window.showDirectoryPicker({ id: 'dr-trial-dir', mode: 'readwrite' });
     showLoader(true, 'Loading trial…');

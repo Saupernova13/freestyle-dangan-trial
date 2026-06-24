@@ -2,6 +2,13 @@
 import { renderScriptEditor } from '../app.js';
 import { updateFloatingAddButton } from '../components/floatingAddButton.js';
 import { state } from '../core/state.js';
+import {
+  listOpfsTrialFolders,
+  readOpfsFileText,
+  supportsFsPicker,
+  supportsOpfs,
+} from '../core/opfs.js';
+import { escapeHtml } from '../utils.js';
 import { renderCastGrid } from './castView.js';
 import { renderMinigameDetails } from './minigameView.js';
 import { renderTruthBulletsView } from './truthBulletsView.js';
@@ -28,30 +35,8 @@ export function renderActiveView() {
   const mainGrid = document.getElementById('mainGrid');
   if (!mainGrid) return;
 
-  // The editor reads and writes trial folders through the File System Access
-  // API, which only Chromium-based browsers implement. Fail with a clear
-  // explanation rather than a confusing error the moment the user clicks.
-  if (!window.showDirectoryPicker) {
-    mainGrid.innerHTML = `
-      <div class="welcome-screen">
-        <div class="script-empty-icon">${window.icon('warning', { size: 56 })}</div>
-        <h2>This browser isn't supported</h2>
-        <p>The editor saves trials directly to a folder on disk using the File
-        System Access API, which only Chromium browsers implement. Please open
-        this editor in <strong>Chrome, Edge, or Opera</strong>.</p>
-      </div>
-    `;
-    return;
-  }
-
   if (!state.dirHandle) {
-    mainGrid.innerHTML = `
-      <div class="welcome-screen">
-        <h2>Welcome to the Class Trial Editor</h2>
-        <p>To get started, choose a folder to store your trial data.</p>
-        <button class="btn btn-primary" onclick="chooseTrialDir()">${window.icon('folder')} Choose Folder</button>
-      </div>
-    `;
+    renderWelcomeHub(mainGrid);
     return;
   }
 
@@ -64,4 +49,115 @@ export function renderActiveView() {
   } else if (state.activeView === 'minigames') {
     renderMinigameDetails();
   }
+}
+
+// Welcome / trial-picker hub. Adapts to what the browser supports: a real
+// on-disk folder picker on Chromium, plus browser storage (OPFS) wherever it
+// exists. The inline handlers resolve through the window bridge (storage.js).
+function renderWelcomeHub(mainGrid) {
+  const hasPicker = supportsFsPicker();
+  const hasOpfs = supportsOpfs();
+
+  if (!hasPicker && !hasOpfs) {
+    mainGrid.innerHTML = `
+      <div class="welcome-screen">
+        <div class="script-empty-icon">${window.icon('warning', { size: 56 })}</div>
+        <h2>This browser isn't supported</h2>
+        <p>The editor needs either the File System Access API or the Origin
+        Private File System. Please use a current version of Chrome, Edge,
+        Firefox, or Safari.</p>
+      </div>
+    `;
+    return;
+  }
+
+  mainGrid.innerHTML = `
+    <div class="welcome-screen welcome-hub">
+      <h2>Class Trial Editor</h2>
+      <p>Open a trial to start editing, or create a new one.</p>
+
+      <div class="hub-options">
+        ${
+          hasPicker
+            ? `<div class="hub-card">
+                 <div class="hub-card-icon">${window.icon('folder', { size: 28 })}</div>
+                 <h3>Folder on disk</h3>
+                 <p>Edit a trial folder on your computer. Changes save in place.</p>
+                 <button class="btn btn-primary" onclick="chooseTrialDir()">Open folder…</button>
+               </div>`
+            : ''
+        }
+        ${
+          hasOpfs
+            ? `<div class="hub-card">
+                 <div class="hub-card-icon">${window.icon('layers', { size: 28 })}</div>
+                 <h3>Browser storage</h3>
+                 <p>Store trials inside this browser. Move them between machines with Export / Import.</p>
+                 <div class="hub-card-actions">
+                   <button class="btn btn-primary" onclick="newOpfsTrial()">${window.icon('plus')} New trial</button>
+                   <button class="btn btn-secondary" onclick="triggerImportTrial()">${window.icon('upload')} Import .drtrial</button>
+                 </div>
+               </div>`
+            : ''
+        }
+      </div>
+
+      ${hasOpfs ? `<div class="hub-trials" id="hubTrials"></div>` : ''}
+    </div>
+  `;
+
+  if (hasOpfs) populateHubTrials();
+}
+
+async function populateHubTrials() {
+  const container = document.getElementById('hubTrials');
+  if (!container) return;
+
+  let folders = [];
+  try {
+    folders = await listOpfsTrialFolders();
+  } catch {
+    /* leave empty */
+  }
+  if (folders.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  // Resolve each trial's display name from its trial.json (fallback: folder).
+  const rows = await Promise.all(
+    folders.map(async (folder) => {
+      let name = folder;
+      const txt = await readOpfsFileText(folder, 'trial.json');
+      if (txt) {
+        try {
+          const j = JSON.parse(txt);
+          if (j.trialName) name = j.trialName;
+        } catch {
+          /* keep folder name */
+        }
+      }
+      return { folder, name };
+    })
+  );
+
+  container.innerHTML = `
+    <h3 class="hub-trials-title">Saved in this browser</h3>
+    <ul class="hub-trial-list">
+      ${rows
+        .map(
+          (r) => `
+        <li class="hub-trial-row">
+          <button class="hub-trial-open" onclick="openOpfsTrialByName('${escapeHtml(r.folder)}')">
+            ${window.icon('script', { size: 16 })}
+            <span class="hub-trial-name">${escapeHtml(r.name)}</span>
+          </button>
+          <button class="hub-trial-delete" title="Delete trial" onclick="deleteOpfsTrialAndRefresh('${escapeHtml(r.folder)}')">
+            ${window.icon('trash', { size: 15 })}
+          </button>
+        </li>`
+        )
+        .join('')}
+    </ul>
+  `;
 }

@@ -7,10 +7,18 @@ playable `.drtrial` file for the Godot engine.
 ## Requirements
 
 - Node.js 18+ (for the dev server and build)
-- A Chromium-based browser (Chrome, Edge, Opera). The editor saves trials
-  directly to a folder on disk via the
-  [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API),
-  which Firefox and Safari do not implement.
+- A modern browser. There are two storage backends, chosen automatically:
+  - **Chromium (Chrome, Edge, Opera):** edit a trial folder **on disk** via the
+    [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API);
+    changes save in place.
+  - **Firefox / Safari (and Chromium too):** store trials in **browser storage**
+    via the [Origin Private File System](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system).
+    These browsers don't implement the on-disk folder picker, so trials move in
+    and out with **Export** (download a `.drtrial`) and **Import** (load one back).
+
+Browser-storage trials live inside the browser/origin and aren't visible in your
+OS file manager — use Export to get a portable `.drtrial`, and Import to bring it
+into another browser or machine.
 
 ## Getting started
 

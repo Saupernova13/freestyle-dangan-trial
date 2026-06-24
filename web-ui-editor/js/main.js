@@ -14,6 +14,7 @@ import * as storage from './core/storage.js';
 import * as exporter from './export.js';
 import * as floatingAddButton from './components/floatingAddButton.js';
 import * as spriteMagnifier from './components/spriteMagnifier.js';
+import * as characterSearchDropdown from './components/characterSearchDropdown.js';
 import * as characterModel from './models/characterModel.js';
 import * as castView from './views/castView.js';
 import * as viewManager from './views/viewManager.js';
@@ -39,6 +40,7 @@ const modules = [
   exporter,
   floatingAddButton,
   spriteMagnifier,
+  characterSearchDropdown,
   characterModel,
   castView,
   viewManager,

@@ -1,5 +1,7 @@
-// Script editor view: renders the script line list, owns line CRUD,
-// drag-and-drop reordering, and the per-line character search dropdown.
+// Script editor view: renders the script line list and owns line CRUD plus
+// drag-and-drop reordering. The per-line character search dropdown lives in
+// components/characterSearchDropdown.js.
+import { initCharacterSearchDropdown } from './components/characterSearchDropdown.js';
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
 import { initSpriteMagnifier } from './components/spriteMagnifier.js';
 import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
@@ -12,16 +14,12 @@ import { generateId, escapeHtml } from './utils.js';
 import { renderActiveView } from './views/viewManager.js';
 import { MINIGAME_TYPE_LABELS } from './core/constants.js';
 
-// Character search dropdown state (one dropdown open at a time).
-let activeDropdownLineId = null;
-let filteredCharacters = [];
-let highlightedIndex = -1;
-
 // Initialize app
 document.addEventListener('DOMContentLoaded', function () {
   initializeTheme();
   loadSettings();
   initSpriteMagnifier();
+  initCharacterSearchDropdown();
   renderActiveView();
 
   // Trial name input handler
@@ -29,36 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
     state.trialName = e.target.value.trim();
     updateExportButtonState();
     scheduleAutoSave();
-  });
-
-  // Click outside to close dropdown
-  document.addEventListener('click', function (e) {
-    // Check if click is outside any searchable dropdown
-    if (!e.target.closest('.searchable-dropdown') && activeDropdownLineId) {
-      closeCharacterDropdown(activeDropdownLineId);
-    }
-  });
-
-  // Character dropdown item selection/highlighting via document-level event
-  // delegation. The list is re-rendered on every keystroke, so per-item (or
-  // even per-list) listeners would need rebinding each time — the old
-  // clone-and-replace approach leaked nodes and lost scroll position.
-  document.addEventListener('click', function (e) {
-    const item = e.target.closest('.searchable-dropdown-item');
-    if (item && item.dataset.charId && activeDropdownLineId) {
-      selectCharacterFromDropdown(activeDropdownLineId, item.dataset.charId);
-    }
-  });
-
-  document.addEventListener('mouseover', function (e) {
-    const item = e.target.closest('.searchable-dropdown-item');
-    if (item && item.dataset.charIndex !== undefined && activeDropdownLineId) {
-      const idx = parseInt(item.dataset.charIndex, 10);
-      if (!Number.isNaN(idx) && idx !== highlightedIndex) {
-        highlightedIndex = idx;
-        updateDropdownHighlighting(activeDropdownLineId);
-      }
-    }
   });
 });
 
@@ -345,170 +313,6 @@ export function updateScriptLine(lineId, field, value) {
   line[field] = value;
   // Fires on every keystroke of the dialogue inputs - debounce the write.
   scheduleAutoSave();
-}
-
-// Searchable dropdown helper functions
-export function openCharacterDropdown(lineId) {
-  // Close any open dropdown first
-  if (activeDropdownLineId && activeDropdownLineId !== lineId) {
-    closeCharacterDropdown(activeDropdownLineId);
-  }
-
-  activeDropdownLineId = lineId;
-  highlightedIndex = -1;
-
-  // Initialize with all characters
-  filteredCharacters = state.cast.filter((c) => c !== null);
-
-  // Render the dropdown list
-  renderCharacterDropdownList(lineId);
-}
-
-export function closeCharacterDropdown(lineId) {
-  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
-  if (listEl) {
-    listEl.style.display = 'none';
-  }
-
-  if (activeDropdownLineId === lineId) {
-    activeDropdownLineId = null;
-    filteredCharacters = [];
-    highlightedIndex = -1;
-  }
-}
-
-export function filterCharacters(lineId, searchTerm) {
-  const characters = state.cast.filter((c) => c !== null);
-  const term = searchTerm.toLowerCase().trim();
-
-  if (term === '') {
-    filteredCharacters = characters;
-  } else {
-    filteredCharacters = characters.filter((c) => {
-      const fullName = `${c.name} ${c.surname}`.toLowerCase();
-      return fullName.includes(term);
-    });
-  }
-
-  highlightedIndex = filteredCharacters.length > 0 ? 0 : -1;
-  renderCharacterDropdownList(lineId);
-}
-
-export function handleCharacterKeydown(lineId, event) {
-  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
-
-  // Only handle if dropdown is open
-  if (!listEl || listEl.style.display === 'none') {
-    return;
-  }
-
-  switch (event.key) {
-    case 'ArrowDown':
-      event.preventDefault();
-      if (highlightedIndex < filteredCharacters.length - 1) {
-        highlightedIndex++;
-        updateDropdownHighlighting(lineId);
-        scrollToHighlighted(lineId);
-      }
-      break;
-
-    case 'ArrowUp':
-      event.preventDefault();
-      if (highlightedIndex > 0) {
-        highlightedIndex--;
-        updateDropdownHighlighting(lineId);
-        scrollToHighlighted(lineId);
-      }
-      break;
-
-    case 'Enter':
-      event.preventDefault();
-      if (highlightedIndex >= 0 && highlightedIndex < filteredCharacters.length) {
-        const character = filteredCharacters[highlightedIndex];
-        selectCharacterFromDropdown(lineId, character.id);
-      }
-      break;
-
-    case 'Escape':
-      event.preventDefault();
-      closeCharacterDropdown(lineId);
-      break;
-  }
-}
-
-export function selectCharacterFromDropdown(lineId, characterId) {
-  updateScriptLine(lineId, 'characterId', characterId);
-  closeCharacterDropdown(lineId);
-
-  // Update the input value to show selected character
-  const selectedChar = state.cast.find((c) => c && c.id === characterId);
-  if (selectedChar) {
-    const inputEl = document.getElementById(`char-dropdown-input-${lineId}`);
-    if (inputEl) {
-      inputEl.value = `${selectedChar.name} ${selectedChar.surname}`;
-    }
-  }
-}
-
-export function renderCharacterDropdownList(lineId) {
-  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
-  if (!listEl) return;
-
-  if (filteredCharacters.length === 0) {
-    listEl.innerHTML =
-      '<div class="searchable-dropdown-item" style="cursor: default; opacity: 0.6;">No characters found</div>';
-    listEl.style.display = 'block';
-    return;
-  }
-
-  const line = state.scriptLines.find((l) => l.id === lineId);
-  const selectedCharId = line ? line.characterId : '';
-
-  const itemsHtml = filteredCharacters
-    .map((c, idx) => {
-      const isSelected = c.id === selectedCharId;
-      const isHighlighted = idx === highlightedIndex;
-      const classes = ['searchable-dropdown-item'];
-      if (isSelected) classes.push('selected');
-      if (isHighlighted) classes.push('highlighted');
-
-      return `
-      <div class="${classes.join(' ')}"
-           data-char-id="${c.id}"
-           data-char-index="${idx}">
-        ${escapeHtml(`${c.name} ${c.surname}`)} (${c.isHeadmaster ? 'Headmaster' : 'Student'})
-      </div>
-    `;
-    })
-    .join('');
-
-  listEl.innerHTML = itemsHtml;
-  listEl.style.display = 'block';
-  // Clicks and hover are handled by document-level delegation set up at init.
-}
-
-export function updateDropdownHighlighting(lineId) {
-  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
-  if (!listEl) return;
-
-  const items = listEl.querySelectorAll('.searchable-dropdown-item');
-  items.forEach((item, idx) => {
-    if (idx === highlightedIndex) {
-      item.classList.add('highlighted');
-    } else {
-      item.classList.remove('highlighted');
-    }
-  });
-}
-
-export function scrollToHighlighted(lineId) {
-  const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
-  if (!listEl) return;
-
-  const highlightedEl = listEl.querySelector('.highlighted');
-  if (highlightedEl) {
-    highlightedEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
 }
 
 export function renderScriptLineBar(line, index) {

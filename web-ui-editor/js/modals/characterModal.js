@@ -73,7 +73,7 @@ export async function openCharModal(idx) {
 
   // Lazy load remaining sprites if character exists (performance optimization)
   if (c.id && c._folderHandle) {
-    showLoader(true);
+    showLoader(true, 'Loading sprites…');
     await loadRemainingSprites(idx);
     c = state.cast[idx]; // Refresh reference after loading sprites
     showLoader(false);
@@ -303,7 +303,7 @@ export async function trySaveChar() {
   }
 
   try {
-    showLoader(true);
+    showLoader(true, 'Saving character…');
 
     // Generate human-readable ID for new characters or keep existing ID
     const existingChar = state.cast[activeIdx];

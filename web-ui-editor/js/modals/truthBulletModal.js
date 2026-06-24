@@ -195,7 +195,7 @@ export async function saveTruthBullet() {
   }
 
   try {
-    showLoader(true);
+    showLoader(true, 'Saving truth bullet…');
 
     // Handle image upload
     if (bulletFields.imageBlob) {

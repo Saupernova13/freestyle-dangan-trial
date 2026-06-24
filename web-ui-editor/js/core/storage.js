@@ -10,8 +10,8 @@ import { renderActiveView } from '../views/viewManager.js';
 
 export async function chooseTrialDir() {
   try {
-    showLoader(true);
     let dH = await window.showDirectoryPicker({ id: 'dr-trial-dir', mode: 'readwrite' });
+    showLoader(true, 'Loading trial…');
     state.dirHandle = dH;
     renderDirDisplay(state.dirHandle);
 

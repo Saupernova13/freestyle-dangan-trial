@@ -71,7 +71,7 @@ export async function openScriptLineModal(lineId) {
     const character = state.cast.find((c) => c && c.id === line.characterId);
     if (character && character.id && character._folderHandle) {
       if (!character.sprites || character.sprites.length < appSettings.maxSprites) {
-        showLoader(true);
+        showLoader(true, 'Loading sprites…');
         const charIndex = state.cast.indexOf(character);
         await loadRemainingSprites(charIndex);
         showLoader(false);
@@ -201,7 +201,7 @@ export async function saveScriptLineAdvanced() {
   }
 
   try {
-    showLoader(true);
+    showLoader(true, 'Saving…');
 
     if (line.type === 'speaking') {
       line.spriteIndex = sl.fields.spriteIndex;

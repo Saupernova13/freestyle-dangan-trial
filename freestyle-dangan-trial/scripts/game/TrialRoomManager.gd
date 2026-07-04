@@ -126,29 +126,40 @@ func populate_character_position(position_index: int, character_id: String):
 	_characters_by_id[character_id] = char_data
 	_characters_by_bench[position_index - 1] = char_data
 
-	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, 1)
+	var texture := _get_sprite_texture(character_id, 1)
 	if not texture:
-		var sprite_path := TrialLoader.get_character_sprite(character_id, 1)
-		if sprite_path.is_empty():
-			push_warning("Sprite not found for character: ", char_data.get("name", character_id))
-			return
-		var image := Image.load_from_file(sprite_path)
-		if not image:
-			push_error("Failed to load image: ", sprite_path)
-			return
-		texture = ImageTexture.create_from_image(image)
-		TrialLoader.cache_texture(character_id, 1, texture)
+		push_warning("Sprite not found for character: ", char_data.get("name", character_id))
+		return
 
+	mesh_instance.material_override = _make_sprite_material(texture)
+	_fit_quad_to_texture(mesh_instance, texture)
+	_ensure_black_backplane(mesh_instance)
+
+	print("Loaded character: ", char_data.get("name", ""), " at position ", position_index)
+
+## Cached sprite texture for a character, loading (and caching) from the
+## extracted trial files on first use. Returns null when the sprite is missing.
+func _get_sprite_texture(character_id: String, sprite_index: int) -> ImageTexture:
+	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, sprite_index)
+	if texture:
+		return texture
+	var sprite_path := TrialLoader.get_character_sprite(character_id, sprite_index)
+	if sprite_path.is_empty():
+		return null
+	var image := Image.load_from_file(sprite_path)
+	if not image:
+		return null
+	texture = ImageTexture.create_from_image(image)
+	TrialLoader.cache_texture(character_id, sprite_index, texture)
+	return texture
+
+func _make_sprite_material(texture: Texture2D) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_texture = texture
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.cull_mode = BaseMaterial3D.CULL_BACK
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mesh_instance.material_override = material
-	_fit_quad_to_texture(mesh_instance, texture)
-	_ensure_black_backplane(mesh_instance)
-
-	print("Loaded character: ", char_data.get("name", ""), " at position ", position_index)
+	return material
 
 func update_character_name_label(character_name: String):
 	if name_label:
@@ -166,18 +177,12 @@ func update_character_portrait(bench_index: int, sprite_index: int = 1):
 	if character_id.is_empty():
 		return
 
-	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, sprite_index)
+	# Fall back to the first sprite when the requested index doesn't exist.
+	var texture := _get_sprite_texture(character_id, sprite_index)
 	if not texture:
-		var sprite_path := TrialLoader.get_character_sprite(character_id, sprite_index)
-		if sprite_path.is_empty():
-			sprite_path = TrialLoader.get_character_sprite(character_id, 1)
-		if sprite_path.is_empty():
-			return
-		var image := Image.load_from_file(sprite_path)
-		if not image:
-			return
-		texture = ImageTexture.create_from_image(image)
-		TrialLoader.cache_texture(character_id, sprite_index, texture)
+		texture = _get_sprite_texture(character_id, 1)
+	if not texture:
+		return
 	portrait_rect.texture = texture
 
 func on_bench_focused(bench_index: int):
@@ -346,16 +351,9 @@ func find_character_position(character_id: String) -> int:
 	return int(char_data.get("_bench_index", -1))
 
 func update_character_sprite(position_index: int, character_id: String, sprite_index: int):
-	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, sprite_index)
+	var texture := _get_sprite_texture(character_id, sprite_index)
 	if not texture:
-		var sprite_path := TrialLoader.get_character_sprite(character_id, sprite_index)
-		if sprite_path.is_empty():
-			return
-		var image := Image.load_from_file(sprite_path)
-		if not image:
-			return
-		texture = ImageTexture.create_from_image(image)
-		TrialLoader.cache_texture(character_id, sprite_index, texture)
+		return
 
 	var marker_name = "Bench_Marker3D_%03d" % (position_index + 1)
 	if position_index == 16:
@@ -373,12 +371,7 @@ func update_character_sprite(position_index: int, character_id: String, sprite_i
 	if mesh_instance.material_override:
 		mesh_instance.material_override.albedo_texture = texture
 	else:
-		var material := StandardMaterial3D.new()
-		material.albedo_texture = texture
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		material.cull_mode = BaseMaterial3D.CULL_BACK
-		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mesh_instance.material_override = material
+		mesh_instance.material_override = _make_sprite_material(texture)
 	_fit_quad_to_texture(mesh_instance, texture)
 	_ensure_black_backplane(mesh_instance)
 

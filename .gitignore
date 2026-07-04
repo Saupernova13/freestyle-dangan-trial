@@ -1,43 +1,29 @@
-# Godot 4+ specific ignores
+# Godot generated files
 .godot/
 .nomedia
-
-# Godot-specific ignores
-.import/
+*.import
+*.uid
+*.translation
 export.cfg
 export_credentials.cfg
 
-# Imported translations (automatically generated from CSV files)
-*.translation
-
-# Mono-specific ignores
+# Mono/.NET
 .mono/
-data_*/
 mono_crash.*.json
-*.import
-*.exr
+
+# Source art too large for git (scenes embed the imported meshes)
 *.blend
-/.claude
-/cli
-/freestyle-dangan-trial/.stfolder
-/freestyle-dangan-trial/godotgif/bin
-/freestyle-dangan-trial/godotgif
-/freestyle-dangan-trial/builds
+*.exr
 /freestyle-dangan-trial/models
-/freestyle-dangan-trial/models
-/freestyle-dangan-trial/models
-/freestyle-dangan-trial/models/textures
 /freestyle-dangan-trial/PSDs
-/freestyle-dangan-trial/textures
-*.uid
-/freestyle-dangan-trial/Trial
 
 # Scene carries 500MB+ of embedded mesh data — exceeds GitHub's file size
 # limit. Track it only after extracting meshes to external resources.
 /freestyle-dangan-trial/scenes/thh_default_trial_room.tscn
 
-# Scripter
-scripter/node_modules/
-scripter/dist/
-scripter/output/
-scripter/scripts/
+# Local state
+.claude/
+/freestyle-dangan-trial/.stfolder
+/freestyle-dangan-trial/builds
+/freestyle-dangan-trial/godotgif
+/freestyle-dangan-trial/Trial

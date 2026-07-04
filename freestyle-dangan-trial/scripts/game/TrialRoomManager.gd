@@ -126,7 +126,7 @@ func populate_character_position(position_index: int, character_id: String):
 	_characters_by_id[character_id] = char_data
 	_characters_by_bench[position_index - 1] = char_data
 
-	var texture := _get_sprite_texture(character_id, 1)
+	var texture := TrialLoader.get_sprite_texture(character_id, 1)
 	if not texture:
 		push_warning("Sprite not found for character: ", char_data.get("name", character_id))
 		return
@@ -136,22 +136,6 @@ func populate_character_position(position_index: int, character_id: String):
 	_ensure_black_backplane(mesh_instance)
 
 	print("Loaded character: ", char_data.get("name", ""), " at position ", position_index)
-
-## Cached sprite texture for a character, loading (and caching) from the
-## extracted trial files on first use. Returns null when the sprite is missing.
-func _get_sprite_texture(character_id: String, sprite_index: int) -> ImageTexture:
-	var texture: ImageTexture = TrialLoader.get_cached_texture(character_id, sprite_index)
-	if texture:
-		return texture
-	var sprite_path := TrialLoader.get_character_sprite(character_id, sprite_index)
-	if sprite_path.is_empty():
-		return null
-	var image := Image.load_from_file(sprite_path)
-	if not image:
-		return null
-	texture = ImageTexture.create_from_image(image)
-	TrialLoader.cache_texture(character_id, sprite_index, texture)
-	return texture
 
 func _make_sprite_material(texture: Texture2D) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
@@ -178,9 +162,9 @@ func update_character_portrait(bench_index: int, sprite_index: int = 1):
 		return
 
 	# Fall back to the first sprite when the requested index doesn't exist.
-	var texture := _get_sprite_texture(character_id, sprite_index)
+	var texture := TrialLoader.get_sprite_texture(character_id, sprite_index)
 	if not texture:
-		texture = _get_sprite_texture(character_id, 1)
+		texture = TrialLoader.get_sprite_texture(character_id, 1)
 	if not texture:
 		return
 	portrait_rect.texture = texture
@@ -351,7 +335,7 @@ func find_character_position(character_id: String) -> int:
 	return int(char_data.get("_bench_index", -1))
 
 func update_character_sprite(position_index: int, character_id: String, sprite_index: int):
-	var texture := _get_sprite_texture(character_id, sprite_index)
+	var texture := TrialLoader.get_sprite_texture(character_id, sprite_index)
 	if not texture:
 		return
 

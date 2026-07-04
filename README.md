@@ -1,6 +1,6 @@
 # Freestyle Danganronpa Trial Creator
 
-A comprehensive tool for creating custom Danganronpa-style trials, featuring both a browser-based authoring interface and a fully-implemented Godot 4.5 game engine. Design your cast, write scripts, and play interactive trials with minigame mechanics.
+A tool for creating custom Danganronpa-style trials: a browser-based authoring interface plus a Godot 4.5 engine that plays the result. Design your cast, write scripts, and play interactive trials with minigame mechanics.
 
 ## Project Status
 
@@ -103,11 +103,10 @@ A comprehensive tool for creating custom Danganronpa-style trials, featuring bot
 - Trial loading path configuration problematic
 
 #### Technical Stack
-- ~5000 lines of GDScript
-- Godot 4.5 engine
-- Modular manager singletons (ScriptDirector, AudioManager, InputManager, etc.)
+- Godot 4.5 engine, GDScript
+- Autoload manager singletons (ScriptDirector, AudioManager, InputManager, etc.)
 - Signal-driven event system
-- Trial data loader from directory structure
+- `.drtrial` loader with threaded extraction (see ARCHITECTURE.md)
 
 ---
 
@@ -117,8 +116,9 @@ A comprehensive tool for creating custom Danganronpa-style trials, featuring bot
 
 #### Prerequisites
 - Node.js 18+
-- Modern Chromium-based browser (Chrome, Edge, Opera)
-- File System Access API support
+- A modern browser. Chromium (Chrome, Edge, Opera) can edit a trial folder
+  on disk; Firefox and Safari work in browser storage with `.drtrial`
+  import/export (see `web-ui-editor/README.md`)
 
 #### Installation & Usage
 
@@ -131,8 +131,8 @@ A comprehensive tool for creating custom Danganronpa-style trials, featuring bot
    ```
 
 2. **Create a trial workspace**:
-   - Click "📁 Choose Folder"
-   - Select or create a directory for your trial
+   - Use the trial hub to open a trial folder (Chromium) or create a
+     browser-storage trial (any browser)
    - Enter a trial name
 
 3. **Build your cast**:
@@ -192,22 +192,6 @@ A comprehensive tool for creating custom Danganronpa-style trials, featuring bot
 
 ---
 
-## Command-Line Tools
-
-### Batch Character Creation (CLI)
-
-For rapid character setup, use the Node.js CLI tool to batch-create characters:
-
-```bash
-cd cli
-npm install
-node create-character.js --batch characters.json --dest "C:\Path\To\Trial"
-```
-
-Supports JSON and CSV batch files with automatic sprite discovery.
-
----
-
 ## Project Structure
 
 ```
@@ -222,30 +206,24 @@ freestyle-dangan-trial/
 │       ├── models/                 # Data structures (character, etc.)
 │       ├── views/                  # UI rendering and controllers
 │       ├── modals/                 # Dialog components
-│       ├── ui/                     # Theme management
+│       ├── ui/                     # Theme, icons, dialogs, modal behaviors
 │       └── app.js, settings.js, utils.js, export.js
-│
-├── cli/                            # Node.js batch character creation
-│   ├── create-character.js         # CLI entry point
-│   ├── lib/                        # Character generator, validators, sprite processor
-│   └── examples/                   # Sample batch files (JSON, CSV)
 │
 ├── freestyle-dangan-trial/         # Godot 4.5 game engine
 │   ├── scripts/
-│   │   ├── core/                   # System managers (ScriptDirector, AudioManager, InputManager, etc.)
-│   │   ├── minigames/              # Minigame implementations (6 types)
-│   │   ├── Camera/                 # Camera systems and controllers
-│   │   ├── ui/                     # UI components (gauges, crosshair, etc.)
-│   │   └── [other scripts]
+│   │   ├── core/                   # Autoload singletons (TrialLoader, ScriptDirector, ...)
+│   │   ├── camera/                 # Camera director and bench camera rig
+│   │   ├── minigames/              # MinigameBase + one script per minigame
+│   │   ├── ui/                     # Dialogue box, gauges, cards, menus
+│   │   └── config/, effects/, game/, tools/
 │   ├── scenes/                     # Godot scene files (.tscn)
-│   ├── models/                     # 3D model assets (.blend)
-│   ├── textures/                   # Texture and material files
 │   ├── shaders/                    # Godot shader files (.gdshader)
-│   ├── project.godot               # Godot project configuration
-│   └── .godot/                     # Godot cache (ignored)
+│   ├── textures/                   # UI and background textures
+│   ├── models/                     # Source 3D assets (gitignored; meshes are embedded in scenes)
+│   └── project.godot               # Godot project configuration
 │
-├── .gitignore
-├── .gitattributes
+├── ARCHITECTURE.md                 # Component map and engine architecture
+├── CONTRIBUTING.md
 └── README.md
 ```
 
@@ -268,11 +246,9 @@ trial-folder/
 │   └── ...
 ├── Audio/                          # Voice acting files
 │   ├── line_1733585420123.mp3
-│   └── ...
-└── TruthBullets/                   # Evidence items
-    ├── bullet_ID/
-    │   ├── bullet.json             # Evidence metadata
-    │   └── image.png               # Evidence image
+│   └── Minigames/<gameId>/         # Minigame voice lines
+└── TruthBullets/                   # Evidence images (metadata lives in trial.json)
+    ├── tb_1733585450123.png
     └── ...
 ```
 
@@ -320,12 +296,8 @@ trial-folder/
 ### Game Engine
 - **Godot 4.5**: Open-source game engine
 - **GDScript**: Native Godot scripting language
-- **GLSL**: Shaders for visual effects
-- **3D Assets**: Blender models
-
-### CLI Tool
-- **Node.js 18+**: Runtime
-- **JavaScript**: Batch processing
+- **Godot shading language**: Shaders for visual effects
+- **3D Assets**: Blender models (meshes embedded in scenes)
 
 ---
 
@@ -340,7 +312,6 @@ trial-folder/
 - [x] Truth bullets management
 - [x] Dark/Light theme
 - [x] Auto-save to JSON
-- [x] CLI batch character tool
 
 ### Game Engine — Priority Order
 
@@ -376,14 +347,12 @@ trial-folder/
 
 ## Browser Compatibility
 
-**Fully Supported** (File System Access API):
-- Chrome 86+
-- Edge 86+
-- Opera 72+
+The editor picks a storage backend automatically:
 
-**Not Supported**:
-- Firefox (no File System Access API)
-- Safari (no File System Access API)
+- **Chromium (Chrome, Edge, Opera)**: edit a trial folder on disk via the
+  File System Access API — changes save in place.
+- **Firefox / Safari**: trials live in browser storage (Origin Private File
+  System); move them in and out with Export/Import of `.drtrial` files.
 
 ---
 
@@ -440,14 +409,16 @@ cd freestyle-dangan-trial
 
 **Game Engine**:
 - `freestyle-dangan-trial/scripts/core/ScriptDirector.gd` — Script playback & progression
-- `freestyle-dangan-trial/scripts/minigames/NonstopDebate.gd` — Nonstop debate implementation
-- `freestyle-dangan-trial/scripts/Camera/CameraDirector.gd` — Camera motion system
+- `freestyle-dangan-trial/scripts/game/TrialRoomManager.gd` — Trial room orchestration
+- `freestyle-dangan-trial/scripts/minigames/MinigameBase.gd` — Minigame framework
+- `freestyle-dangan-trial/scripts/camera/CameraDirector.gd` — Camera motion system
 
 ---
 
 ## Known Limitations
 
-- Web UI only works in Chromium browsers (File System Access API limitation)
+- On-disk trial folders require a Chromium browser; other browsers go
+  through `.drtrial` import/export
 - Trial file picker in Godot requires manual folder selection
 - Multi-language text support is limited to English
 - No built-in audio editing (use external tools)

@@ -9,7 +9,6 @@ The project has two main components with different workflows.
 | ------------------------- | -------------------------------------- |
 | `web-ui-editor/`          | Browser-based trial authoring tool     |
 | `freestyle-dangan-trial/` | Godot 4.5 trial engine                 |
-| `cli/`                    | Node.js batch character creation tool  |
 
 ## Web UI (web-ui-editor)
 

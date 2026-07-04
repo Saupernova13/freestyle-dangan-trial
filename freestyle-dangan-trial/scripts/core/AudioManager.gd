@@ -29,6 +29,11 @@ func play_voice_line(audio_filename: String):
 func stop_voice():
 	voice_player.stop()
 
+## Set voice playback volume from a 0..1 linear value (silence at 0). Called by
+## Settings so the volume knob doesn't have to know the player node or decibels.
+func set_voice_volume_linear(linear: float) -> void:
+	voice_player.volume_db = linear_to_db(linear) if linear > 0.0 else -80.0
+
 func is_voice_playing() -> bool:
 	return voice_player.playing
 
@@ -52,23 +57,7 @@ func _load_audio_from_file(file_path: String) -> AudioStream:
 		return null
 
 	var bytes = FileAccess.get_file_as_bytes(file_path)
-	if bytes.is_empty():
-		return null
-
-	var stream: AudioStream = null
-	var ext = file_path.get_extension().to_lower()
-
-	match ext:
-		"mp3":
-			var mp3 = AudioStreamMP3.new()
-			mp3.data = bytes
-			stream = mp3
-		"ogg":
-			stream = AudioStreamOggVorbis.load_from_buffer(bytes)
-		"wav":
-			stream = _parse_wav_data(bytes)
-		_:
-			push_warning("AudioManager: Unsupported format: ", ext)
+	var stream := AudioStreamLoader.from_bytes(bytes, file_path.get_extension())
 
 	if stream:
 		if _audio_cache.size() >= _MAX_AUDIO_CACHE_SIZE:
@@ -76,35 +65,6 @@ func _load_audio_from_file(file_path: String) -> AudioStream:
 		_audio_cache[file_path] = stream
 
 	return stream
-
-func _parse_wav_data(bytes: PackedByteArray) -> AudioStreamWAV:
-	if bytes.size() < 44:
-		return null
-
-	var wav = AudioStreamWAV.new()
-	var num_channels = bytes.decode_u16(22)
-	var sample_rate = bytes.decode_u32(24)
-	var bits_per_sample = bytes.decode_u16(34)
-
-	wav.mix_rate = sample_rate
-	wav.stereo = num_channels == 2
-
-	match bits_per_sample:
-		8:
-			wav.format = AudioStreamWAV.FORMAT_8_BITS
-		16:
-			wav.format = AudioStreamWAV.FORMAT_16_BITS
-		_:
-			wav.format = AudioStreamWAV.FORMAT_16_BITS
-
-	var data_offset = 44
-	for i in range(12, min(bytes.size() - 8, 200)):
-		if bytes[i] == 0x64 and bytes[i+1] == 0x61 and bytes[i+2] == 0x74 and bytes[i+3] == 0x61:
-			data_offset = i + 8
-			break
-
-	wav.data = bytes.slice(data_offset)
-	return wav
 
 func set_voice_pitch(scale: float):
 	voice_player.pitch_scale = scale

@@ -24,6 +24,8 @@ func _ready():
 	_dialogue_box = preload("res://scripts/ui/DialogueBox.gd").new()
 	add_child(_dialogue_box)
 	_dialogue_box.setup(dialogue_label, name_label, portrait_rect)
+	_dialogue_box.typewriter_started.connect(ScriptDirector.notify_typewriter_started)
+	_dialogue_box.typewriter_finished.connect(ScriptDirector.notify_typewriter_finished)
 	ScriptDirector.typewriter_skip_requested.connect(func():
 		if _dialogue_box:
 			_dialogue_box.skip_typewriter()

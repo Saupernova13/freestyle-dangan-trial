@@ -16,8 +16,6 @@ signal bullet_prev
 
 # Dialogue / script flow
 signal advance_pressed                # SPACE / ENTER / center-tap on dialogue
-signal confirm_pressed                # SPACE / ENTER outside dialogue
-signal pause_pressed                  # legacy alias for settings_toggle_requested
 signal settings_toggle_requested      # ESC
 signal skip_held_changed(held: bool)  # CTRL held → fast-forward mode
 
@@ -61,9 +59,7 @@ func _handle_keyboard(event: InputEvent) -> void:
 	match event.keycode:
 		KEY_SPACE, KEY_ENTER:
 			advance_pressed.emit()
-			confirm_pressed.emit()
 		KEY_ESCAPE:
-			pause_pressed.emit()
 			settings_toggle_requested.emit()
 		KEY_Q:
 			bullet_prev.emit()

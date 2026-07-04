@@ -1,4 +1,11 @@
 extends Node
+## Renders a script line into the dialogue box: highlight BBCode, per-line box
+## styling, and the typewriter reveal. Reports reveal start/finish as signals so
+## the flow controller (ScriptDirector) can gate input without this view knowing
+## about it.
+
+signal typewriter_started
+signal typewriter_finished
 
 var _rich_label: RichTextLabel
 var _name_label: Label
@@ -7,9 +14,6 @@ var _portrait_rect: TextureRect
 var _typewriter_speed: float = 30.0
 var _is_typing: bool = false
 var _typewriter_tween: Tween = null
-
-enum TextSpeed { SLOW, NORMAL, FAST, INSTANT }
-var text_speed: TextSpeed = TextSpeed.NORMAL
 
 func setup(rich_label: RichTextLabel, name_label: Label = null, portrait_rect: TextureRect = null):
 	_rich_label = rich_label
@@ -216,18 +220,18 @@ func _start_typewriter():
 	_typewriter_speed = Settings.get_typewriter_speed()
 	if _typewriter_speed >= 999.0:
 		_rich_label.visible_characters = -1
-		ScriptDirector.notify_typewriter_finished()
+		typewriter_finished.emit()
 		return
 
 	var total_chars := _rich_label.get_total_character_count()
 	if total_chars <= 0:
 		_rich_label.visible_characters = -1
-		ScriptDirector.notify_typewriter_finished()
+		typewriter_finished.emit()
 		return
 
 	_rich_label.visible_characters = 0
 	_is_typing = true
-	ScriptDirector.notify_typewriter_started()
+	typewriter_started.emit()
 
 	# Linear char-by-char reveal driven by a Tween instead of a per-frame loop.
 	# Duration is derived from chars/sec so reveal pacing matches the old timer.
@@ -245,7 +249,7 @@ func _on_typewriter_finished():
 	if _rich_label:
 		_rich_label.visible_characters = -1
 	_is_typing = false
-	ScriptDirector.notify_typewriter_finished()
+	typewriter_finished.emit()
 
 func skip_typewriter():
 	if _is_typing and _rich_label:
@@ -254,10 +258,4 @@ func skip_typewriter():
 		_typewriter_tween = null
 		_rich_label.visible_characters = -1
 		_is_typing = false
-		ScriptDirector.notify_typewriter_finished()
-
-func is_typing() -> bool:
-	return _is_typing
-
-func set_text_speed(speed: TextSpeed):
-	text_speed = speed
+		typewriter_finished.emit()

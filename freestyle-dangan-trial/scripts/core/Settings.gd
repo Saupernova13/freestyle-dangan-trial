@@ -66,7 +66,7 @@ func _apply_and_save():
 
 func _apply_all():
 	if AudioManager:
-		AudioManager.voice_player.volume_db = linear_to_db(voice_volume) if voice_volume > 0.0 else -80.0
+		AudioManager.set_voice_volume_linear(voice_volume)
 
 func get_typewriter_speed() -> float:
 	match text_speed:

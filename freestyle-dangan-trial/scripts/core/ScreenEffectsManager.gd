@@ -170,26 +170,6 @@ func red_flash(duration: float):
 	var tween = create_tween()
 	tween.tween_property(_flash_rect, "color:a", 0.0, duration)
 
-func fade_to_black(duration: float):
-	_fade_rect.color = Color(0, 0, 0, 0)
-	var tween = create_tween()
-	tween.tween_property(_fade_rect, "color:a", 1.0, duration)
-
-func fade_from_black(duration: float):
-	_fade_rect.color = Color(0, 0, 0, 1)
-	var tween = create_tween()
-	tween.tween_property(_fade_rect, "color:a", 0.0, duration)
-
-func fade_to_white(duration: float):
-	_fade_rect.color = Color(1, 1, 1, 0)
-	var tween = create_tween()
-	tween.tween_property(_fade_rect, "color:a", 1.0, duration)
-
-func fade_from_white(duration: float):
-	_fade_rect.color = Color(1, 1, 1, 1)
-	var tween = create_tween()
-	tween.tween_property(_fade_rect, "color:a", 0.0, duration)
-
 func show_overlay_text(text: String, color: Color, duration: float):
 	_overlay_label.text = text
 	_overlay_label.add_theme_color_override("font_color", color)

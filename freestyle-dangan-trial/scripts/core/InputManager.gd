@@ -125,11 +125,5 @@ func _toggle_focus() -> void:
 func _set_focus(active: bool) -> void:
 	set_focus(active)
 
-# ---------------------------------------------------------------------------
-# Query
-# ---------------------------------------------------------------------------
 func is_desktop() -> bool:
 	return _is_desktop
-
-func is_skip_held() -> bool:
-	return _skip_held

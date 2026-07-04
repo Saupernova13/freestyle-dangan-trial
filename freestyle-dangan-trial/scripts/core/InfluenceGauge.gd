@@ -29,15 +29,3 @@ func take_damage_raw(amount: float):
 
 	if current_influence <= 0:
 		influence_depleted.emit()
-
-func heal(amount: float):
-	current_influence = min(max_influence, current_influence + amount)
-	influence_changed.emit(current_influence, max_influence)
-
-func get_percentage() -> float:
-	if max_influence <= 0:
-		return 0.0
-	return current_influence / max_influence
-
-func is_alive() -> bool:
-	return current_influence > 0

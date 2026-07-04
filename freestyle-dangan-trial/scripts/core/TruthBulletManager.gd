@@ -25,12 +25,6 @@ func set_active_bullets(bullet_ids: Array):
 	if not active_bullets.is_empty():
 		bullet_selected.emit(active_bullets[0])
 
-func reset_to_all():
-	active_bullets = all_bullets.duplicate()
-	current_selected_index = 0
-	if not active_bullets.is_empty():
-		bullet_selected.emit(active_bullets[0])
-
 func cycle_next():
 	if active_bullets.is_empty():
 		return
@@ -56,12 +50,10 @@ func get_current_display_name() -> String:
 		return bullet.get("inversedLieBulletName", bullet.get("name", ""))
 	return bullet.get("name", "")
 
+## Not yet bound to any input. The editor authors useNegativeBullet on weak
+## points, so lie mode is the missing player-side half of that contract.
 func toggle_lie_mode():
 	lie_mode = not lie_mode
-	lie_mode_changed.emit(lie_mode)
-
-func set_lie_mode(enabled: bool):
-	lie_mode = enabled
 	lie_mode_changed.emit(lie_mode)
 
 func check_bullet_match(bullet_id: String, requires_lie: bool) -> bool:
@@ -71,16 +63,6 @@ func check_bullet_match(bullet_id: String, requires_lie: bool) -> bool:
 	var matches_id = current.get("bulletId", "") == bullet_id
 	var matches_mode = lie_mode == requires_lie
 	return matches_id and matches_mode
-
-func get_bullet_image_path(bullet: Dictionary) -> String:
-	var image_file = bullet.get("imageFile", "")
-	if image_file == null or image_file.is_empty():
-		return ""
-	var result = TrialLoader.get_truth_bullet_image(image_file)
-	return result if result != null else ""
-
-func get_bullet_count() -> int:
-	return active_bullets.size()
 
 func get_bullet_name(bullet_id: String) -> String:
 	for bullet in all_bullets:

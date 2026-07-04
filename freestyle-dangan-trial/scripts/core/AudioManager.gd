@@ -1,13 +1,9 @@
 extends Node
+##
+## Voice line playback. Volume is owned by Settings, which writes
+## voice_player.volume_db directly.
 
 var voice_player: AudioStreamPlayer
-var sfx_player: AudioStreamPlayer
-var bgm_player: AudioStreamPlayer
-var bgm_crossfade_player: AudioStreamPlayer
-
-var voice_volume_db: float = 0.0
-var sfx_volume_db: float = 0.0
-var bgm_volume_db: float = -6.0
 
 var _audio_cache: Dictionary = {}
 const _MAX_AUDIO_CACHE_SIZE: int = 50
@@ -16,20 +12,6 @@ func _ready():
 	voice_player = AudioStreamPlayer.new()
 	voice_player.bus = "Master"
 	add_child(voice_player)
-
-	sfx_player = AudioStreamPlayer.new()
-	sfx_player.bus = "Master"
-	add_child(sfx_player)
-
-	bgm_player = AudioStreamPlayer.new()
-	bgm_player.bus = "Master"
-	bgm_player.volume_db = bgm_volume_db
-	add_child(bgm_player)
-
-	bgm_crossfade_player = AudioStreamPlayer.new()
-	bgm_crossfade_player.bus = "Master"
-	bgm_crossfade_player.volume_db = -80.0
-	add_child(bgm_crossfade_player)
 
 func play_voice_line(audio_filename: String):
 	if audio_filename.is_empty():
@@ -42,7 +24,6 @@ func play_voice_line(audio_filename: String):
 	var stream = _load_audio_from_file(audio_path)
 	if stream:
 		voice_player.stream = stream
-		voice_player.volume_db = voice_volume_db
 		voice_player.play()
 
 func stop_voice():
@@ -61,45 +42,6 @@ func get_voice_line_duration(audio_filename: String) -> float:
 	if stream == null:
 		return -1.0
 	return stream.get_length()
-
-func play_sfx(sfx_name: String):
-	pass
-
-func play_bgm(bgm_path: String, crossfade_duration: float = 1.0):
-	if bgm_path.is_empty():
-		stop_bgm(crossfade_duration)
-		return
-
-	var stream = _load_audio_from_file(bgm_path)
-	if not stream:
-		return
-
-	if bgm_player.playing:
-		bgm_crossfade_player.stream = stream
-		bgm_crossfade_player.volume_db = -80.0
-		bgm_crossfade_player.play()
-
-		var tween = create_tween()
-		tween.set_parallel(true)
-		tween.tween_property(bgm_player, "volume_db", -80.0, crossfade_duration)
-		tween.tween_property(bgm_crossfade_player, "volume_db", bgm_volume_db, crossfade_duration)
-		tween.finished.connect(func():
-			bgm_player.stop()
-			bgm_player.stream = bgm_crossfade_player.stream
-			bgm_player.volume_db = bgm_volume_db
-			bgm_player.play(bgm_crossfade_player.get_playback_position())
-			bgm_crossfade_player.stop()
-		)
-	else:
-		bgm_player.stream = stream
-		bgm_player.volume_db = bgm_volume_db
-		bgm_player.play()
-
-func stop_bgm(fade_duration: float = 1.0):
-	if bgm_player.playing:
-		var tween = create_tween()
-		tween.tween_property(bgm_player, "volume_db", -80.0, fade_duration)
-		tween.finished.connect(func(): bgm_player.stop())
 
 func _load_audio_from_file(file_path: String) -> AudioStream:
 	if _audio_cache.has(file_path):
@@ -164,27 +106,8 @@ func _parse_wav_data(bytes: PackedByteArray) -> AudioStreamWAV:
 	wav.data = bytes.slice(data_offset)
 	return wav
 
-func play_minigame_bgm(game_type: String) -> void:
-	pass
-
-func stop_minigame_bgm(fade: float = 0.8) -> void:
-	pass
-
-
-
 func set_voice_pitch(scale: float):
 	voice_player.pitch_scale = scale
-
-func set_voice_volume(linear: float):
-	voice_volume_db = linear_to_db(clamp(linear, 0.001, 1.0))
-
-func set_sfx_volume(linear: float):
-	sfx_volume_db = linear_to_db(clamp(linear, 0.001, 1.0))
-
-func set_bgm_volume(linear: float):
-	bgm_volume_db = linear_to_db(clamp(linear, 0.001, 1.0))
-	if bgm_player.playing:
-		bgm_player.volume_db = bgm_volume_db
 
 func clear_cache():
 	_audio_cache.clear()

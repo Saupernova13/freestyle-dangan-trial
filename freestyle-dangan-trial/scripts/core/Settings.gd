@@ -14,16 +14,6 @@ var voice_volume: float = 1.0:
 		voice_volume = clampf(val, 0.0, 1.0)
 		_apply_and_save()
 
-var sfx_volume: float = 1.0:
-	set(val):
-		sfx_volume = clampf(val, 0.0, 1.0)
-		_apply_and_save()
-
-var bgm_volume: float = 0.8:
-	set(val):
-		bgm_volume = clampf(val, 0.0, 1.0)
-		_apply_and_save()
-
 var auto_advance: bool = false:
 	set(val):
 		auto_advance = val
@@ -53,8 +43,6 @@ func _load_settings():
 	_suppress_save = true
 	text_speed = config.get_value("gameplay", "text_speed", 1)
 	voice_volume = config.get_value("audio", "voice_volume", 1.0)
-	sfx_volume = config.get_value("audio", "sfx_volume", 1.0)
-	bgm_volume = config.get_value("audio", "bgm_volume", 0.8)
 	auto_advance = config.get_value("gameplay", "auto_advance", false)
 	auto_advance_delay = config.get_value("gameplay", "auto_advance_delay", 2.0)
 	screen_shake_intensity = config.get_value("gameplay", "screen_shake_intensity", 1.0)
@@ -64,8 +52,6 @@ func _save_settings():
 	var config = ConfigFile.new()
 	config.set_value("gameplay", "text_speed", text_speed)
 	config.set_value("audio", "voice_volume", voice_volume)
-	config.set_value("audio", "sfx_volume", sfx_volume)
-	config.set_value("audio", "bgm_volume", bgm_volume)
 	config.set_value("gameplay", "auto_advance", auto_advance)
 	config.set_value("gameplay", "auto_advance_delay", auto_advance_delay)
 	config.set_value("gameplay", "screen_shake_intensity", screen_shake_intensity)
@@ -81,9 +67,6 @@ func _apply_and_save():
 func _apply_all():
 	if AudioManager:
 		AudioManager.voice_player.volume_db = linear_to_db(voice_volume) if voice_volume > 0.0 else -80.0
-		AudioManager.sfx_player.volume_db = linear_to_db(sfx_volume) if sfx_volume > 0.0 else -80.0
-		AudioManager.bgm_player.volume_db = linear_to_db(bgm_volume) if bgm_volume > 0.0 else -80.0
-		AudioManager.bgm_crossfade_player.volume_db = linear_to_db(bgm_volume) if bgm_volume > 0.0 else -80.0
 
 func get_typewriter_speed() -> float:
 	match text_speed:

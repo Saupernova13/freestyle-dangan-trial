@@ -25,8 +25,6 @@ func open():
 func _build_options():
 	_add_option_row("Text Speed", _create_text_speed_control())
 	_add_slider_row("Voice Volume", Settings.voice_volume, func(val): Settings.voice_volume = val)
-	_add_slider_row("SFX Volume", Settings.sfx_volume, func(val): Settings.sfx_volume = val)
-	_add_slider_row("BGM Volume", Settings.bgm_volume, func(val): Settings.bgm_volume = val)
 	_add_separator()
 	_add_toggle_row("Auto-Advance", Settings.auto_advance, func(val): Settings.auto_advance = val)
 	_add_slider_row("Auto Delay (s)", Settings.auto_advance_delay, func(val): Settings.auto_advance_delay = val, 0.5, 6.0, 0.5)

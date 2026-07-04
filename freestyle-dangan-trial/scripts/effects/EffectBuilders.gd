@@ -89,30 +89,6 @@ static func spawn_drift_popup(
 	tween.finished.connect(func(): if is_instance_valid(label): label.queue_free())
 	return label
 
-static func spawn_centered_feedback(
-	parent: Node,
-	text: String,
-	color: Color,
-	font_size: int = 22,
-	y_offset: float = 80.0,
-	in_duration: float = 0.2,
-	hold_duration: float = 1.5,
-	out_duration: float = 0.3
-) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.set_anchors_preset(Control.PRESET_CENTER)
-	label.position.y = y_offset
-	label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	label.modulate.a = 0.0
-	parent.add_child(label)
-
-	fade_in_hold_out(label, in_duration, hold_duration, out_duration, true)
-	return label
-
 # ---------------------------------------------------------------------------
 # Shatter / break effects
 # ---------------------------------------------------------------------------

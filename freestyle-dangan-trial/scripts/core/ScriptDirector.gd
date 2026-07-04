@@ -37,7 +37,15 @@ var _pre_pause_state: State = State.IDLE
 var _skip_held: bool = false
 var _skip_timer: float = 0.0
 
+## Script line-type dispatch. New line types plug in here.
+var _line_handlers: Dictionary = {}
+
 func _ready():
+	_line_handlers = {
+		"speaking": _handle_speaking_line,
+		"narrator": _handle_narrator_line,
+		"minigame": _handle_minigame_line,
+	}
 	InputManager.advance_pressed.connect(_on_advance_input)
 	InputManager.settings_toggle_requested.connect(_on_settings_toggle_requested)
 	InputManager.skip_held_changed.connect(_on_skip_held_changed)
@@ -69,45 +77,32 @@ func advance_to_next_line():
 	var line = script_lines[current_line_index]
 	line_started.emit(line)
 
-	var line_type = line.get("type", "")
-	match line_type:
-		"speaking":
-			_handle_speaking_line(line)
-		"narrator":
-			_handle_narrator_line(line)
-		"minigame":
-			_handle_minigame_line(line)
-		_:
-			print("ScriptDirector: Unknown line type '", line_type, "', skipping")
-			advance_to_next_line()
+	var handler: Callable = _line_handlers.get(line.get("type", ""), Callable())
+	if handler.is_valid():
+		handler.call(line)
+	else:
+		print("ScriptDirector: Unknown line type '", line.get("type", ""), "', skipping")
+		advance_to_next_line()
 
 func _handle_speaking_line(line: Dictionary):
 	_transition_to(State.DIALOGUE)
-	var character_id = line.get("characterId", "")
-	var dialogue_text = line.get("dialogue", "")
-
-	var audio_file = line.get("audioFile", "")
-	if audio_file is String and not audio_file.is_empty():
-		if AudioManager.is_voice_playing():
-			AudioManager.stop_voice()
-		AudioManager.play_voice_line(audio_file)
-
-	dialogue_displayed.emit(character_id, dialogue_text)
+	_play_line_audio(line)
+	dialogue_displayed.emit(line.get("characterId", ""), line.get("dialogue", ""))
 	_transition_to(State.WAITING_FOR_ADVANCE)
 
 func _handle_narrator_line(line: Dictionary):
 	_transition_to(State.DIALOGUE)
-	var text = line.get("text", line.get("dialogue", ""))
-
 	# Narrator lines can carry audio (SFX / narration VO) just like speaking lines.
+	_play_line_audio(line)
+	narrator_displayed.emit(line.get("text", line.get("dialogue", "")))
+	_transition_to(State.WAITING_FOR_ADVANCE)
+
+func _play_line_audio(line: Dictionary) -> void:
 	var audio_file = line.get("audioFile", "")
 	if audio_file is String and not audio_file.is_empty():
 		if AudioManager.is_voice_playing():
 			AudioManager.stop_voice()
 		AudioManager.play_voice_line(audio_file)
-
-	narrator_displayed.emit(text)
-	_transition_to(State.WAITING_FOR_ADVANCE)
 
 func _handle_minigame_line(line: Dictionary):
 	var minigame_id = line.get("minigameId", "")

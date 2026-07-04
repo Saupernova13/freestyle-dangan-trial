@@ -21,6 +21,8 @@ const FILTER_MODES := {
 	"blur": 5,
 }
 
+var _effects: Dictionary = {}
+
 func _ready():
 	_canvas = CanvasLayer.new()
 	_canvas.layer = 20
@@ -61,8 +63,51 @@ func _ready():
 	_canvas.add_child(_filter_rect)
 	_canvas.move_child(_filter_rect, 0)
 
+	_register_effects()
+
 	await get_tree().process_frame
 	_camera = get_viewport().get_camera_3d()
+
+## Effect vocabulary: maps editor effect names (and aliases) to handlers taking
+## (intensity: float, duration: float, color: Color). duration <= 0.0 means
+## "use this effect's default"; color comes from the editor's flash color
+## picker and defaults to white. Adding an effect = registering it here —
+## play_effects() needs no changes.
+func _register_effects() -> void:
+	_register(["screen_shake", "shake"],
+		func(i: float, d: float, _c: Color): screen_shake(d if d > 0.0 else 0.5, i * 0.04))
+	_register(["white_flash", "flash"],
+		func(_i: float, d: float, c: Color): color_flash(c, d if d > 0.0 else 0.3))
+	# A per-line fade must resolve on its own — fade out, hold, fade back in.
+	_register(["screen_fade_black", "fade_black"],
+		func(_i: float, d: float, _c: Color): fade_pulse(Color.BLACK, d if d > 0.0 else 1.0))
+	_register(["screen_fade_white", "fade_white"],
+		func(_i: float, d: float, _c: Color): fade_pulse(Color.WHITE, d if d > 0.0 else 1.0))
+	_register(["pulse"],
+		func(i: float, d: float, _c: Color): fov_pulse(i, d if d > 0.0 else 0.5))
+	_register(["objection_overlay", "objection"],
+		func(_i: float, _d: float, _c: Color): show_overlay_text("No, that's wrong!", Color(1.0, 0.3, 0.1), 1.5))
+	_register(["blood_splatter"],
+		func(_i: float, d: float, _c: Color): red_flash(d if d > 0.0 else 0.4))
+	_register(["evidence_popup"],
+		func(_i: float, _d: float, _c: Color): show_overlay_text("Evidence!", Color(0.3, 0.7, 1.0), 1.0))
+	_register(["glitch_effect", "glitch"],
+		func(_i: float, d: float, _c: Color): glitch_flash(d if d > 0.0 else 0.3))
+	_register(["vignette"],
+		func(i: float, d: float, _c: Color): vignette_pulse(d if d > 0.0 else 1.0, i))
+	_register(["chromatic_aberration"],
+		func(_i: float, d: float, _c: Color): chromatic_flash(d if d > 0.0 else 0.4))
+	_register(["impact_frame"],
+		func(_i: float, d: float, _c: Color): impact_frame(d if d > 0.0 else 0.3))
+	for filter_name in FILTER_MODES:
+		_register([filter_name], _run_filter.bind(filter_name))
+
+func _register(names: Array, handler: Callable) -> void:
+	for effect_name in names:
+		_effects[effect_name] = handler
+
+func _run_filter(intensity: float, duration: float, _color: Color, filter_name: String) -> void:
+	play_filter(filter_name, intensity, duration if duration > 0.0 else 1.5)
 
 func play_effects(effects_data: Dictionary):
 	var effects_array = effects_data.get("effects", [])
@@ -70,7 +115,7 @@ func play_effects(effects_data: Dictionary):
 		var effect_type = ""
 		var intensity = 0.5
 		var duration = -1.0
-		var color_str = ""
+		var color := Color.WHITE
 		if effect is String:
 			effect_type = effect
 		elif effect is Dictionary:
@@ -78,42 +123,12 @@ func play_effects(effects_data: Dictionary):
 			intensity = float(effect.get("intensity", 0.5))
 			duration = float(effect.get("duration", -1.0))
 			var raw_color = effect.get("color", "")
-			color_str = raw_color if raw_color is String else ""
+			if raw_color is String and not raw_color.is_empty():
+				color = Color.from_string(raw_color, Color.WHITE)
 
-		_play_single_effect(effect_type, intensity, duration, color_str)
-
-## duration <= 0 means "use this effect's default". color_str is an editor hex
-## string like "#FFAA00" (flash only); empty falls back to the default color.
-func _play_single_effect(effect_type: String, intensity: float, duration: float = -1.0, color_str: String = ""):
-	match effect_type:
-		"screen_shake", "shake":
-			screen_shake(duration if duration > 0.0 else 0.5, intensity * 0.04)
-		"white_flash", "flash":
-			var flash_color = Color.from_string(color_str, Color.WHITE) if not color_str.is_empty() else Color.WHITE
-			color_flash(flash_color, duration if duration > 0.0 else 0.3)
-		"screen_fade_black", "fade_black":
-			# A per-line effect must resolve — fade out, hold, fade back in.
-			fade_pulse(Color.BLACK, duration if duration > 0.0 else 1.0)
-		"screen_fade_white", "fade_white":
-			fade_pulse(Color.WHITE, duration if duration > 0.0 else 1.0)
-		"pulse":
-			fov_pulse(intensity, duration if duration > 0.0 else 0.5)
-		"objection_overlay", "objection":
-			show_overlay_text("No, that's wrong!", Color(1.0, 0.3, 0.1), 1.5)
-		"blood_splatter":
-			red_flash(duration if duration > 0.0 else 0.4)
-		"evidence_popup":
-			show_overlay_text("Evidence!", Color(0.3, 0.7, 1.0), 1.0)
-		"glitch_effect", "glitch":
-			glitch_flash(duration if duration > 0.0 else 0.3)
-		"vignette":
-			vignette_pulse(duration if duration > 0.0 else 1.0, intensity)
-		"chromatic_aberration":
-			chromatic_flash(duration if duration > 0.0 else 0.4)
-		"impact_frame":
-			impact_frame(duration if duration > 0.0 else 0.3)
-		"grayscale", "sepia", "invert", "scanlines", "distortion", "blur":
-			play_filter(effect_type, intensity, duration if duration > 0.0 else 1.5)
+		var handler: Callable = _effects.get(effect_type, Callable())
+		if handler.is_valid():
+			handler.call(intensity, duration, color)
 
 func screen_shake(duration: float, intensity: float = 0.02):
 	if not _camera:

@@ -19,6 +19,16 @@ enum HudComponent {
 	TRUTH_BULLET_SELECTOR,
 }
 
+## How each HudComponent is built and torn down. Adding a component = one
+## entry here plus its scene in ResourceRegistry.
+const _HUD_SPECS := {
+	HudComponent.INFLUENCE_GAUGE: {"scene": "influence_gauge", "show": "show_gauge", "hide": "hide_gauge"},
+	HudComponent.CONCENTRATE_GAUGE: {"scene": "concentrate_gauge", "show": "show_gauge", "hide": "hide_gauge"},
+	HudComponent.TIMER_DISPLAY: {"scene": "timer_display", "show": "", "hide": "hide_timer"},
+	HudComponent.CROSSHAIR: {"scene": "crosshair", "show": "show_crosshair", "hide": "hide_crosshair"},
+	HudComponent.TRUTH_BULLET_SELECTOR: {"scene": "truth_bullet_selector", "show": "show_selector", "hide": "hide_selector"},
+}
+
 var minigame_data: Dictionary = {}
 var difficulty: String = "medium"
 var time_limit: float = 60.0
@@ -79,21 +89,16 @@ func cleanup():
 ##   var ui = setup_standard_ui([HudComponent.INFLUENCE_GAUGE, HudComponent.TIMER_DISPLAY])
 func setup_standard_ui(components: Array) -> Dictionary:
 	for component in components:
-		match component:
-			HudComponent.INFLUENCE_GAUGE:
-				_add_hud(component, "influence_gauge", "show_gauge")
-			HudComponent.CONCENTRATE_GAUGE:
-				_add_hud(component, "concentrate_gauge", "show_gauge")
-			HudComponent.TIMER_DISPLAY:
-				var timer = _add_hud(component, "timer_display", "")
-				if timer:
-					connect_managed(timer.time_expired, _on_time_expired)
-					if time_limit > 0:
-						timer.start_timer(time_limit)
-			HudComponent.CROSSHAIR:
-				_add_hud(component, "crosshair", "show_crosshair")
-			HudComponent.TRUTH_BULLET_SELECTOR:
-				_add_hud(component, "truth_bullet_selector", "show_selector")
+		var spec: Dictionary = _HUD_SPECS.get(component, {})
+		if spec.is_empty():
+			continue
+		var node = _add_hud(component, spec["scene"], spec["show"])
+		# The timer is the one component with extra wiring: it drives the
+		# minigame's time limit rather than just displaying state.
+		if component == HudComponent.TIMER_DISPLAY and node:
+			connect_managed(node.time_expired, _on_time_expired)
+			if time_limit > 0:
+				node.start_timer(time_limit)
 	_maybe_spawn_mobile_hud(components)
 	return hud
 
@@ -140,19 +145,9 @@ func _teardown_standard_ui():
 		var node = hud[component]
 		if not is_instance_valid(node):
 			continue
-		match component:
-			HudComponent.INFLUENCE_GAUGE, HudComponent.CONCENTRATE_GAUGE:
-				if node.has_method("hide_gauge"):
-					node.call("hide_gauge")
-			HudComponent.TIMER_DISPLAY:
-				if node.has_method("hide_timer"):
-					node.call("hide_timer")
-			HudComponent.CROSSHAIR:
-				if node.has_method("hide_crosshair"):
-					node.call("hide_crosshair")
-			HudComponent.TRUTH_BULLET_SELECTOR:
-				if node.has_method("hide_selector"):
-					node.call("hide_selector")
+		var hide_method: String = _HUD_SPECS.get(component, {}).get("hide", "")
+		if not hide_method.is_empty() and node.has_method(hide_method):
+			node.call(hide_method)
 	hud.clear()
 	if _mobile_hud and is_instance_valid(_mobile_hud):
 		_mobile_hud.queue_free()

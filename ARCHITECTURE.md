@@ -31,15 +31,21 @@ conventions, and dev workflow — that document is kept current.
 GDScript, organized under `freestyle-dangan-trial/scripts/`:
 
 ```
-core/       Autoload singletons (see below)
+core/       Autoload singletons (see below) + trial/ loader helpers and AudioStreamLoader
 camera/     CameraDirector autoload + bench_focus_camera rig
 config/     MinigameConfig (tuning constants), ResourceRegistry (scene keys), UITheme
 effects/    EffectBuilders — shared visual effect construction
-game/       TrialRoomManager (scene orchestrator), roaming background text
+game/       TrialRoomManager (composition root), CharacterStage, MinigameRunner, roaming text
 minigames/  MinigameBase + one script per minigame type; debate/ for shared pieces
 tools/      Start-menu file picker, small editor/debug helpers
 ui/         DialogueBox, HUD gauges, cards, settings menu, mobile touch HUD
 ```
+
+`TrialLoader` is a thin facade: `core/trial/TrialArchive.gd` does ZIP
+extraction and `core/trial/CharacterLibrary.gd` owns character data and the
+sprite-texture cache. `TrialRoomManager` is a composition root that wires
+`ScriptDirector` signals to `CharacterStage` (3D bench sprites) and
+`MinigameRunner` (the minigame catalog and replay loop).
 
 ### Autoloads (project.godot)
 
@@ -64,17 +70,18 @@ ui/         DialogueBox, HUD gauges, cards, settings menu, mobile touch HUD
    and connects to `ScriptDirector` signals, then starts the script.
 3. Speaking/narrator lines go through `DialogueBox` (typewriter, highlights,
    voice); camera and screen effects come from per-line script data.
-4. A minigame line instantiates the matching `MinigameBase` subclass
-   (`TrialRoomManager.MINIGAME_SCRIPTS`). The base class provides lifecycle,
-   timers, managed signal connections, and standard HUD setup via
-   `ResourceRegistry`. Success advances the script; failure replays the
-   minigame; a depleted influence gauge ends in the game-over screen.
+4. A minigame line hands off to `MinigameRunner`, which instantiates the
+   matching `MinigameBase` subclass (`MinigameRunner.MINIGAME_SCRIPTS`). The
+   base class provides lifecycle, timers, managed signal connections, and
+   standard HUD setup via `ResourceRegistry`. Success advances the script;
+   failure replays the minigame; a depleted influence gauge ends in the
+   game-over screen.
 
 ### Adding a minigame
 
 1. Create `scripts/minigames/MyGame.gd` extending `MinigameBase`
    (implement `start()`, call `_finish(success, data)`).
-2. Register its script path in `TrialRoomManager.MINIGAME_SCRIPTS` and any
+2. Register its script path in `MinigameRunner.MINIGAME_SCRIPTS` and any
    scenes it needs in `ResourceRegistry.SCENES`.
 3. Add the matching editor UI in `web-ui-editor/js/views/minigames/` so the
    game type can be authored (see the web UI README).
@@ -89,5 +96,8 @@ ui/         DialogueBox, HUD gauges, cards, settings menu, mobile touch HUD
   GitHub's hard limit but should eventually reference external mesh
   resources (the untracked `thh_default_trial_room.tscn` already exceeds the
   limit for the same reason).
-- Many `trial.json` line parameters the editor can author (some camera
-  motions, effect options) are not yet interpreted by the engine.
+- A few authored fields aren't wired up yet: `characterSpotlight` (reserved for
+  an unimplemented lighting effect), white-noise debate lines (disabled pending
+  a layout rework), and the lie/negative-bullet toggle (`TruthBulletManager`
+  supports it but no input is bound). The camera motions, screen effects and
+  highlight ranges the editor authors *are* interpreted.

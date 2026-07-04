@@ -1,263 +1,217 @@
 # Freestyle Danganronpa Trial Creator
 
-A tool for creating custom Danganronpa-style trials: a browser-based authoring interface plus a Godot 4.5 engine that plays the result. Design your cast, write scripts, and play interactive trials with minigame mechanics.
+Create custom Danganronpa-style class trials: a browser-based authoring tool
+plus a Godot 4.5 engine that plays the result. Design a cast, write a branching
+script with camera work and effects, configure minigames, and play it back.
 
-## Project Status
+The project is two independent components joined by one data format — a
+`.drtrial` file. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full map.
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| **Web UI (Authoring)** | 🟢 Stable | Character management, script writing, minigame configuration, asset management |
-| **Trial Engine (Godot)** | 🟡 Proof-of-Concept | 6 minigame POCs (no animations), basic dialogue/camera/effects, many parameters not yet interpreted from scripter |
-| **Integration** | 🔴 WIP | Trial loading works, but parameter interpretation and full feature support missing |
+## Project status
 
----
+| Component | Status |
+|-----------|--------|
+| **Web UI (authoring)** | Stable — full character, script, minigame and evidence editing |
+| **Trial engine (Godot)** | Playable — dialogue, camera, effects and five minigames run end to end; still in development |
 
-## Key Features
-
-### Web-Based Authoring Interface
-
-#### Cast & Character Management
-- Create 16 students + 1 headmaster with detailed profiles
-- Character profiles: name, date of birth, blood type, physical attributes, personality
-- Sprite system: upload 1-100 character expressions (default 25)
-- Type-specific editing (students vs. headmaster)
-- Automatic character ID generation for tracking
-
-#### Script Writing
-- Three line types: **Speaking** (character dialogue), **Narrator** (narration text), **Minigame** (trigger minigame)
-- Visual drag-and-drop editor with gap-based insertion
-- Arrow buttons for precise single-step reordering
-- Multi-select support for batch operations
-- Real-time auto-save to trial.json
-
-#### Advanced Line Properties (Speaking Only)
-- 🎭 **Sprite Selection**: Choose character expression per line
-- 🔊 **Voice Acting**: Upload and preview audio files (MP3, WAV, OGG)
-- 🖍️ **Text Highlighting**: Drag-to-select highlighting with custom colors
-- 📹 **Camera Motion**: 17 motion types (pan, zoom, rotate, dolly, truck, pedestal, tilt)
-- ✨ **Screen Effects**: 11 effect types (shake, flash, fade, blur, distortion, sepia, grayscale, invert, vignette, scanlines)
-
-#### Additional Features
-- Dark/Light theme with persistent settings
-- Truth bullets management (evidence system)
-- Minigame configuration editors for each minigame type
-- Responsive grid layout optimized for all screen sizes
-- Settings configuration (max sprites per character, etc.)
-
-### Game Engine (Godot 4.5) — Work in Progress
-
-**Status**: POC implementations for core systems. Many parameters from the web UI scripter are not yet interpreted by the engine. Minigames are functional but lack animations and polish.
-
-#### Minigames (POC Status)
-
-1. **Nonstop Debate** — Rapid-fire statements with truth bullet shooting (basic hit detection, no character animations)
-2. **Debate Scrum** — Turn-based arguments with timer system (POC, minimal UI)
-3. **Logic Dive** — Multiple-choice questions (basic implementation)
-4. **Hangman's Gambit** — Letter puzzle mechanic (working state)
-5. **Mass Panic Debate** — Three-speaker line groups (structural WIP)
-6. **Rebuttal Showdown** — Stub implementation
-
-#### Partially Implemented Systems
-
-**Dialogue & Script Playback**
-- Basic script-based progression through dialogue lines
-- Character selection and sprite display (static, no animations)
-- Audio playback (not always synchronized with script timing)
-- Many advanced properties (highlighting, effects, camera motion) not yet interpreted
-
-**Camera System**
-- 17 motion types defined in code
-- Basic motion types working (pan, zoom)
-- Missing: smooth animations, easing implementation, proper duration handling
-- Free-look bench camera functional
-
-**Audio Management**
-- Voice file playback for dialogue
-- Basic audio management
-- Missing: Background music, proper file path resolution
-
-**Game Mechanics**
-- Influence gauge (tracks damage)
-- Concentrate gauge (Nonstop Debate)
-- Slow-time mode (partial implementation)
-- Truth bullet manager (structure in place, not fully integrated)
-
-**Screen Effects**
-- Framework in place for shake, flash, fade effects
-- Missing: Animations, proper timing, effect composition
-
-**Input Management**
-- Keyboard and mouse controls working
-- Free-look camera with mouse rotation
-- Action bindings partially implemented
-
-#### Known Issues & WIP Items
-
-- Camera motion duration and easing not properly applied
-- Text highlighting from scripter not rendered
-- Special effects parameters not interpreted
-- Character animations missing (static sprites only)
-- Typewriter effect not implemented
-- Many dialogue parameters ignored
-- Some signal connection issues under restart conditions
-- Trial loading path configuration problematic
-
-#### Technical Stack
-- Godot 4.5 engine, GDScript
-- Autoload manager singletons (ScriptDirector, AudioManager, InputManager, etc.)
-- Signal-driven event system
-- `.drtrial` loader with threaded extraction (see ARCHITECTURE.md)
+The engine plays a trial from start to finish: it renders dialogue with a
+typewriter reveal and inline highlighting, drives per-line camera motions and
+screen effects, runs five minigames with a replay-on-failure loop, tracks the
+influence/concentrate gauges, and ends on the game-over screen. What is *not*
+done yet is called out under [Not yet implemented](#not-yet-implemented) — the
+honest list, rather than the whole feature set being marked "WIP."
 
 ---
 
-## Getting Started
+## Web authoring interface
 
-### Web UI (Authoring Trials)
+### Cast & characters
+- 16 students + 1 headmaster, each with a profile (name, DOB, blood type,
+  physical attributes, personality) and a set of sprite expressions
+- Type-specific editing for students vs. the headmaster
+- Automatic character IDs used everywhere the script references a character
 
-#### Prerequisites
-- Node.js 18+
-- A modern browser. Chromium (Chrome, Edge, Opera) can edit a trial folder
-  on disk; Firefox and Safari work in browser storage with `.drtrial`
-  import/export (see `web-ui-editor/README.md`)
+### Script
+- Three line types: **Speaking** (character dialogue), **Narrator**
+  (narration), **Minigame** (hand off to a minigame)
+- Drag-and-drop reordering with gap insertion, arrow-button single steps, and
+  multi-select for batch operations
+- Auto-save to `trial.json`
 
-#### Installation & Usage
+### Per-line properties (speaking lines)
+- **Sprite** — the expression shown for that line
+- **Voice** — upload/preview an audio clip (MP3, WAV, OGG)
+- **Highlighting** — drag-select ranges with custom colours
+- **Camera motion** — pan/zoom/rotate/dolly/truck/pedestal/tilt and more
+- **Screen effects** — shake, flash, fade, blur, distortion, sepia, grayscale,
+  invert, vignette, scanlines, and others
 
-1. **Start the authoring tool**:
-   ```bash
-   cd web-ui-editor
-   npm install
-   npm run dev
-   # Open the printed URL in Chrome/Edge/Opera
-   ```
-
-2. **Create a trial workspace**:
-   - Use the trial hub to open a trial folder (Chromium) or create a
-     browser-storage trial (any browser)
-   - Enter a trial name
-
-3. **Build your cast**:
-   - Click empty student/headmaster blocks
-   - Fill in character details and upload sprites
-   - Save characters to create directories
-
-4. **Write your script**:
-   - Switch to "📝 Script" view
-   - Add dialogue, narrator, and minigame lines
-   - Use drag-and-drop or arrow buttons to reorder
-   - Click edit (✏️) to configure advanced properties
-   - Add camera motions, effects, audio, highlighting
-
-5. **Configure minigames**:
-   - Switch to "🎮 Minigames" view
-   - Set up Nonstop Debate, Debate Scrum, Logic Dive, etc.
-   - Configure difficulty, audio, and answers
-
-6. **Manage evidence**:
-   - Switch to "💎 Truth Bullets" view
-   - Add evidence items with images and descriptions
-
-### Game Engine (Playing Trials) — Early POC
-
-⚠️ **Warning**: The engine is in early POC stage. Many features are non-functional or incomplete. Expect bugs and missing functionality.
-
-#### Running a Trial in Godot
-
-1. **Prepare a trial**:
-   - Create a trial using the web UI (character, script, minigames)
-   - Or manually create a trial directory with the correct structure
-
-2. **Load the Godot project**:
-   ```bash
-   cd freestyle-dangan-trial
-   # Open in Godot 4.5 or later
-   # Press F5 to run
-   ```
-
-3. **Load a trial**:
-   - Click "Choose Trial Folder" button
-   - Select your trial directory
-   - Click "Load Trial"
-
-4. **Play** (limited functionality):
-   - Navigate bench with arrow keys (basic free-look works)
-   - Dialogue progresses through script lines
-   - Minigames trigger but lack polish and animations
-   - **Not working**: Camera motions, most text effects, highlighting, proper audio sync
-
-#### Current Limitations
-- Script parameters (camera motion, effects, highlighting) mostly ignored
-- No character animations
-- Minigames are functional but lack visual polish
-- Some trial loading issues with absolute paths
+### Also
+- Truth bullets (evidence) with images and descriptions
+- A configuration editor per minigame type
+- Dark/light theme, persisted
 
 ---
 
-## Project Structure
+## Game engine (Godot 4.5)
+
+### Minigames
+
+Five are fully playable; three are stubs that show a title card and
+auto-complete (placeholders for future mechanics):
+
+| Minigame | Status |
+|----------|--------|
+| Nonstop Debate | Playable — scrolling statements, truth-bullet shooting, slow-time, weak-point break sequence |
+| Hangman's Gambit | Playable — floating-letter word puzzle |
+| Logic Dive | Playable — multiple-choice lanes over a scrolling road |
+| Debate Scrum | Playable — timed keyword rebuttals |
+| Mass Panic Debate | Playable — three-speaker rows with focus switching |
+| Rebuttal Showdown / Psyche Taxi / Closing Argument | Stub — title card, then auto-complete |
+
+### Implemented systems
+- **Dialogue** — typewriter reveal (speed from settings), inline highlight
+  BBCode, per-line dialogue-box styling, voice playback
+- **Camera** — `CameraDirector` executes the editor's motion vocabulary with
+  easing and duration; a bench camera handles free navigation and focus
+- **Screen effects** — `ScreenEffects` runs per-line shake/flash/fade/FOV
+  punch/overlay-text/shader-filter effects
+- **Minigame framework** — `MinigameBase` provides the lifecycle, timer,
+  managed signal connections, standard HUD setup, and a mobile touch HUD
+- **Gauges** — influence (damage) and concentrate (slow-time) meters, with
+  scene-bound UI
+- **Truth bullets** — the selector HUD and bullet-match checking the debate
+  minigames use
+- **Audio** — runtime decoding of MP3/OGG/WAV voice lines with a small cache
+- **Settings, game-over, seeded RNG** — persisted preferences, retry/return
+  flow, and reproducible sessions via `GameRandom` (`DANGAN_SEED` env var)
+
+### Not yet implemented
+- Character animation — sprites are static (no idle/react/walk)
+- Background music — audio is voice-only
+- Lie/negative truth bullets — the editor authors `useNegativeBullet`, but the
+  player-side toggle isn't bound to input yet
+- White-noise debate lines — the field exists but panel placement is disabled
+  pending a rework
+- `characterSpotlight` — reserved for a lighting effect that doesn't exist yet
+  (camera focus follows the speaker regardless)
+- The three stub minigames above
+
+---
+
+## Getting started
+
+### Web UI (authoring trials)
+
+**Prerequisites:** Node.js 18+, and a modern browser. Chromium (Chrome, Edge,
+Opera) can edit a trial folder on disk; Firefox and Safari work in browser
+storage with `.drtrial` import/export (see `web-ui-editor/README.md`).
+
+```bash
+cd web-ui-editor
+npm install
+npm run dev        # open the printed URL
+```
+
+1. Use the trial hub to open a folder (Chromium) or create a browser-storage
+   trial (any browser), and name it.
+2. Fill in the cast and upload sprites.
+3. Write the script (📝 Script view); add camera motions, effects, audio, and
+   highlighting through the per-line editor.
+4. Configure minigames (🎮 Minigames view).
+5. Add evidence (💎 Truth Bullets view).
+6. Export a `.drtrial` to play in the engine.
+
+### Game engine (playing trials)
+
+```bash
+cd freestyle-dangan-trial
+# Open in Godot 4.5+, press F5
+```
+
+From the start menu, choose a `.drtrial` file (desktop uses the native file
+dialog; Android uses the storage picker). The trial then loads behind a
+progress screen and begins.
+
+---
+
+## Controls (engine)
+
+| Input | Action |
+|-------|--------|
+| Space / Enter | Advance dialogue (or skip the typewriter) |
+| Ctrl (hold) | Fast-forward / auto-skip |
+| Esc | Open settings |
+| Arrow keys | Navigate between benches |
+| Left-click drag | Free-look (springs back on release) |
+| Left-click | Shoot truth bullet / select |
+| Right-click (hold) / F | Focus (aim) mode |
+| Q / E or scroll wheel | Cycle truth bullets |
+
+On touch devices a mobile HUD provides settings, bullet cycling, focus, and
+slow-time buttons; tapping the left/right screen thirds navigates benches.
+
+---
+
+## Project structure
 
 ```
 freestyle-dangan-trial/
-├── web-ui-editor/                  # Browser-based authoring tool (ES modules + Vite)
-│   ├── index.html                  # Main entry point
-│   ├── css/styles.css              # Complete styling system with theming
-│   ├── tests/                      # Unit tests (Vitest)
-│   └── js/
-│       ├── main.js                 # Entry point and window handler bridge
-│       ├── core/                   # Central state, storage, constants
-│       ├── models/                 # Data structures (character, etc.)
-│       ├── views/                  # UI rendering and controllers
-│       ├── modals/                 # Dialog components
-│       ├── ui/                     # Theme, icons, dialogs, modal behaviors
-│       └── app.js, settings.js, utils.js, export.js
+├── web-ui-editor/                  # Browser authoring tool (ES modules + Vite)
+│   ├── index.html
+│   ├── css/styles.css
+│   ├── tests/                      # Vitest unit tests
+│   └── js/                         # core/, models/, views/, modals/, ui/, ...
 │
-├── freestyle-dangan-trial/         # Godot 4.5 game engine
+├── freestyle-dangan-trial/         # Godot 4.5 engine
 │   ├── scripts/
-│   │   ├── core/                   # Autoload singletons (TrialLoader, ScriptDirector, ...)
-│   │   ├── camera/                 # Camera director and bench camera rig
+│   │   ├── core/                   # Autoload singletons + trial/ loader helpers
+│   │   ├── camera/                 # CameraDirector + bench camera rig
 │   │   ├── minigames/              # MinigameBase + one script per minigame
-│   │   ├── ui/                     # Dialogue box, gauges, cards, menus
-│   │   └── config/, effects/, game/, tools/
-│   ├── scenes/                     # Godot scene files (.tscn)
-│   ├── shaders/                    # Godot shader files (.gdshader)
+│   │   ├── game/                   # TrialRoomManager, CharacterStage, MinigameRunner
+│   │   ├── ui/                     # Dialogue box, gauges, cards, menus, mobile HUD
+│   │   └── config/, effects/, tools/
+│   ├── scenes/                     # Godot scenes (.tscn)
+│   ├── shaders/                    # screen_filter.gdshader
 │   ├── textures/                   # UI and background textures
-│   ├── models/                     # Source 3D assets (gitignored; meshes are embedded in scenes)
-│   └── project.godot               # Godot project configuration
+│   ├── models/                     # Source 3D art (gitignored; meshes embedded in scenes)
+│   └── project.godot
 │
-├── ARCHITECTURE.md                 # Component map and engine architecture
+├── ARCHITECTURE.md
 ├── CONTRIBUTING.md
 └── README.md
 ```
 
 ---
 
-## Data Structure
+## Data format
 
-### Trial File Format (.drtrial)
+### `.drtrial` file
 
-Trials are stored as directories with the following structure:
+A `.drtrial` is a ZIP of the trial folder:
 
 ```
 trial-folder/
-├── trial.json                      # Trial metadata and script
+├── trial.json                      # metadata, cast ids, script, minigames, truth bullets
 ├── Characters/
-│   ├── CharacterName/
-│   │   ├── character.json          # Profile data
-│   │   ├── sprite_01.png           # Character expressions
-│   │   └── ...
-│   └── ...
-├── Audio/                          # Voice acting files
-│   ├── line_1733585420123.mp3
-│   └── Minigames/<gameId>/         # Minigame voice lines
-└── TruthBullets/                   # Evidence images (metadata lives in trial.json)
-    ├── tb_1733585450123.png
-    └── ...
+│   └── <Name>/
+│       ├── character.json          # profile
+│       └── sprite_01.png …         # expressions
+├── Audio/                          # per-line voice files
+│   └── Minigames/<gameId>/         # minigame voice lines
+└── TruthBullets/                   # evidence images (metadata is in trial.json)
 ```
 
-### trial.json Schema
+### `trial.json`
+
+`trial.json` is the contract between editor and engine. `characters` is an
+ordered list of character ids (one per bench); `minigames` and `truthBullets`
+are arrays the engine looks up by `gameId` / `bulletId`.
 
 ```json
 {
   "trialName": "Investigation Room Case 1",
-  "characters": ["JD_19920315_A1B2C3", "JS_19930822_D4E5F6", ...],
+  "characters": ["JD_19920315_A1B2C3", "JS_19930822_D4E5F6"],
   "script": {
     "lines": [
       {
@@ -267,192 +221,75 @@ trial-folder/
         "dialogue": "Something doesn't add up here...",
         "spriteIndex": 2,
         "audioFile": "line_1733585420123.mp3",
-        "cameraMotion": {"type": "zoom_in", "duration": 1.5},
-        "specialEffects": {"effects": [{"type": "shake", "intensity": 0.5}]}
+        "highlights": [{ "startChar": 0, "endChar": 9, "color": "#FFDD00" }],
+        "cameraMotion": { "type": "zoom_in", "duration": 1.5, "easing": "ease-in-out" },
+        "specialEffects": { "effects": [{ "type": "shake", "intensity": 0.5 }] }
       },
-      {
-        "id": "line_1733585430456",
-        "type": "minigame",
-        "minigameId": "truth_bullets"
-      }
+      { "id": "line_1733585430456", "type": "minigame", "minigameId": "debate_1" }
     ]
   },
-  "minigames": {...},
-  "truthBullets": {...}
+  "minigames": [
+    { "gameId": "debate_1", "gameType": "nonstop_debate", "name": "...", "difficulty": "medium", "timeLimit": 60, "typeSpecific": {} }
+  ],
+  "truthBullets": [
+    { "bulletId": "tb_1", "name": "Broken Watch", "description": "Stopped at 10:15." }
+  ]
 }
 ```
 
 ---
 
-## Technology Stack
-
-### Web Interface
-- **HTML5**: Semantic structure, File System Access API
-- **CSS3**: Custom properties, Grid/Flexbox, responsive design
-- **JavaScript**: Native ES modules, no framework dependencies
-- **Tooling**: Vite (dev server/build), ESLint, Prettier, Vitest
-- **APIs**: LocalStorage, FileReader, Canvas
-
-### Game Engine
-- **Godot 4.5**: Open-source game engine
-- **GDScript**: Native Godot scripting language
-- **Godot shading language**: Shaders for visual effects
-- **3D Assets**: Blender models (meshes embedded in scenes)
-
----
-
-## Development Roadmap
-
-### Web UI (Stable) ✅
-- [x] Character management (create, edit, delete)
-- [x] Script writing (dialogue, narrator, minigame lines)
-- [x] Sprite management with lazy loading
-- [x] Advanced line properties (highlighting, camera, effects)
-- [x] Minigame configuration editors
-- [x] Truth bullets management
-- [x] Dark/Light theme
-- [x] Auto-save to JSON
-
-### Game Engine — Priority Order
-
-**High Priority** (Core gameplay)
-- [ ] Interpret camera motion parameters (duration, easing, type)
-- [ ] Implement character animations (walk, idle, react)
-- [ ] Render text highlighting from scripter
-- [ ] Apply screen effects from script data
-- [ ] Proper audio synchronization with dialogue timing
-- [ ] Typewriter/text reveal effect
-
-**Medium Priority** (Polish)
-- [ ] Minigame animations (panel movement, bullet effects, transitions)
-- [ ] Scene transitions and fades
-- [ ] Background image support
-- [ ] Music and ambient audio
-- [ ] Visual feedback for player actions
-
-**Lower Priority** (Extended features)
-- [ ] Cross-examination system
-- [ ] Evidence presentation mechanics
-- [ ] Alternative trial paths/branching
-- [ ] Particle effects
-- [ ] Mobile optimization
-
-### Known Blockers
-- Many scripter parameters not yet passed to engine
-- No animation system for characters
-- Camera motion system framework incomplete
-- Effect timing and composition not working
-
----
-
-## Browser Compatibility
-
-The editor picks a storage backend automatically:
-
-- **Chromium (Chrome, Edge, Opera)**: edit a trial folder on disk via the
-  File System Access API — changes save in place.
-- **Firefox / Safari**: trials live in browser storage (Origin Private File
-  System); move them in and out with Export/Import of `.drtrial` files.
-
----
-
-## Controls (Game Engine)
-
-### Bench Navigation
-- **Arrow Keys**: Move camera around bench
-- **Mouse Drag**: Free-look camera rotation (left-click + drag)
-- **Scroll**: Zoom in/out
-
-### Minigames
-- **Left Mouse**: Shoot truth bullet / Select answer
-- **Space**: Trigger minigame action (context-dependent)
-- **Escape**: Pause/Resume
-
-### Free Camera
-- **Mouse Left-Click + Drag**: Rotate camera
-- **Mouse Scroll**: Adjust distance
-
----
-
 ## Development
 
-### Running Locally
-
-**Web UI**:
+**Web UI**
 ```bash
 cd web-ui-editor
-npm install
-npm run dev      # dev server with hot reload
-npm test         # unit tests (Vitest)
-npm run lint     # ESLint
-npm run build    # static production build to dist/
+npm run dev        # dev server
+npm test           # Vitest
+npm run lint       # ESLint
+npm run build      # static build to dist/
+npm run check      # lint + test + build (the CI gate)
 ```
 
-**Game Engine**:
+**Engine** — open `freestyle-dangan-trial/` in Godot 4.5+ and press F5. A
+headless compile check:
 ```bash
-cd freestyle-dangan-trial
-# Open with Godot 4.5+
-# Press F5 to run
+godot --headless --quit-after 5 --path freestyle-dangan-trial
 ```
 
-### Code Style
-- GDScript: 4-space indentation, snake_case for functions/variables
-- JavaScript: 2-space indentation, camelCase for functions/variables
-- Comments for complex logic only
+### Code style
+- GDScript: tabs, `snake_case`; comments only where intent isn't obvious
+- JavaScript: 2-space, `camelCase`
 
-### Key Files to Know
+### Key files
 
-**Web UI**:
-- `web-ui-editor/js/core/storage.js` — File I/O and persistence
-- `web-ui-editor/js/views/minigameView.js` — Minigame coordinator
-- `web-ui-editor/js/modals/scriptLineModal.js` — Advanced properties editor
+**Web UI**
+- `web-ui-editor/js/core/storage.js` — file I/O and persistence
+- `web-ui-editor/js/views/minigameView.js` — minigame coordinator
+- `web-ui-editor/js/modals/scriptLineModal.js` — per-line properties editor
 
-**Game Engine**:
-- `freestyle-dangan-trial/scripts/core/ScriptDirector.gd` — Script playback & progression
-- `freestyle-dangan-trial/scripts/game/TrialRoomManager.gd` — Trial room orchestration
-- `freestyle-dangan-trial/scripts/minigames/MinigameBase.gd` — Minigame framework
-- `freestyle-dangan-trial/scripts/camera/CameraDirector.gd` — Camera motion system
-
----
-
-## Known Limitations
-
-- On-disk trial folders require a Chromium browser; other browsers go
-  through `.drtrial` import/export
-- Trial file picker in Godot requires manual folder selection
-- Multi-language text support is limited to English
-- No built-in audio editing (use external tools)
+**Engine**
+- `scripts/core/TrialLoader.gd` — `.drtrial` load facade (`trial/` helpers)
+- `scripts/core/ScriptDirector.gd` — script playback state machine
+- `scripts/game/TrialRoomManager.gd` — trial-room composition root
+- `scripts/game/CharacterStage.gd` — bench sprite population and lookup
+- `scripts/game/MinigameRunner.gd` — minigame catalog and replay loop
+- `scripts/minigames/MinigameBase.gd` — minigame framework
+- `scripts/camera/CameraDirector.gd` — per-line camera motion
 
 ---
 
 ## Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup,
-conventions, and the PR checklist. Areas of interest:
-- Bug reports and fixes
-- UI/UX improvements
-- Additional minigame types
-- Documentation and tutorials
-- Testing on different systems
-
----
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, conventions, and the PR
+checklist. Adding a minigame is documented in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## License
 
-Open source. License details to be finalized.
-
----
+Open source; license to be finalized.
 
 ## Acknowledgments
 
-- Inspired by Danganronpa series by Spike Chunsoft
-- Built with Godot Engine and web standards
-- 3D assets created in Blender
-
----
-
-## Contact
-
-For questions or collaboration: Open an issue on GitHub.
-
-**Note**: This is a fan creation, not affiliated with Spike Chunsoft Co., Ltd.
+Inspired by the Danganronpa series by Spike Chunsoft. Built with Godot and web
+standards; 3D assets made in Blender. This is a fan creation, not affiliated
+with Spike Chunsoft Co., Ltd.

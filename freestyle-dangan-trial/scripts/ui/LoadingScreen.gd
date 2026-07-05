@@ -38,7 +38,7 @@ func _on_loading_complete() -> void:
 	get_tree().change_scene_to_file("res://scenes/thh_trial_room_1.tscn")
 
 func _on_loading_failed(error: String) -> void:
-	MobileToast.show(get_tree().root, error, true, 5.0)
+	MobileToast.show_message(get_tree().root, error, true, 5.0)
 	if _anim and _anim.has_animation("dismiss"):
 		_anim.play("dismiss")
 	await get_tree().create_timer(1.5).timeout

@@ -69,7 +69,7 @@ func _load_and_display_trial():
 			if not TrialLoader.last_load_error.is_empty()
 			else "Failed to load trial.")
 		push_error(msg)
-		MobileToast.show(get_tree().root, msg, true, 5.0)
+		MobileToast.show_message(get_tree().root, msg, true, 5.0)
 		await get_tree().create_timer(1.0).timeout
 		get_tree().change_scene_to_file("res://scenes/start_menu.tscn")
 		return

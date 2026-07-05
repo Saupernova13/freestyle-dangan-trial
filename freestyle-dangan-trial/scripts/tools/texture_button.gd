@@ -45,7 +45,7 @@ func _on_picker_cancelled():
 	_cleanup_picker()
 
 func _on_picker_load_failed(message: String):
-	MobileToast.show(get_tree().root, message, true)
+	MobileToast.show_message(get_tree().root, message, true)
 	_cleanup_picker()
 
 func _cleanup_picker():

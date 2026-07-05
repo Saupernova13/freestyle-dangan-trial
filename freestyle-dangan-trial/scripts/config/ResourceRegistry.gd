@@ -33,6 +33,8 @@ const SCENES := {
 	"mobile_hud": "res://scenes/ui/mobile_hud.tscn",
 	"mobile_toast": "res://scenes/ui/mobile_toast.tscn",
 	"screen_effects_overlay": "res://scenes/ui/screen_effects_overlay.tscn",
+	"trial_file_list": "res://scenes/ui/trial_file_list.tscn",
+	"trial_file_row": "res://scenes/ui/trial_file_row.tscn",
 	"game_over_screen": "res://scenes/ui/game_over_screen.tscn",
 	"minigame_title_card": "res://scenes/ui/minigame_title_card.tscn",
 	"minigame_result_card": "res://scenes/ui/minigame_result_card.tscn",

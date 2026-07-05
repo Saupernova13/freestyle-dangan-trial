@@ -209,57 +209,17 @@ func _scan_directory(path: String, results: Array, depth: int = 0):
 	dir.list_dir_end()
 
 func _show_mobile_file_list(files: Array):
-	var overlay = CanvasLayer.new()
-	overlay.layer = 30
-	add_child(overlay)
-
-	var bg = ColorRect.new()
-	bg.color = Color(0, 0, 0, 0.8)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.add_child(bg)
-
-	var panel = VBoxContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-	panel.custom_minimum_size = Vector2(500, 400)
-	panel.add_theme_constant_override("separation", 8)
-	overlay.add_child(panel)
-
-	var title = Label.new()
-	title.text = "Select Trial File"
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color.WHITE)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	panel.add_child(title)
-
-	var scroll = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(480, 300)
-	panel.add_child(scroll)
-
-	var list = VBoxContainer.new()
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-
-	for file_path in files:
-		var btn = Button.new()
-		btn.text = file_path.get_file()
-		btn.custom_minimum_size.y = 50
-		btn.add_theme_font_size_override("font_size", 16)
-		btn.pressed.connect(func():
-			overlay.queue_free()
-			file_selected.emit(file_path)
-		)
-		list.add_child(btn)
-
-	var cancel_btn = Button.new()
-	cancel_btn.text = "Cancel"
-	cancel_btn.custom_minimum_size.y = 40
-	cancel_btn.pressed.connect(func():
-		overlay.queue_free()
+	var list: TrialFileList = ResourceRegistry.instantiate("trial_file_list")
+	add_child(list)
+	list.file_chosen.connect(func(path: String):
+		list.queue_free()
+		file_selected.emit(path)
+	)
+	list.cancelled.connect(func():
+		list.queue_free()
 		cancelled.emit()
 	)
-	panel.add_child(cancel_btn)
+	list.populate(files)
 
 func _on_file_chosen(path: String):
 	if _file_dialog:

@@ -71,22 +71,8 @@ func _show_question(index: int):
 		var entry = filtered_answers[i]
 		var answer = entry["answer"]
 		var original_index = entry["original_index"]
-		var btn = Button.new()
+		var btn: Button = ResourceRegistry.instantiate("lane_button")
 		btn.text = answer.get("answerText", "?")
-		btn.custom_minimum_size = UITheme.LANE_BUTTON_SIZE
-		btn.add_theme_font_size_override("font_size", UITheme.FONT_SIZE_BUTTON)
-
-		var style_normal = UITheme.make_button_style(
-			UITheme.COLOR_BG_BUTTON, UITheme.COLOR_BORDER_BUTTON, 8, 2
-		)
-		style_normal.border_color = Color(0.3, 0.5, 0.8, 0.7)
-		btn.add_theme_stylebox_override("normal", style_normal)
-
-		var style_hover = style_normal.duplicate()
-		style_hover.bg_color = UITheme.COLOR_BG_BUTTON_HOVER
-		style_hover.border_color = UITheme.COLOR_BORDER_BUTTON_HOVER
-		btn.add_theme_stylebox_override("hover", style_hover)
-
 		btn.modulate.a = 0.0
 		var is_correct = answer.get("isCorrect", false)
 		btn.pressed.connect(_on_answer_selected.bind(original_index, is_correct))

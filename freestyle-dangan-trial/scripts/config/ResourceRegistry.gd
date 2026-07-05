@@ -18,6 +18,7 @@ const SCENES := {
 	"debate_text_panel": "res://scenes/minigames/debate_text_panel.tscn",
 	"bullet_projectile": "res://scenes/minigames/bullet_projectile.tscn",
 	"hangman_slot": "res://scenes/minigames/hangman_slot.tscn",
+	"lane_button": "res://scenes/minigames/lane_button.tscn",
 
 	# Shared HUD / UI
 	"influence_gauge": "res://scenes/ui/influence_gauge.tscn",

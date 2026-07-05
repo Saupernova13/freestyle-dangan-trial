@@ -17,6 +17,7 @@ const SCENES := {
 	# Minigame pieces
 	"debate_text_panel": "res://scenes/minigames/debate_text_panel.tscn",
 	"bullet_projectile": "res://scenes/minigames/bullet_projectile.tscn",
+	"hangman_slot": "res://scenes/minigames/hangman_slot.tscn",
 
 	# Shared HUD / UI
 	"influence_gauge": "res://scenes/ui/influence_gauge.tscn",

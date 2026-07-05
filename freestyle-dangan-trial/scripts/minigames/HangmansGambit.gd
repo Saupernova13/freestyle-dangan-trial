@@ -7,7 +7,7 @@ var _floating_letters: Array = []
 var _overlay: CanvasLayer
 var _letters_container: Control
 var _answer_display: HBoxContainer
-var _answer_labels: Array = []
+var _answer_slots: Array = []
 var _spawn_timer: float = 0.0
 var _spawn_interval: float = 1.5
 
@@ -41,38 +41,11 @@ func _build_overlay():
 	_answer_display = _overlay.get_node("%AnswerDisplay")
 
 	for i in range(answer_key.length()):
-		var slot = PanelContainer.new()
-		var style = StyleBoxFlat.new()
-		style.content_margin_top = 4
-		style.content_margin_bottom = 4
-
-		var lbl = Label.new()
-		lbl.add_theme_font_size_override("font_size", UITheme.FONT_SIZE_LARGE)
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-
-		if answer_key[i] == " ":
-			style.bg_color = Color(0, 0, 0, 0)
-			style.border_width_bottom = 0
-			style.content_margin_left = 4
-			style.content_margin_right = 4
-			lbl.text = " "
-			lbl.custom_minimum_size.x = UITheme.HANGMAN_SPACE_MIN_WIDTH
-			lbl.add_theme_color_override("font_color", Color(0, 0, 0, 0))
-		else:
-			style.bg_color = UITheme.COLOR_HANGMAN_SLOT_BG
-			style.border_width_bottom = 2
-			style.border_color = UITheme.COLOR_HANGMAN_SLOT_BORDER
-			style.content_margin_left = 8
-			style.content_margin_right = 8
-			lbl.text = "_"
-			lbl.custom_minimum_size.x = UITheme.HANGMAN_LETTER_MIN_WIDTH
-			lbl.add_theme_color_override("font_color", UITheme.COLOR_HANGMAN_BLANK)
-
-		slot.add_theme_stylebox_override("panel", style)
-		slot.add_child(lbl)
-
+		var slot: HangmanSlot = ResourceRegistry.instantiate("hangman_slot")
 		_answer_display.add_child(slot)
-		_answer_labels.append(lbl)
+		if answer_key[i] == " ":
+			slot.mark_space()
+		_answer_slots.append(slot)
 
 func _process(delta):
 	if not is_active:
@@ -135,8 +108,7 @@ func _on_letter_clicked(floating: FloatingLetter):
 	for i in range(answer_key.length()):
 		if answer_key[i] == letter and not _revealed_letters[i]:
 			_revealed_letters[i] = true
-			_answer_labels[i].text = letter
-			_answer_labels[i].add_theme_color_override("font_color", UITheme.COLOR_CORRECT)
+			_answer_slots[i].reveal(letter)
 			found = true
 			break
 

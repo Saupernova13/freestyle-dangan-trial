@@ -48,15 +48,10 @@ func _build_overlay():
 	_score_label = _overlay.get_node("%ScoreLabel")
 	_turn_timer_label = _overlay.get_node("%TurnTimerLabel")
 
-	var keyword_container = _overlay.get_node("%KeywordContainer")
+	# The keyword buttons are authored in the overlay scene (KeywordButton0..N).
+	_defense_buttons.clear()
 	for i in range(MinigameConfig.SCRUM_KEYWORD_BUTTON_COUNT):
-		var btn = Button.new()
-		btn.custom_minimum_size = UITheme.KEYWORD_BUTTON_SIZE
-		btn.add_theme_font_size_override("font_size", UITheme.FONT_SIZE_KEYWORD)
-		btn.add_theme_stylebox_override("normal", UITheme.make_button_style())
-		btn.visible = false
-		keyword_container.add_child(btn)
-		_defense_buttons.append(btn)
+		_defense_buttons.append(_overlay.get_node("%%KeywordButton%d" % i))
 
 func _process(delta):
 	if not is_active or not _turn_active:

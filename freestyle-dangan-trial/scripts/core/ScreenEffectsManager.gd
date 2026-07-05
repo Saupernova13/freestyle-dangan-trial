@@ -1,6 +1,10 @@
 extends Node
+## Full-screen per-line effects (flash/fade/overlay text/shader filters). The
+## overlay rects and the filter material are scene-owned — see
+## scenes/ui/screen_effects_overlay.tscn. The effect tweens stay in code: their
+## duration and colors come from script data, so they can't be authored as fixed
+## AnimationPlayer clips.
 
-var _canvas: CanvasLayer
 var _flash_rect: ColorRect
 var _fade_rect: ColorRect
 var _overlay_label: Label
@@ -24,44 +28,16 @@ const FILTER_MODES := {
 var _effects: Dictionary = {}
 
 func _ready():
-	_canvas = CanvasLayer.new()
-	_canvas.layer = 20
-	add_child(_canvas)
-
-	_flash_rect = ColorRect.new()
-	_flash_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_flash_rect.color = Color(1, 1, 1, 0)
-	_flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_canvas.add_child(_flash_rect)
-
-	_fade_rect = ColorRect.new()
-	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_fade_rect.color = Color(0, 0, 0, 0)
-	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_canvas.add_child(_fade_rect)
-
-	_overlay_label = Label.new()
-	_overlay_label.set_anchors_preset(Control.PRESET_CENTER)
-	_overlay_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_overlay_label.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_overlay_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_overlay_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_overlay_label.add_theme_font_size_override("font_size", 48)
-	_overlay_label.visible = false
-	_overlay_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_canvas.add_child(_overlay_label)
-
-	_filter_material = ShaderMaterial.new()
-	_filter_material.shader = load("res://shaders/screen_filter.gdshader")
+	# The scene renders FilterRect below Flash/Fade/Label, so filters stay under
+	# the flash and fade layers.
+	var overlay := ResourceRegistry.instantiate("screen_effects_overlay")
+	add_child(overlay)
+	_flash_rect = overlay.get_node("%FlashRect")
+	_fade_rect = overlay.get_node("%FadeRect")
+	_overlay_label = overlay.get_node("%OverlayLabel")
+	_filter_rect = overlay.get_node("%FilterRect")
+	_filter_material = _filter_rect.material
 	_filter_material.set_shader_parameter("intensity", 0.0)
-	_filter_rect = ColorRect.new()
-	_filter_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_filter_rect.material = _filter_material
-	_filter_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_filter_rect.visible = false
-	# Render below flash/fade rects so those still read on top of filters.
-	_canvas.add_child(_filter_rect)
-	_canvas.move_child(_filter_rect, 0)
 
 	_register_effects()
 

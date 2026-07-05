@@ -1,0 +1,123 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" uid="uid://dncrga2hordgl" path="res://scripts/ui/MobileHud.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="Btn_Normal"]
+bg_color = Color(0.08, 0.1, 0.18, 0.78)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.7, 1, 0.7)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="Btn_Pressed"]
+bg_color = Color(0.2, 0.35, 0.55, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.7, 1, 0.7)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="MobileHud" type="CanvasLayer"]
+layer = 90
+script = ExtResource("1_script")
+
+[node name="RightColumn" type="VBoxContainer" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -88.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 88.0
+grow_horizontal = 0
+theme_override_constants/separation = 8
+
+[node name="SettingsButton" type="Button" parent="RightColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 72)
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("Btn_Normal")
+theme_override_styles/hover = SubResource("Btn_Pressed")
+theme_override_styles/pressed = SubResource("Btn_Pressed")
+text = "⚙"
+tooltip_text = "Settings"
+
+[node name="LeftActionColumn" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -88.0
+offset_top = -346.0
+offset_right = -16.0
+offset_bottom = -106.0
+grow_horizontal = 0
+grow_vertical = 0
+alignment = 2
+theme_override_constants/separation = 8
+
+[node name="FocusButton" type="Button" parent="LeftActionColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 72)
+toggle_mode = true
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("Btn_Normal")
+theme_override_styles/hover = SubResource("Btn_Pressed")
+theme_override_styles/pressed = SubResource("Btn_Pressed")
+text = "◎"
+tooltip_text = "Focus"
+
+[node name="SlowButton" type="Button" parent="LeftActionColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 72)
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("Btn_Normal")
+theme_override_styles/hover = SubResource("Btn_Pressed")
+theme_override_styles/pressed = SubResource("Btn_Pressed")
+text = "◐"
+tooltip_text = "Slow"
+
+[node name="BulletRow" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -88.0
+offset_right = 160.0
+offset_bottom = -16.0
+grow_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="BulletPrev" type="Button" parent="BulletRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 72)
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("Btn_Normal")
+theme_override_styles/hover = SubResource("Btn_Pressed")
+theme_override_styles/pressed = SubResource("Btn_Pressed")
+text = "◀"
+tooltip_text = "Prev"
+
+[node name="BulletNext" type="Button" parent="BulletRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 72)
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("Btn_Normal")
+theme_override_styles/hover = SubResource("Btn_Pressed")
+theme_override_styles/pressed = SubResource("Btn_Pressed")
+text = "▶"
+tooltip_text = "Next"

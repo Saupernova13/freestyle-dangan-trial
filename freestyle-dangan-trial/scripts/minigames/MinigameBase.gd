@@ -110,10 +110,9 @@ func setup_standard_ui(components: Array) -> Dictionary:
 func _maybe_spawn_mobile_hud(components: Array) -> void:
 	if not OS.has_feature("mobile"):
 		return
-	var script: GDScript = load("res://scripts/ui/MobileHud.gd")
-	if script == null:
+	_mobile_hud = ResourceRegistry.instantiate("mobile_hud")
+	if _mobile_hud == null:
 		return
-	_mobile_hud = script.new()
 	add_child(_mobile_hud)
 	_mobile_hud.setup({
 		"settings": true,

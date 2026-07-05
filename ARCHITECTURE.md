@@ -86,12 +86,24 @@ sprite-texture cache. `TrialRoomManager` is a composition root that wires
 3. Add the matching editor UI in `web-ui-editor/js/views/minigames/` so the
    game type can be authored (see the web UI README).
 
+## Scene-owned UI
+
+Editable UI is authored in `.tscn` scenes; scripts bind data and trigger
+animations, they don't build node trees. This covers the settings menu, the
+mobile HUD and toast, the screen-effects overlay, and the per-item minigame
+pieces (Hangman slots, Debate Scrum keyword buttons, Logic Dive lanes, the
+Nonstop Debate bullet preview and evidence card, the fallback file list). New UI
+belongs in a scene, instantiated via `ResourceRegistry`.
+
+What stays in code is procedural visual effects, not authorable screens:
+`EffectBuilders` (shatter/particle systems), the slow-time vignette, the camera
+cross-dissolve, and `roaming_text_path` (one label per character along a curve).
+Their tweens have data-driven durations/colors and per-frame or per-item counts,
+so they can't be fixed AnimationPlayer clips. The same reasoning keeps the
+`ScreenEffects` effect tweens and the gauge-fill / typewriter tweens in code.
+
 ## Known debt
 
-- Several engine systems build UI nodes and tweens in code rather than in
-  `.tscn` scenes + animation resources (minigame overlays, mobile HUD,
-  settings menu). New UI should be scene-owned; migrating the existing code
-  is tracked as ongoing work.
 - `scenes/thh_trial_room_1.tscn` embeds ~97MB of mesh data. It stays under
   GitHub's hard limit but should eventually reference external mesh
   resources (the untracked `thh_default_trial_room.tscn` already exceeds the

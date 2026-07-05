@@ -88,58 +88,9 @@ func _show_bullet_preview() -> void:
 	var bullets = TruthBulletManager.active_bullets
 	if bullets.is_empty():
 		return
-
-	var preview_canvas = CanvasLayer.new()
-	preview_canvas.layer = 25
-	add_child(preview_canvas)
-
-	var root = Control.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.modulate.a = 0.0
-	preview_canvas.add_child(root)
-
-	var bg = ColorRect.new()
-	bg.color = UITheme.COLOR_OVERLAY_DIM
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.add_child(bg)
-
-	var container = VBoxContainer.new()
-	container.set_anchors_preset(Control.PRESET_CENTER)
-	container.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	container.grow_vertical = Control.GROW_DIRECTION_BOTH
-	container.add_theme_constant_override("separation", 8)
-	root.add_child(container)
-
-	container.add_child(UITheme.make_centered_label("TRUTH BULLETS", UITheme.FONT_SIZE_BODY, UITheme.COLOR_ACCENT_CYAN))
-
-	var grid = GridContainer.new()
-	grid.columns = mini(bullets.size(), 4)
-	grid.add_theme_constant_override("h_separation", 16)
-	grid.add_theme_constant_override("v_separation", 8)
-	container.add_child(grid)
-
-	for bullet in bullets:
-		var cell = VBoxContainer.new()
-		cell.add_theme_constant_override("separation", 2)
-
-		var name_lbl = UITheme.make_centered_label(bullet.get("name", "?"), UITheme.FONT_SIZE_LABEL, Color.WHITE)
-		name_lbl.custom_minimum_size.x = UITheme.PREVIEW_LABEL_MIN_WIDTH
-		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-		cell.add_child(name_lbl)
-
-		# Surface the editor-authored evidence description under the name.
-		var desc = bullet.get("description", "")
-		if desc is String and not desc.is_empty():
-			var desc_lbl = UITheme.make_centered_label(desc, UITheme.FONT_SIZE_TINY, Color(0.75, 0.75, 0.8))
-			desc_lbl.custom_minimum_size.x = UITheme.PREVIEW_LABEL_MIN_WIDTH
-			desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-			cell.add_child(desc_lbl)
-
-		grid.add_child(cell)
-
-	var tween = EffectBuilders.fade_in_hold_out(root, 0.2, 1.0, 0.3)
-	await tween.finished
-	preview_canvas.queue_free()
+	var preview: BulletPreview = ResourceRegistry.instantiate("bullet_preview")
+	add_child(preview)
+	await preview.show_bullets(bullets)
 
 func _process(delta):
 	if not is_active or _solved:
@@ -409,31 +360,9 @@ func _show_wrong_label():
 	EffectBuilders.flash_alpha(_wrong_label, 3, 0.3, 1.0, 0.08)
 
 func _show_evidence_card(bullet_id: String) -> Control:
-	var bullet_name = TruthBulletManager.get_bullet_name(bullet_id)
-
-	var card = PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UITheme.make_panel_style(
-		UITheme.COLOR_BG_PANEL, UITheme.COLOR_ACCENT_GOLD, 2, 16
-	))
-	card.set_anchors_preset(Control.PRESET_CENTER)
-	card.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	card.grow_vertical = Control.GROW_DIRECTION_BOTH
-	card.modulate.a = 0.0
-	card.scale = Vector2(0.7, 0.7)
+	var card: EvidenceCard = ResourceRegistry.instantiate("evidence_card")
 	_overlay.add_child(card)
-
-	var vbox = VBoxContainer.new()
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	card.add_child(vbox)
-
-	vbox.add_child(UITheme.make_centered_label("TRUTH BULLET", UITheme.FONT_SIZE_TINY, UITheme.COLOR_TRUTH_BULLET))
-	vbox.add_child(UITheme.make_centered_label(bullet_name, UITheme.FONT_SIZE_HEADER, Color.WHITE))
-
-	var tween = create_tween().set_parallel(true)
-	tween.tween_property(card, "modulate:a", 1.0, 0.15)
-	tween.tween_property(card, "scale", Vector2(1.0, 1.0), 0.2) \
-		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-
+	card.show_evidence(TruthBulletManager.get_bullet_name(bullet_id))
 	return card
 
 func _on_wrong_hit(panel: DebateTextPanel):

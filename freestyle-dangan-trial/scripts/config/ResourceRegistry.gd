@@ -19,6 +19,9 @@ const SCENES := {
 	"bullet_projectile": "res://scenes/minigames/bullet_projectile.tscn",
 	"hangman_slot": "res://scenes/minigames/hangman_slot.tscn",
 	"lane_button": "res://scenes/minigames/lane_button.tscn",
+	"bullet_preview": "res://scenes/minigames/bullet_preview.tscn",
+	"bullet_preview_cell": "res://scenes/minigames/bullet_preview_cell.tscn",
+	"evidence_card": "res://scenes/minigames/evidence_card.tscn",
 
 	# Shared HUD / UI
 	"influence_gauge": "res://scenes/ui/influence_gauge.tscn",

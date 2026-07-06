@@ -3,18 +3,18 @@
 [ext_resource type="Theme" uid="uid://dtc7eb2uybtbu" path="res://resources/themes/panel_blank.tres" id="1_5byqq"]
 [ext_resource type="Script" uid="uid://cllgr8odryc43" path="res://scripts/tools/vbox_selector.gd" id="1_gqu1h"]
 [ext_resource type="FontFile" uid="uid://cu6duhax05smh" path="res://fonts/LexendMega-Regular.ttf" id="1_h61rw"]
-[ext_resource type="Texture2D" uid="uid://dhepp0qvtsujp" path="res://textures/ui/high/menu_banner.png" id="1_m7x51"]
+[ext_resource type="Texture2D" uid="uid://dhepp0qvtsujp" path="res://textures/ui/menu_banner.png" id="1_m7x51"]
 [ext_resource type="AnimationLibrary" uid="uid://chps8lild5wfe" path="res://animations/UI_Anim_Lib.tres" id="2_4v6gu"]
-[ext_resource type="Texture2D" uid="uid://bnel022dmf3mt" path="res://textures/ui/high/empty_block.png" id="4_h61rw"]
+[ext_resource type="Texture2D" uid="uid://bnel022dmf3mt" path="res://textures/ui/empty_block.png" id="4_h61rw"]
 [ext_resource type="Theme" uid="uid://b6wy0f0wwkcdn" path="res://resources/themes/panel_sharp_white_label.tres" id="5_e58y3"]
 [ext_resource type="Script" uid="uid://lgprxnjsp8v1" path="res://scripts/tools/texture_button.gd" id="5_s0oe1"]
 [ext_resource type="Theme" uid="uid://ssjg7uf12ynv" path="res://resources/themes/panel_solid_black.tres" id="7_apowk"]
-[ext_resource type="Texture2D" uid="uid://d8jrnl3pmb0h" path="res://textures/ui/low/bullet_chamber.png" id="8_s0oe1"]
+[ext_resource type="Texture2D" uid="uid://ng0xhg2w730y" path="res://textures/ui/bullet_chamber.png" id="8_s0oe1"]
 [ext_resource type="Shader" uid="uid://dt4pk7uxhaekj" path="res://shaders/crt_glitch_scanlines.gdshader" id="9_egh8s"]
 [ext_resource type="Material" uid="uid://ml5s4h4qhuue" path="res://resources/materials/glitch.tres" id="9_vnuwp"]
-[ext_resource type="Texture2D" uid="uid://b67m5dyvxytut" path="res://textures/ui/high/menu_select.png" id="10_egh8s"]
+[ext_resource type="Texture2D" uid="uid://b67m5dyvxytut" path="res://textures/ui/menu_select.png" id="10_egh8s"]
 [ext_resource type="Material" uid="uid://dx10hxw738ooi" path="res://resources/materials/pulse.tres" id="11_b1kog"]
-[ext_resource type="Texture2D" uid="uid://bbvb1a73554vu" path="res://textures/ui/high/menu_select_clicked.png" id="12_ruo1u"]
+[ext_resource type="Texture2D" uid="uid://bbvb1a73554vu" path="res://textures/ui/menu_select_clicked.png" id="12_ruo1u"]
 [ext_resource type="Texture2D" uid="uid://bfx1jan842be6" path="res://textures/backgrounds/start_screen_1080p.png" id="16_s0oe1"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_b1kog"]
@@ -190,11 +190,14 @@ libraries = {
 }
 
 [node name="TextureButton_OpenHandbook" type="TextureButton" parent="Panel_Menu/VBoxContainer_Start_Menu"]
+custom_minimum_size = Vector2(1058, 191)
 z_index = 4096
 material = ExtResource("11_b1kog")
 layout_mode = 2
 texture_normal = ExtResource("10_egh8s")
 texture_pressed = ExtResource("12_ruo1u")
+ignore_texture_size = true
+stretch_mode = 5
 
 [node name="Label_OpenHandBook" type="Label" parent="Panel_Menu/VBoxContainer_Start_Menu/TextureButton_OpenHandbook"]
 z_index = 4096
@@ -215,11 +218,14 @@ theme_override_font_sizes/font_size = 64
 text = "Open e-Handbook"
 
 [node name="TextureButton_StartGame" type="TextureButton" parent="Panel_Menu/VBoxContainer_Start_Menu"]
+custom_minimum_size = Vector2(1058, 191)
 z_index = 4096
 material = ExtResource("11_b1kog")
 layout_mode = 2
 texture_normal = ExtResource("10_egh8s")
 texture_pressed = ExtResource("12_ruo1u")
+ignore_texture_size = true
+stretch_mode = 5
 script = ExtResource("5_s0oe1")
 
 [node name="Label_OpenHandBook" type="Label" parent="Panel_Menu/VBoxContainer_Start_Menu/TextureButton_StartGame"]
@@ -255,7 +261,7 @@ theme_override_styles/panel = SubResource("StyleBoxEmpty_vnuwp")
 [node name="Sprite2D" type="Sprite2D" parent="Panel_Chamber_Left"]
 z_index = 2
 position = Vector2(316.56, 218)
-scale = Vector2(1.5804446, 1.5804446)
+scale = Vector2(0.39511115, 0.39511115)
 texture = ExtResource("8_s0oe1")
 
 [node name="Load_In_Chamber" type="AnimationPlayer" parent="Panel_Chamber_Left"]

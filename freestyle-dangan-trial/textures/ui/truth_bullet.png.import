@@ -3,15 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d2c1xo6o0tqv6"
-path="res://.godot/imported/truth_bullet.png-4b273b3d1ed40ee41ef8503627ab412d.ctex"
+path.bptc="res://.godot/imported/truth_bullet.png-d349248657ff5c3031d6697371860575.bptc.ctex"
+path.astc="res://.godot/imported/truth_bullet.png-d349248657ff5c3031d6697371860575.astc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ui/truth_bullet.png"
-dest_files=["res://.godot/imported/truth_bullet.png-4b273b3d1ed40ee41ef8503627ab412d.ctex"]
+dest_files=["res://.godot/imported/truth_bullet.png-d349248657ff5c3031d6697371860575.bptc.ctex", "res://.godot/imported/truth_bullet.png-d349248657ff5c3031d6697371860575.astc.ctex"]
 
 [params]
 

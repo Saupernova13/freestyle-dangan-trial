@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://kqvq8foqxt6l"
-path="res://.godot/imported/minigame_name_frame_blue.png-0812788ac56a0ab084c9a1170672037e.ctex"
+path="res://.godot/imported/minigame_name_frame_blue.png-07f39b1d9fb854eba8fbe18719f521b6.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://textures/ui/minigame_name_frame_blue.png"
-dest_files=["res://.godot/imported/minigame_name_frame_blue.png-0812788ac56a0ab084c9a1170672037e.ctex"]
+dest_files=["res://.godot/imported/minigame_name_frame_blue.png-07f39b1d9fb854eba8fbe18719f521b6.ctex"]
 
 [params]
 

@@ -3,15 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ng0xhg2w730y"
-path="res://.godot/imported/bullet_chamber.png-ba9469e1c399c27f4d57428767780c05.ctex"
+path.bptc="res://.godot/imported/bullet_chamber.png-b94b8d418b63009c826dcc08ed44c63d.bptc.ctex"
+path.astc="res://.godot/imported/bullet_chamber.png-b94b8d418b63009c826dcc08ed44c63d.astc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ui/bullet_chamber.png"
-dest_files=["res://.godot/imported/bullet_chamber.png-ba9469e1c399c27f4d57428767780c05.ctex"]
+dest_files=["res://.godot/imported/bullet_chamber.png-b94b8d418b63009c826dcc08ed44c63d.bptc.ctex", "res://.godot/imported/bullet_chamber.png-b94b8d418b63009c826dcc08ed44c63d.astc.ctex"]
 
 [params]
 

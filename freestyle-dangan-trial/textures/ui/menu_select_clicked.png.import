@@ -3,15 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bbvb1a73554vu"
-path="res://.godot/imported/menu_select_clicked.png-8ee96a139426530521aceb6f7af84906.ctex"
+path.bptc="res://.godot/imported/menu_select_clicked.png-d15bd4282fc1b06180ab64320477b1c7.bptc.ctex"
+path.astc="res://.godot/imported/menu_select_clicked.png-d15bd4282fc1b06180ab64320477b1c7.astc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ui/menu_select_clicked.png"
-dest_files=["res://.godot/imported/menu_select_clicked.png-8ee96a139426530521aceb6f7af84906.ctex"]
+dest_files=["res://.godot/imported/menu_select_clicked.png-d15bd4282fc1b06180ab64320477b1c7.bptc.ctex", "res://.godot/imported/menu_select_clicked.png-d15bd4282fc1b06180ab64320477b1c7.astc.ctex"]
 
 [params]
 

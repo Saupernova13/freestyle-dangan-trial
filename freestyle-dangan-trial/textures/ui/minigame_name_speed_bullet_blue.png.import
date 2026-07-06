@@ -3,15 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cj42i8ldvsj6x"
-path="res://.godot/imported/minigame_name_speed_bullet_blue.png-0a968ff792e95d577bc0bf357853e84f.ctex"
+path.bptc="res://.godot/imported/minigame_name_speed_bullet_blue.png-70c61f85fb396b0f35c62a593d19ae7b.bptc.ctex"
+path.astc="res://.godot/imported/minigame_name_speed_bullet_blue.png-70c61f85fb396b0f35c62a593d19ae7b.astc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ui/minigame_name_speed_bullet_blue.png"
-dest_files=["res://.godot/imported/minigame_name_speed_bullet_blue.png-0a968ff792e95d577bc0bf357853e84f.ctex"]
+dest_files=["res://.godot/imported/minigame_name_speed_bullet_blue.png-70c61f85fb396b0f35c62a593d19ae7b.bptc.ctex", "res://.godot/imported/minigame_name_speed_bullet_blue.png-70c61f85fb396b0f35c62a593d19ae7b.astc.ctex"]
 
 [params]
 

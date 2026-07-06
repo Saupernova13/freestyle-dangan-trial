@@ -3,8 +3,8 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://p3jid5bam1qo"
-path.s3tc="res://.godot/imported/makoto.png-11f208875e826c311e8480b1a5ad4123.s3tc.ctex"
-path.etc2="res://.godot/imported/makoto.png-11f208875e826c311e8480b1a5ad4123.etc2.ctex"
+path.bptc="res://.godot/imported/makoto.png-631a966060fd263cf171aea57f726a57.bptc.ctex"
+path.astc="res://.godot/imported/makoto.png-631a966060fd263cf171aea57f726a57.astc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -13,7 +13,7 @@ metadata={
 [deps]
 
 source_file="res://textures/ui/makoto.png"
-dest_files=["res://.godot/imported/makoto.png-11f208875e826c311e8480b1a5ad4123.s3tc.ctex", "res://.godot/imported/makoto.png-11f208875e826c311e8480b1a5ad4123.etc2.ctex"]
+dest_files=["res://.godot/imported/makoto.png-631a966060fd263cf171aea57f726a57.bptc.ctex", "res://.godot/imported/makoto.png-631a966060fd263cf171aea57f726a57.astc.ctex"]
 
 [params]
 

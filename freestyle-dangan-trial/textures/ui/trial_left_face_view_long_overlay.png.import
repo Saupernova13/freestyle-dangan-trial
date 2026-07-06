@@ -3,15 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://rk1or2ndqrxh"
-path="res://.godot/imported/trial_left_face_view_long_overlay.png-be3c8f7f94108f60fef8bdaab5d0760c.ctex"
+path.bptc="res://.godot/imported/trial_left_face_view_long_overlay.png-7323f1a935abd9ec519276dd60d35d1f.bptc.ctex"
+path.astc="res://.godot/imported/trial_left_face_view_long_overlay.png-7323f1a935abd9ec519276dd60d35d1f.astc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ui/trial_left_face_view_long_overlay.png"
-dest_files=["res://.godot/imported/trial_left_face_view_long_overlay.png-be3c8f7f94108f60fef8bdaab5d0760c.ctex"]
+dest_files=["res://.godot/imported/trial_left_face_view_long_overlay.png-7323f1a935abd9ec519276dd60d35d1f.bptc.ctex", "res://.godot/imported/trial_left_face_view_long_overlay.png-7323f1a935abd9ec519276dd60d35d1f.astc.ctex"]
 
 [params]
 

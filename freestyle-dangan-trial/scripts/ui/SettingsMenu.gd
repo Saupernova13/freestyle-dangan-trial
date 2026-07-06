@@ -11,6 +11,7 @@ signal closed
 @onready var _voice_slider: HSlider = %VoiceSlider
 @onready var _auto_delay_slider: HSlider = %AutoDelaySlider
 @onready var _screen_shake_slider: HSlider = %ScreenShakeSlider
+@onready var _ui_scale_slider: HSlider = %UIScaleSlider
 @onready var _auto_advance_toggle: CheckButton = %AutoAdvanceToggle
 
 var _is_closing: bool = false
@@ -28,6 +29,9 @@ func _ready():
 		func(v): Settings.auto_advance_delay = v)
 	_bind_slider(_screen_shake_slider, %ScreenShakeValue, Settings.screen_shake_intensity,
 		func(v): Settings.screen_shake_intensity = v)
+	_bind_slider(_ui_scale_slider, %UIScaleValue, Settings.ui_scale,
+		func(v): Settings.ui_scale = v,
+		func(v): return str(int(round(v * 100.0))) + "%")
 
 	_auto_advance_toggle.button_pressed = Settings.auto_advance
 	_auto_advance_toggle.toggled.connect(func(v): Settings.auto_advance = v)
@@ -36,12 +40,13 @@ func open():
 	if _anim and _anim.has_animation("open"):
 		_anim.play("open")
 
-func _bind_slider(slider: HSlider, value_label: Label, initial: float, setter: Callable) -> void:
+func _bind_slider(slider: HSlider, value_label: Label, initial: float, setter: Callable, formatter: Callable = Callable()) -> void:
+	var format := formatter if formatter.is_valid() else func(v): return _format_value(v, slider.max_value)
 	slider.value = initial
-	value_label.text = _format_value(initial, slider.max_value)
+	value_label.text = format.call(initial)
 	slider.value_changed.connect(func(v):
 		setter.call(v)
-		value_label.text = _format_value(v, slider.max_value)
+		value_label.text = format.call(v)
 	)
 
 func _format_value(val: float, max_val: float) -> String:

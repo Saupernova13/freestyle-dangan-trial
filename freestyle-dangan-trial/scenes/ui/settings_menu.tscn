@@ -265,6 +265,34 @@ theme_override_font_sizes/font_size = 14
 text = "1.0"
 horizontal_alignment = 2
 
+[node name="UIScaleRow" type="HBoxContainer" parent="CenterContainer/Panel/VBox/OptionsContainer"]
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="CenterContainer/Panel/VBox/OptionsContainer/UIScaleRow"]
+custom_minimum_size = Vector2(140, 0)
+theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
+theme_override_font_sizes/font_size = 16
+text = "UI Scale"
+
+[node name="UIScaleSlider" type="HSlider" parent="CenterContainer/Panel/VBox/OptionsContainer/UIScaleRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.75
+max_value = 2.0
+step = 0.05
+value = 1.0
+
+[node name="UIScaleValue" type="Label" parent="CenterContainer/Panel/VBox/OptionsContainer/UIScaleRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
+theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "100%"
+horizontal_alignment = 2
+
 [node name="ButtonRow" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
 alignment = 1
 

@@ -102,6 +102,16 @@ Their tweens have data-driven durations/colors and per-frame or per-item counts,
 so they can't be fixed AnimationPlayer clips. The same reasoning keeps the
 `ScreenEffects` effect tweens and the gauge-fill / typewriter tweens in code.
 
+## UI textures
+
+`freestyle-dangan-trial/textures/ui/` is the single runtime texture set; node
+sizes are defined in scenes and never derived from texture resolution, so
+swapping art never moves layout. Stretch mode is deliberately disabled --
+window size never rescales the UI; the Settings "UI Scale" option
+(`Window.content_scale_factor`) is the only canvas scale. Full rules,
+including why 9-slice sources must stay at design resolution, live in
+`freestyle-dangan-trial/textures/ui/README.md`.
+
 ## Known debt
 
 - `scenes/thh_trial_room_1.tscn` embeds ~97MB of mesh data. It stays under

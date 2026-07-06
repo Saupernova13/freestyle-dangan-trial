@@ -1,8 +1,7 @@
-# Godot generated files
+# Godot generated files (.import/.uid are versioned on purpose: they carry
+# stable resource UIDs and import parameters that must match across machines)
 .godot/
 .nomedia
-*.import
-*.uid
 *.translation
 export.cfg
 export_credentials.cfg

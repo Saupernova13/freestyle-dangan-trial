@@ -16,6 +16,10 @@ var current_trial_path: String = ""
 ## can surface a useful message to the user. Empty when the last load succeeded.
 var last_load_error: String = ""
 
+## Set by _parse_manifest() when trial.json exists but fails validation, so
+## both load paths can report the specific problem instead of a generic one.
+var last_parse_error: String = ""
+
 ## True once load_trial_async() has finished; the trial room uses it to skip
 ## the synchronous fallback load.
 var loaded_async: bool = false
@@ -43,7 +47,11 @@ func load_trial(file_path: String) -> bool:
 
 	var trial_data = _parse_manifest()
 	if trial_data.is_empty():
-		last_load_error = "trial.json missing or invalid in the selected file."
+		last_load_error = (
+			last_parse_error
+			if not last_parse_error.is_empty()
+			else "trial.json missing or invalid in the selected file."
+		)
 		push_error(last_load_error)
 		return false
 
@@ -116,6 +124,7 @@ func _reset_trial_state() -> void:
 	_pending_images.clear()
 
 func _parse_manifest() -> Dictionary:
+	last_parse_error = ""
 	var json_path := EXTRACT_DIR + "trial.json"
 	if not FileAccess.file_exists(json_path):
 		push_error("trial.json not found at: " + json_path)
@@ -128,12 +137,27 @@ func _parse_manifest() -> Dictionary:
 
 	var json = JSON.new()
 	if json.parse(json_text) != OK:
-		push_error("Failed to parse trial.json: " + json.get_error_message())
+		last_parse_error = "trial.json is not valid JSON: " + json.get_error_message()
+		push_error(last_parse_error)
 		return {}
 
 	var data = json.data
-	if not data.has("trialName"):
-		push_warning("trial.json missing trialName field")
+	if not data is Dictionary:
+		last_parse_error = "trial.json root is not an object."
+		push_error(last_parse_error)
+		return {}
+
+	# Contract checks against schema/trial.schema.json (see TrialValidator).
+	var version_issue := TrialValidator.check_version(data)
+	if not version_issue.is_empty():
+		last_parse_error = version_issue
+		push_error(last_parse_error)
+		return {}
+	var errors := TrialValidator.validate(data)
+	if not errors.is_empty():
+		last_parse_error = "trial.json is invalid: " + "; ".join(errors.slice(0, 3))
+		push_error(last_parse_error)
+		return {}
 	return data
 
 func _load_in_thread(file_path: String) -> void:
@@ -161,7 +185,9 @@ func _load_in_thread(file_path: String) -> void:
 	var trial_data := _parse_manifest()
 	if trial_data.is_empty():
 		call_deferred("_finish_with_error",
-			"trial.json missing or invalid in the selected file.")
+			last_parse_error
+			if not last_parse_error.is_empty()
+			else "trial.json missing or invalid in the selected file.")
 		return
 
 	current_trial = trial_data

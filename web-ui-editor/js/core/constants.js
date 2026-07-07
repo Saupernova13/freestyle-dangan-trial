@@ -1,5 +1,11 @@
 // Core constants for the trial editor.
 
+// trial.json format version written to metadata.version. The schema lives in
+// schema/trial.schema.json at the repo root; the engine's TrialValidator.gd
+// SUPPORTED_FORMAT_MAJOR must track the major here. Bump the minor for
+// additive changes, the major for breaking ones.
+export const FORMAT_VERSION = '4.0';
+
 // Total number of cast slots: 16 students + 1 headmaster.
 export const BLOCK_COUNT = 17;
 

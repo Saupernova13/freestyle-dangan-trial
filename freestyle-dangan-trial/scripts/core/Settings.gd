@@ -79,8 +79,9 @@ func _apply_and_save():
 func _apply_all():
 	if AudioManager:
 		AudioManager.set_voice_volume_linear(voice_volume)
-	# Uniform canvas scale. Stretch mode stays disabled, so window size never
-	# rescales the UI; this factor is the only thing that does.
+	# Extra uniform UI zoom on top of the window stretch (canvas_items/expand,
+	# which already fills the window on resize). This factor lets the player
+	# nudge overall UI size independently of the window.
 	var window := get_window()
 	if window:
 		window.content_scale_factor = ui_scale

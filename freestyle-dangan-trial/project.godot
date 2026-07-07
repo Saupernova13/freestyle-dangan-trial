@@ -31,19 +31,21 @@ Settings="*res://scripts/core/Settings.gd"
 ConcentrateGauge="*res://scripts/core/ConcentrateGauge.gd"
 GameRandom="*res://scripts/core/GameRandom.gd"
 
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
-
 [display]
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 window/vsync/vsync_mode=0
 
 [dotnet]
 
 project/assembly_name="freestyle-dangan-trial"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 
 [importer_defaults]
 

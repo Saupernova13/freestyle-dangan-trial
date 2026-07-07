@@ -12,6 +12,10 @@ const EXTRACT_DIR := "user://trials/extracted/"
 var current_trial: Dictionary = {}
 var current_trial_path: String = ""
 
+## Typed view of the loaded trial (see scripts/core/trial/model/). Null until
+## a trial has loaded successfully.
+var manifest: TrialManifest = null
+
 ## Populated by load_trial() on failure so the caller (start menu, trial room)
 ## can surface a useful message to the user. Empty when the last load succeeded.
 var last_load_error: String = ""
@@ -56,6 +60,7 @@ func load_trial(file_path: String) -> bool:
 		return false
 
 	current_trial = trial_data
+	manifest = TrialManifest.from_dict(trial_data)
 	current_trial_path = file_path
 	Log.info("TrialLoader", "Trial loaded: %s" % trial_data.get("trialName", "Unnamed"))
 	return true
@@ -119,6 +124,7 @@ func get_character_ids() -> Array:
 
 func _reset_trial_state() -> void:
 	current_trial = {}
+	manifest = null
 	current_trial_path = ""
 	characters.clear()
 	_pending_images.clear()
@@ -191,6 +197,7 @@ func _load_in_thread(file_path: String) -> void:
 		return
 
 	current_trial = trial_data
+	manifest = TrialManifest.from_dict(trial_data)
 	current_trial_path = file_path
 
 	# --- Phase 3: Load character Images (65 -> 95%) ---

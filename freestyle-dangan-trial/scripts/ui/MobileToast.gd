@@ -21,7 +21,9 @@ const _DEFAULT_DURATION: float = 3.0
 ## so the caller can dismiss it early. Not named show() — CanvasLayer.show() is a
 ## built-in, and a static override would shadow it.
 ##   MobileToast.show_message(self, "Trial file failed to load", true)
-static func show_message(host: Node, message: String, is_error: bool = false, duration: float = _DEFAULT_DURATION) -> CanvasLayer:
+static func show_message(
+	host: Node, message: String, is_error: bool = false, duration: float = _DEFAULT_DURATION
+) -> CanvasLayer:
 	if host == null or not is_instance_valid(host):
 		push_warning("MobileToast.show: invalid host, message was: " + message)
 		return null

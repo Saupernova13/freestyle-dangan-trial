@@ -1,0 +1,15 @@
+# gdlint (gdtoolkit) configuration for the engine.
+#
+# Deviations from defaults, and why:
+# - max-line-length 120: the codebase reads fine at 120 and 100 forced
+#   awkward wraps in HUD spec tables and format strings.
+# - class-definitions-order disabled: the existing files group members by
+#   feature (signals/vars interleaved near the code that uses them), which
+#   is deliberate; reordering dozens of sites mechanically would hurt
+#   reviewability for zero behavior gain.
+# - max-returns 10: line-type/state dispatch functions legitimately use
+#   early returns.
+disable:
+  - class-definitions-order
+max-line-length: 120
+max-returns: 10

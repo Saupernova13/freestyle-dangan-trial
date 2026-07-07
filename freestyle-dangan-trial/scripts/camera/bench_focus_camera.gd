@@ -155,7 +155,13 @@ func _input(event):
 				mouse_button_pressed = false
 				is_dragging = false
 
-	elif event is InputEventMouseMotion and mouse_button_pressed and enable_free_look and not is_transitioning and not _is_free_look_blocked():
+	elif (
+		event is InputEventMouseMotion
+		and mouse_button_pressed
+		and enable_free_look
+		and not is_transitioning
+		and not _is_free_look_blocked()
+	):
 		# Offsets invert the drag delta so the view follows the finger/cursor.
 		current_free_look_offset.x -= event.relative.x * free_look_sensitivity
 		current_free_look_offset.y -= event.relative.y * free_look_sensitivity
@@ -190,7 +196,13 @@ func _input(event):
 				hold_direction = 0
 				active_touch_index = -1
 
-		elif event is InputEventScreenDrag and event.index == active_touch_index and enable_free_look and not is_transitioning and not _is_free_look_blocked():
+		elif (
+			event is InputEventScreenDrag
+			and event.index == active_touch_index
+			and enable_free_look
+			and not is_transitioning
+			and not _is_free_look_blocked()
+		):
 			touch_moved = true
 			# A real drag cancels the hold-to-repeat that a tap in a nav zone started.
 			if is_holding_touch and event.relative.length() > 10.0:

@@ -44,7 +44,10 @@ func load_trial(file_path: String) -> bool:
 		return false
 
 	if not TrialArchive.extract(file_path, EXTRACT_DIR):
-		last_load_error = "Trial archive could not be extracted. The file may be corrupt, unreadable, or you may lack storage permissions on this device."
+		last_load_error = (
+			"Trial archive could not be extracted. The file may be corrupt, "
+			+ "unreadable, or you may lack storage permissions on this device."
+		)
 		push_error(last_load_error)
 		return false
 

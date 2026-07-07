@@ -40,7 +40,9 @@ func open():
 	if _anim and _anim.has_animation("open"):
 		_anim.play("open")
 
-func _bind_slider(slider: HSlider, value_label: Label, initial: float, setter: Callable, formatter: Callable = Callable()) -> void:
+func _bind_slider(
+	slider: HSlider, value_label: Label, initial: float, setter: Callable, formatter: Callable = Callable()
+) -> void:
 	var format := formatter if formatter.is_valid() else func(v): return _format_value(v, slider.max_value)
 	slider.value = initial
 	value_label.text = format.call(initial)

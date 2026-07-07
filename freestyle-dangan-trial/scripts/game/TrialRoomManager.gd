@@ -6,7 +6,9 @@ extends Node3D
 
 @onready var trial_posts = $Trial_Posts/Trial_Benches
 @onready var name_label = get_node("../UI/Conversation_UI/Control_Center_Name_Label/Label_Center_Name")
-@onready var portrait_rect = get_node("../UI/Conversation_UI/Panel_Top_Left/Control_Top_Left/TextureRect_Speaker_Portrait")
+@onready var portrait_rect = get_node(
+	"../UI/Conversation_UI/Panel_Top_Left/Control_Top_Left/TextureRect_Speaker_Portrait"
+)
 @onready var dialogue_label = get_node("../UI/Conversation_UI/RichTextLabel_Bottom_Speech")
 @onready var camera = get_node_or_null("../Camera3D")
 
@@ -165,8 +167,10 @@ func _on_trial_ended():
 # Called by the bench-focus camera (player free-look) and MinigameBase.
 # ---------------------------------------------------------------------------
 func on_bench_focused(bench_index: int):
-	if ScriptDirector.current_state == ScriptDirector.State.WAITING_FOR_ADVANCE or \
-	   ScriptDirector.current_state == ScriptDirector.State.DIALOGUE:
+	if (
+		ScriptDirector.current_state == ScriptDirector.State.WAITING_FOR_ADVANCE
+		or ScriptDirector.current_state == ScriptDirector.State.DIALOGUE
+	):
 		return
 
 	var char_data: Dictionary = _stage.character_at_bench(bench_index)

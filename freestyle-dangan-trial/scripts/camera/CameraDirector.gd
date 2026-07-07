@@ -74,7 +74,9 @@ func execute_motion(motion_data: Dictionary, target_bench_index: int = -1):
 	var handler: Callable = _motions.get(motion_type, _finish_immediately)
 	handler.call(target_bench_index, duration, _parse_ease(easing_str), _parse_trans(easing_str))
 
-func _finish_immediately(_bench_index: int, _duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType):
+func _finish_immediately(
+	_bench_index: int, _duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType
+):
 	_finish_motion()
 
 func _execute_cut(bench_index: int, _duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType):
@@ -88,14 +90,26 @@ func _execute_pan(bench_index: int, duration: float, _ease_type: Tween.EaseType,
 	await get_tree().create_timer(duration).timeout
 	_finish_motion()
 
-func _execute_zoom(_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType, target_fov: float):
+func _execute_zoom(
+	_bench_index: int,
+	duration: float,
+	ease_type: Tween.EaseType,
+	trans_type: Tween.TransitionType,
+	target_fov: float
+):
 	var tween = _camera.create_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)
 	tween.tween_property(_camera, "fov", target_fov, duration)
 	tween.finished.connect(_finish_motion)
 
-func _execute_shake(_bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType, intensity: float = 0.02):
+func _execute_shake(
+	_bench_index: int,
+	duration: float,
+	_ease_type: Tween.EaseType,
+	_trans_type: Tween.TransitionType,
+	intensity: float = 0.02
+):
 	var original_pos = _camera.global_position
 	var elapsed = 0.0
 	while elapsed < duration:
@@ -110,7 +124,9 @@ func _execute_shake(_bench_index: int, duration: float, _ease_type: Tween.EaseTy
 	_camera.global_position = original_pos
 	_finish_motion()
 
-func _execute_dramatic_zoom(bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType):
+func _execute_dramatic_zoom(
+	bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType
+):
 	if _bench_camera and bench_index >= 0:
 		_bench_camera.jump_to_bench(bench_index, true)
 
@@ -142,7 +158,9 @@ func _execute_overhead(_bench_index: int, duration: float, ease_type: Tween.Ease
 	tween.tween_property(_camera, "rotation", overhead_rot, duration)
 	tween.finished.connect(_finish_motion)
 
-func _execute_low_angle(_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType):
+func _execute_low_angle(
+	_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType
+):
 	var low_pos = _camera.global_position + Vector3(0, -0.3, 0)
 	var low_rot = _camera.rotation + Vector3(0.2, 0, 0)
 	var tween = _camera.create_tween()
@@ -153,7 +171,13 @@ func _execute_low_angle(_bench_index: int, duration: float, ease_type: Tween.Eas
 	tween.tween_property(_camera, "rotation", low_rot, duration)
 	tween.finished.connect(_finish_motion)
 
-func _execute_dolly(_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType, distance: float):
+func _execute_dolly(
+	_bench_index: int,
+	duration: float,
+	ease_type: Tween.EaseType,
+	trans_type: Tween.TransitionType,
+	distance: float
+):
 	var forward = -_camera.global_transform.basis.z
 	var target_pos = _camera.global_position + forward * distance
 	var tween = _camera.create_tween()
@@ -163,7 +187,13 @@ func _execute_dolly(_bench_index: int, duration: float, ease_type: Tween.EaseTyp
 	tween.finished.connect(_finish_motion)
 
 ## Rotate the camera by a relative delta (radians per axis) over duration.
-func _execute_rotate(_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType, delta_rot: Vector3):
+func _execute_rotate(
+	_bench_index: int,
+	duration: float,
+	ease_type: Tween.EaseType,
+	trans_type: Tween.TransitionType,
+	delta_rot: Vector3
+):
 	var target_rot = _camera.rotation + delta_rot
 	var tween = _camera.create_tween()
 	tween.set_ease(ease_type)
@@ -172,7 +202,13 @@ func _execute_rotate(_bench_index: int, duration: float, ease_type: Tween.EaseTy
 	tween.finished.connect(_finish_motion)
 
 ## Translate the camera by a local-space offset (x = right, y = up) over duration.
-func _execute_translate(_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType, local_offset: Vector3):
+func _execute_translate(
+	_bench_index: int,
+	duration: float,
+	ease_type: Tween.EaseType,
+	trans_type: Tween.TransitionType,
+	local_offset: Vector3
+):
 	var basis = _camera.global_transform.basis
 	var world_offset = basis.x * local_offset.x + basis.y * local_offset.y + basis.z * local_offset.z
 	var target_pos = _camera.global_position + world_offset
@@ -182,7 +218,9 @@ func _execute_translate(_bench_index: int, duration: float, ease_type: Tween.Eas
 	tween.tween_property(_camera, "global_position", target_pos, duration)
 	tween.finished.connect(_finish_motion)
 
-func _execute_cross_dissolve(_bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType):
+func _execute_cross_dissolve(
+	_bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType
+):
 	var canvas = CanvasLayer.new()
 	canvas.layer = 20
 	add_child(canvas)
@@ -200,13 +238,17 @@ func _execute_cross_dissolve(_bench_index: int, duration: float, _ease_type: Twe
 		_finish_motion()
 	)
 
-func _execute_tracking(bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType):
+func _execute_tracking(
+	bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType
+):
 	if _bench_camera and bench_index >= 0:
 		_bench_camera.jump_to_bench(bench_index, true)
 	await get_tree().create_timer(duration).timeout
 	_finish_motion()
 
-func _execute_dutch_tilt(_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType):
+func _execute_dutch_tilt(
+	_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType
+):
 	var tilt_angle = deg_to_rad(15.0)
 	var original_z = _camera.rotation.z
 	var tween = _camera.create_tween()

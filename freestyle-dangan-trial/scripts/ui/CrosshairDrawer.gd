@@ -16,9 +16,33 @@ func _draw():
 	draw_arc(center, radius, 0, TAU, 32, color, ring_thickness, true)
 	draw_arc(center, inner_radius, 0, TAU, 16, color, line_width, true)
 
-	draw_line(Vector2(center.x, center.y - radius - 2), Vector2(center.x, center.y - inner_radius - 2), color, line_width, true)
-	draw_line(Vector2(center.x, center.y + inner_radius + 2), Vector2(center.x, center.y + radius + 2), color, line_width, true)
-	draw_line(Vector2(center.x - radius - 2, center.y), Vector2(center.x - inner_radius - 2, center.y), color, line_width, true)
-	draw_line(Vector2(center.x + inner_radius + 2, center.y), Vector2(center.x + radius + 2, center.y), color, line_width, true)
+	draw_line(
+		Vector2(center.x, center.y - radius - 2),
+		Vector2(center.x, center.y - inner_radius - 2),
+		color,
+		line_width,
+		true
+	)
+	draw_line(
+		Vector2(center.x, center.y + inner_radius + 2),
+		Vector2(center.x, center.y + radius + 2),
+		color,
+		line_width,
+		true
+	)
+	draw_line(
+		Vector2(center.x - radius - 2, center.y),
+		Vector2(center.x - inner_radius - 2, center.y),
+		color,
+		line_width,
+		true
+	)
+	draw_line(
+		Vector2(center.x + inner_radius + 2, center.y),
+		Vector2(center.x + radius + 2, center.y),
+		color,
+		line_width,
+		true
+	)
 
 	draw_circle(center, 2.0, color)

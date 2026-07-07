@@ -17,7 +17,10 @@ static func fade_out(node: CanvasItem, duration: float = 0.3, free_after: bool =
 	var tween := node.create_tween()
 	tween.tween_property(node, "modulate:a", 0.0, duration)
 	if free_after:
-		tween.finished.connect(func(): if is_instance_valid(node): node.queue_free())
+		tween.finished.connect(func():
+			if is_instance_valid(node):
+				node.queue_free()
+		)
 	return tween
 
 static func fade_in_hold_out(
@@ -32,7 +35,10 @@ static func fade_in_hold_out(
 	tween.tween_interval(hold_duration)
 	tween.tween_property(node, "modulate:a", 0.0, out_duration)
 	if free_after:
-		tween.finished.connect(func(): if is_instance_valid(node): node.queue_free())
+		tween.finished.connect(func():
+			if is_instance_valid(node):
+				node.queue_free()
+		)
 	return tween
 
 # ---------------------------------------------------------------------------
@@ -54,7 +60,9 @@ static func scale_pop(
 		.set_ease(Tween.EASE_IN)
 	return tween
 
-static func flash_alpha(node: CanvasItem, loops: int = 2, dim: float = 0.5, bright: float = 1.0, step: float = 0.1) -> Tween:
+static func flash_alpha(
+	node: CanvasItem, loops: int = 2, dim: float = 0.5, bright: float = 1.0, step: float = 0.1
+) -> Tween:
 	var tween := node.create_tween()
 	tween.set_loops(loops)
 	tween.tween_property(node, "modulate:a", dim, step)
@@ -86,7 +94,10 @@ static func spawn_drift_popup(
 	tween.set_parallel(true)
 	tween.tween_property(label, "position:y", pos.y - drift, duration)
 	tween.tween_property(label, "modulate:a", 0.0, duration)
-	tween.finished.connect(func(): if is_instance_valid(label): label.queue_free())
+	tween.finished.connect(func():
+		if is_instance_valid(label):
+			label.queue_free()
+	)
 	return label
 
 # ---------------------------------------------------------------------------
@@ -127,7 +138,10 @@ static func shatter_rect(
 				.set_ease(Tween.EASE_OUT)
 			tween.tween_property(shard, "rotation", rot_speed * dur, dur)
 			tween.tween_property(shard, "modulate:a", 0.0, dur).set_ease(Tween.EASE_IN)
-			tween.finished.connect(func(): if is_instance_valid(shard): shard.queue_free())
+			tween.finished.connect(func():
+				if is_instance_valid(shard):
+					shard.queue_free()
+			)
 
 ## Radial burst of small square shards (used for break particles).
 static func spawn_burst_particles(
@@ -156,7 +170,10 @@ static func spawn_burst_particles(
 		var tween = shard.create_tween().set_parallel(true)
 		tween.tween_property(shard, "position", shard.position + vel * dur, dur).set_ease(Tween.EASE_OUT)
 		tween.tween_property(shard, "modulate:a", 0.0, dur).set_ease(Tween.EASE_IN)
-		tween.finished.connect(func(): if is_instance_valid(shard): shard.queue_free())
+		tween.finished.connect(func():
+			if is_instance_valid(shard):
+				shard.queue_free()
+		)
 
 ## Full-screen shatter overlay. Builds its own CanvasLayer, shatters, frees itself.
 static func screen_shatter(
@@ -205,7 +222,10 @@ static func screen_shatter(
 
 	# Clean up the host canvas once the last shard fades.
 	var cleanup_timer := host.get_tree().create_timer(longest_dur + 0.1)
-	cleanup_timer.timeout.connect(func(): if is_instance_valid(canvas): canvas.queue_free())
+	cleanup_timer.timeout.connect(func():
+		if is_instance_valid(canvas):
+			canvas.queue_free()
+	)
 
 # ---------------------------------------------------------------------------
 # Misc overlays
@@ -219,5 +239,8 @@ static func screen_flash(parent: Node, color: Color, duration: float = 0.3) -> C
 	parent.add_child(flash)
 	var tween := flash.create_tween()
 	tween.tween_property(flash, "color:a", 0.0, duration)
-	tween.finished.connect(func(): if is_instance_valid(flash): flash.queue_free())
+	tween.finished.connect(func():
+		if is_instance_valid(flash):
+			flash.queue_free()
+	)
 	return flash

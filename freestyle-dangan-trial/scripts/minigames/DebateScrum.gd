@@ -86,7 +86,9 @@ func _show_argument(index: int):
 	_update_progress_bar(float(index) / float(arguments.size()))
 	var arg = arguments[index]
 
-	_opposition_label.text = _format_character_line(arg.get("oppositionStatement", "..."), arg.get("oppositionCharacterId", ""))
+	_opposition_label.text = _format_character_line(
+		arg.get("oppositionStatement", "..."), arg.get("oppositionCharacterId", "")
+	)
 	_defense_label.text = _format_character_line(arg.get("defenseStatement", ""), arg.get("defenseCharacterId", ""))
 
 	var opp_audio = arg.get("oppositionAudioFile", "")

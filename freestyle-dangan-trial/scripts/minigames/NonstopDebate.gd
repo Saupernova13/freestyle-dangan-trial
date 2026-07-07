@@ -72,7 +72,13 @@ func start():
 
 	await _show_bullet_preview()
 
-	Log.info("NonstopDebate", "Started with %d main lines, %d white noise lines, %ss limit" % [_main_lines.size(), _white_noise_lines.size(), time_limit])
+	Log.info(
+		"NonstopDebate",
+		(
+			"Started with %d main lines, %d white noise lines, %ss limit"
+			% [_main_lines.size(), _white_noise_lines.size(), time_limit]
+		)
+	)
 
 func _build_overlay():
 	# Scene-driven — see scenes/minigames/nonstop_debate_overlay.tscn for the
@@ -134,7 +140,9 @@ func _activate_slow_time():
 		vig_canvas.add_child(_slow_vignette)
 
 	var tween = create_tween()
-	tween.tween_property(_slow_vignette, "color:a", MinigameConfig.SLOW_VIGNETTE_ALPHA, MinigameConfig.SLOW_VIGNETTE_FADE_IN)
+	tween.tween_property(
+		_slow_vignette, "color:a", MinigameConfig.SLOW_VIGNETTE_ALPHA, MinigameConfig.SLOW_VIGNETTE_FADE_IN
+	)
 
 func _deactivate_slow_time():
 	_is_slow_time = false

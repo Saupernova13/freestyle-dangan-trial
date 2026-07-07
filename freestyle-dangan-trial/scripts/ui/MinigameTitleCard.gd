@@ -94,9 +94,11 @@ func _animate() -> void:
 		_anim.play("bg_fade_in")
 
 	var tween := create_tween()
-	tween.tween_property(_mount, "position:x", center_x, fly_in_duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	var fly_in := tween.tween_property(_mount, "position:x", center_x, fly_in_duration)
+	fly_in.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	tween.tween_interval(hold_duration)
-	tween.tween_property(_mount, "position:x", end_x, fly_out_duration).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+	var fly_out := tween.tween_property(_mount, "position:x", end_x, fly_out_duration)
+	fly_out.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
 	tween.parallel().tween_callback(func():
 		if _anim.has_animation("bg_fade_out"):
 			_anim.play("bg_fade_out")

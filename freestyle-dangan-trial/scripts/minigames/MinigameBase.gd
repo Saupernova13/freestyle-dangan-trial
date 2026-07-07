@@ -26,7 +26,8 @@ const _HUD_SPECS := {
 	HudComponent.CONCENTRATE_GAUGE: {"scene": "concentrate_gauge", "show": "show_gauge", "hide": "hide_gauge"},
 	HudComponent.TIMER_DISPLAY: {"scene": "timer_display", "show": "", "hide": "hide_timer"},
 	HudComponent.CROSSHAIR: {"scene": "crosshair", "show": "show_crosshair", "hide": "hide_crosshair"},
-	HudComponent.TRUTH_BULLET_SELECTOR: {"scene": "truth_bullet_selector", "show": "show_selector", "hide": "hide_selector"},
+	HudComponent.TRUTH_BULLET_SELECTOR:
+	{"scene": "truth_bullet_selector", "show": "show_selector", "hide": "hide_selector"},
 }
 
 var minigame_data: MinigameData = null

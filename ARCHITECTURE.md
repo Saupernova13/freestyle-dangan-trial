@@ -114,10 +114,12 @@ including why 9-slice sources must stay at design resolution, live in
 
 ## Known debt
 
-- `scenes/thh_trial_room_1.tscn` embeds ~97MB of mesh data. It stays under
-  GitHub's hard limit but should eventually reference external mesh
-  resources (the untracked `thh_default_trial_room.tscn` already exceeds the
-  limit for the same reason).
+- `scenes/thh_trial_room_1.tscn` — the room the runtime actually loads
+  (`LoadingScreen.gd`, `vbox_selector.gd`) — embeds ~97MB of mesh data. It
+  stays under GitHub's hard limit but should eventually reference external
+  mesh resources. The gitignored `thh_default_trial_room.tscn` is referenced
+  by nothing at runtime; it is a local-only authoring asset kept out of git
+  because its embedded meshes exceed GitHub's file size limit.
 - A few authored fields aren't wired up yet: `characterSpotlight` (reserved for
   an unimplemented lighting effect), white-noise debate lines (disabled pending
   a layout rework), and the lie/negative-bullet toggle (`TruthBulletManager`

@@ -10,10 +10,15 @@ export_credentials.cfg
 .mono/
 mono_crash.*.json
 
-# Source art too large for git (scenes embed the imported meshes)
+# Source art too large for git (scenes embed the imported meshes). The one
+# exception is models/textures/1x/: the committed trial-room scene references
+# those textures by res:// path, so CI needs them to export the engine.
 *.blend
 *.exr
-/freestyle-dangan-trial/models
+/freestyle-dangan-trial/models/*
+!/freestyle-dangan-trial/models/textures/
+/freestyle-dangan-trial/models/textures/*
+!/freestyle-dangan-trial/models/textures/1x/
 /freestyle-dangan-trial/PSDs
 
 # Scene carries 500MB+ of embedded mesh data — exceeds GitHub's file size

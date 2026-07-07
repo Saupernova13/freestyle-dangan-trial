@@ -9,6 +9,14 @@ separately in `schema/trial.schema.json`.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-07-08
+
+### Fixed
+- Engine: startup crash on the Windows build (`Nonexistent function
+  'character_at_bench' in base 'Nil'`) when the bench-focus camera fired its
+  initial focus before `TrialRoomManager` had assigned `_stage`.
+  `on_bench_focused` now no-ops until the stage is ready.
+
 ## [1.1.0] - 2026-07-07
 
 ### Added

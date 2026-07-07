@@ -167,6 +167,13 @@ func _on_trial_ended():
 # Called by the bench-focus camera (player free-look) and MinigameBase.
 # ---------------------------------------------------------------------------
 func on_bench_focused(bench_index: int):
+	# The bench-focus camera calls this from its own _ready(), which can run
+	# before this manager finishes _ready() and assigns _stage (there is an
+	# await'd frame first). Ignore focus events until the stage exists — the
+	# first dialogue line sets the speaker name/portrait anyway.
+	if _stage == null:
+		return
+
 	if (
 		ScriptDirector.current_state == ScriptDirector.State.WAITING_FOR_ADVANCE
 		or ScriptDirector.current_state == ScriptDirector.State.DIALOGUE

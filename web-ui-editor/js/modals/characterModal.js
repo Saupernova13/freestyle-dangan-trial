@@ -379,7 +379,7 @@ export async function trySaveChar() {
           savedSprites.push(s);
         } catch (error) {
           console.error(`Failed to save sprite ${k + 1}:`, error);
-          throw new Error(`Failed to save sprite ${k + 1}: ${error.message}`);
+          throw new Error(`Failed to save sprite ${k + 1}: ${error.message}`, { cause: error });
         }
       } else {
         savedSprites.push(null);

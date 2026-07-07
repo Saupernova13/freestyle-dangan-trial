@@ -26,7 +26,7 @@ export function updateFloatingAddButton() {
   floatingButton.style.display = 'none';
 
   // Determine which button to show based on state.activeView
-  let buttonConfig = null;
+  let buttonConfig;
 
   switch (state.activeView) {
     case 'script':

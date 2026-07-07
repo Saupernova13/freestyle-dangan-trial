@@ -34,7 +34,7 @@ export function renderCastGrid() {
 
     if (c) {
       // Character exists - show sprite and name
-      let spriteHtml = '';
+      let spriteHtml;
       if (c.sprites && c.sprites[0] && c.sprites[0].dataURL) {
         spriteHtml = `<img src="${c.sprites[0].dataURL}" class="blk-ppic" alt="Character sprite">`;
       } else {

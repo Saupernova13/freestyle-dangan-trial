@@ -31,6 +31,10 @@ Settings="*res://scripts/core/Settings.gd"
 ConcentrateGauge="*res://scripts/core/ConcentrateGauge.gd"
 GameRandom="*res://scripts/core/GameRandom.gd"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
+
 [display]
 
 window/size/viewport_width=1280

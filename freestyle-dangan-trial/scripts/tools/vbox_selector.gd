@@ -29,7 +29,7 @@ func _input(event: InputEvent) -> void:
 				update_shader()
 				get_tree().root.set_input_as_handled()
 			KEY_ENTER:
-				print("Selected: ", current_index)
+				Log.debug("VboxSelector", "Selected: %d" % current_index)
 				get_tree().root.set_input_as_handled()
 
 func update_shader() -> void:

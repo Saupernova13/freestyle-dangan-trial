@@ -32,7 +32,7 @@ func populate(character_ids: Array) -> void:
 			character_id = character_ids[bench_index]
 
 		if character_id.is_empty() or character_id == "null":
-			print("No character at bench ", bench_index)
+			Log.debug("CharacterStage", "No character at bench %d" % bench_index)
 			continue
 		_populate_bench(bench_index, character_id)
 
@@ -58,7 +58,7 @@ func _populate_bench(bench_index: int, character_id: String) -> void:
 	mesh_instance.material_override = _make_sprite_material(texture)
 	_fit_quad_to_texture(mesh_instance, texture)
 	_ensure_black_backplane(mesh_instance)
-	print("Loaded character: ", char_data.get("name", ""), " at bench ", bench_index)
+	Log.debug("CharacterStage", "Loaded character: %s at bench %d" % [char_data.get("name", ""), bench_index])
 
 ## Swap a bench's sprite to a different sprite index (e.g. an emotion change).
 func update_sprite(bench_index: int, character_id: String, sprite_index: int) -> void:

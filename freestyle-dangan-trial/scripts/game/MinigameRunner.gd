@@ -33,7 +33,7 @@ func run(minigame_data: Dictionary) -> void:
 	var game_type = minigame_data.get("gameType", "")
 
 	if not MINIGAME_SCRIPTS.has(game_type):
-		print("MinigameRunner: Unknown minigame type: ", game_type)
+		Log.warn("MinigameRunner", "Unknown minigame type: %s" % game_type)
 		await get_tree().create_timer(1.0).timeout
 		ScriptDirector.on_minigame_finished(true)
 		return

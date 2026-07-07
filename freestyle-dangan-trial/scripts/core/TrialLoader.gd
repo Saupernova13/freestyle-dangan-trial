@@ -27,7 +27,7 @@ var _thread: Thread = null
 
 ## Load a trial from a .drtrial file. Sets last_load_error on failure.
 func load_trial(file_path: String) -> bool:
-	print("Loading trial from: ", file_path)
+	Log.info("TrialLoader", "Loading trial from: %s" % file_path)
 	last_load_error = ""
 	_reset_trial_state()
 
@@ -49,7 +49,7 @@ func load_trial(file_path: String) -> bool:
 
 	current_trial = trial_data
 	current_trial_path = file_path
-	print("Trial loaded: ", trial_data.get("trialName", "Unnamed"))
+	Log.info("TrialLoader", "Trial loaded: %s" % trial_data.get("trialName", "Unnamed"))
 	return true
 
 ## Async version of load_trial(). Runs extraction, JSON parse, and sprite

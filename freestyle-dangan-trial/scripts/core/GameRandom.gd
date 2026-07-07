@@ -18,7 +18,7 @@ func _ready() -> void:
 		var entropy := RandomNumberGenerator.new()
 		entropy.randomize()
 		seed_value = entropy.randi()
-	print("GameRandom: session seed = ", seed_value)
+	Log.info("GameRandom", "Session seed = %d" % seed_value)
 
 ## Returns a fresh RNG for `label`. Each call with the same label yields a
 ## distinct stream (so repeated plays of one minigame differ), while the same

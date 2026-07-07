@@ -30,7 +30,7 @@ func start():
 	setup_standard_ui([HudComponent.INFLUENCE_GAUGE, HudComponent.TIMER_DISPLAY])
 	InfluenceGauge.reset()
 	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
-	print("HangmansGambit: Answer is '", answer_key, "' (", answer_key.length(), " letters)")
+	Log.debug("HangmansGambit", "Answer is '%s' (%d letters)" % [answer_key, answer_key.length()])
 
 func _build_overlay():
 	# Scene-driven — see scenes/minigames/hangmans_gambit_overlay.tscn for the

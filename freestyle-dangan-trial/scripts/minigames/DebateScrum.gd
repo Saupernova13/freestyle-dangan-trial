@@ -31,7 +31,7 @@ func start():
 	setup_standard_ui([HudComponent.INFLUENCE_GAUGE, HudComponent.TIMER_DISPLAY])
 	InfluenceGauge.reset()
 	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
-	print("DebateScrum: ", arguments.size(), " arguments")
+	Log.info("DebateScrum", "%d arguments" % arguments.size())
 
 	await get_tree().create_timer(0.5).timeout
 	_show_argument(0)

@@ -44,7 +44,7 @@ func start():
 	TruthBulletManager.load_bullets()
 	connect_managed(InputManager.shoot_pressed, _on_shoot)
 
-	print("MassPanicDebate: ", line_groups.size(), " groups, 3 speakers")
+	Log.info("MassPanicDebate", "%d groups, 3 speakers" % line_groups.size())
 
 func _build_overlay():
 	# Scene-driven — see scenes/minigames/mass_panic_debate_overlay.tscn.

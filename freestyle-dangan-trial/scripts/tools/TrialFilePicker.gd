@@ -37,7 +37,7 @@ func _request_storage_permissions() -> void:
 	# permission prompt is dismissed.
 	if OS.has_method("request_permissions"):
 		var granted = OS.request_permissions()
-		print("TrialFilePicker: requested permissions, granted=", granted)
+		Log.info("TrialFilePicker", "Requested permissions, granted=%s" % str(granted))
 
 func _open_desktop_picker():
 	_file_dialog = FileDialog.new()
@@ -98,7 +98,7 @@ func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, _
 		return
 
 	var picked = selected_paths[0]
-	print("TrialFilePicker: SAF returned path: ", picked)
+	Log.info("TrialFilePicker", "SAF returned path: %s" % picked)
 	var local_copy = _copy_to_user_dir(picked)
 	if local_copy.is_empty():
 		var msg = "Could not read selected file. %s" % _last_copy_error_detail
@@ -120,7 +120,7 @@ func _copy_to_user_dir(source_path: String) -> String:
 	var data := FileAccess.get_file_as_bytes(source_path)
 	var err := FileAccess.get_open_error()
 	if data.is_empty():
-		print("TrialFilePicker: get_file_as_bytes returned empty (err %d), trying FileAccess.open" % err)
+		Log.warn("TrialFilePicker", "get_file_as_bytes returned empty (err %d), trying FileAccess.open" % err)
 		var src := FileAccess.open(source_path, FileAccess.READ)
 		var open_err := FileAccess.get_open_error()
 		if src == null:
@@ -163,7 +163,7 @@ func _copy_to_user_dir(source_path: String) -> String:
 		push_error("Imported file is 0 bytes: %s" % IMPORTED_TRIAL_PATH)
 		return ""
 
-	print("TrialFilePicker: copied %d bytes from %s to %s" % [size, source_path, IMPORTED_TRIAL_PATH])
+	Log.info("TrialFilePicker", "Copied %d bytes from %s to %s" % [size, source_path, IMPORTED_TRIAL_PATH])
 	return IMPORTED_TRIAL_PATH
 
 func _open_legacy_directory_scan():

@@ -70,7 +70,7 @@ func _ready():
 		push_error("No bench markers found! Cannot initialize camera controller.")
 		return
 
-	print("Bench Focus Camera initialized with %d markers" % bench_markers.size())
+	Log.info("BenchFocusCamera", "Initialized with %d markers" % bench_markers.size())
 	focus_on_bench(0, false)
 
 func _is_nav_blocked() -> bool:
@@ -247,7 +247,7 @@ func focus_on_bench(index: int, animate: bool):
 		quaternion = target_rotation
 		is_transitioning = false
 
-	print("Focused on bench %d: %s" % [index + 1, target_marker.name])
+	Log.debug("BenchFocusCamera", "Focused on bench %d: %s" % [index + 1, target_marker.name])
 
 	var trial_manager = get_node_or_null("../TrialRoom")
 	if trial_manager and trial_manager.has_method("on_bench_focused"):

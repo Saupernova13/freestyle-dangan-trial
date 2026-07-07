@@ -72,7 +72,7 @@ func start():
 
 	await _show_bullet_preview()
 
-	print("NonstopDebate: Started with ", _main_lines.size(), " main lines, ", _white_noise_lines.size(), " white noise lines, ", time_limit, "s limit")
+	Log.info("NonstopDebate", "Started with %d main lines, %d white noise lines, %ss limit" % [_main_lines.size(), _white_noise_lines.size(), time_limit])
 
 func _build_overlay():
 	# Scene-driven — see scenes/minigames/nonstop_debate_overlay.tscn for the
@@ -368,7 +368,7 @@ func _show_evidence_card(bullet_id: String) -> Control:
 func _on_wrong_hit(panel: DebateTextPanel):
 	if _solved or _has_finished:
 		return
-	print("NonstopDebate: Wrong bullet!")
+	Log.debug("NonstopDebate", "Wrong bullet!")
 	AudioManager.stop_voice()
 	InfluenceGauge.take_damage(difficulty)
 

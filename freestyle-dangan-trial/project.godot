@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Log="*res://scripts/core/Log.gd"
 TrialLoader="*res://scripts/core/TrialLoader.gd"
 ScriptDirector="*res://scripts/core/ScriptDirector.gd"
 AudioManager="*res://scripts/core/AudioManager.gd"

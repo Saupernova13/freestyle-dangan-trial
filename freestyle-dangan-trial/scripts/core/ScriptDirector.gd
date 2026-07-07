@@ -53,10 +53,10 @@ func _ready():
 func start_trial():
 	script_lines = TrialLoader.get_script_lines()
 	if script_lines.is_empty():
-		print("ScriptDirector: No script lines found")
+		Log.warn("ScriptDirector", "No script lines found")
 		return
 
-	print("ScriptDirector: Starting trial with ", script_lines.size(), " lines")
+	Log.info("ScriptDirector", "Starting trial with %d lines" % script_lines.size())
 	current_line_index = -1
 	_transition_to(State.DIALOGUE)
 	advance_to_next_line()
@@ -69,7 +69,7 @@ func advance_to_next_line():
 	current_line_index += 1
 
 	if current_line_index >= script_lines.size():
-		print("ScriptDirector: End of script reached")
+		Log.info("ScriptDirector", "End of script reached")
 		_transition_to(State.TRIAL_COMPLETE)
 		trial_ended.emit()
 		return
@@ -81,7 +81,7 @@ func advance_to_next_line():
 	if handler.is_valid():
 		handler.call(line)
 	else:
-		print("ScriptDirector: Unknown line type '", line.get("type", ""), "', skipping")
+		Log.warn("ScriptDirector", "Unknown line type '%s', skipping" % line.get("type", ""))
 		advance_to_next_line()
 
 func _handle_speaking_line(line: Dictionary):
@@ -107,7 +107,7 @@ func _play_line_audio(line: Dictionary) -> void:
 func _handle_minigame_line(line: Dictionary):
 	var minigame_id = line.get("minigameId", "")
 	if minigame_id.is_empty():
-		print("ScriptDirector: Minigame line missing minigameId, skipping")
+		Log.warn("ScriptDirector", "Minigame line missing minigameId, skipping")
 		advance_to_next_line()
 		return
 
@@ -119,7 +119,7 @@ func _handle_minigame_line(line: Dictionary):
 			break
 
 	if minigame_data.is_empty():
-		print("ScriptDirector: Minigame not found: ", minigame_id, ", skipping")
+		Log.warn("ScriptDirector", "Minigame not found: %s, skipping" % minigame_id)
 		advance_to_next_line()
 		return
 

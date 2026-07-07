@@ -1,0 +1,30 @@
+#!/bin/sh
+# Fast pre-commit checks on staged files only (<5s target; full checks live
+# in tools/check.sh). Opt in with:
+#   git config core.hooksPath .githooks
+
+set -u
+
+repo_root=$(git rev-parse --show-toplevel)
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+failed=0
+
+# --- Editor JS: eslint + prettier on staged files ---------------------------
+editor_js=$(printf '%s\n' "$staged" | grep '^web-ui-editor/js/.*\.js$' || true)
+if [ -n "$editor_js" ] && command -v npx >/dev/null 2>&1; then
+    rel=$(printf '%s\n' "$editor_js" | sed 's|^web-ui-editor/||')
+    (cd "$repo_root/web-ui-editor" && npx eslint $rel) || failed=1
+    (cd "$repo_root/web-ui-editor" && npx prettier --check $rel) || failed=1
+fi
+
+# --- Engine GDScript: gdlint on staged files (skip silently if missing) -----
+engine_gd=$(printf '%s\n' "$staged" | grep '^freestyle-dangan-trial/.*\.gd$' | grep -v '/addons/' || true)
+if [ -n "$engine_gd" ] && command -v gdlint >/dev/null 2>&1; then
+    (cd "$repo_root" && gdlint $engine_gd) || failed=1
+fi
+
+if [ "$failed" -ne 0 ]; then
+    echo "pre-commit: checks failed (bypass once with --no-verify if you must)"
+    exit 1
+fi
+exit 0

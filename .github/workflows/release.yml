@@ -1,41 +1,118 @@
 name: Release
 
-# Ships the single-file editor HTML for each version tag. A prebuilt Windows
-# engine binary is intentionally not produced here: the main scene depends on
-# the large texture/mesh assets that are gitignored (see .gitignore), so a
-# clean CI checkout cannot resolve them and `--export-release` crashes on the
-# missing resources. Engine builds are exported locally from a full checkout.
+# Builds the Windows and Android engine binaries for each version tag and
+# attaches them to the GitHub release. The web editor is NOT published here
+# (it is hosted via GitHub Pages). The trial-room textures the main scene
+# needs (models/textures/1x) are committed, so a clean checkout can export.
+#
+# workflow_dispatch runs the two export jobs as a build-only dry run; the
+# publish job is gated on tag refs so dispatch never creates a release.
 
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+env:
+  GODOT_VERSION: 4.5.1
+
 jobs:
-  editor:
+  windows-export:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web-ui-editor
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web-ui-editor/package-lock.json
-      - run: npm ci
-      - run: npm run build:single
-      - run: cp dist/index.html "trial-editor-${{ github.ref_name }}.html"
+      - name: Install Godot and export templates
+        run: |
+          curl -fsSL -o godot.zip \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          install -D "Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$HOME/.local/bin/godot"
+          curl -fsSL -o templates.tpz \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q templates.tpz
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mv templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+      - name: Import project
+        # Cold first import can exit nonzero while resources settle; the second
+        # pass is a cheap no-op when the first already succeeded.
+        run: |
+          godot --headless --path freestyle-dangan-trial --import || \
+          godot --headless --path freestyle-dangan-trial --import
+      - name: Export Windows build
+        run: |
+          mkdir -p freestyle-dangan-trial/builds/win
+          godot --headless --path freestyle-dangan-trial --export-release "Windows" builds/win/trial.exe
+          test -s freestyle-dangan-trial/builds/win/trial.exe
+      - name: Zip build
+        run: |
+          cd freestyle-dangan-trial/builds/win
+          zip -r "$GITHUB_WORKSPACE/CustomRonpa-windows-${GITHUB_REF_NAME}.zip" .
       - uses: actions/upload-artifact@v7
         with:
-          name: editor
-          path: web-ui-editor/trial-editor-${{ github.ref_name }}.html
+          name: windows-build
+          path: CustomRonpa-windows-*.zip
+          if-no-files-found: error
+
+  android-export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Godot and export templates
+        run: |
+          curl -fsSL -o godot.zip \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          install -D "Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$HOME/.local/bin/godot"
+          curl -fsSL -o templates.tpz \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q templates.tpz
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mv templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+      - name: Generate debug keystore and configure Godot editor settings
+        # The prebuilt-template Android export signs with the debug keystore and
+        # finds the SDK/keystore through the editor settings file. The GitHub
+        # runner ships the Android SDK at $ANDROID_SDK_ROOT.
+        run: |
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey \
+            -keypass android -keystore "$HOME/debug.keystore" \
+            -storepass android -dname "CN=Android Debug,O=Android,C=US" \
+            -validity 10000 -deststoretype pkcs12
+          mkdir -p "$HOME/.config/godot"
+          {
+            echo '[gd_resource type="EditorSettings" format=3]'
+            echo ''
+            echo '[resource]'
+            echo "export/android/android_sdk_path = \"${ANDROID_SDK_ROOT}\""
+            echo "export/android/debug_keystore = \"${HOME}/debug.keystore\""
+            echo 'export/android/debug_keystore_user = "androiddebugkey"'
+            echo 'export/android/debug_keystore_pass = "android"'
+          } > "$HOME/.config/godot/editor_settings-4.tres"
+      - name: Import project
+        run: |
+          godot --headless --path freestyle-dangan-trial --import || \
+          godot --headless --path freestyle-dangan-trial --import
+      - name: Export Android build
+        run: |
+          mkdir -p freestyle-dangan-trial/builds/android
+          godot --headless --path freestyle-dangan-trial --export-debug "Android" builds/android/CustomRonpa.apk
+          test -s freestyle-dangan-trial/builds/android/CustomRonpa.apk
+          cp freestyle-dangan-trial/builds/android/CustomRonpa.apk "CustomRonpa-android-${GITHUB_REF_NAME}.apk"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-build
+          path: CustomRonpa-android-*.apk
+          if-no-files-found: error
 
   release:
-    needs: [editor]
+    needs: [windows-export, android-export]
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -45,4 +122,5 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            trial-editor-${{ github.ref_name }}.html
+            CustomRonpa-windows-*.zip
+            CustomRonpa-android-*.apk

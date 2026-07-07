@@ -29,7 +29,7 @@ jobs:
       - run: npm ci
       - run: npm run build:single
       - run: cp dist/index.html "trial-editor-${{ github.ref_name }}.html"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: editor
           path: web-ui-editor/trial-editor-${{ github.ref_name }}.html

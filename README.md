@@ -114,9 +114,9 @@ auto-complete (placeholders for future mechanics):
 ### Web UI (authoring trials)
 
 **No install:** use the hosted editor at
-<https://saupernova13.github.io/freestyle-dangan-trial/>, or download the
-single-file offline editor from the
-[latest release](https://github.com/Saupernova13/freestyle-dangan-trial/releases).
+<https://saupernova13.github.io/freestyle-dangan-trial/>. For an offline copy,
+build the single-file editor yourself with `npm run build:single` (it writes a
+self-contained `dist/index.html`).
 
 **From source:** Node.js 18+, and a modern browser. Chromium (Chrome, Edge,
 Opera) can edit a trial folder on disk; Firefox and Safari work in browser
@@ -139,8 +139,10 @@ npm run dev        # open the printed URL
 
 ### Game engine (playing trials)
 
-Run from source (the engine ships as a Godot project; the trial-room assets
-are not distributed as a prebuilt binary):
+Download a prebuilt build from the
+[latest release](https://github.com/Saupernova13/freestyle-dangan-trial/releases):
+a self-contained **Windows** `.exe` (zipped) or an **Android** `.apk`
+(debug-signed — enable "install unknown apps" to sideload). Or run from source:
 
 ```bash
 cd freestyle-dangan-trial

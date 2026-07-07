@@ -90,11 +90,16 @@ change workflow. Never change the format on one side only.
 
 1. Update `CHANGELOG.md` (move Unreleased into a new version section).
 2. `git tag vX.Y.Z && git push origin vX.Y.Z`.
-3. The Release workflow builds the single-file editor HTML and attaches it to
-   the GitHub release. Engine binaries are not built in CI: the main scene
-   depends on the large texture/mesh assets that are gitignored, so a clean
-   checkout cannot export it. Export the engine locally from a full checkout
-   (`--export-release "Windows"`) if a desktop binary is needed.
+3. The Release workflow exports the engine and attaches two binaries to the
+   GitHub release: a zipped self-contained **Windows** `.exe` and a
+   debug-signed **Android** `.apk` (arm64, prebuilt template). The web editor
+   is not attached — it ships via GitHub Pages. Trigger the workflow manually
+   (`workflow_dispatch`) to dry-run the exports without publishing a release.
+
+The Android job generates a throwaway debug keystore in CI, so successive
+releases are not signed with a stable key; sideloaders may need to uninstall a
+previous build before installing a new one. Wire in a release keystore via
+repository secrets if you need stable signing.
 
 ## Commit messages
 

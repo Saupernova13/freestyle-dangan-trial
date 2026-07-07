@@ -9,6 +9,22 @@ separately in `schema/trial.schema.json`.
 
 ## [Unreleased]
 
+### Added
+- Releases now ship prebuilt engine binaries: a zipped self-contained Windows
+  `.exe` and a debug-signed Android `.apk` (arm64, prebuilt template, keystore
+  generated in CI). The release workflow also runs on `workflow_dispatch` as a
+  build-only dry run.
+- Committed `models/textures/1x/` (the trial-room textures the main scene
+  references) so a clean checkout can export the engine in CI.
+
+### Changed
+- The release workflow no longer attaches the web editor; the editor ships via
+  GitHub Pages and `npm run build:single` for offline use.
+- Editor toolchain bumped to ESLint 10, Vite 8, and Vitest 4; CI runs on
+  Node 22.
+- Windows export preset embeds the pck into a single `.exe`; the Android export
+  preset is named `Android` with package `za.co.raavivi.customronpa`.
+
 ## [1.0.0] - 2026-07-07
 
 First tagged release. Editor and engine were already feature-complete for

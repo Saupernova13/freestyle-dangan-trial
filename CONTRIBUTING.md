@@ -10,6 +10,20 @@ The project has two main components with different workflows.
 | `web-ui-editor/`          | Browser-based trial authoring tool     |
 | `freestyle-dangan-trial/` | Godot 4.5 trial engine                 |
 
+## Running all checks
+
+`tools/check.sh` (POSIX / Git Bash) and `tools/check.ps1` (PowerShell) run
+everything CI runs: editor lint + tests + build, engine gdlint, headless
+import, and the gdUnit4 suites. Steps whose tools are missing are skipped
+with a warning, so web-only contributors are not blocked.
+
+Optional but recommended: enable the fast pre-commit hook (eslint/prettier/
+gdlint on staged files only):
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Web UI (web-ui-editor)
 
 ### Setup
@@ -23,9 +37,7 @@ npm run dev
 ### Before you open a PR
 
 ```bash
-npm run lint    # must pass with no errors
-npm test        # must pass
-npm run build   # must succeed
+npm run check   # lint + tests + build, all must pass
 ```
 
 ### Guidelines
@@ -33,17 +45,54 @@ npm run build   # must succeed
 - Read `web-ui-editor/README.md` for the architecture and conventions.
 - Shared trial data goes through `state` (`js/core/state.js`) — never add new
   ambient globals.
-- Escape user-entered text with `escapeHtml()` before putting it in markup.
-- Put pure logic in DOM-free modules and add unit tests in `tests/`.
+- Write HTML via `setHtml()` from `js/ui/dom.js` (raw `innerHTML` assignment
+  is a lint error) and escape user-entered text with `escapeHtml()`.
+- Put pure logic in DOM-free modules and add unit tests in `tests/` (vitest
+  runs in a node environment — no DOM).
 - Functions referenced by inline `onclick` markup must be exported (the
   `js/main.js` bridge exposes them on `window`).
 
 ## Godot engine (freestyle-dangan-trial)
 
 - Open the project in Godot 4.5+ and run with F5.
-- GDScript style: 4-space indentation, snake_case functions/variables.
+- GDScript style: gdlint-enforced (see `freestyle-dangan-trial/gdlintrc`);
+  tab indentation, snake_case functions/variables, lines up to 120 chars.
 - UI belongs in `.tscn` scenes and animations in resource files — scripts only
   bind data and trigger animations.
+- Log through the `Log` autoload (`Log.info("Tag", "msg")`), not `print()`.
+  `Log.debug/info` are muted in release builds unless `DANGAN_VERBOSE=1`.
+
+### Engine tests (gdUnit4)
+
+Unit tests live in `freestyle-dangan-trial/tests/unit/` and run on gdUnit4
+(vendored at `addons/gdUnit4`, currently v6.1.3 — update by replacing the
+directory with a newer release tag). Run them with a Godot 4.5 binary:
+
+```powershell
+# Windows
+$env:GODOT_BIN = "C:\path\to\Godot_v4.5.1-stable_win64_console.exe"
+cd freestyle-dangan-trial
+.\addons\gdUnit4\runtest.cmd -a res://tests/unit
+```
+
+```bash
+# Linux/macOS
+GODOT_BIN=/path/to/godot bash freestyle-dangan-trial/addons/gdUnit4/runtest.sh -a res://tests/unit
+```
+
+## Changing the trial.json format
+
+`schema/trial.schema.json` is the contract between editor and engine — see
+"The trial.json contract" in [ARCHITECTURE.md](ARCHITECTURE.md) for the
+change workflow. Never change the format on one side only.
+
+## Releases
+
+1. Update `CHANGELOG.md` (move Unreleased into a new version section).
+2. `git tag vX.Y.Z && git push origin vX.Y.Z`.
+3. The Release workflow builds the single-file editor HTML and the Windows
+   engine zip and attaches both to the GitHub release. (Android is excluded
+   until signing secrets are configured.)
 
 ## Commit messages
 

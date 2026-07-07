@@ -60,9 +60,12 @@ js/
 ├── main.js                 # Entry point; bridges handlers onto window
 ├── app.js                  # Script editor view + app initialization
 ├── core/
-│   ├── constants.js        # Cast slot + minigame label constants
+│   ├── constants.js        # Cast slot + minigame label + format version constants
 │   ├── state.js            # Central mutable state (the only shared state)
 │   ├── storage.js          # File System Access API persistence
+│   ├── history.js          # Undo/redo snapshot stack (Ctrl+Z / Ctrl+Y)
+│   ├── trialSchema.js      # trial.json validator (mirrors schema/trial.schema.json)
+│   ├── trialSerialize.js   # state -> trial.json object assembly
 │   ├── listOps.js          # Shared list reorder/drag helpers
 │   └── minigameAudio.js    # Minigame voice-line file storage
 ├── export.js               # .drtrial (ZIP) packaging
@@ -94,8 +97,15 @@ Conventions:
 - **Rendered markup uses inline `onclick` handlers**, which resolve through
   `window`. `js/main.js` bridges every exported function onto `window`; if you
   add a handler referenced from markup, export it from its module.
-- **Escape user text** with `escapeHtml()` whenever interpolating it into
-  HTML attributes or content.
+- **Write HTML through `setHtml()`** (`js/ui/dom.js`) — raw `innerHTML`
+  assignment is an eslint error — and **escape user text** with `escapeHtml()`
+  whenever interpolating it into HTML attributes or content.
+- **State mutations are undoable for free.** Anything that persists through
+  `scheduleAutoSave()`/`autoSaveTrial()` is recorded by `core/history.js`;
+  no per-feature undo wiring is needed.
+- **trial.json shape changes go through the schema.** See "The trial.json
+  contract" in the repo-root ARCHITECTURE.md before touching
+  `trialSchema.js`, `trialSerialize.js`, or the format version.
 - **Pure logic belongs in `utils.js`** (or another DOM-free module) so it can
   be unit tested. Test files live in `tests/`.
 

@@ -18,7 +18,28 @@ trial-folder/
 ```
 
 `trial.json` is the contract between the two components. The editor writes it,
-`TrialLoader.gd` reads it. If you change one side, change the other.
+`TrialLoader.gd` reads it.
+
+## The trial.json contract
+
+The normative definition of the format lives in
+[`schema/trial.schema.json`](schema/trial.schema.json) (JSON Schema). Three
+things track it, and CI cross-checks all of them against the shared fixture
+trial in `freestyle-dangan-trial/tests/fixtures/minimal-trial/`:
+
+- the editor's runtime validator (`web-ui-editor/js/core/trialSchema.js`),
+  cross-checked against the schema by ajv in `tests/schema.test.js`;
+- the engine's validator (`scripts/core/trial/TrialValidator.gd`) and typed
+  model (`scripts/core/trial/model/`), exercised by the gdUnit4 suites;
+- the format version: the editor writes `metadata.version`
+  (`FORMAT_VERSION` in `js/core/constants.js`), the engine checks it
+  (`TrialValidator.SUPPORTED_FORMAT_MAJOR`). Both sides reject files from a
+  newer major version and warn on older ones.
+
+To change the format: update the schema, then the editor validator/writer
+and its tests, then the engine validator/model and its tests, then the
+fixture. Bump the minor version for additive changes, the major for breaking
+ones. A change that lands on only one side fails the other side's CI.
 
 ## Web editor
 

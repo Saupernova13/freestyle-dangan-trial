@@ -1,8 +1,15 @@
 # Freestyle Danganronpa Trial Creator
 
+[![Web UI](https://github.com/Saupernova13/freestyle-dangan-trial/actions/workflows/web-ui.yml/badge.svg)](https://github.com/Saupernova13/freestyle-dangan-trial/actions/workflows/web-ui.yml)
+[![Engine](https://github.com/Saupernova13/freestyle-dangan-trial/actions/workflows/engine.yml/badge.svg)](https://github.com/Saupernova13/freestyle-dangan-trial/actions/workflows/engine.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Create custom Danganronpa-style class trials: a browser-based authoring tool
 plus a Godot 4.5 engine that plays the result. Design a cast, write a branching
 script with camera work and effects, configure minigames, and play it back.
+
+**Try it:** [hosted editor](https://saupernova13.github.io/freestyle-dangan-trial/) ·
+[downloads](https://github.com/Saupernova13/freestyle-dangan-trial/releases)
 
 The project is two independent components joined by one data format — a
 `.drtrial` file. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full map.
@@ -49,6 +56,9 @@ honest list, rather than the whole feature set being marked "WIP."
 ### Also
 - Truth bullets (evidence) with images and descriptions
 - A configuration editor per minigame type
+- Undo/redo across all views (Ctrl+Z / Ctrl+Y or Ctrl+Shift+Z). Undo restores
+  the trial structure; binary side files already deleted from disk (e.g. a
+  removed voice clip) are not resurrected.
 - Dark/light theme, persisted
 
 ---
@@ -103,7 +113,12 @@ auto-complete (placeholders for future mechanics):
 
 ### Web UI (authoring trials)
 
-**Prerequisites:** Node.js 18+, and a modern browser. Chromium (Chrome, Edge,
+**No install:** use the hosted editor at
+<https://saupernova13.github.io/freestyle-dangan-trial/>, or download the
+single-file offline editor from the
+[latest release](https://github.com/Saupernova13/freestyle-dangan-trial/releases).
+
+**From source:** Node.js 18+, and a modern browser. Chromium (Chrome, Edge,
 Opera) can edit a trial folder on disk; Firefox and Safari work in browser
 storage with `.drtrial` import/export (see `web-ui-editor/README.md`).
 
@@ -123,6 +138,10 @@ npm run dev        # open the printed URL
 6. Export a `.drtrial` to play in the engine.
 
 ### Game engine (playing trials)
+
+Download the Windows build from the
+[latest release](https://github.com/Saupernova13/freestyle-dangan-trial/releases),
+or run from source:
 
 ```bash
 cd freestyle-dangan-trial
@@ -204,9 +223,11 @@ trial-folder/
 
 ### `trial.json`
 
-`trial.json` is the contract between editor and engine. `characters` is an
-ordered list of character ids (one per bench); `minigames` and `truthBullets`
-are arrays the engine looks up by `gameId` / `bulletId`.
+`trial.json` is the contract between editor and engine, formally defined in
+[`schema/trial.schema.json`](schema/trial.schema.json) (see ARCHITECTURE.md,
+"The trial.json contract"). `characters` is an ordered list of character ids
+(one per bench); `minigames` and `truthBullets` are arrays the engine looks
+up by `gameId` / `bulletId`.
 
 ```json
 {

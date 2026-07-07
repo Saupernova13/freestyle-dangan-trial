@@ -1,4 +1,5 @@
 // Utility functions
+import { setHtml } from './ui/dom.js';
 export function showLoader(on, text = '') {
   document.getElementById('loaderOverlay').classList.toggle('visible', !!on);
   const label = document.getElementById('loaderText');
@@ -17,9 +18,7 @@ export function fileToDataUrl(file) {
 export function renderDirDisplay(dH, label) {
   const el = document.getElementById('dirDisplay');
   if (!el) return;
-  el.innerHTML = dH
-    ? `${window.icon('folder', { size: 15 })} ${escapeHtml(label || dH.name)}`
-    : '';
+  setHtml(el, dH ? `${window.icon('folder', { size: 15 })} ${escapeHtml(label || dH.name)}` : '');
 }
 
 // Format seconds as M:SS for audio player time displays.
@@ -36,7 +35,8 @@ export function escapeHtml(text) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // Normalize dialogue highlight ranges into the only shape previews, saves,

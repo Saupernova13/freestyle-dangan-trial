@@ -3,6 +3,8 @@ import { addScriptLine } from '../app.js';
 import { state } from '../core/state.js';
 import { addMinigame } from '../views/minigameView.js';
 import { addTruthBullet } from '../views/truthBulletsView.js';
+import { setHtml } from '../ui/dom.js';
+import { escapeHtml } from '../utils.js';
 let floatingButton = null;
 
 export function initFloatingAddButton() {
@@ -11,7 +13,7 @@ export function initFloatingAddButton() {
     floatingButton = document.createElement('button');
     floatingButton.id = 'floatingAddButton';
     floatingButton.className = 'floating-add-btn';
-    floatingButton.innerHTML = window.icon('plus', { size: 24 });
+    setHtml(floatingButton, window.icon('plus', { size: 24 }));
     floatingButton.style.display = 'none';
     document.body.appendChild(floatingButton);
   }
@@ -62,10 +64,13 @@ export function updateFloatingAddButton() {
     // Update button text if extended mode
     if (buttonConfig.text) {
       floatingButton.classList.add('extended');
-      floatingButton.innerHTML = `${window.icon('plus', { size: 22 })} <span class="floating-add-btn-text">${buttonConfig.text}</span>`;
+      setHtml(
+        floatingButton,
+        `${window.icon('plus', { size: 22 })} <span class="floating-add-btn-text">${escapeHtml(buttonConfig.text)}</span>`
+      );
     } else {
       floatingButton.classList.remove('extended');
-      floatingButton.innerHTML = window.icon('plus', { size: 24 });
+      setHtml(floatingButton, window.icon('plus', { size: 24 }));
     }
   } else {
     floatingButton.style.display = 'none';

@@ -26,6 +26,7 @@ import {
   teardownDragSelection,
 } from './scriptLine/highlightingTab.js';
 
+import { setHtml } from '../ui/dom.js';
 // Re-export every tab's handlers so they reach window via main.js's bridge.
 export * from './scriptLine/spriteTab.js';
 export * from './scriptLine/audioTab.js';
@@ -136,7 +137,9 @@ export function renderScriptLineModal() {
          </div>`
       : '';
 
-  root.innerHTML = `
+  setHtml(
+    root,
+    `
     <div class="dr-modal-bg">
       <div class="dr-modal">
         <button class="dr-close" onclick="closeScriptLineModal()">&times;</button>
@@ -163,7 +166,8 @@ export function renderScriptLineModal() {
         </div>
       </div>
     </div>
-  `;
+  `
+  );
 }
 
 export function switchScriptLineTab(tab) {
@@ -184,7 +188,7 @@ export function closeScriptLineModal() {
   stopAudioPreview(AUDIO_PREVIEW_KEY);
   teardownDragSelection();
   const modalRoot = document.getElementById('modalroot');
-  if (modalRoot) modalRoot.innerHTML = '';
+  if (modalRoot) setHtml(modalRoot, '');
   sl.activeLineId = null;
   sl.tab = 'sprite';
   sl.err = '';

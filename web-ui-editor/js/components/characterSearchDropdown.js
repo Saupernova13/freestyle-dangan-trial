@@ -10,6 +10,7 @@ import { updateScriptLine } from '../app.js';
 import { state } from '../core/state.js';
 import { escapeHtml } from '../utils.js';
 
+import { setHtml } from '../ui/dom.js';
 let activeDropdownLineId = null;
 let filteredCharacters = [];
 let highlightedIndex = -1;
@@ -148,8 +149,10 @@ export function renderCharacterDropdownList(lineId) {
   if (!listEl) return;
 
   if (filteredCharacters.length === 0) {
-    listEl.innerHTML =
-      '<div class="searchable-dropdown-item" style="cursor: default; opacity: 0.6;">No characters found</div>';
+    setHtml(
+      listEl,
+      '<div class="searchable-dropdown-item" style="cursor: default; opacity: 0.6;">No characters found</div>'
+    );
     listEl.style.display = 'block';
     return;
   }
@@ -175,7 +178,7 @@ export function renderCharacterDropdownList(lineId) {
     })
     .join('');
 
-  listEl.innerHTML = itemsHtml;
+  setHtml(listEl, itemsHtml);
   listEl.style.display = 'block';
   // Clicks and hover are handled by document-level delegation set up at init.
 }

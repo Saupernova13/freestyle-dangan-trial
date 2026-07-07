@@ -32,8 +32,7 @@ export function missingCharacterFields(fields, hasSprite) {
     return v === undefined || v === null || String(v).trim() === '';
   }).map(([, label]) => label);
 
-  const heightOk =
-    !isNaN(parseFloat(fields.heightM)) && !isNaN(parseInt(fields.heightCM, 10));
+  const heightOk = !isNaN(parseFloat(fields.heightM)) && !isNaN(parseInt(fields.heightCM, 10));
   if (!heightOk) missing.push('Height');
   if (!hasSprite) missing.push('At least one sprite');
   return missing;

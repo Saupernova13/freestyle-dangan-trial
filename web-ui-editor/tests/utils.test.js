@@ -6,6 +6,10 @@ describe('escapeHtml', () => {
     expect(escapeHtml('<b>"a" & b</b>')).toBe('&lt;b&gt;&quot;a&quot; &amp; b&lt;/b&gt;');
   });
 
+  it('escapes single quotes so single-quoted attributes cannot break out', () => {
+    expect(escapeHtml("it's")).toBe('it&#39;s');
+  });
+
   it('stringifies non-string input', () => {
     expect(escapeHtml(42)).toBe('42');
     expect(escapeHtml(null)).toBe('null');

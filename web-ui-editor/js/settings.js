@@ -2,6 +2,7 @@
 import { closeModal } from './modals/modalCoordinator.js';
 import { alertDialog, showToast } from './ui/dialogs.js';
 import { focusFirstField } from './ui/modalBehaviors.js';
+import { setHtml } from './ui/dom.js';
 export const appSettings = {
   maxSprites: 25,
 };
@@ -19,7 +20,9 @@ export function saveSettings() {
 
 export function openSettings() {
   const root = document.getElementById('modalroot');
-  root.innerHTML = `
+  setHtml(
+    root,
+    `
     <div class="dr-modal-bg">
       <div class="dr-modal">
         <button class="dr-close" onclick="closeModal()">&times;</button>
@@ -46,7 +49,8 @@ export function openSettings() {
         </div>
       </div>
     </div>
-  `;
+  `
+  );
   focusFirstField();
 }
 

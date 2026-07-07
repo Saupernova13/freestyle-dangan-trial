@@ -6,6 +6,7 @@
 // the tab modules mutate `sl.fields` / `sl.highlighting` as the user edits.
 import { state } from '../../core/state.js';
 
+import { setHtml } from '../../ui/dom.js';
 export const AUDIO_PREVIEW_KEY = 'script-line-modal';
 export const DEFAULT_HIGHLIGHT_COLOR = '#FFFF00';
 export const DEFAULT_CAMERA_MOTION = { type: 'none', duration: 1.0, easing: 'ease-in-out' };
@@ -61,5 +62,5 @@ export function activeLine() {
 // must not steal focus or reset scroll the way a full re-render would).
 export function refreshTabBody(html) {
   const content = document.querySelector('.dr-modal-content');
-  if (content) content.innerHTML = html;
+  if (content) setHtml(content, html);
 }

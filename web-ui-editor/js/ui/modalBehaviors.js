@@ -43,9 +43,7 @@ export function initModalBehaviors() {
         !['file', 'checkbox', 'radio', 'range', 'button'].includes(el.type) &&
         !el.classList.contains('searchable-dropdown-input');
       if (!isTextInput) return;
-      const primary = document.querySelector(
-        '#modalroot .dr-btn-row .btn-primary:not([disabled])'
-      );
+      const primary = document.querySelector('#modalroot .dr-btn-row .btn-primary:not([disabled])');
       if (primary) {
         e.preventDefault();
         primary.click();

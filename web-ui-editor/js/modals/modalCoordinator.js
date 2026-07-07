@@ -7,6 +7,7 @@ import { closeCharModal } from './characterModal.js';
 import { closeScriptLineModal } from './scriptLineModal.js';
 import { closeTruthBulletModal } from './truthBulletModal.js';
 
+import { setHtml } from '../ui/dom.js';
 export function closeModal() {
   closeScriptLineModal();
   closeCharModal();
@@ -14,5 +15,5 @@ export function closeModal() {
 
   // Fallback for modals without their own close handler (e.g. settings).
   const modalRoot = document.getElementById('modalroot');
-  if (modalRoot) modalRoot.innerHTML = '';
+  if (modalRoot) setHtml(modalRoot, '');
 }

@@ -9,6 +9,7 @@
 // place of the synchronous native calls.
 import { escapeHtml } from '../utils.js';
 
+import { setHtml } from './dom.js';
 // Escape text, then turn newlines into <br> so multi-line messages (the old
 // alert strings used \n\n) keep their line breaks.
 function formatMessage(text) {
@@ -32,10 +33,13 @@ export function showToast(message, opts = {}) {
   const el = document.createElement('div');
   el.className = `dr-toast dr-toast--${type}`;
   el.setAttribute('role', type === 'error' ? 'alert' : 'status');
-  el.innerHTML = `
+  setHtml(
+    el,
+    `
     <span class="dr-toast-icon">${window.icon(TOAST_ICONS[type] || 'bulb', { size: 18 })}</span>
     <span class="dr-toast-msg">${formatMessage(message)}</span>
-  `;
+  `
+  );
   root.appendChild(el);
   requestAnimationFrame(() => el.classList.add('visible'));
 
@@ -78,7 +82,9 @@ function openDialog({ title, message, icon = 'alert', buttons }) {
     wrap.className = 'dr-dialog-bg';
     wrap.setAttribute('role', 'dialog');
     wrap.setAttribute('aria-modal', 'true');
-    wrap.innerHTML = `
+    setHtml(
+      wrap,
+      `
       <div class="dr-dialog">
         <div class="dr-dialog-head">
           <span class="dr-dialog-icon">${window.icon(icon, { size: 22 })}</span>
@@ -87,7 +93,8 @@ function openDialog({ title, message, icon = 'alert', buttons }) {
         ${message ? `<div class="dr-dialog-msg">${formatMessage(message)}</div>` : ''}
         <div class="dr-dialog-actions">${buttonsHtml}</div>
       </div>
-    `;
+    `
+    );
     root.appendChild(wrap);
 
     let settled = false;
@@ -194,7 +201,9 @@ export function promptDialog(opts = {}) {
     wrap.className = 'dr-dialog-bg';
     wrap.setAttribute('role', 'dialog');
     wrap.setAttribute('aria-modal', 'true');
-    wrap.innerHTML = `
+    setHtml(
+      wrap,
+      `
       <div class="dr-dialog">
         <div class="dr-dialog-head">
           <span class="dr-dialog-icon">${window.icon('edit', { size: 22 })}</span>
@@ -211,7 +220,8 @@ export function promptDialog(opts = {}) {
           <button class="btn btn-primary" data-act="ok">${escapeHtml(confirmLabel)}</button>
         </div>
       </div>
-    `;
+    `
+    );
     root.appendChild(wrap);
     const input = wrap.querySelector('.dr-dialog-input');
 

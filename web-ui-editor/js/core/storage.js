@@ -172,7 +172,11 @@ export function openTrialHub() {
 // Create a fresh trial in browser storage (OPFS).
 export async function newOpfsTrial() {
   if (!(await opfsCanWrite())) {
-    await alertDialog({ title: 'Browser storage unavailable', type: 'error', message: OPFS_WRITE_MSG });
+    await alertDialog({
+      title: 'Browser storage unavailable',
+      type: 'error',
+      message: OPFS_WRITE_MSG,
+    });
     return;
   }
   const name = await promptDialog({
@@ -234,7 +238,11 @@ export async function deleteOpfsTrialAndRefresh(folder) {
 // Import a .drtrial (a ZIP) into a new browser-storage trial and open it.
 export async function importTrialFromFile(file) {
   if (!(await opfsCanWrite())) {
-    await alertDialog({ title: 'Browser storage unavailable', type: 'error', message: OPFS_WRITE_MSG });
+    await alertDialog({
+      title: 'Browser storage unavailable',
+      type: 'error',
+      message: OPFS_WRITE_MSG,
+    });
     return;
   }
   try {

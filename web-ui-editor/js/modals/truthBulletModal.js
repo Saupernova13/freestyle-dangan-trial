@@ -6,6 +6,7 @@ import { focusFirstField } from '../ui/modalBehaviors.js';
 import { escapeHtml, showLoader } from '../utils.js';
 import { renderTruthBulletsView } from '../views/truthBulletsView.js';
 
+import { setHtml } from '../ui/dom.js';
 let activeBulletId = null;
 let bulletModalErr = '';
 let bulletModalMsg = '';
@@ -51,7 +52,9 @@ export function renderTruthBulletModal() {
 
   const hasImage = bulletFields.imageFile !== null;
 
-  root.innerHTML = `
+  setHtml(
+    root,
+    `
     <div class="dr-modal-bg">
       <div class="dr-modal">
         <button class="dr-close" onclick="closeTruthBulletModal()">&times;</button>
@@ -128,7 +131,8 @@ export function renderTruthBulletModal() {
         </div>
       </div>
     </div>
-  `;
+  `
+  );
 }
 
 export function updateBulletField(field, value) {
@@ -178,7 +182,7 @@ export function clearBulletImage() {
 }
 
 export function closeTruthBulletModal() {
-  document.getElementById('modalroot').innerHTML = '';
+  setHtml(document.getElementById('modalroot'), '');
   activeBulletId = null;
 }
 

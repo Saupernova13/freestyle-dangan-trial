@@ -3,6 +3,7 @@ import { escapeHtml, normalizeHighlights } from '../../utils.js';
 import { COLOR_REGEX, activeLine, sl } from './state.js';
 import { renderScriptLineModal } from '../scriptLineModal.js';
 
+import { setHtml } from '../../ui/dom.js';
 export function renderHighlightingTab(line) {
   const dialogue = line.dialogue || line.text || '';
 
@@ -216,10 +217,12 @@ export function initializeDragSelection() {
     }
 
     const selectedText = dialogue.substring(sl.highlighting.startChar, sl.highlighting.endChar);
-    selectionRange.innerHTML =
+    setHtml(
+      selectionRange,
       sl.highlighting.endChar > sl.highlighting.startChar
         ? `"${escapeHtml(selectedText)}" (${sl.highlighting.startChar}-${sl.highlighting.endChar})`
-        : 'None';
+        : 'None'
+    );
 
     const unifiedPreview = document.getElementById('highlight-unified-preview');
     if (unifiedPreview) {
@@ -232,7 +235,7 @@ export function initializeDragSelection() {
           isTemp: true,
         });
       }
-      unifiedPreview.innerHTML = renderHighlightedDialogue(dialogue, tempHighlights);
+      setHtml(unifiedPreview, renderHighlightedDialogue(dialogue, tempHighlights));
     }
   }
 }
@@ -278,7 +281,7 @@ export function clearHighlightSelection() {
 
   const selectionRange = document.getElementById('selection-range');
   if (selectionRange) {
-    selectionRange.innerHTML = 'None';
+    setHtml(selectionRange, 'None');
   }
 
   const addButton = document.getElementById('add-highlight-btn');
@@ -329,7 +332,7 @@ export function selectHighlightColor(color) {
         color: sl.highlighting.currentColor,
       },
     ];
-    unifiedPreview.innerHTML = renderHighlightedDialogue(dialogue, tempHighlights);
+    setHtml(unifiedPreview, renderHighlightedDialogue(dialogue, tempHighlights));
   }
 }
 

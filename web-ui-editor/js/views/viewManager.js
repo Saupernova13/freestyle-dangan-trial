@@ -13,6 +13,7 @@ import { renderCastGrid } from './castView.js';
 import { renderMinigameDetails } from './minigameView.js';
 import { renderTruthBulletsView } from './truthBulletsView.js';
 
+import { setHtml } from '../ui/dom.js';
 export function switchView(viewName) {
   state.activeView = viewName;
   updateNavSelection();
@@ -59,7 +60,9 @@ function renderWelcomeHub(mainGrid) {
   const hasOpfs = supportsOpfs();
 
   if (!hasPicker && !hasOpfs) {
-    mainGrid.innerHTML = `
+    setHtml(
+      mainGrid,
+      `
       <div class="welcome-screen">
         <div class="script-empty-icon">${window.icon('warning', { size: 56 })}</div>
         <h2>This browser isn't supported</h2>
@@ -67,11 +70,14 @@ function renderWelcomeHub(mainGrid) {
         Private File System. Please use a current version of Chrome, Edge,
         Firefox, or Safari.</p>
       </div>
-    `;
+    `
+    );
     return;
   }
 
-  mainGrid.innerHTML = `
+  setHtml(
+    mainGrid,
+    `
     <div class="welcome-screen welcome-hub">
       <h2>Class Trial Editor</h2>
       <p>Open a trial to start editing, or create a new one.</p>
@@ -104,7 +110,8 @@ function renderWelcomeHub(mainGrid) {
 
       ${hasOpfs ? `<div class="hub-trials" id="hubTrials"></div>` : ''}
     </div>
-  `;
+  `
+  );
 
   if (hasOpfs) populateHubTrials();
 }
@@ -120,7 +127,7 @@ async function populateHubTrials() {
     /* leave empty */
   }
   if (folders.length === 0) {
-    container.innerHTML = '';
+    setHtml(container, '');
     return;
   }
 
@@ -141,23 +148,36 @@ async function populateHubTrials() {
     })
   );
 
-  container.innerHTML = `
+  // Folder names ride in data attributes and are read back with .dataset —
+  // never interpolated into inline JS, where HTML entity escaping alone
+  // wouldn't be enough (the browser decodes entities before evaluating).
+  setHtml(
+    container,
+    `
     <h3 class="hub-trials-title">Saved in this browser</h3>
     <ul class="hub-trial-list">
       ${rows
         .map(
           (r) => `
         <li class="hub-trial-row">
-          <button class="hub-trial-open" onclick="openOpfsTrialByName('${escapeHtml(r.folder)}')">
+          <button class="hub-trial-open" data-folder="${escapeHtml(r.folder)}">
             ${window.icon('script', { size: 16 })}
             <span class="hub-trial-name">${escapeHtml(r.name)}</span>
           </button>
-          <button class="hub-trial-delete" title="Delete trial" onclick="deleteOpfsTrialAndRefresh('${escapeHtml(r.folder)}')">
+          <button class="hub-trial-delete" title="Delete trial" data-folder="${escapeHtml(r.folder)}">
             ${window.icon('trash', { size: 15 })}
           </button>
         </li>`
         )
         .join('')}
     </ul>
-  `;
+  `
+  );
+
+  container.querySelectorAll('.hub-trial-open').forEach((btn) => {
+    btn.addEventListener('click', () => window.openOpfsTrialByName(btn.dataset.folder));
+  });
+  container.querySelectorAll('.hub-trial-delete').forEach((btn) => {
+    btn.addEventListener('click', () => window.deleteOpfsTrialAndRefresh(btn.dataset.folder));
+  });
 }

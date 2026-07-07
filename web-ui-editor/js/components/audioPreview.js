@@ -8,12 +8,13 @@
 import { showToast } from '../ui/dialogs.js';
 import { formatAudioTime } from '../utils.js';
 
+import { setHtml } from '../ui/dom.js';
 const players = {};
 
 function setPlayButton(entry, isPlaying) {
   const btn = entry.opts.buttonId && document.getElementById(entry.opts.buttonId);
   if (btn)
-    btn.innerHTML = isPlaying ? `${window.icon('pause')} Pause` : `${window.icon('play')} Play`;
+    setHtml(btn, isPlaying ? `${window.icon('pause')} Pause` : `${window.icon('play')} Play`);
 }
 
 function updateSeekDisplay(entry) {

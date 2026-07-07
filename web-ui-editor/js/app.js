@@ -17,6 +17,7 @@ import { generateId, escapeHtml } from './utils.js';
 import { renderActiveView } from './views/viewManager.js';
 import { MINIGAME_TYPE_LABELS } from './core/constants.js';
 
+import { setHtml } from './ui/dom.js';
 // Initialize app
 document.addEventListener('DOMContentLoaded', function () {
   initializeTheme();
@@ -41,7 +42,9 @@ export function renderScriptEditor() {
 
   if (state.scriptLines.length === 0) {
     // Empty state
-    grid.innerHTML = `
+    setHtml(
+      grid,
+      `
       <div id="scriptEditorContainer">
         <div class="script-empty-state">
           <div class="script-empty-icon">${window.icon('script', { size: 56 })}</div>
@@ -52,7 +55,8 @@ export function renderScriptEditor() {
           </button>
         </div>
       </div>
-    `;
+    `
+    );
   } else {
     // Render script lines with drop zones between them
     let linesHtml = '';
@@ -73,7 +77,9 @@ export function renderScriptEditor() {
            <button class="script-hint-clear" onclick="clearSelection()">Clear selection</button>`
         : `<span>Tip: Ctrl/Cmd-click lines to select several, then drag to reorder.</span>`;
 
-    grid.innerHTML = `
+    setHtml(
+      grid,
+      `
       <div id="scriptEditorContainer">
         <div class="script-header">
           <h2>Trial Script</h2>
@@ -92,7 +98,8 @@ export function renderScriptEditor() {
           </div>
         </div>
       </div>
-    `;
+    `
+    );
   }
 
   // Re-apply any active search filter to the freshly rendered rows.

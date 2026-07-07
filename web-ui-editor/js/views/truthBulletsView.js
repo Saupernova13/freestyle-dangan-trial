@@ -6,11 +6,14 @@ import { openTruthBulletModal } from '../modals/truthBulletModal.js';
 import { confirmDialog } from '../ui/dialogs.js';
 import { generateId, escapeHtml } from '../utils.js';
 
+import { setHtml } from '../ui/dom.js';
 export function renderTruthBulletsView() {
   const grid = document.getElementById('mainGrid');
 
   if (state.truthBullets.length === 0) {
-    grid.innerHTML = `
+    setHtml(
+      grid,
+      `
       <div id="truthBulletsContainer">
         <div class="script-empty-state">
           <div class="script-empty-icon">${window.icon('target', { size: 56 })}</div>
@@ -21,7 +24,8 @@ export function renderTruthBulletsView() {
           </button>
         </div>
       </div>
-    `;
+    `
+    );
     updateFloatingAddButton();
     return;
   }
@@ -49,7 +53,9 @@ export function renderTruthBulletsView() {
     ? renderTruthBulletDetail(selectedBullet)
     : '<div class="no-selection">Select a truth bullet to view details</div>';
 
-  grid.innerHTML = `
+  setHtml(
+    grid,
+    `
     <div id="truthBulletsContainer" class="truth-bullets-split-view">
       <div class="script-header">
         <h2>Truth Bullets</h2>
@@ -66,7 +72,8 @@ export function renderTruthBulletsView() {
         </div>
       </div>
     </div>
-  `;
+  `
+  );
 
   // Update floating add button
   updateFloatingAddButton();

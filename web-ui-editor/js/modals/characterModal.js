@@ -12,6 +12,7 @@ import { focusFirstField } from '../ui/modalBehaviors.js';
 import { escapeHtml, showLoader } from '../utils.js';
 import { renderCastGrid } from '../views/castView.js';
 
+import { setHtml } from '../ui/dom.js';
 let activeIdx = null;
 let charFields = {
   name: '',
@@ -109,7 +110,9 @@ export function renderCharacterModal() {
   const characterType = getCharacterType(activeIdx);
   const isHeadmasterChar = isHeadmaster(activeIdx);
 
-  root.innerHTML = `
+  setHtml(
+    root,
+    `
     <div class="dr-modal-bg">
       <div class="dr-modal">
         <button class="dr-close" onclick="closeCharModal()">&times;</button>
@@ -131,11 +134,12 @@ export function renderCharacterModal() {
         </div>
       </div>
     </div>
-  `;
+  `
+  );
 }
 
 export function closeCharModal() {
-  document.getElementById('modalroot').innerHTML = '';
+  setHtml(document.getElementById('modalroot'), '');
   activeIdx = null;
 }
 

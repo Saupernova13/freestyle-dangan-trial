@@ -125,7 +125,8 @@ export async function exportToPlayableFile() {
   if (issues.length > 0) {
     const shown = issues.slice(0, 8);
     const extra = issues.length - shown.length;
-    const list = shown.map((m) => `• ${m}`).join('\n') + (extra > 0 ? `\n• …and ${extra} more` : '');
+    const list =
+      shown.map((m) => `• ${m}`).join('\n') + (extra > 0 ? `\n• …and ${extra} more` : '');
     const proceed = await confirmDialog({
       title: `Export check — ${issues.length} issue${issues.length === 1 ? '' : 's'}`,
       message: `${list}\n\nExport anyway?`,

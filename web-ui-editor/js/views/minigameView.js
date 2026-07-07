@@ -9,6 +9,7 @@ import { renderLogicDiveEditor } from './minigames/logicDiveEditor.js';
 import { renderMassPanicDebateEditor } from './minigames/massPanicDebateEditor.js';
 import { renderNonstopDebateEditor } from './minigames/nonstopDebateEditor.js';
 import { MINIGAME_TYPE_LABELS } from '../core/constants.js';
+import { setHtml } from '../ui/dom.js';
 let expandedMinigameId = null;
 
 // Look up a minigame instance by id.
@@ -20,7 +21,9 @@ export function renderMinigameDetails() {
   const grid = document.getElementById('mainGrid');
 
   if (state.minigames.length === 0) {
-    grid.innerHTML = `
+    setHtml(
+      grid,
+      `
       <div id="minigameDetailsContainer">
         <div class="script-empty-state">
           <div class="script-empty-icon">${window.icon('gamepad', { size: 56 })}</div>
@@ -31,11 +34,14 @@ export function renderMinigameDetails() {
           </button>
         </div>
       </div>
-    `;
+    `
+    );
   } else {
     let minigamesHtml = state.minigames.map((mg, index) => renderMinigameCard(mg, index)).join('');
 
-    grid.innerHTML = `
+    setHtml(
+      grid,
+      `
       <div id="minigameDetailsContainer">
         <div class="script-header">
           <h2>Minigames</h2>
@@ -44,7 +50,8 @@ export function renderMinigameDetails() {
           ${minigamesHtml}
         </div>
       </div>
-    `;
+    `
+    );
   }
 }
 

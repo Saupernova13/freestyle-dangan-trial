@@ -6,9 +6,10 @@ import { isCharacterComplete } from '../models/characterModel.js';
 import { showToast } from '../ui/dialogs.js';
 import { escapeHtml } from '../utils.js';
 
+import { setHtml } from '../ui/dom.js';
 export function renderCastGrid() {
   const grid = document.getElementById('mainGrid');
-  grid.innerHTML = '';
+  setHtml(grid, '');
 
   for (let i = 0; i < BLOCK_COUNT; i++) {
     const c = state.cast[i];
@@ -17,7 +18,10 @@ export function renderCastGrid() {
     div.className = 'cast-block';
     div.setAttribute('tabindex', 0);
     div.setAttribute('role', 'button');
-    div.setAttribute('aria-label', `${blockNames[i]}: ${c ? `${c.name || ''} ${c.surname || ''}`.trim() || 'unnamed' : 'empty slot'}`);
+    div.setAttribute(
+      'aria-label',
+      `${blockNames[i]}: ${c ? `${c.name || ''} ${c.surname || ''}`.trim() || 'unnamed' : 'empty slot'}`
+    );
     div.setAttribute('data-filled', c ? '1' : '0');
     div.setAttribute('data-type', isHeadmaster ? 'headmaster' : 'student');
     div.onclick = () => {
@@ -40,19 +44,25 @@ export function renderCastGrid() {
       const isDraft = !isCharacterComplete(c);
       div.setAttribute('data-draft', isDraft ? '1' : '0');
 
-      div.innerHTML = `
+      setHtml(
+        div,
+        `
         ${isDraft ? `<span class="cast-draft-badge" title="Profile incomplete">Draft</span>` : ''}
         ${spriteHtml}
         <div class="cast-name">${escapeHtml(`${c.name || ''} ${c.surname || ''}`)}</div>
         <div class="cast-block-title">${blockNames[i]}</div>
-      `;
+      `
+      );
     } else {
       // Empty slot - show plus and default name
-      div.innerHTML = `
+      setHtml(
+        div,
+        `
         <div class="blk-plus">+</div>
         <div class="cast-name">No Character</div>
         <div class="cast-block-title">${blockNames[i]}</div>
-      `;
+      `
+      );
     }
 
     grid.appendChild(div);

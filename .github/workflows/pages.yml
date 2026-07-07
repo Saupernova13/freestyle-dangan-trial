@@ -25,6 +25,10 @@ jobs:
         working-directory: web-ui-editor
     steps:
       - uses: actions/checkout@v4
+      - name: Enable Pages for the repo if not yet configured
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/setup-node@v4
         with:
           node-version: 20

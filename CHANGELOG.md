@@ -9,6 +9,8 @@ separately in `schema/trial.schema.json`.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-07
+
 ### Added
 - Releases now ship prebuilt engine binaries: a zipped self-contained Windows
   `.exe` and a debug-signed Android `.apk` (arm64, prebuilt template, keystore

@@ -1,0 +1,47 @@
+name: Bug report
+description: Something broke in the editor or the engine
+labels: [bug]
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Web editor
+        - Godot engine
+        - Both / the .drtrial format
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the editor
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / environment
+      description: Browser and version for editor bugs; Godot version and OS for engine bugs.
+      placeholder: e.g. Chrome 137 / Godot 4.5.1 on Windows 11
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output or logs
+      description: Browser devtools console for the editor; Godot output panel for the engine.
+      render: text
+  - type: textarea
+    id: trial-file
+    attributes:
+      label: Trial file
+      description: If the bug depends on a specific trial, attach the .drtrial (zip it first if GitHub rejects the extension) or paste the relevant trial.json snippet.

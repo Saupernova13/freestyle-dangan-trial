@@ -42,10 +42,17 @@ jobs:
           godot --headless --path freestyle-dangan-trial --import || \
           godot --headless --path freestyle-dangan-trial --import
       - name: Export Windows build
+        # Godot 4.5 segfaults on shutdown after a successful headless export
+        # (it polls adb for one-click-deploy devices). savepack still finishes
+        # and writes the binary, so tolerate the exit code and gate success on
+        # the output file being present and a sane size.
         run: |
           mkdir -p freestyle-dangan-trial/builds/win
-          godot --headless --path freestyle-dangan-trial --export-release "Windows" builds/win/trial.exe
-          test -s freestyle-dangan-trial/builds/win/trial.exe
+          godot --headless --path freestyle-dangan-trial --export-release "Windows" builds/win/trial.exe || true
+          exe="freestyle-dangan-trial/builds/win/trial.exe"
+          test -f "$exe" && [ "$(stat -c%s "$exe")" -gt 1000000 ] \
+            || { echo "Windows export did not produce a valid exe"; exit 1; }
+          ls -lh freestyle-dangan-trial/builds/win/
       - name: Zip build
         run: |
           cd freestyle-dangan-trial/builds/win
@@ -99,11 +106,16 @@ jobs:
           godot --headless --path freestyle-dangan-trial --import || \
           godot --headless --path freestyle-dangan-trial --import
       - name: Export Android build
+        # Same shutdown segfault as the Windows job: the APK is built and signed
+        # by apksigner before Godot crashes on exit, so gate on the output file.
         run: |
           mkdir -p freestyle-dangan-trial/builds/android
-          godot --headless --path freestyle-dangan-trial --export-debug "Android" builds/android/CustomRonpa.apk
-          test -s freestyle-dangan-trial/builds/android/CustomRonpa.apk
-          cp freestyle-dangan-trial/builds/android/CustomRonpa.apk "CustomRonpa-android-${GITHUB_REF_NAME}.apk"
+          godot --headless --path freestyle-dangan-trial --export-debug "Android" builds/android/CustomRonpa.apk || true
+          apk="freestyle-dangan-trial/builds/android/CustomRonpa.apk"
+          test -f "$apk" && [ "$(stat -c%s "$apk")" -gt 1000000 ] \
+            || { echo "Android export did not produce a valid apk"; exit 1; }
+          ls -lh freestyle-dangan-trial/builds/android/
+          cp "$apk" "CustomRonpa-android-${GITHUB_REF_NAME}.apk"
       - uses: actions/upload-artifact@v7
         with:
           name: android-build

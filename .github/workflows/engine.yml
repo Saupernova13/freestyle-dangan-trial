@@ -1,0 +1,51 @@
+name: Engine
+
+on:
+  push:
+    paths:
+      - 'freestyle-dangan-trial/**'
+      - 'schema/**'
+      - '.github/workflows/engine.yml'
+  pull_request:
+    paths:
+      - 'freestyle-dangan-trial/**'
+      - 'schema/**'
+      - '.github/workflows/engine.yml'
+
+env:
+  GODOT_VERSION: 4.5.1
+
+jobs:
+  gdlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install "gdtoolkit==4.5.*"
+      - run: gdlint freestyle-dangan-trial/scripts freestyle-dangan-trial/tests
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot
+        run: |
+          curl -fsSL -o godot.zip \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          install -D "Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$HOME/.local/bin/godot"
+      - name: Import project
+        # .godot/ is gitignored, so CI must import from scratch (this also
+        # resolves the uid:// main-scene reference). A cold first import can
+        # exit nonzero on resource ordering; the second pass is a cheap no-op
+        # when the first succeeded.
+        run: |
+          godot --headless --path freestyle-dangan-trial --import || \
+          godot --headless --path freestyle-dangan-trial --import
+      - name: Run gdUnit4 tests
+        env:
+          GODOT_BIN: /home/runner/.local/bin/godot
+        working-directory: freestyle-dangan-trial
+        run: bash addons/gdUnit4/runtest.sh -a res://tests/unit

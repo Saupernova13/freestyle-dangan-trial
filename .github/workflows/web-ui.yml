@@ -4,10 +4,14 @@ on:
   push:
     paths:
       - 'web-ui-editor/**'
+      - 'schema/**'
+      - 'freestyle-dangan-trial/tests/fixtures/**'
       - '.github/workflows/web-ui.yml'
   pull_request:
     paths:
       - 'web-ui-editor/**'
+      - 'schema/**'
+      - 'freestyle-dangan-trial/tests/fixtures/**'
       - '.github/workflows/web-ui.yml'
 
 jobs:

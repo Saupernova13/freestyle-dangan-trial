@@ -25,10 +25,14 @@ jobs:
         working-directory: web-ui-editor
     steps:
       - uses: actions/checkout@v4
+      # Best effort: the default workflow token often may not create the
+      # Pages site. If this step fails, enable Pages once by hand
+      # (Settings -> Pages -> Source: GitHub Actions) and re-run.
       - name: Enable Pages for the repo if not yet configured
         uses: actions/configure-pages@v5
         with:
           enablement: true
+        continue-on-error: true
       - uses: actions/setup-node@v4
         with:
           node-version: 20

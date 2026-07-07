@@ -18,9 +18,12 @@ if [ -n "$editor_js" ] && command -v npx >/dev/null 2>&1; then
 fi
 
 # --- Engine GDScript: gdlint on staged files (skip silently if missing) -----
+# Run from the engine dir: gdlint discovers gdlintrc from the working
+# directory, not from the linted file's location.
 engine_gd=$(printf '%s\n' "$staged" | grep '^freestyle-dangan-trial/.*\.gd$' | grep -v '/addons/' || true)
 if [ -n "$engine_gd" ] && command -v gdlint >/dev/null 2>&1; then
-    (cd "$repo_root" && gdlint $engine_gd) || failed=1
+    rel_gd=$(printf '%s\n' "$engine_gd" | sed 's|^freestyle-dangan-trial/||')
+    (cd "$repo_root/freestyle-dangan-trial" && gdlint $rel_gd) || failed=1
 fi
 
 if [ "$failed" -ne 0 ]; then

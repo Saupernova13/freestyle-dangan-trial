@@ -24,7 +24,10 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install "gdtoolkit==4.5.*"
-      - run: gdlint freestyle-dangan-trial/scripts freestyle-dangan-trial/tests
+      # gdlint discovers gdlintrc from the working directory, so lint from
+      # inside the engine dir where the config lives.
+      - run: gdlint scripts tests
+        working-directory: freestyle-dangan-trial
 
   test:
     runs-on: ubuntu-latest
@@ -48,4 +51,6 @@ jobs:
         env:
           GODOT_BIN: /home/runner/.local/bin/godot
         working-directory: freestyle-dangan-trial
-        run: bash addons/gdUnit4/runtest.sh -a res://tests/unit
+        # --headless (engine flag) because the runner has no display;
+        # --ignoreHeadlessMode opts out of gdUnit4's headless refusal.
+        run: bash addons/gdUnit4/runtest.sh -a res://tests/unit --headless --ignoreHeadlessMode

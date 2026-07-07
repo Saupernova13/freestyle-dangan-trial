@@ -286,7 +286,12 @@ checklist. Adding a minigame is documented in [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## License
 
-Open source; license to be finalized.
+The code in this repository is licensed under the [MIT License](LICENSE).
+
+The license covers the code only. Sample trial content, character art, and
+other Danganronpa-styled assets are fan content; rights to the Danganronpa
+characters, names, and visual style belong to Spike Chunsoft Co., Ltd. Do not
+redistribute those assets outside the context of this fan project.
 
 ## Acknowledgments
 

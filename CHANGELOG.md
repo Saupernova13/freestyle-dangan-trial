@@ -35,8 +35,8 @@ release infrastructure around them.
 - Engine: gdUnit4 test suites for the validator, archive extraction, data
   model, and seeded RNG; gdlint configuration.
 - CI: engine workflow (gdlint, headless import, unit tests), GitHub Pages
-  deploy of the editor, and a tag-triggered release workflow that builds the
-  single-file editor and the Windows engine executable.
+  deploy of the editor, and a tag-triggered release workflow that publishes
+  the single-file editor HTML.
 - Repo: issue/PR templates, dependabot, cross-platform check scripts
   (`tools/check.sh`, `tools/check.ps1`), and an opt-in pre-commit hook.
 

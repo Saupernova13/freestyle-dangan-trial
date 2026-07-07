@@ -90,9 +90,11 @@ change workflow. Never change the format on one side only.
 
 1. Update `CHANGELOG.md` (move Unreleased into a new version section).
 2. `git tag vX.Y.Z && git push origin vX.Y.Z`.
-3. The Release workflow builds the single-file editor HTML and the Windows
-   engine zip and attaches both to the GitHub release. (Android is excluded
-   until signing secrets are configured.)
+3. The Release workflow builds the single-file editor HTML and attaches it to
+   the GitHub release. Engine binaries are not built in CI: the main scene
+   depends on the large texture/mesh assets that are gitignored, so a clean
+   checkout cannot export it. Export the engine locally from a full checkout
+   (`--export-release "Windows"`) if a desktop binary is needed.
 
 ## Commit messages
 

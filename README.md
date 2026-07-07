@@ -139,9 +139,8 @@ npm run dev        # open the printed URL
 
 ### Game engine (playing trials)
 
-Download the Windows build from the
-[latest release](https://github.com/Saupernova13/freestyle-dangan-trial/releases),
-or run from source:
+Run from source (the engine ships as a Godot project; the trial-room assets
+are not distributed as a prebuilt binary):
 
 ```bash
 cd freestyle-dangan-trial

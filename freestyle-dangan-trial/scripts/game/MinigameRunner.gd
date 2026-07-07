@@ -29,11 +29,9 @@ func setup(conversation_ui: Node, roaming_text: Node, dialogue_label: Node) -> v
 	_roaming_text = roaming_text as CanvasItem
 	_dialogue_label = dialogue_label
 
-func run(minigame_data: Dictionary) -> void:
-	var game_type = minigame_data.get("gameType", "")
-
-	if not MINIGAME_SCRIPTS.has(game_type):
-		Log.warn("MinigameRunner", "Unknown minigame type: %s" % game_type)
+func run(minigame: MinigameData) -> void:
+	if not MINIGAME_SCRIPTS.has(minigame.game_type):
+		Log.warn("MinigameRunner", "Unknown minigame type: %s" % minigame.game_type)
 		await get_tree().create_timer(1.0).timeout
 		ScriptDirector.on_minigame_finished(true)
 		return
@@ -45,13 +43,13 @@ func run(minigame_data: Dictionary) -> void:
 	# Title card plays once; each attempt then gets its own result card.
 	var title_card = ResourceRegistry.instantiate("minigame_title_card")
 	add_child(title_card)
-	title_card.show_title(game_type, minigame_data.get("name", ""))
+	title_card.show_title(minigame.game_type, minigame.name)
 	await title_card.card_finished
 
-	_start_attempt(minigame_data)
+	_start_attempt(minigame)
 
-func _start_attempt(minigame_data: Dictionary) -> void:
-	var minigame: MinigameBase = _instantiate(minigame_data.get("gameType", ""))
+func _start_attempt(minigame_data: MinigameData) -> void:
+	var minigame: MinigameBase = _instantiate(minigame_data.game_type)
 	add_child(minigame)
 	minigame.initialize(minigame_data)
 	minigame.minigame_completed.connect(func(success, data):

@@ -12,9 +12,9 @@ var _road_effect: RoadEffect
 
 var _showing_question: bool = false
 
-func initialize(data: Dictionary):
+func initialize(data: MinigameData):
 	super.initialize(data)
-	var type_specific = data.get("typeSpecific", {})
+	var type_specific := data.type_specific
 	questions = type_specific.get("questions", [])
 
 func start():

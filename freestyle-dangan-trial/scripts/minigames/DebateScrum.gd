@@ -15,9 +15,9 @@ var _turn_timer_label: Label
 var _turn_timer: float = 0.0
 var _turn_active: bool = false
 
-func initialize(data: Dictionary):
+func initialize(data: MinigameData):
 	super.initialize(data)
-	var type_specific = data.get("typeSpecific", {})
+	var type_specific := data.type_specific
 	arguments = type_specific.get("arguments", [])
 
 func start():

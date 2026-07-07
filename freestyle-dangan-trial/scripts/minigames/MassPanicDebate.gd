@@ -14,9 +14,9 @@ var _spawn_timer: float = 0.0
 var _spawn_interval: float = 3.0
 var _break_label: Label
 
-func initialize(data: Dictionary):
+func initialize(data: MinigameData):
 	super.initialize(data)
-	var type_specific = data.get("typeSpecific", {})
+	var type_specific := data.type_specific
 	line_groups = type_specific.get("lineGroups", [])
 	speaker_ids = [
 		type_specific.get("speaker1CharacterId", ""),

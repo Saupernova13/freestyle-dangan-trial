@@ -9,7 +9,6 @@ signal loading_failed(error: String)
 
 const EXTRACT_DIR := "user://trials/extracted/"
 
-var current_trial: Dictionary = {}
 var current_trial_path: String = ""
 
 ## Typed view of the loaded trial (see scripts/core/trial/model/). Null until
@@ -59,10 +58,9 @@ func load_trial(file_path: String) -> bool:
 		push_error(last_load_error)
 		return false
 
-	current_trial = trial_data
 	manifest = TrialManifest.from_dict(trial_data)
 	current_trial_path = file_path
-	Log.info("TrialLoader", "Trial loaded: %s" % trial_data.get("trialName", "Unnamed"))
+	Log.info("TrialLoader", "Trial loaded: %s" % manifest.trial_name)
 	return true
 
 ## Async version of load_trial(). Runs extraction, JSON parse, and sprite
@@ -109,21 +107,25 @@ func get_audio_path(audio_filename: String) -> String:
 
 	return ""
 
-func get_script_lines() -> Array:
-	var script = current_trial.get("script", {})
-	return script.get("lines", [])
+func get_script_lines() -> Array[ScriptLine]:
+	if manifest:
+		return manifest.script_lines
+	var empty: Array[ScriptLine] = []
+	return empty
 
-func get_minigames() -> Array:
-	return current_trial.get("minigames", [])
+func get_minigames() -> Array[MinigameData]:
+	if manifest:
+		return manifest.minigames
+	var empty: Array[MinigameData] = []
+	return empty
 
 func get_truth_bullets() -> Array:
-	return current_trial.get("truthBullets", [])
+	return manifest.truth_bullets if manifest else []
 
 func get_character_ids() -> Array:
-	return current_trial.get("characters", [])
+	return manifest.character_ids if manifest else []
 
 func _reset_trial_state() -> void:
-	current_trial = {}
 	manifest = null
 	current_trial_path = ""
 	characters.clear()
@@ -196,7 +198,6 @@ func _load_in_thread(file_path: String) -> void:
 			else "trial.json missing or invalid in the selected file.")
 		return
 
-	current_trial = trial_data
 	manifest = TrialManifest.from_dict(trial_data)
 	current_trial_path = file_path
 

@@ -70,13 +70,13 @@ func _theme_chain_defines(prop: String, is_font: bool) -> bool:
 			return true
 	return false
 
-func display_speaking_line(line: Dictionary):
-	if not _rich_label:
+func display_speaking_line(line: ScriptLine):
+	if not line or not _rich_label:
 		return
 
-	var dialogue_text = line.get("dialogue", "")
-	var highlights = line.get("highlights", [])
-	var box_style = line.get("dialogueBoxStyle", {})
+	var dialogue_text := line.dialogue
+	var highlights := line.highlights
+	var box_style := line.dialogue_box_style
 
 	var bbcode = _apply_highlights(dialogue_text, highlights)
 	_rich_label.text = bbcode
@@ -84,18 +84,18 @@ func display_speaking_line(line: Dictionary):
 	_apply_box_style(box_style)
 	_start_typewriter()
 
-func display_narrator_line(line: Dictionary):
-	if not _rich_label:
+func display_narrator_line(line: ScriptLine):
+	if not line or not _rich_label:
 		return
 
-	var text = line.get("text", line.get("dialogue", ""))
+	var text := line.display_text()
 	# Narrator lines support the same highlight + box style data as speaking
 	# lines — the editor exposes both tabs for them.
-	var highlights = line.get("highlights", [])
+	var highlights := line.highlights
 	var bbcode = _apply_highlights(text, highlights)
 	_rich_label.text = "[center][color=#AABBCC]" + bbcode + "[/color][/center]"
 
-	_apply_box_style(line.get("dialogueBoxStyle", {}))
+	_apply_box_style(line.dialogue_box_style)
 
 	if _name_label:
 		_name_label.text = ""

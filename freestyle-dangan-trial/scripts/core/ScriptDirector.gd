@@ -16,17 +16,17 @@ enum State {
 	TRIAL_COMPLETE
 }
 
-signal line_started(line: Dictionary)
+signal line_started(line: ScriptLine)
 signal dialogue_displayed(character_id: String, text: String)
 signal narrator_displayed(text: String)
-signal minigame_requested(minigame_data: Dictionary)
+signal minigame_requested(minigame: MinigameData)
 signal minigame_completed(success: bool)
 signal trial_ended
 signal state_changed(new_state: State)
 signal typewriter_skip_requested
 
 var current_state: State = State.IDLE
-var script_lines: Array = []
+var script_lines: Array[ScriptLine] = []
 var current_line_index: int = -1
 var is_typewriter_active: bool = false
 
@@ -74,57 +74,51 @@ func advance_to_next_line():
 		trial_ended.emit()
 		return
 
-	var line = script_lines[current_line_index]
+	var line: ScriptLine = script_lines[current_line_index]
 	line_started.emit(line)
 
-	var handler: Callable = _line_handlers.get(line.get("type", ""), Callable())
+	var handler: Callable = _line_handlers.get(line.type, Callable())
 	if handler.is_valid():
 		handler.call(line)
 	else:
-		Log.warn("ScriptDirector", "Unknown line type '%s', skipping" % line.get("type", ""))
+		Log.warn("ScriptDirector", "Unknown line type '%s', skipping" % line.type)
 		advance_to_next_line()
 
-func _handle_speaking_line(line: Dictionary):
+func _handle_speaking_line(line: ScriptLine):
 	_transition_to(State.DIALOGUE)
 	_play_line_audio(line)
-	dialogue_displayed.emit(line.get("characterId", ""), line.get("dialogue", ""))
+	dialogue_displayed.emit(line.character_id, line.dialogue)
 	_transition_to(State.WAITING_FOR_ADVANCE)
 
-func _handle_narrator_line(line: Dictionary):
+func _handle_narrator_line(line: ScriptLine):
 	_transition_to(State.DIALOGUE)
 	# Narrator lines can carry audio (SFX / narration VO) just like speaking lines.
 	_play_line_audio(line)
-	narrator_displayed.emit(line.get("text", line.get("dialogue", "")))
+	narrator_displayed.emit(line.display_text())
 	_transition_to(State.WAITING_FOR_ADVANCE)
 
-func _play_line_audio(line: Dictionary) -> void:
-	var audio_file = line.get("audioFile", "")
-	if audio_file is String and not audio_file.is_empty():
+func _play_line_audio(line: ScriptLine) -> void:
+	if not line.audio_file.is_empty():
 		if AudioManager.is_voice_playing():
 			AudioManager.stop_voice()
-		AudioManager.play_voice_line(audio_file)
+		AudioManager.play_voice_line(line.audio_file)
 
-func _handle_minigame_line(line: Dictionary):
-	var minigame_id = line.get("minigameId", "")
-	if minigame_id.is_empty():
+func _handle_minigame_line(line: ScriptLine):
+	if line.minigame_id.is_empty():
 		Log.warn("ScriptDirector", "Minigame line missing minigameId, skipping")
 		advance_to_next_line()
 		return
 
-	var minigames = TrialLoader.get_minigames()
-	var minigame_data: Dictionary = {}
-	for mg in minigames:
-		if mg.get("gameId", "") == minigame_id:
-			minigame_data = mg
-			break
-
-	if minigame_data.is_empty():
-		Log.warn("ScriptDirector", "Minigame not found: %s, skipping" % minigame_id)
+	var minigame: MinigameData = (
+		TrialLoader.manifest.find_minigame(line.minigame_id) if TrialLoader.manifest else null
+	)
+	if minigame == null:
+		Log.warn("ScriptDirector", "Minigame not found: %s, skipping" % line.minigame_id)
 		advance_to_next_line()
 		return
 
 	_transition_to(State.MINIGAME_LOADING)
-	minigame_requested.emit(minigame_data)
+	minigame_requested.emit(minigame)
 
 func on_minigame_started(minigame_node: Node):
 	_active_minigame = minigame_node
@@ -186,10 +180,10 @@ func resume_trial():
 	if current_state == State.PAUSED:
 		_transition_to(_pre_pause_state)
 
-func get_current_line() -> Dictionary:
+func get_current_line() -> ScriptLine:
 	if current_line_index >= 0 and current_line_index < script_lines.size():
 		return script_lines[current_line_index]
-	return {}
+	return null
 
 func get_progress() -> float:
 	if script_lines.is_empty():

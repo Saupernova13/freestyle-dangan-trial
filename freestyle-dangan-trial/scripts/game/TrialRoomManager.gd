@@ -103,22 +103,16 @@ func _set_portrait(bench_index: int, sprite_index: int = 1) -> void:
 	if texture:
 		portrait_rect.texture = texture
 
-func _on_line_started(line: Dictionary):
-	if line.get("type", "") == "speaking":
+func _on_line_started(line: ScriptLine):
+	if line.type == ScriptLine.TYPE_SPEAKING:
 		_present_speaking_line(line)
 
-	var special_effects = line.get("specialEffects", {})
-	if not special_effects.is_empty():
-		ScreenEffects.play_effects(special_effects)
+	if not line.special_effects.is_empty():
+		ScreenEffects.play_effects(line.special_effects)
 
-func _present_speaking_line(line: Dictionary) -> void:
-	var character_id = line.get("characterId", "")
-	# spriteIndex is 1-based (sprite_NN.png). JSON null / legacy 0 / missing
-	# all fall back to the first sprite instead of erroring on a typed int.
-	var raw_sprite = line.get("spriteIndex", 1)
-	var sprite_index: int = int(raw_sprite) if (raw_sprite is int or raw_sprite is float) else 1
-	if sprite_index < 1:
-		sprite_index = 1
+func _present_speaking_line(line: ScriptLine) -> void:
+	var character_id := line.character_id
+	var sprite_index := line.sprite_index
 
 	# Resolve the speaker by id — never via bench index, so a sparse cast can't
 	# redirect the lookup. Fall back to the character file for speakers without
@@ -143,7 +137,7 @@ func _present_speaking_line(line: Dictionary) -> void:
 		# Always hard-cut to the speaking character first (no smooth pan)
 		if camera and camera.has_method("jump_to_bench"):
 			camera.jump_to_bench(bench_index, false)
-		var camera_motion = line.get("cameraMotion", {})
+		var camera_motion := line.camera_motion
 		if not camera_motion.is_empty() and camera_motion.get("type", "none") != "none":
 			CameraDirector.execute_motion(camera_motion, bench_index)
 
@@ -159,8 +153,8 @@ func _on_narrator_displayed(_text: String):
 	if _dialogue_box:
 		_dialogue_box.display_narrator_line(ScriptDirector.get_current_line())
 
-func _on_minigame_requested(minigame_data: Dictionary):
-	_minigame_runner.run(minigame_data)
+func _on_minigame_requested(minigame: MinigameData):
+	_minigame_runner.run(minigame)
 
 func _on_trial_ended():
 	if dialogue_label:

@@ -11,9 +11,9 @@ var _answer_slots: Array = []
 var _spawn_timer: float = 0.0
 var _spawn_interval: float = 1.5
 
-func initialize(data: Dictionary):
+func initialize(data: MinigameData):
 	super.initialize(data)
-	var type_specific = data.get("typeSpecific", {})
+	var type_specific := data.type_specific
 	answer_key = type_specific.get("answerKey", "").to_upper()
 	_revealed_letters.resize(answer_key.length())
 	_revealed_letters.fill(false)

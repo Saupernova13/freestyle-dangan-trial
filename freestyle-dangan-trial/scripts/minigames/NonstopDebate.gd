@@ -24,9 +24,9 @@ var _turn_label: Label
 var _is_slow_time: bool = false
 var _slow_vignette: ColorRect = null
 
-func initialize(data: Dictionary):
+func initialize(data: MinigameData):
 	super.initialize(data)
-	var type_specific = data.get("typeSpecific", {})
+	var type_specific := data.type_specific
 	dialogue_lines = type_specific.get("dialogueLines", [])
 	selected_bullets = type_specific.get("selectedBullets", [])
 

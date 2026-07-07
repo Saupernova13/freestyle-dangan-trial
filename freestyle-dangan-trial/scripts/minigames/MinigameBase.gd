@@ -29,7 +29,7 @@ const _HUD_SPECS := {
 	HudComponent.TRUTH_BULLET_SELECTOR: {"scene": "truth_bullet_selector", "show": "show_selector", "hide": "hide_selector"},
 }
 
-var minigame_data: Dictionary = {}
+var minigame_data: MinigameData = null
 var difficulty: String = "medium"
 var time_limit: float = 60.0
 var time_remaining: float = 60.0
@@ -51,10 +51,10 @@ var _mobile_hud: Node = null
 var is_active: bool:
 	get: return state == State.ACTIVE
 
-func initialize(data: Dictionary):
+func initialize(data: MinigameData):
 	minigame_data = data
-	difficulty = data.get("difficulty", "medium")
-	time_limit = float(data.get("timeLimit", 60))
+	difficulty = data.difficulty
+	time_limit = data.time_limit
 	time_remaining = time_limit
 
 func start():
@@ -204,9 +204,8 @@ func _finish(success: bool, data: Dictionary = {}):
 	# Fall back to the minigame-level fail comment when the subclass didn't
 	# supply a per-line one — so every minigame's result card can show text.
 	if not success and str(data.get("failComment", "")).is_empty():
-		var fallback = minigame_data.get("failComment", "")
-		if fallback is String and not fallback.is_empty():
-			data["failComment"] = fallback
+		if minigame_data and not minigame_data.fail_comment.is_empty():
+			data["failComment"] = minigame_data.fail_comment
 	_transition_to(State.COMPLETE)
 	if _timer_node:
 		_timer_node.stop()

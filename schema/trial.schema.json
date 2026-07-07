@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Saupernova13/freestyle-dangan-trial/main/schema/trial.schema.json",
+  "title": "Freestyle Dangan Trial manifest (trial.json)",
+  "description": "The contract between the web editor (writer) and the Godot engine (reader). The editor's runtime validator (web-ui-editor/js/core/trialSchema.js) and the engine's TrialValidator.gd mirror the structural requirements here; CI cross-checks all three against the shared fixture trial. Unknown extra properties are allowed everywhere so old readers tolerate new writers.",
+  "type": "object",
+  "required": ["trialName", "characters", "script", "metadata"],
+  "properties": {
+    "trialName": {
+      "type": "string"
+    },
+    "characters": {
+      "description": "Positional bench slots (16 students + 1 headmaster). Each entry is a character id whose data lives in Characters/<Name>/character.json inside the .drtrial, or null for an empty bench.",
+      "type": "array",
+      "items": {
+        "type": ["string", "null"]
+      }
+    },
+    "truthBullets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/truthBullet"
+      }
+    },
+    "minigames": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/minigame"
+      }
+    },
+    "script": {
+      "type": "object",
+      "required": ["lines"],
+      "properties": {
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scriptLine"
+          }
+        },
+        "lastModified": {
+          "type": "string"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["version"],
+      "properties": {
+        "version": {
+          "description": "Format version, '<major>.<minor>'. Readers reject files with a newer major than they support and warn on older majors.",
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "scriptLine": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "order": {
+          "type": "number"
+        },
+        "type": {
+          "enum": ["speaking", "narrator", "minigame"]
+        },
+        "characterId": {
+          "type": "string"
+        },
+        "dialogue": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "audioFile": {
+          "type": ["string", "null"]
+        },
+        "minigameId": {
+          "type": "string"
+        },
+        "spriteIndex": {
+          "description": "1-based sprite selector; readers clamp values below 1.",
+          "type": ["integer", "null"]
+        },
+        "cameraMotion": {
+          "type": "object"
+        },
+        "specialEffects": {
+          "description": "An object wrapping an effects array, not a bare array.",
+          "type": "object",
+          "properties": {
+            "effects": {
+              "type": "array"
+            }
+          }
+        },
+        "highlights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/highlight"
+          }
+        },
+        "dialogueBoxStyle": {
+          "type": "object"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "speaking"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["characterId", "dialogue"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "narrator"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["text"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "minigame"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["minigameId"]
+          }
+        }
+      ]
+    },
+    "highlight": {
+      "type": "object",
+      "required": ["startChar", "endChar", "color"],
+      "properties": {
+        "startChar": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endChar": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        }
+      }
+    },
+    "minigame": {
+      "type": "object",
+      "required": ["gameId", "gameType"],
+      "properties": {
+        "gameId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "gameType": {
+          "enum": [
+            "nonstop_debate",
+            "mass_panic_debate",
+            "logic_dive",
+            "hangmans_gambit",
+            "debate_scrum",
+            "rebuttal_showdown",
+            "psyche_taxi",
+            "closing_argument"
+          ]
+        },
+        "difficulty": {
+          "type": "string"
+        },
+        "timeLimit": {
+          "type": "number"
+        },
+        "typeSpecific": {
+          "description": "Per-gameType payload. Shapes are owned by each minigame implementation and its editor view; deliberately not constrained here.",
+          "type": "object"
+        }
+      }
+    },
+    "truthBullet": {
+      "type": "object",
+      "required": ["bulletId", "name"],
+      "properties": {
+        "bulletId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "imageFile": {
+          "type": ["string", "null"]
+        },
+        "inversedLieBulletName": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}

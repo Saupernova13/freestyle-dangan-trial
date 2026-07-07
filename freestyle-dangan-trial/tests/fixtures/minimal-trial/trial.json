@@ -1,0 +1,116 @@
+{
+  "trialName": "Fixture Trial",
+  "characters": [
+    "FC_20000101_FIXTUR",
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "truthBullets": [
+    {
+      "bulletId": "tb_fixture_1",
+      "name": "Fixture Evidence",
+      "description": "A tiny piece of evidence used by automated tests.",
+      "imageFile": "tb_fixture.png",
+      "inversedLieBulletName": "Fixture Lie"
+    }
+  ],
+  "minigames": [
+    {
+      "gameId": "mg_fixture_debate",
+      "name": "Fixture Debate",
+      "gameType": "nonstop_debate",
+      "difficulty": "easy",
+      "timeLimit": 30,
+      "typeSpecific": {
+        "dialogueLines": [
+          {
+            "lineId": "ndl_fixture_1",
+            "characterId": "FC_20000101_FIXTUR",
+            "text": "The fixture is obviously guilty!",
+            "isWeakPoint": true,
+            "correctBulletId": "tb_fixture_1"
+          }
+        ]
+      }
+    }
+  ],
+  "script": {
+    "lines": [
+      {
+        "id": "line_fixture_1",
+        "order": 0,
+        "type": "speaking",
+        "characterId": "FC_20000101_FIXTUR",
+        "dialogue": "This trial exists only for the test suite.",
+        "spriteIndex": 1,
+        "cameraMotion": {
+          "type": "none",
+          "duration": 1,
+          "easing": "ease-in-out"
+        },
+        "highlights": [
+          {
+            "startChar": 5,
+            "endChar": 10,
+            "color": "#FFFF00"
+          }
+        ],
+        "specialEffects": {
+          "effects": []
+        },
+        "dialogueBoxStyle": {
+          "style": "default",
+          "borderColor": "#FFFFFF",
+          "bgOpacity": 0.9,
+          "borderThickness": 2
+        },
+        "audioFile": "line_fixture_1.mp3"
+      },
+      {
+        "id": "line_fixture_2",
+        "order": 1,
+        "type": "narrator",
+        "text": "A hush falls over the fixture courtroom."
+      },
+      {
+        "id": "line_fixture_3",
+        "order": 2,
+        "type": "speaking",
+        "characterId": "FC_20000101_FIXTUR",
+        "dialogue": "No voice line was recorded for this one.",
+        "audioFile": null
+      },
+      {
+        "id": "line_fixture_4",
+        "order": 3,
+        "type": "minigame",
+        "minigameId": "mg_fixture_debate"
+      }
+    ],
+    "lastModified": "2026-01-01T00:00:00.000Z"
+  },
+  "metadata": {
+    "version": "4.0",
+    "lastModified": "2026-01-01T00:00:00.000Z",
+    "studentCount": 16,
+    "headmasterCount": 1,
+    "totalCharacters": 1,
+    "scriptLineCount": 4,
+    "minigameCount": 1,
+    "truthBulletCount": 1
+  }
+}

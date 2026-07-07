@@ -1,0 +1,17 @@
+{
+  "id": "FC_20000101_FIXTUR",
+  "name": "Fixture",
+  "surname": "Chan",
+  "heightM": 1.6,
+  "heightCM": 0,
+  "weight": 50,
+  "chest": 80,
+  "blood": "O",
+  "dob": "2000-01-01",
+  "likes": "Deterministic tests",
+  "dislikes": "Flaky CI",
+  "notes": "Ultimate Test Fixture",
+  "isHeadmaster": false,
+  "position": 0,
+  "lastModified": "2026-01-01T00:00:00.000Z"
+}

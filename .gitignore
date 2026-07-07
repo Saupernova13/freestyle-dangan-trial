@@ -26,3 +26,6 @@ mono_crash.*.json
 /freestyle-dangan-trial/builds
 /freestyle-dangan-trial/godotgif
 /freestyle-dangan-trial/Trial
+
+# gdUnit4 test run reports
+/freestyle-dangan-trial/reports

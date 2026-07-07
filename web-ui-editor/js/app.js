@@ -4,6 +4,7 @@
 import { initCharacterSearchDropdown } from './components/characterSearchDropdown.js';
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
 import { initSpriteMagnifier } from './components/spriteMagnifier.js';
+import { initHistory, redo, undo } from './core/history.js';
 import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
 import { state } from './core/state.js';
 import { autoSaveTrial, scheduleAutoSave } from './core/storage.js';
@@ -33,6 +34,44 @@ document.addEventListener('DOMContentLoaded', function () {
     state.trialName = e.target.value.trim();
     updateExportButtonState();
     scheduleAutoSave();
+  });
+
+  // Undo/redo. History lives in core/history.js; this callback applies a
+  // restored snapshot to the UI and persists it (skipHistory keeps the
+  // restore itself from being recorded as a new edit).
+  initHistory(() => {
+    document.getElementById('trialNameInput').value = state.trialName;
+    renderActiveView();
+    updateFloatingAddButton();
+    updateExportButtonState();
+    autoSaveTrial({ skipHistory: true });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (!(event.ctrlKey || event.metaKey)) return;
+    const key = event.key.toLowerCase();
+    const isUndo = key === 'z' && !event.shiftKey;
+    const isRedo = key === 'y' || (key === 'z' && event.shiftKey);
+    if (!isUndo && !isRedo) return;
+
+    // No trial open: nothing to undo.
+    if (!state.dirHandle) return;
+    // A modal or dialog is open: its own inputs (and Escape/close flows) own
+    // the keyboard; app-level history would yank data out from under it.
+    if (
+      document.getElementById('modalroot')?.childElementCount ||
+      document.getElementById('dialogroot')?.childElementCount
+    ) {
+      return;
+    }
+    // Native text-field editing keeps its native undo. Those edits flow
+    // through scheduleAutoSave, so app history stays consistent anyway.
+    const t = event.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+
+    event.preventDefault();
+    if (isUndo) undo();
+    else redo();
   });
 });
 

@@ -7,6 +7,7 @@
 // Everything below works the same against either.
 import JSZip from 'jszip';
 import { BLOCK_COUNT } from './constants.js';
+import { recordChange, resetHistory } from './history.js';
 import { state } from './state.js';
 import { checkFormatVersion, validateTrialData } from './trialSchema.js';
 import { buildTrialJson } from './trialSerialize.js';
@@ -121,6 +122,9 @@ export async function openTrialFromHandle(dirHandle) {
     showLoader(true, 'Loading trial…');
     state.dirHandle = dirHandle;
     await loadTrialIntoState();
+    // The freshly loaded trial is the undo baseline; history never crosses
+    // from one trial into another.
+    resetHistory();
     renderDirDisplay(state.dirHandle, state.trialName);
     showLoader(false);
     renderActiveView();
@@ -491,14 +495,20 @@ let autoSaveFailureNotified = false;
 // Debounced auto-save for keystroke-frequency callers (dialogue inputs,
 // trial name). Writing trial.json on every keypress hammers the disk and
 // can interleave writes; one trailing save after the user pauses is enough.
+//
+// Persistence doubles as the undo-history choke point: every mutation in the
+// app reaches one of these two functions, so recordChange here covers them
+// all. The timer path passes skipHistory to avoid snapshotting twice.
 export function scheduleAutoSave(delayMs = 600) {
   if (state.dirHandle) setSaveStatus('saving');
+  recordChange(delayMs);
   clearTimeout(autoSaveTimer);
-  autoSaveTimer = setTimeout(autoSaveTrial, delayMs);
+  autoSaveTimer = setTimeout(() => autoSaveTrial({ skipHistory: true }), delayMs);
 }
 
-export async function autoSaveTrial() {
+export async function autoSaveTrial(opts = {}) {
   if (!state.dirHandle) return;
+  if (!opts.skipHistory) recordChange(0);
   setSaveStatus('saving');
   try {
     await writeTrialJson();

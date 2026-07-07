@@ -21,15 +21,15 @@ jobs:
         working-directory: web-ui-editor
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: web-ui-editor/package-lock.json
       - run: npm ci
       - run: npm run build:single
       - run: cp dist/index.html "trial-editor-${{ github.ref_name }}.html"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: editor
           path: web-ui-editor/trial-editor-${{ github.ref_name }}.html
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
           files: |

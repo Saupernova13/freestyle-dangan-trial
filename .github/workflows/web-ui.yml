@@ -22,9 +22,9 @@ jobs:
         working-directory: web-ui-editor
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: web-ui-editor/package-lock.json
       - run: npm ci

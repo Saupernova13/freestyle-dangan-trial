@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: 4.5.1
+
+jobs:
+  editor:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-ui-editor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web-ui-editor/package-lock.json
+      - run: npm ci
+      - run: npm run build:single
+      - run: cp dist/index.html "trial-editor-${{ github.ref_name }}.html"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: editor
+          path: web-ui-editor/trial-editor-${{ github.ref_name }}.html
+
+  windows-export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot and export templates
+        run: |
+          curl -fsSL -o godot.zip \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          install -D "Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$HOME/.local/bin/godot"
+          curl -fsSL -o templates.tpz \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q templates.tpz
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mv templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+      - name: Import project
+        run: |
+          godot --headless --path freestyle-dangan-trial --import || \
+          godot --headless --path freestyle-dangan-trial --import
+      - name: Export Windows build
+        run: |
+          mkdir -p freestyle-dangan-trial/builds/win
+          godot --headless --path freestyle-dangan-trial --export-release "Windows" builds/win/trial.exe
+      - name: Zip build
+        run: |
+          cd freestyle-dangan-trial/builds/win
+          zip -r "../../../CustomRonpa-windows-${{ github.ref_name }}.zip" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: CustomRonpa-windows-${{ github.ref_name }}.zip
+
+  release:
+    needs: [editor, windows-export]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            trial-editor-${{ github.ref_name }}.html
+            CustomRonpa-windows-${{ github.ref_name }}.zip

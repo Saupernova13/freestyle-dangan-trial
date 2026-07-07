@@ -6,8 +6,10 @@
 //   - an OPFS subfolder (Firefox/Safari/Chromium) — see core/opfs.js.
 // Everything below works the same against either.
 import JSZip from 'jszip';
-import { BLOCK_COUNT, blockTypes } from './constants.js';
+import { BLOCK_COUNT } from './constants.js';
 import { state } from './state.js';
+import { checkFormatVersion, validateTrialData } from './trialSchema.js';
+import { buildTrialJson } from './trialSerialize.js';
 import {
   createOpfsTrial,
   deleteOpfsTrial,
@@ -46,6 +48,36 @@ async function loadTrialIntoState() {
   try {
     const file = await state.dirHandle.getFileHandle('trial.json').then((fh) => fh.getFile());
     const data = JSON.parse(await file.text());
+
+    // Contract checks (schema/trial.schema.json). Never block opening — the
+    // author needs the editor to fix a broken trial — but say what's wrong
+    // before an auto-save quietly rewrites the file.
+    const versionCheck = checkFormatVersion(data);
+    if (versionCheck.message) {
+      await alertDialog({
+        title: versionCheck.ok ? 'Trial format notice' : 'Trial from a newer editor',
+        type: 'warning',
+        message: versionCheck.ok
+          ? versionCheck.message
+          : versionCheck.message +
+            '\n\nThe editor will still open it, but unknown data may be lost on save. ' +
+            'Back the trial up first.',
+      });
+    }
+    const schemaIssues = validateTrialData(data);
+    if (schemaIssues.length > 0) {
+      const shown = schemaIssues.slice(0, 8);
+      const extra = schemaIssues.length - shown.length;
+      await alertDialog({
+        title: 'trial.json has problems',
+        type: 'warning',
+        message:
+          shown.map((m) => '- ' + m).join('\n') +
+          (extra > 0 ? '\n- ...and ' + extra + ' more' : '') +
+          '\n\nThe editor will still open this trial; fix these before exporting.',
+      });
+    }
+
     state.trialName = data.trialName || '';
     document.getElementById('trialNameInput').value = state.trialName;
 
@@ -484,41 +516,15 @@ export async function autoSaveTrial() {
 }
 
 async function writeTrialJson() {
-  // Create minimal ID-only references
-  let characterIds = state.cast.map((c) => (c ? c.id : null));
+  const trialJs = buildTrialJson(state);
 
-  const RUNTIME_FIELDS = new Set(['voiceLineBlob', 'oppositionAudioBlob', 'defenseAudioBlob']);
-  let minigamesForSave = JSON.parse(
-    JSON.stringify(state.minigames, (k, v) => (RUNTIME_FIELDS.has(k) ? undefined : v))
-  );
-
-  let trialJs = {
-    trialName: state.trialName,
-    characters: characterIds, // Just an array of IDs or nulls
-    truthBullets: state.truthBullets.map((b) => ({
-      // Exclude imageDataURL
-      bulletId: b.bulletId,
-      name: b.name,
-      description: b.description,
-      imageFile: b.imageFile,
-      inversedLieBulletName: b.inversedLieBulletName,
-    })),
-    minigames: minigamesForSave,
-    script: {
-      lines: state.scriptLines,
-      lastModified: new Date().toISOString(),
-    },
-    metadata: {
-      version: '4.0',
-      lastModified: new Date().toISOString(),
-      studentCount: blockTypes.filter((t) => !t).length,
-      headmasterCount: blockTypes.filter((t) => t).length,
-      totalCharacters: characterIds.filter((id) => id !== null).length,
-      scriptLineCount: state.scriptLines.length,
-      minigameCount: state.minigames.length,
-      truthBulletCount: state.truthBullets.length,
-    },
-  };
+  // Contract self-check. Only warn — blocking an auto-save over a validation
+  // bug would risk losing the author's work, which is worse than persisting
+  // an imperfect file.
+  const issues = validateTrialData(trialJs);
+  if (issues.length > 0) {
+    console.warn('trial.json being saved does not match the schema:', issues);
+  }
 
   let fHandle = await state.dirHandle.getFileHandle('trial.json', { create: true });
   let wr = await fHandle.createWritable();

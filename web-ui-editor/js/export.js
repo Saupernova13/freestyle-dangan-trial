@@ -1,7 +1,9 @@
 // Export module - handles packaging trial files into .drtrial format
 import JSZip from 'jszip';
 import { state } from './core/state.js';
-import { MINIGAME_TYPE_LABELS } from './core/constants.js';
+import { FORMAT_VERSION, MINIGAME_TYPE_LABELS } from './core/constants.js';
+import { validateTrialData } from './core/trialSchema.js';
+import { buildTrialJson } from './core/trialSerialize.js';
 import { isCharacterComplete, missingCharacterFields } from './models/characterModel.js';
 import { alertDialog, confirmDialog, showToast } from './ui/dialogs.js';
 import { normalizeHighlights, showLoader } from './utils.js';
@@ -115,8 +117,11 @@ export async function exportToPlayableFile() {
   }
 
   // Pre-flight check: warn about anything that would make the trial broken or
-  // unplayable, and let the author decide whether to export anyway.
-  const issues = validateTrialForExport();
+  // unplayable, and let the author decide whether to export anyway. Content
+  // problems come from validateTrialForExport; contract violations against
+  // schema/trial.schema.json come from validateTrialData on the exact object
+  // a save would write.
+  const issues = validateTrialData(buildTrialJson(state)).concat(validateTrialForExport());
   if (issues.length > 0) {
     const shown = issues.slice(0, 8);
     const extra = issues.length - shown.length;
@@ -162,7 +167,7 @@ export async function exportToPlayableFile() {
         minigames: state.minigames || [],
         script: { lines: state.scriptLines || [] },
         metadata: {
-          version: '4.0',
+          version: FORMAT_VERSION,
           lastModified: new Date().toISOString(),
           scriptLineCount: (state.scriptLines || []).length,
           minigameCount: (state.minigames || []).length,

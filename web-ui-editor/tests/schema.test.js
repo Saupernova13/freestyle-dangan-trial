@@ -13,6 +13,7 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import { describe, expect, it } from 'vitest';
 import { FORMAT_VERSION } from '../js/core/constants.js';
 import { checkFormatVersion, validateTrialData } from '../js/core/trialSchema.js';
+import { buildTrialJson } from '../js/core/trialSerialize.js';
 import { sanitizeTrialJson } from '../js/export.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -354,5 +355,22 @@ describe('export path keeps the contract', () => {
     const out = JSON.parse(sanitizeTrialJson(readFileSync(fixturePath, 'utf8')));
     expect(ajvValidate(out), JSON.stringify(ajvValidate.errors)).toBe(true);
     expect(validateTrialData(out)).toEqual([]);
+  });
+
+  it('buildTrialJson output validates against the schema', () => {
+    const f = fixture();
+    const fakeState = {
+      trialName: f.trialName,
+      cast: [{ id: 'FC_20000101_FIXTUR', name: 'Fixture' }, null, null],
+      scriptLines: f.script.lines,
+      minigames: f.minigames.map((mg) => ({ ...mg, voiceLineBlob: 'runtime-junk' })),
+      truthBullets: f.truthBullets.map((b) => ({ ...b, imageDataURL: 'data:image/png;...' })),
+    };
+    const out = JSON.parse(JSON.stringify(buildTrialJson(fakeState)));
+    expect(ajvValidate(out), JSON.stringify(ajvValidate.errors)).toBe(true);
+    expect(validateTrialData(out)).toEqual([]);
+    expect(out.metadata.version).toBe(FORMAT_VERSION);
+    expect(JSON.stringify(out)).not.toContain('voiceLineBlob');
+    expect(JSON.stringify(out)).not.toContain('imageDataURL');
   });
 });

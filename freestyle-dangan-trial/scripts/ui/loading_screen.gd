@@ -5,7 +5,7 @@ extends CanvasLayer
 ##
 ## Scene-driven — see scenes/ui/loading_screen.tscn. Edit the layout, colors
 ## and fonts there; edit the entrance/exit animations in
-## animations/Loading_Screen_Anim_Lib.tres ("show" autoplays, "dismiss" is
+## animations/loading_screen_anim_lib.tres ("show" autoplays, "dismiss" is
 ## triggered before leaving). This script only binds live load progress to the
 ## UI and triggers the dismiss animation.
 

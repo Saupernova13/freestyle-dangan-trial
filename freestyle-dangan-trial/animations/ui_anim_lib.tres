@@ -1,7 +1,7 @@
 [gd_resource type="AnimationLibrary" load_steps=4 format=3 uid="uid://chps8lild5wfe"]
 
-[ext_resource type="Animation" uid="uid://dlob2iwgp4cn1" path="res://animations/Spinning_Chamber.res" id="1_plmvo"]
-[ext_resource type="Animation" uid="uid://dqtmpfcwh5731" path="res://animations/Load_In_Chamber.res" id="2_4j38q"]
+[ext_resource type="Animation" uid="uid://dlob2iwgp4cn1" path="res://animations/spinning_chamber.res" id="1_plmvo"]
+[ext_resource type="Animation" uid="uid://dqtmpfcwh5731" path="res://animations/load_in_chamber.res" id="2_4j38q"]
 
 [sub_resource type="Animation" id="Animation_5byqq"]
 length = 0.001

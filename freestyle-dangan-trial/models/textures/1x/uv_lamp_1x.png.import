@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://daul3l47h7s6t"
-path.s3tc="res://.godot/imported/UV_Joiner_1x.png-f81d4a6b13f22166d90635635da7f156.s3tc.ctex"
-path.etc2="res://.godot/imported/UV_Joiner_1x.png-f81d4a6b13f22166d90635635da7f156.etc2.ctex"
+uid="uid://em5hxugfjjoq"
+path.s3tc="res://.godot/imported/uv_lamp_1x.png-d52a9860ee70c3955cf23fc3aa278193.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_lamp_1x.png-d52a9860ee70c3955cf23fc3aa278193.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Joiner_1x.png"
-dest_files=["res://.godot/imported/UV_Joiner_1x.png-f81d4a6b13f22166d90635635da7f156.s3tc.ctex", "res://.godot/imported/UV_Joiner_1x.png-f81d4a6b13f22166d90635635da7f156.etc2.ctex"]
+source_file="res://models/textures/1x/uv_lamp_1x.png"
+dest_files=["res://.godot/imported/uv_lamp_1x.png-d52a9860ee70c3955cf23fc3aa278193.s3tc.ctex", "res://.godot/imported/uv_lamp_1x.png-d52a9860ee70c3955cf23fc3aa278193.etc2.ctex"]
 
 [params]
 

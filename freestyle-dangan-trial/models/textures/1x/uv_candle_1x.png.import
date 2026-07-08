@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://leu2tb2xub60"
-path.s3tc="res://.godot/imported/UV_Lamp_Holder_1x.png-651ca2bb586303549e8adb2ae3d03ffe.s3tc.ctex"
-path.etc2="res://.godot/imported/UV_Lamp_Holder_1x.png-651ca2bb586303549e8adb2ae3d03ffe.etc2.ctex"
+uid="uid://blbgp8gqiql0o"
+path.s3tc="res://.godot/imported/uv_candle_1x.png-ace656bfb58deb9931efe058fb7b7690.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_candle_1x.png-ace656bfb58deb9931efe058fb7b7690.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Lamp_Holder_1x.png"
-dest_files=["res://.godot/imported/UV_Lamp_Holder_1x.png-651ca2bb586303549e8adb2ae3d03ffe.s3tc.ctex", "res://.godot/imported/UV_Lamp_Holder_1x.png-651ca2bb586303549e8adb2ae3d03ffe.etc2.ctex"]
+source_file="res://models/textures/1x/uv_candle_1x.png"
+dest_files=["res://.godot/imported/uv_candle_1x.png-ace656bfb58deb9931efe058fb7b7690.s3tc.ctex", "res://.godot/imported/uv_candle_1x.png-ace656bfb58deb9931efe058fb7b7690.etc2.ctex"]
 
 [params]
 

@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://du1wcrekm3o0o"
-path.s3tc="res://.godot/imported/UV_Bench_Rod_1x.png-85f1d99f398b27d2da6cc48bc53856f7.s3tc.ctex"
-path.etc2="res://.godot/imported/UV_Bench_Rod_1x.png-85f1d99f398b27d2da6cc48bc53856f7.etc2.ctex"
+uid="uid://vwn36pavuekv"
+path.s3tc="res://.godot/imported/uv_throne_1x.png-1ae82d08244f62504aca5ad38c15b09e.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_throne_1x.png-1ae82d08244f62504aca5ad38c15b09e.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Bench_Rod_1x.png"
-dest_files=["res://.godot/imported/UV_Bench_Rod_1x.png-85f1d99f398b27d2da6cc48bc53856f7.s3tc.ctex", "res://.godot/imported/UV_Bench_Rod_1x.png-85f1d99f398b27d2da6cc48bc53856f7.etc2.ctex"]
+source_file="res://models/textures/1x/uv_throne_1x.png"
+dest_files=["res://.godot/imported/uv_throne_1x.png-1ae82d08244f62504aca5ad38c15b09e.s3tc.ctex", "res://.godot/imported/uv_throne_1x.png-1ae82d08244f62504aca5ad38c15b09e.etc2.ctex"]
 
 [params]
 

@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://73wbyivh4oh6"
-path.s3tc="res://.godot/imported/UV_Red_Carpet_1x.png-f9c2c32e3bed85e0df562c6b16ce2b16.s3tc.ctex"
-path.etc2="res://.godot/imported/UV_Red_Carpet_1x.png-f9c2c32e3bed85e0df562c6b16ce2b16.etc2.ctex"
+uid="uid://daul3l47h7s6t"
+path.s3tc="res://.godot/imported/uv_joiner_1x.png-da1f14b2e40c7b234ea37bd47887e98c.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_joiner_1x.png-da1f14b2e40c7b234ea37bd47887e98c.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Red_Carpet_1x.png"
-dest_files=["res://.godot/imported/UV_Red_Carpet_1x.png-f9c2c32e3bed85e0df562c6b16ce2b16.s3tc.ctex", "res://.godot/imported/UV_Red_Carpet_1x.png-f9c2c32e3bed85e0df562c6b16ce2b16.etc2.ctex"]
+source_file="res://models/textures/1x/uv_joiner_1x.png"
+dest_files=["res://.godot/imported/uv_joiner_1x.png-da1f14b2e40c7b234ea37bd47887e98c.s3tc.ctex", "res://.godot/imported/uv_joiner_1x.png-da1f14b2e40c7b234ea37bd47887e98c.etc2.ctex"]
 
 [params]
 

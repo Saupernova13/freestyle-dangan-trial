@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b6yjbov8i0l74"
-path.s3tc="res://.godot/imported/UV_Curtain_1x.jpg-b3ac09e0334a8a1a4ee92d7e5411eda8.s3tc.ctex"
-path.etc2="res://.godot/imported/UV_Curtain_1x.jpg-b3ac09e0334a8a1a4ee92d7e5411eda8.etc2.ctex"
+uid="uid://b6ls43rc0o3gp"
+path.s3tc="res://.godot/imported/uv_floor_checker_1x.png-630d48ad25eaf76bf523fcf1e85dd293.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_floor_checker_1x.png-630d48ad25eaf76bf523fcf1e85dd293.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Curtain_1x.jpg"
-dest_files=["res://.godot/imported/UV_Curtain_1x.jpg-b3ac09e0334a8a1a4ee92d7e5411eda8.s3tc.ctex", "res://.godot/imported/UV_Curtain_1x.jpg-b3ac09e0334a8a1a4ee92d7e5411eda8.etc2.ctex"]
+source_file="res://models/textures/1x/uv_floor_checker_1x.png"
+dest_files=["res://.godot/imported/uv_floor_checker_1x.png-630d48ad25eaf76bf523fcf1e85dd293.s3tc.ctex", "res://.godot/imported/uv_floor_checker_1x.png-630d48ad25eaf76bf523fcf1e85dd293.etc2.ctex"]
 
 [params]
 

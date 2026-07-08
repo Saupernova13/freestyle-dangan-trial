@@ -32,7 +32,7 @@ extends Path2D
 @export_range(8, 128, 1) var font_size: int = 74
 
 ## Font file to use for character labels
-@export_file("*.ttf") var font_file: String = "res://fonts/LexendMega-Regular.ttf"
+@export_file("*.ttf") var font_file: String = "res://fonts/lexend_mega_regular.ttf"
 
 ## Color of the text (supports hex codes with transparency)
 @export var text_color: Color = Color(1.0, 1.0, 1.0, 0.2)

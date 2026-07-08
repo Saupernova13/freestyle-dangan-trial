@@ -1,7 +1,7 @@
 [gd_scene load_steps=11 format=4 uid="uid://d15txppf4j9hq"]
 
-[ext_resource type="Texture2D" uid="uid://b6yjbov8i0l74" path="res://models/textures/1x/UV_Curtain_1x.jpg" id="1_0q5xb"]
-[ext_resource type="FontFile" uid="uid://cj7wnflnjmjyv" path="res://fonts/LexendMega-Regular.ttf" id="2_rh4x2"]
+[ext_resource type="Texture2D" uid="uid://b6yjbov8i0l74" path="res://models/textures/1x/uv_curtain_1x.jpg" id="1_0q5xb"]
+[ext_resource type="FontFile" uid="uid://cj7wnflnjmjyv" path="res://fonts/lexend_mega_regular.ttf" id="2_rh4x2"]
 [ext_resource type="Shader" uid="uid://bofaa3xotc3cq" path="res://shaders/text_wave.gdshader" id="3_g20o5"]
 [ext_resource type="Texture2D" uid="uid://e348ddqmg6j8" path="res://textures/ui/trial_left_face_view_long.png" id="4_g20o5"]
 [ext_resource type="Texture2D" uid="uid://rk1or2ndqrxh" path="res://textures/ui/trial_left_face_view_long_overlay.png" id="5_q5u86"]

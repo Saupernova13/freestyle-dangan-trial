@@ -2,20 +2,22 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dxhn5fsg8bhxn"
-path="res://.godot/imported/UV_Pillar_1x.png-179666bdb39086f980334461f9c9c4c9.ctex"
+uid="uid://d1d3buqsf4o00"
+path.s3tc="res://.godot/imported/uv_walls_1x.png-2e007fdffaa50b8d61ffce87f20ca509.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_walls_1x.png-2e007fdffaa50b8d61ffce87f20ca509.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Pillar_1x.png"
-dest_files=["res://.godot/imported/UV_Pillar_1x.png-179666bdb39086f980334461f9c9c4c9.ctex"]
+source_file="res://models/textures/1x/uv_walls_1x.png"
+dest_files=["res://.godot/imported/uv_walls_1x.png-2e007fdffaa50b8d61ffce87f20ca509.s3tc.ctex", "res://.godot/imported/uv_walls_1x.png-2e007fdffaa50b8d61ffce87f20ca509.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -23,7 +25,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -37,4 +39,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

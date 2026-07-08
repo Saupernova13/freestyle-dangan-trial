@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b6ls43rc0o3gp"
-path.s3tc="res://.godot/imported/UV_Floor_Checker_1x.png-75378ecd48974784a852b3cb95b9fd3f.s3tc.ctex"
-path.etc2="res://.godot/imported/UV_Floor_Checker_1x.png-75378ecd48974784a852b3cb95b9fd3f.etc2.ctex"
+uid="uid://cms27tkhks1nq"
+path.s3tc="res://.godot/imported/uv_rug_wood_1x.png-7b78262b151fe338b9923e0cf2a4c0aa.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_rug_wood_1x.png-7b78262b151fe338b9923e0cf2a4c0aa.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Floor_Checker_1x.png"
-dest_files=["res://.godot/imported/UV_Floor_Checker_1x.png-75378ecd48974784a852b3cb95b9fd3f.s3tc.ctex", "res://.godot/imported/UV_Floor_Checker_1x.png-75378ecd48974784a852b3cb95b9fd3f.etc2.ctex"]
+source_file="res://models/textures/1x/uv_rug_wood_1x.png"
+dest_files=["res://.godot/imported/uv_rug_wood_1x.png-7b78262b151fe338b9923e0cf2a4c0aa.s3tc.ctex", "res://.godot/imported/uv_rug_wood_1x.png-7b78262b151fe338b9923e0cf2a4c0aa.etc2.ctex"]
 
 [params]
 

@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cms27tkhks1nq"
-path.s3tc="res://.godot/imported/UV_Rug_Wood_1x.png-0a6e83d73157cb81d647e8eaecf6a3b3.s3tc.ctex"
-path.etc2="res://.godot/imported/UV_Rug_Wood_1x.png-0a6e83d73157cb81d647e8eaecf6a3b3.etc2.ctex"
+uid="uid://b6yjbov8i0l74"
+path.s3tc="res://.godot/imported/uv_curtain_1x.jpg-f6998bc019ffad0f31dee3da9e77e61b.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_curtain_1x.jpg-f6998bc019ffad0f31dee3da9e77e61b.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Rug_Wood_1x.png"
-dest_files=["res://.godot/imported/UV_Rug_Wood_1x.png-0a6e83d73157cb81d647e8eaecf6a3b3.s3tc.ctex", "res://.godot/imported/UV_Rug_Wood_1x.png-0a6e83d73157cb81d647e8eaecf6a3b3.etc2.ctex"]
+source_file="res://models/textures/1x/uv_curtain_1x.jpg"
+dest_files=["res://.godot/imported/uv_curtain_1x.jpg-f6998bc019ffad0f31dee3da9e77e61b.s3tc.ctex", "res://.godot/imported/uv_curtain_1x.jpg-f6998bc019ffad0f31dee3da9e77e61b.etc2.ctex"]
 
 [params]
 

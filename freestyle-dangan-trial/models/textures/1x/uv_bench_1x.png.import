@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bi2txcchhu0fm"
-path.s3tc="res://.godot/imported/UV_Rug_1x.png-0c78d64328a9ee723ae91201a9304ded.s3tc.ctex"
-path.etc2="res://.godot/imported/UV_Rug_1x.png-0c78d64328a9ee723ae91201a9304ded.etc2.ctex"
+uid="uid://df4pnsn2xfuwc"
+path.s3tc="res://.godot/imported/uv_bench_1x.png-99611d0c5b7f07d47c5d33c930d52d14.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_bench_1x.png-99611d0c5b7f07d47c5d33c930d52d14.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Rug_1x.png"
-dest_files=["res://.godot/imported/UV_Rug_1x.png-0c78d64328a9ee723ae91201a9304ded.s3tc.ctex", "res://.godot/imported/UV_Rug_1x.png-0c78d64328a9ee723ae91201a9304ded.etc2.ctex"]
+source_file="res://models/textures/1x/uv_bench_1x.png"
+dest_files=["res://.godot/imported/uv_bench_1x.png-99611d0c5b7f07d47c5d33c930d52d14.s3tc.ctex", "res://.godot/imported/uv_bench_1x.png-99611d0c5b7f07d47c5d33c930d52d14.etc2.ctex"]
 
 [params]
 

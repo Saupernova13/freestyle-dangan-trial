@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d1d3buqsf4o00"
-path.s3tc="res://.godot/imported/UV_Walls_1X.png-4579cbc367b3dc4116e7a73d6689e266.s3tc.ctex"
-path.etc2="res://.godot/imported/UV_Walls_1X.png-4579cbc367b3dc4116e7a73d6689e266.etc2.ctex"
+uid="uid://du1wcrekm3o0o"
+path.s3tc="res://.godot/imported/uv_bench_rod_1x.png-6273f34d0394144f3c1c0286f31c4f30.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_bench_rod_1x.png-6273f34d0394144f3c1c0286f31c4f30.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Walls_1X.png"
-dest_files=["res://.godot/imported/UV_Walls_1X.png-4579cbc367b3dc4116e7a73d6689e266.s3tc.ctex", "res://.godot/imported/UV_Walls_1X.png-4579cbc367b3dc4116e7a73d6689e266.etc2.ctex"]
+source_file="res://models/textures/1x/uv_bench_rod_1x.png"
+dest_files=["res://.godot/imported/uv_bench_rod_1x.png-6273f34d0394144f3c1c0286f31c4f30.s3tc.ctex", "res://.godot/imported/uv_bench_rod_1x.png-6273f34d0394144f3c1c0286f31c4f30.etc2.ctex"]
 
 [params]
 

@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://em5hxugfjjoq"
-path.s3tc="res://.godot/imported/UV_Lamp_1x.png-f4c7717fe820872154c5f96e28cd6318.s3tc.ctex"
-path.etc2="res://.godot/imported/UV_Lamp_1x.png-f4c7717fe820872154c5f96e28cd6318.etc2.ctex"
+uid="uid://bi2txcchhu0fm"
+path.s3tc="res://.godot/imported/uv_rug_1x.png-d1a6e2dd73926b8d5b6a139355c96fae.s3tc.ctex"
+path.etc2="res://.godot/imported/uv_rug_1x.png-d1a6e2dd73926b8d5b6a139355c96fae.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://models/textures/1x/UV_Lamp_1x.png"
-dest_files=["res://.godot/imported/UV_Lamp_1x.png-f4c7717fe820872154c5f96e28cd6318.s3tc.ctex", "res://.godot/imported/UV_Lamp_1x.png-f4c7717fe820872154c5f96e28cd6318.etc2.ctex"]
+source_file="res://models/textures/1x/uv_rug_1x.png"
+dest_files=["res://.godot/imported/uv_rug_1x.png-d1a6e2dd73926b8d5b6a139355c96fae.s3tc.ctex", "res://.godot/imported/uv_rug_1x.png-d1a6e2dd73926b8d5b6a139355c96fae.etc2.ctex"]
 
 [params]
 

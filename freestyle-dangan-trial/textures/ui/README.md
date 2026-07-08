@@ -56,5 +56,4 @@ Do **not** re-introduce per-node texture swapping or duplicate directories.
 The standard mechanism is a resource-pack overlay: ship design-res files at
 these same `res://textures/ui/...` paths and mount an optional HD `.pck`
 (`ProjectSettings.load_resource_pack`) that overrides the identical paths at
-startup. Scenes stay untouched. The retired duplicate set is archived under
-`textures/_archive/` (excluded from import/export by `.gdignore`).
+startup. Scenes stay untouched.

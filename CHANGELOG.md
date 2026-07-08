@@ -9,6 +9,25 @@ separately in `schema/trial.schema.json`.
 
 ## [Unreleased]
 
+### Changed
+- Renamed all GDScript files to snake_case per the official Godot style guide
+  (e.g. `TrialLoader.gd` -> `trial_loader.gd`, `UITheme.gd` -> `ui_theme.gd`).
+  Autoload names and `class_name` identifiers are unchanged.
+- Renamed the trial-room textures and the Lexend font to snake_case, fixing the
+  `UV_Walls_1X` capital-X inconsistency. Resource UIDs are preserved, so scene
+  references resolve unchanged.
+- Renamed the animation resources to snake_case (`UI_Anim_Lib.tres` ->
+  `ui_anim_lib.tres`, `Load_In_Chamber.res` -> `load_in_chamber.res`, etc.);
+  animation-name keys inside the libraries are unchanged.
+
+### Removed
+- Deleted the bundled `trial_data/` sample trial (17 DRV3 character folders,
+  generated audio and truth bullets). `makoto` remains the default portrait and
+  `tests/fixtures/minimal-trial/` the only in-repo sample.
+- Removed dead assets: the archived UI texture set (`textures/_archive/`), eight
+  orphaned `.uid` sidecars, the unused `Loop_Summary.res`, and duplicated
+  trial-room texture copies.
+
 ## [1.1.1] - 2026-07-08
 
 ### Fixed

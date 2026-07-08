@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/MinigameResultCard.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/minigame_result_card.gd" id="1_script"]
 
 [sub_resource type="Animation" id="Anim_Reset"]
 resource_name = "RESET"

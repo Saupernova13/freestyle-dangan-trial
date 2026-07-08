@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/LoadingScreen.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/loading_screen.gd" id="1_script"]
 [ext_resource type="AnimationLibrary" path="res://animations/Loading_Screen_Anim_Lib.tres" id="2_animlib"]
 
 [node name="LoadingScreen" type="CanvasLayer"]

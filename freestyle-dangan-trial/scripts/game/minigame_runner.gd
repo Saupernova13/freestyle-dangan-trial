@@ -8,14 +8,14 @@ extends Node
 ## Minigame gameType -> script path. Adding a minigame = one entry here plus the
 ## script (a MinigameBase subclass).
 const MINIGAME_SCRIPTS := {
-	"nonstop_debate": "res://scripts/minigames/NonstopDebate.gd",
-	"hangmans_gambit": "res://scripts/minigames/HangmansGambit.gd",
-	"logic_dive": "res://scripts/minigames/LogicDive.gd",
-	"debate_scrum": "res://scripts/minigames/DebateScrum.gd",
-	"mass_panic_debate": "res://scripts/minigames/MassPanicDebate.gd",
-	"rebuttal_showdown": "res://scripts/minigames/RebuttalShowdown.gd",
-	"psyche_taxi": "res://scripts/minigames/PsycheTaxi.gd",
-	"closing_argument": "res://scripts/minigames/ClosingArgument.gd",
+	"nonstop_debate": "res://scripts/minigames/nonstop_debate.gd",
+	"hangmans_gambit": "res://scripts/minigames/hangmans_gambit.gd",
+	"logic_dive": "res://scripts/minigames/logic_dive.gd",
+	"debate_scrum": "res://scripts/minigames/debate_scrum.gd",
+	"mass_panic_debate": "res://scripts/minigames/mass_panic_debate.gd",
+	"rebuttal_showdown": "res://scripts/minigames/rebuttal_showdown.gd",
+	"psyche_taxi": "res://scripts/minigames/psyche_taxi.gd",
+	"closing_argument": "res://scripts/minigames/closing_argument.gd",
 }
 
 var _conversation_ui: CanvasItem

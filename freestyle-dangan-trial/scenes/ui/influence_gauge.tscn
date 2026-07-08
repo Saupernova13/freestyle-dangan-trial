@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" uid="uid://cnflm0kty0rp0" path="res://scripts/ui/InfluenceGaugeUI.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cnflm0kty0rp0" path="res://scripts/ui/influence_gauge_ui.gd" id="1_script"]
 
 [sub_resource type="Animation" id="Anim_DamageFlash"]
 resource_name = "damage_flash"

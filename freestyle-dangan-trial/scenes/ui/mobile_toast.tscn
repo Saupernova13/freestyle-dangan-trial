@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" uid="uid://dyj5i3lcvsu62" path="res://scripts/ui/MobileToast.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dyj5i3lcvsu62" path="res://scripts/ui/mobile_toast.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="Toast_Style"]
 content_margin_left = 16.0

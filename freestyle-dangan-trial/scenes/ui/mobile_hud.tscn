@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" uid="uid://dncrga2hordgl" path="res://scripts/ui/MobileHud.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dncrga2hordgl" path="res://scripts/ui/mobile_hud.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="Btn_Normal"]
 bg_color = Color(0.08, 0.1, 0.18, 0.78)

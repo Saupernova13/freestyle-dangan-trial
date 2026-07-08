@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/minigames/RoadEffect.gd" id="1_road"]
+[ext_resource type="Script" path="res://scripts/minigames/road_effect.gd" id="1_road"]
 
 [node name="LogicDiveOverlay" type="CanvasLayer"]
 layer = 5

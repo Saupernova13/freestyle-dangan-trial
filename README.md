@@ -291,13 +291,13 @@ godot --headless --quit-after 5 --path freestyle-dangan-trial
 - `web-ui-editor/js/modals/scriptLineModal.js` — per-line properties editor
 
 **Engine**
-- `scripts/core/TrialLoader.gd` — `.drtrial` load facade (`trial/` helpers)
-- `scripts/core/ScriptDirector.gd` — script playback state machine
-- `scripts/game/TrialRoomManager.gd` — trial-room composition root
-- `scripts/game/CharacterStage.gd` — bench sprite population and lookup
-- `scripts/game/MinigameRunner.gd` — minigame catalog and replay loop
-- `scripts/minigames/MinigameBase.gd` — minigame framework
-- `scripts/camera/CameraDirector.gd` — per-line camera motion
+- `scripts/core/trial_loader.gd` — `.drtrial` load facade (`trial/` helpers)
+- `scripts/core/script_director.gd` — script playback state machine
+- `scripts/game/trial_room_manager.gd` — trial-room composition root
+- `scripts/game/character_stage.gd` — bench sprite population and lookup
+- `scripts/game/minigame_runner.gd` — minigame catalog and replay loop
+- `scripts/minigames/minigame_base.gd` — minigame framework
+- `scripts/camera/camera_director.gd` — per-line camera motion
 
 ---
 

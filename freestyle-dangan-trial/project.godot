@@ -18,18 +18,18 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-Log="*res://scripts/core/Log.gd"
-TrialLoader="*res://scripts/core/TrialLoader.gd"
-ScriptDirector="*res://scripts/core/ScriptDirector.gd"
-AudioManager="*res://scripts/core/AudioManager.gd"
-InputManager="*res://scripts/core/InputManager.gd"
-InfluenceGauge="*res://scripts/core/InfluenceGauge.gd"
-TruthBulletManager="*res://scripts/core/TruthBulletManager.gd"
-CameraDirector="*res://scripts/camera/CameraDirector.gd"
-ScreenEffects="*res://scripts/core/ScreenEffectsManager.gd"
-Settings="*res://scripts/core/Settings.gd"
-ConcentrateGauge="*res://scripts/core/ConcentrateGauge.gd"
-GameRandom="*res://scripts/core/GameRandom.gd"
+Log="*res://scripts/core/log.gd"
+TrialLoader="*res://scripts/core/trial_loader.gd"
+ScriptDirector="*res://scripts/core/script_director.gd"
+AudioManager="*res://scripts/core/audio_manager.gd"
+InputManager="*res://scripts/core/input_manager.gd"
+InfluenceGauge="*res://scripts/core/influence_gauge.gd"
+TruthBulletManager="*res://scripts/core/truth_bullet_manager.gd"
+CameraDirector="*res://scripts/camera/camera_director.gd"
+ScreenEffects="*res://scripts/core/screen_effects_manager.gd"
+Settings="*res://scripts/core/settings.gd"
+ConcentrateGauge="*res://scripts/core/concentrate_gauge.gd"
+GameRandom="*res://scripts/core/game_random.gd"
 
 [display]
 

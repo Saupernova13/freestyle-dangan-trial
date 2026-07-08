@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" path="res://scripts/minigames/BulletPreview.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/minigames/bullet_preview.gd" id="1_script"]
 
 [sub_resource type="Animation" id="Anim_Show"]
 resource_name = "show"

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://scripts/minigames/debate/BulletProjectile.gd" id="1_script"]
-[ext_resource type="Script" path="res://scripts/minigames/debate/BulletDrawer.gd" id="2_drawer"]
+[ext_resource type="Script" path="res://scripts/minigames/debate/bullet_projectile.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/minigames/debate/bullet_drawer.gd" id="2_drawer"]
 
 [node name="BulletProjectile" type="Control"]
 custom_minimum_size = Vector2(16, 16)

@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" uid="uid://cwqb5uyomka7p" path="res://scripts/ui/Crosshair.gd" id="1_script"]
-[ext_resource type="Script" path="res://scripts/ui/CrosshairDrawer.gd" id="2_drawer"]
+[ext_resource type="Script" uid="uid://cwqb5uyomka7p" path="res://scripts/ui/crosshair.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/crosshair_drawer.gd" id="2_drawer"]
 
 [sub_resource type="Animation" id="Anim_FocusPulse"]
 resource_name = "focus_pulse"

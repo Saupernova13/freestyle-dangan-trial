@@ -18,7 +18,7 @@ trial-folder/
 ```
 
 `trial.json` is the contract between the two components. The editor writes it,
-`TrialLoader.gd` reads it.
+`trial_loader.gd` reads it.
 
 ## The trial.json contract
 
@@ -29,7 +29,7 @@ trial in `freestyle-dangan-trial/tests/fixtures/minimal-trial/`:
 
 - the editor's runtime validator (`web-ui-editor/js/core/trialSchema.js`),
   cross-checked against the schema by ajv in `tests/schema.test.js`;
-- the engine's validator (`scripts/core/trial/TrialValidator.gd`) and typed
+- the engine's validator (`scripts/core/trial/trial_validator.gd`) and typed
   model (`scripts/core/trial/model/`), exercised by the gdUnit4 suites;
 - the format version: the editor writes `metadata.version`
   (`FORMAT_VERSION` in `js/core/constants.js`), the engine checks it
@@ -62,8 +62,8 @@ tools/      Start-menu file picker, small editor/debug helpers
 ui/         DialogueBox, HUD gauges, cards, settings menu, mobile touch HUD
 ```
 
-`TrialLoader` is a thin facade: `core/trial/TrialArchive.gd` does ZIP
-extraction and `core/trial/CharacterLibrary.gd` owns character data and the
+`TrialLoader` is a thin facade: `core/trial/trial_archive.gd` does ZIP
+extraction and `core/trial/character_library.gd` owns character data and the
 sprite-texture cache. `TrialRoomManager` is a composition root that wires
 `ScriptDirector` signals to `CharacterStage` (3D bench sprites) and
 `MinigameRunner` (the minigame catalog and replay loop).
@@ -100,7 +100,7 @@ sprite-texture cache. `TrialRoomManager` is a composition root that wires
 
 ### Adding a minigame
 
-1. Create `scripts/minigames/MyGame.gd` extending `MinigameBase`
+1. Create `scripts/minigames/my_game.gd` extending `MinigameBase`
    (implement `start()`, call `_finish(success, data)`).
 2. Register its script path in `MinigameRunner.MINIGAME_SCRIPTS` and any
    scenes it needs in `ResourceRegistry.SCENES`.
@@ -136,7 +136,7 @@ including why 9-slice sources must stay at design resolution, live in
 ## Known debt
 
 - `scenes/thh_trial_room_1.tscn` — the room the runtime actually loads
-  (`LoadingScreen.gd`, `vbox_selector.gd`) — embeds ~97MB of mesh data. It
+  (`loading_screen.gd`, `vbox_selector.gd`) — embeds ~97MB of mesh data. It
   stays under GitHub's hard limit but should eventually reference external
   mesh resources. The gitignored `thh_default_trial_room.tscn` is referenced
   by nothing at runtime; it is a local-only authoring asset kept out of git

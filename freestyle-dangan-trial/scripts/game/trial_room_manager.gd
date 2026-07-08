@@ -23,7 +23,7 @@ func _ready():
 
 	_stage = CharacterStage.new(trial_posts)
 
-	_dialogue_box = preload("res://scripts/ui/DialogueBox.gd").new()
+	_dialogue_box = preload("res://scripts/ui/dialogue_box.gd").new()
 	add_child(_dialogue_box)
 	_dialogue_box.setup(dialogue_label, name_label, portrait_rect)
 	_dialogue_box.typewriter_started.connect(ScriptDirector.notify_typewriter_started)

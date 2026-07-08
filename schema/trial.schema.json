@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/Saupernova13/freestyle-dangan-trial/main/schema/trial.schema.json",
   "title": "Freestyle Dangan Trial manifest (trial.json)",
-  "description": "The contract between the web editor (writer) and the Godot engine (reader). The editor's runtime validator (web-ui-editor/js/core/trialSchema.js) and the engine's TrialValidator.gd mirror the structural requirements here; CI cross-checks all three against the shared fixture trial. Unknown extra properties are allowed everywhere so old readers tolerate new writers.",
+  "description": "The contract between the web editor (writer) and the Godot engine (reader). The editor's runtime validator (web-ui-editor/js/core/trialSchema.js) and the engine's trial_validator.gd mirror the structural requirements here; CI cross-checks all three against the shared fixture trial. Unknown extra properties are allowed everywhere so old readers tolerate new writers.",
   "type": "object",
   "required": ["trialName", "characters", "script", "metadata"],
   "properties": {

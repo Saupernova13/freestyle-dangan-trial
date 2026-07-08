@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3]
 
-[ext_resource type="Script" uid="uid://c32ynkbgcgbv" path="res://scripts/ui/SettingsMenu.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://c32ynkbgcgbv" path="res://scripts/ui/settings_menu.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_Panel"]
 content_margin_left = 24.0

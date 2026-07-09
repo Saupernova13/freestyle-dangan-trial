@@ -11,7 +11,7 @@ uniform float crack_progress : hint_range(0.0, 1.0) = 0.0;
 uniform float shatter_progress : hint_range(0.0, 1.0) = 0.0;
 uniform int cell_count : hint_range(3, 20) = 8;
 uniform float pattern_seed : hint_range(0.0, 100.0) = 7.0;
-uniform float crack_width : hint_range(0.0, 0.15) = 0.035;
+uniform float crack_width : hint_range(0.0, 0.15) = 0.015;
 uniform vec4 crack_color : source_color = vec4(0.95, 0.97, 1.0, 0.85);
 uniform float crack_feather : hint_range(0.1, 4.0) = 1.5;
 uniform vec2 impact_center = vec2(0.5, 0.5);
@@ -141,10 +141,12 @@ void fragment() {
 			float border = (f2 - f1) * 0.5;
 			float ring = crack_progress * max_r * 1.15;
 			float active = smoothstep(ring, ring - crack_feather, distance(f, impact_p));
-			float crack = active * (1.0 - smoothstep(crack_width * 0.5, crack_width, border));
-			col = mix(col, crack_color.rgb, crack * crack_color.a);
-			// Subtle darkening band beside the crack line for glassy depth.
-			col *= 1.0 - 0.25 * active * (1.0 - smoothstep(crack_width, crack_width * 3.0, border));
+			float line = 1.0 - smoothstep(crack_width * 0.5, crack_width, border);
+			// Darkening halo sits beside the line, never on it, so the crack
+			// itself stays bright instead of greying out.
+			float halo = clamp((1.0 - smoothstep(crack_width, crack_width * 2.5, border)) - line, 0.0, 1.0);
+			col *= 1.0 - 0.35 * active * halo;
+			col = mix(col, crack_color.rgb, active * line * crack_color.a);
 
 			out_col = vec4(col, tex.a * shard_alpha);
 		}

@@ -23,6 +23,7 @@ var _turn_label: Label
 
 var _is_slow_time: bool = false
 var _slow_vignette: ColorRect = null
+var _ambience: CanvasLayer = null
 
 func initialize(data: MinigameData):
 	super.initialize(data)
@@ -52,6 +53,7 @@ func start():
 	_current_main_panel = null
 
 	_build_overlay()
+	_show_ambience()
 	setup_standard_ui([
 		HudComponent.INFLUENCE_GAUGE,
 		HudComponent.CONCENTRATE_GAUGE,
@@ -89,6 +91,23 @@ func _build_overlay():
 	_break_label = _overlay.get_node("%BreakLabel")
 	_wrong_label = _overlay.get_node("%WrongLabel")
 	_turn_label = _overlay.get_node("%TurnLabel")
+
+## The red debate filter must outlive this node (MinigameRunner frees the
+## minigame the moment it completes), so it is parented to the trial room and
+## dismisses itself.
+func _show_ambience():
+	_ambience = ResourceRegistry.instantiate("debate_ambience")
+	var room = get_tree().get_first_node_in_group("trial_room")
+	if room:
+		room.add_child(_ambience)
+	else:
+		add_child(_ambience)
+	_ambience.show_ambience()
+
+func _dismiss_ambience():
+	if _ambience and is_instance_valid(_ambience):
+		_ambience.dismiss()
+	_ambience = null
 
 func _show_bullet_preview() -> void:
 	var bullets = TruthBulletManager.active_bullets
@@ -416,6 +435,7 @@ func cleanup():
 	if _is_slow_time:
 		_deactivate_slow_time()
 	ConcentrateGauge.reset()
+	_dismiss_ambience()
 
 	for panel in _panels_on_screen:
 		if is_instance_valid(panel):

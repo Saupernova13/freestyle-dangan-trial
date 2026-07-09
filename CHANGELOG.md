@@ -9,7 +9,39 @@ separately in `schema/trial.schema.json`.
 
 ## [Unreleased]
 
+### Added
+- Nonstop debates now darken the scene and apply a crimson filter with an edge
+  vignette while the debate runs, fading in at the start and out at the end.
+  The grade is a shader on `scenes/minigames/debate_ambience.tscn`; tint,
+  desaturation, darkening, and vignette are material parameters, and the fade
+  timing is the scene's `show` / `dismiss` animations.
+- Breaking a statement now freezes a screenshot of the screen, grows crack
+  lines outward from the shot panel, shatters the frame into glass shards that
+  reveal black behind, then races the BREAK! text in from a distance, holds it,
+  and zooms it past the camera. The whole sequence is one scrubbable
+  `break_sequence` animation in `scenes/minigames/break_shatter.tscn`; the
+  crack pattern (cell count, seed, crack width and color, shard flight) is
+  exposed as material parameters.
+
 ### Changed
+- Every visual element and animation is now owned by a scene and editable in
+  the Godot editor. Code-built nodes and `create_tween()` animations were
+  replaced by `.tscn` scenes with `AnimationPlayer` clips across the screen
+  effects overlay, the minigame overlays, the slow-time vignette, Hangman's
+  floating letters, the Logic Dive road and question entrance, the debate
+  panels, bullet projectiles, the evidence card, the minigame title card, the
+  dialogue typewriter, and the start menu's roaming text. Scripts now only bind
+  live data and trigger animations. See `UI_GUIDE.md` for the layer map and the
+  short list of things that legitimately stay in code.
+- `ScreenEffects` clips are authored one second long and stretched with
+  `speed_scale`, so per-line `duration` and `color` from trial data still drive
+  scene-authored curves. Each overlay rect has its own `AnimationPlayer`, so
+  several effects on one dialogue line no longer cancel each other.
+- The minigame title card's fly-in/fly-out keys proportional anchors instead of
+  pixel positions, so it enters and exits fully offscreen at any resolution.
+- The camera director's cross dissolve and screen shake now delegate to
+  `ScreenEffects`; shake consequently respects the screen-shake accessibility
+  setting.
 - Renamed all GDScript files to snake_case per the official Godot style guide
   (e.g. `TrialLoader.gd` -> `trial_loader.gd`, `UITheme.gd` -> `ui_theme.gd`).
   Autoload names and `class_name` identifiers are unchanged.
@@ -21,6 +53,12 @@ separately in `schema/trial.schema.json`.
   animation-name keys inside the libraries are unchanged.
 
 ### Removed
+- Deleted `scripts/effects/effect_builders.gd`. Its node-building, self-tweening
+  factories were replaced by the spawnable VFX scenes in `scenes/effects/` and
+  by animation clips on the scenes that own the affected nodes. The dead
+  `SHATTER_GRID`, `SLOW_VIGNETTE_*`, `COLOR_SCREEN_SHARD`, `COLOR_SLOW_VIGNETTE`
+  and `FONT_SIZE_POPUP` constants went with it — those values now live in the
+  scenes.
 - Deleted the bundled `trial_data/` sample trial (17 DRV3 character folders,
   generated audio and truth bullets). `makoto` remains the default portrait and
   `tests/fixtures/minimal-trial/` the only in-repo sample.

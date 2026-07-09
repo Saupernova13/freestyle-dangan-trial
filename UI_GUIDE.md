@@ -122,6 +122,56 @@ This is the rule that keeps texture swaps harmless. Per node type:
    textures with a half-size export; the layout must not move. Revert.
 5. Commit the `.tscn` + PNG + `.import` (+ `.uid` for new scripts) together.
 
+## 8. CanvasLayer layer map
+
+Overlays are stacked by `layer`. Pick a number that puts your overlay above
+what it must cover and below what must stay usable on top of it.
+
+| Layer | Overlay |
+|-------|---------|
+| 4 | `debate_ambience` — red/dark grade over the 3D scene |
+| 5 | Minigame overlays (debate panels, lanes, rows) |
+| 10 | HUD (influence, concentrate, timer, truth bullets) |
+| 15 | Crosshair |
+| 18 | `slow_time_vignette` |
+| 20 | `screen_effects_overlay` (flash / fade / filter / overlay text) |
+| 22 | `break_shatter` — frozen frame, shards, BREAK! |
+| 25 | Minigame title card, bullet preview |
+| 26 | Minigame result card |
+| 28 | Settings menu |
+| 30 | Game over, trial file list |
+| 90 | Mobile HUD |
+| 200 | Mobile toast |
+
+## 9. What may still live in code
+
+The rule is "no visual construction, no animation in code". Four things are
+*not* animations and stay in script:
+
+- **Procedural motion driven by live gameplay data** — no fixed timeline
+  exists to author. Bullet flight physics, debate-panel traversal synced to a
+  voice line's duration, crosshair aim smoothing, camera free-look spring-back.
+- **Value smoothing toward a live target** — a short tween to a data-driven
+  number is the same act as `progress_bar.value = fraction * 100.0`. Gauge
+  fills, the debate-scrum progress bar, the mass-panic focus indicator.
+- **3D camera cinematography** — `camera_director` moves a `Camera3D` toward
+  world positions from trial data. Screen shake and FOV punch belong here too.
+- **`_draw()` primitives and theme/material data** — the crosshair, the road,
+  sprite materials, dialogue-box styleboxes.
+
+Everything else is a scene. When a fixed timeline exists — a pop, a fade, a
+slide, a shatter, a reveal — it is an `AnimationPlayer` clip, and the script
+only calls `play()` and awaits `animation_finished`.
+
+Two techniques make clips that look data-driven authorable anyway:
+
+- **Normalize the clip to 1 second and set `speed_scale = 1.0 / duration`.**
+  `ScreenEffects` does this for every flash/fade/filter, so a per-line
+  `duration` from trial data still plays a scene-authored curve.
+- **Key proportional properties, not pixels.** The minigame title card keys
+  its slider's `anchor_left`/`anchor_right` from `-0.5` to `1.5`, so it flies
+  fully offscreen at any resolution without the script measuring the viewport.
+
 ## Quick reference — the five sins
 
 1. A TextureRect with default Expand Mode (`Keep Size`).
@@ -129,6 +179,9 @@ This is the rule that keeps texture swaps harmless. Per node type:
 3. A Sprite2D in UI whose scale silently encodes texture resolution.
 4. A high-res source feeding a 9-slice/tiled/region StyleBox.
 5. Duplicate quality variants of a texture on disk.
+
+...and the two that this guide exists to prevent: building visual nodes with
+`.new()` + `add_child()`, and animating them with `create_tween()`.
 
 If a future feature genuinely needs quality tiers, the sanctioned mechanism
 is a `.pck` overlay that overrides the same `res://textures/ui/` paths at

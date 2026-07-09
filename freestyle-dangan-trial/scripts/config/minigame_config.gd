@@ -45,18 +45,8 @@ const SCREEN_LAYOUT := {
 }
 
 # ---------------------------------------------------------------------------
-# Animation grid sizes used by shatter / break effects.
-# ---------------------------------------------------------------------------
-const SHATTER_GRID := {
-	"panel_rows": 3,
-	"panel_cols": 6,
-	"screen_rows": 5,
-	"screen_cols": 8,
-	"particle_count": 10,
-}
-
-# ---------------------------------------------------------------------------
-# Timing constants for break / shatter sequences.
+# Gaps between the beats of the break sequence. The beats themselves are
+# animations: see scenes/minigames/break_shatter.tscn and evidence_card.tscn.
 # ---------------------------------------------------------------------------
 const TIMING := {
 	"impact_frame": 0.05,
@@ -64,17 +54,14 @@ const TIMING := {
 	"wrong_to_screen_shatter": 0.6,
 	"break_to_evidence": 0.25,
 	"evidence_hold": 1.2,
-	"evidence_fade": 0.4,
 	"result_pause": 1.0,
 }
 
 # ---------------------------------------------------------------------------
-# Concentrate gauge / slow-time tuning.
+# Concentrate gauge / slow-time tuning. The vignette's tint and fade timing
+# live in scenes/minigames/slow_time_vignette.tscn.
 # ---------------------------------------------------------------------------
 const SLOW_TIME_SCALE: float = 0.4
-const SLOW_VIGNETTE_ALPHA: float = 0.35
-const SLOW_VIGNETTE_FADE_IN: float = 0.15
-const SLOW_VIGNETTE_FADE_OUT: float = 0.2
 
 # ---------------------------------------------------------------------------
 # Debate scrum turn timing.

@@ -16,6 +16,25 @@ env:
   GODOT_VERSION: 4.5.1
 
 jobs:
+  no-dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The engine is GDScript-only. Addons occasionally vendor a .cs file, and
+      # the .NET Godot editor then refuses to export without a C# solution. The
+      # standard build this workflow installs ignores .cs entirely, so nothing
+      # else here would notice.
+      - name: Reject C#/.NET files
+        run: |
+          found=$(find freestyle-dangan-trial \
+            \( -name '*.cs' -o -name '*.csproj' -o -name '*.sln' \) \
+            -not -path '*/.godot/*' -print)
+          if [ -n "$found" ]; then
+            echo "::error::C#/.NET files are not allowed in the engine project:"
+            printf '%s\n' "$found"
+            exit 1
+          fi
+
   gdlint:
     runs-on: ubuntu-latest
     steps:

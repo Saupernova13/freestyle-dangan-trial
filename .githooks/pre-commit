@@ -26,6 +26,15 @@ if [ -n "$engine_gd" ] && command -v gdlint >/dev/null 2>&1; then
     (cd "$repo_root/freestyle-dangan-trial" && gdlint $rel_gd) || failed=1
 fi
 
+# --- Engine: no C#/.NET -----------------------------------------------------
+# A stray .cs makes the .NET editor demand a C# solution and refuse to export.
+engine_cs=$(printf '%s\n' "$staged" | grep -E '^freestyle-dangan-trial/.*\.(cs|csproj|sln)$' || true)
+if [ -n "$engine_cs" ]; then
+    echo "pre-commit: C#/.NET files are not allowed in the engine project:"
+    printf '%s\n' "$engine_cs" | sed 's|^|  |'
+    failed=1
+fi
+
 if [ "$failed" -ne 0 ]; then
     echo "pre-commit: checks failed (bypass once with --no-verify if you must)"
     exit 1

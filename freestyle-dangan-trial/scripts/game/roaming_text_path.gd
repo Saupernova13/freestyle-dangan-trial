@@ -1,7 +1,10 @@
 extends Path2D
-## Roaming background text: builds a viewport-fitting oval path and animates one
-## PathFollow2D + Label per character around it. Character count is data-driven
-## (from JSON), so the labels are generated in code rather than authored in a scene.
+## Roaming background text: builds a viewport-fitting oval path and spawns one
+## roaming_char scene per character of the JSON-configured text. Character count
+## is data-driven, so the characters are instanced rather than authored one by
+## one — but each is a scene: edit the font, size, color, z-index, and the
+## looping orbit animation in scenes/ui/roaming_char.tscn.
+## The oval curve itself is procedural because it refits the live viewport.
 
 ## Path to the JSON file containing configuration paths (paths.json)
 @export_file("*.json") var paths_config_file: String = "res://data/paths.json"
@@ -28,15 +31,6 @@ extends Path2D
 ## Padding from the bottom edge of the viewport (positive = inset, negative = expand beyond viewport)
 @export_range(-500.0, 500.0, 1.0) var padding_bottom: float = -200.0
 
-## Font size for all character labels
-@export_range(8, 128, 1) var font_size: int = 74
-
-## Font file to use for character labels
-@export_file("*.ttf") var font_file: String = "res://fonts/lexend_mega_regular.ttf"
-
-## Color of the text (supports hex codes with transparency)
-@export var text_color: Color = Color(1.0, 1.0, 1.0, 0.2)
-
 ## Direction of rotation (true = clockwise, false = counter-clockwise)
 @export var clockwise: bool = false
 
@@ -57,7 +51,6 @@ extends Path2D
 
 # Internal variables
 var character_nodes: Array[PathFollow2D] = []
-var tween: Tween
 var text_config_path: String = ""
 
 func _ready():
@@ -69,9 +62,6 @@ func _ready():
 	# The curve must be baked before characters can be placed on it.
 	await get_tree().process_frame
 	generate_curved_text()
-
-	if animate:
-		start_animation()
 
 func load_paths_config():
 	var json_text = FileAccess.get_file_as_string(paths_config_file)
@@ -177,42 +167,12 @@ func generate_curved_text():
 	var start_offset = start_position - (total_width / 2.0)
 
 	for i in range(char_count):
-		var path_follow = PathFollow2D.new()
-		path_follow.rotates = true  # label follows the path tangent
-		path_follow.loop = true
-
-		var label = Label.new()
-		label.text = text[i]
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-
-		if font_file != "" and FileAccess.file_exists(font_file):
-			var font = load(font_file)
-			if font:
-				label.add_theme_font_override("font", font)
-		label.add_theme_font_size_override("font_size", font_size)
-		label.add_theme_color_override("font_color", text_color)
-
-		# progress_ratio only takes effect once the node is in the tree.
-		path_follow.add_child(label)
+		var path_follow: PathFollow2D = ResourceRegistry.instantiate("roaming_char")
+		# progress_ratio and the orbit clip only take effect once in the tree.
 		add_child(path_follow)
 		character_nodes.append(path_follow)
-		label.z_index = render_z_index
-		path_follow.progress_ratio = wrapf(start_offset + (i * character_spacing), 0.0, 1.0)
-
-## Animate every character one full loop around the path, forever. PathFollow2D.loop
-## handles the 1.0<->0.0 wrap; sign picks rotation direction.
-func start_animation():
-	if tween:
-		tween.kill()
-
-	tween = create_tween()
-	tween.set_loops()
-
-	for path_follow in character_nodes:
-		var start_progress = path_follow.progress_ratio
-		var end_progress = start_progress + 1.0 if clockwise else start_progress - 1.0
-		tween.parallel().tween_property(path_follow, "progress_ratio", end_progress, animation_speed)
+		var phase := wrapf(start_offset + (i * character_spacing), 0.0, 1.0)
+		path_follow.setup(text[i], phase, animation_speed, clockwise, animate)
 
 func _draw():
 	if not draw_path or curve == null:

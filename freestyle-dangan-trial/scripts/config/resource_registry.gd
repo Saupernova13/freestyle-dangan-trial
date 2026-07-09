@@ -45,6 +45,7 @@ const SCENES := {
 	"trial_file_list": "res://scenes/ui/trial_file_list.tscn",
 	"trial_file_row": "res://scenes/ui/trial_file_row.tscn",
 	"game_over_screen": "res://scenes/ui/game_over_screen.tscn",
+	"roaming_char": "res://scenes/ui/roaming_char.tscn",
 	"minigame_title_card": "res://scenes/ui/minigame_title_card.tscn",
 	"minigame_result_card": "res://scenes/ui/minigame_result_card.tscn",
 }

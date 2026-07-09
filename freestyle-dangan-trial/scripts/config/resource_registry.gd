@@ -9,6 +9,7 @@ const SCENES := {
 	# Minigame overlays
 	"break_shatter": "res://scenes/minigames/break_shatter.tscn",
 	"debate_ambience": "res://scenes/minigames/debate_ambience.tscn",
+	"slow_time_vignette": "res://scenes/minigames/slow_time_vignette.tscn",
 	"nonstop_debate_overlay": "res://scenes/minigames/nonstop_debate_overlay.tscn",
 	"debate_scrum_overlay": "res://scenes/minigames/debate_scrum_overlay.tscn",
 	"hangmans_gambit_overlay": "res://scenes/minigames/hangmans_gambit_overlay.tscn",
@@ -20,6 +21,7 @@ const SCENES := {
 	"debate_text_panel": "res://scenes/minigames/debate_text_panel.tscn",
 	"bullet_projectile": "res://scenes/minigames/bullet_projectile.tscn",
 	"hangman_slot": "res://scenes/minigames/hangman_slot.tscn",
+	"floating_letter": "res://scenes/minigames/floating_letter.tscn",
 	"lane_button": "res://scenes/minigames/lane_button.tscn",
 	"bullet_preview": "res://scenes/minigames/bullet_preview.tscn",
 	"bullet_preview_cell": "res://scenes/minigames/bullet_preview_cell.tscn",

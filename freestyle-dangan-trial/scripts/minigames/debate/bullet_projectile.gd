@@ -64,11 +64,7 @@ func _process(delta):
 
 func _play_hit_effect():
 	_is_moving = false
-	if _trail:
-		var trail_tween = create_tween()
-		trail_tween.tween_property(_trail, "modulate:a", 0.0, 0.15)
-
-	var tween = create_tween()
-	tween.tween_property(self, "scale", Vector2(3.0, 3.0), 0.15)
-	tween.parallel().tween_property(self, "modulate:a", 0.0, 0.15)
-	tween.finished.connect(func(): queue_free())
+	var anim: AnimationPlayer = %AnimationPlayer
+	anim.play("hit")
+	await anim.animation_finished
+	queue_free()

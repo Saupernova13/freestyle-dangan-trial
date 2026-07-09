@@ -430,11 +430,10 @@ func check_hit(click_pos: Vector2) -> bool:
 
 func destroy_with_effect():
 	_is_active = false
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(self, "modulate:a", 0.0, 0.3)
-	tween.tween_property(self, "scale", Vector2(1.5, 1.5), 0.3)
-	tween.finished.connect(func(): queue_free())
+	var anim: AnimationPlayer = %AnimationPlayer
+	anim.play("destroy")
+	await anim.animation_finished
+	queue_free()
 
 func set_panel_active(active: bool):
 	_is_active = active

@@ -81,7 +81,7 @@ func _spawn_letter():
 	var speed_base: float = speeds["base"]
 	var speed_range: float = speeds["range"]
 
-	var floating = FloatingLetter.new()
+	var floating: FloatingLetter = ResourceRegistry.instantiate("floating_letter")
 	floating.letter = letter
 	floating.is_answer_letter = is_correct
 	floating.position = Vector2(
@@ -150,64 +150,3 @@ func cleanup():
 	if _overlay:
 		_overlay.queue_free()
 	super.cleanup()
-
-
-class FloatingLetter extends Control:
-	signal clicked(letter_node: FloatingLetter)
-
-	var letter: String = ""
-	var is_answer_letter: bool = false
-	var velocity: Vector2 = Vector2.ZERO
-	var _active: bool = true
-
-	func _ready():
-		custom_minimum_size = Vector2(40, 40)
-		size = Vector2(40, 40)
-		mouse_filter = Control.MOUSE_FILTER_STOP
-
-	func _draw():
-		if not _active:
-			return
-		var bg_color = Color(0.3, 0.15, 0.5, 0.8) if is_answer_letter else Color(0.4, 0.2, 0.2, 0.7)
-		draw_circle(size / 2, 18, bg_color)
-		draw_arc(size / 2, 18, 0, TAU, 24, Color(0.7, 0.5, 0.9, 0.6), 1.5)
-
-		var font = ThemeDB.fallback_font
-		var font_size = 20
-		var text_size = font.get_string_size(letter, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
-		var text_pos = (size - text_size) / 2 + Vector2(0, text_size.y * 0.75)
-		draw_string(font, text_pos, letter, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color.WHITE)
-
-	func _process(delta):
-		if not _active:
-			return
-		position += velocity * delta
-		var vp = get_viewport_rect().size
-		if position.x < -80 or position.x > vp.x + 80 or position.y < -80 or position.y > vp.y + 80:
-			queue_free()
-
-	func _gui_input(event):
-		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			clicked.emit(self)
-		elif event is InputEventScreenTouch and event.pressed:
-			clicked.emit(self)
-
-	func destroy_correct():
-		_active = false
-		var tween = create_tween()
-		tween.tween_property(self, "modulate:a", 0.0, 0.2)
-		tween.tween_property(self, "scale", Vector2(1.5, 1.5), 0.2)
-		tween.finished.connect(func(): queue_free())
-
-	func destroy_wrong():
-		_active = false
-		modulate = Color(1, 0.3, 0.3)
-		var tween = create_tween()
-		tween.tween_property(self, "modulate:a", 0.0, 0.3)
-		tween.finished.connect(func(): queue_free())
-
-	func destroy_collision():
-		_active = false
-		var tween = create_tween()
-		tween.tween_property(self, "modulate", Color(1, 0.5, 0, 0), 0.2)
-		tween.finished.connect(func(): queue_free())

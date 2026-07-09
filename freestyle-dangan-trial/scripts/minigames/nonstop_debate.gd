@@ -22,7 +22,7 @@ var _turn_label: Label
 var _overlay_anim: AnimationPlayer
 
 var _is_slow_time: bool = false
-var _slow_vignette: ColorRect = null
+var _slow_vignette: CanvasLayer = null
 var _ambience: CanvasLayer = null
 
 func initialize(data: MinigameData):
@@ -149,19 +149,9 @@ func _activate_slow_time():
 	AudioManager.set_voice_pitch(MinigameConfig.SLOW_TIME_SCALE)
 
 	if not _slow_vignette:
-		var vig_canvas = CanvasLayer.new()
-		vig_canvas.layer = 18
-		add_child(vig_canvas)
-		_slow_vignette = ColorRect.new()
-		_slow_vignette.color = UITheme.COLOR_SLOW_VIGNETTE
-		_slow_vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_slow_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vig_canvas.add_child(_slow_vignette)
-
-	var tween = create_tween()
-	tween.tween_property(
-		_slow_vignette, "color:a", MinigameConfig.SLOW_VIGNETTE_ALPHA, MinigameConfig.SLOW_VIGNETTE_FADE_IN
-	)
+		_slow_vignette = ResourceRegistry.instantiate("slow_time_vignette")
+		add_child(_slow_vignette)
+	_slow_vignette.show_vignette()
 
 func _deactivate_slow_time():
 	_is_slow_time = false
@@ -169,8 +159,7 @@ func _deactivate_slow_time():
 	AudioManager.set_voice_pitch(1.0)
 
 	if _slow_vignette:
-		var tween = create_tween()
-		tween.tween_property(_slow_vignette, "color:a", 0.0, MinigameConfig.SLOW_VIGNETTE_FADE_OUT)
+		_slow_vignette.hide_vignette()
 
 ## Compute the vertical position for a panel given its row index. Same layout
 ## logic for main and noise lines — keep them in one place so the safe area
@@ -363,9 +352,7 @@ func _on_correct_hit(panel: DebateTextPanel):
 	await get_tree().create_timer(MinigameConfig.TIMING["evidence_hold"]).timeout
 
 	if evidence_card and is_instance_valid(evidence_card):
-		var fade_tween = create_tween()
-		fade_tween.tween_property(evidence_card, "modulate:a", 0.0, MinigameConfig.TIMING["evidence_fade"])
-		await fade_tween.finished
+		await evidence_card.dismiss()
 
 	_on_correct_answer({"loops": _main_line_index})
 

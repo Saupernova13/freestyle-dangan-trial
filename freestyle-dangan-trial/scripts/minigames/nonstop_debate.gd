@@ -17,7 +17,6 @@ var _solved: bool = false
 
 var _overlay: CanvasLayer
 var _panels_container: Control
-var _break_label: Label
 var _wrong_label: Label
 var _turn_label: Label
 
@@ -84,11 +83,10 @@ func start():
 
 func _build_overlay():
 	# Scene-driven — see scenes/minigames/nonstop_debate_overlay.tscn for the
-	# static layout (panels container, break/wrong labels, turn label).
+	# static layout (panels container, wrong label, turn label).
 	_overlay = ResourceRegistry.instantiate("nonstop_debate_overlay")
 	add_child(_overlay)
 	_panels_container = _overlay.get_node("%PanelsContainer")
-	_break_label = _overlay.get_node("%BreakLabel")
 	_wrong_label = _overlay.get_node("%WrongLabel")
 	_turn_label = _overlay.get_node("%TurnLabel")
 
@@ -340,36 +338,27 @@ func _on_correct_hit(panel: DebateTextPanel):
 	_show_wrong_label()
 	await get_tree().create_timer(MinigameConfig.TIMING["wrong_to_screen_shatter"]).timeout
 
-	EffectBuilders.screen_shatter(
-		self, UITheme.COLOR_SCREEN_SHARD,
-		MinigameConfig.SHATTER_GRID["screen_rows"],
-		MinigameConfig.SHATTER_GRID["screen_cols"]
-	)
+	# Freeze the frame (wrong label included until this point), then crack,
+	# shatter, and BREAK! — the whole sequence is the break_sequence animation
+	# in scenes/minigames/break_shatter.tscn.
 	_wrong_label.visible = false
-	await get_tree().create_timer(MinigameConfig.TIMING["screen_shatter_to_break"]).timeout
-
-	await _play_break_label()
+	var impact_uv = panel_center / get_viewport().get_visible_rect().size
+	var breaker = ResourceRegistry.instantiate("break_shatter")
+	add_child(breaker)
+	await breaker.play_break(impact_uv)
+	_dismiss_ambience()
 
 	await get_tree().create_timer(MinigameConfig.TIMING["break_to_evidence"]).timeout
 
 	var evidence_card = _show_evidence_card(panel_bullet_id)
 	await get_tree().create_timer(MinigameConfig.TIMING["evidence_hold"]).timeout
 
-	var fade_tween = create_tween().set_parallel(true)
-	fade_tween.tween_property(_break_label, "modulate:a", 0.0, MinigameConfig.TIMING["evidence_fade"])
 	if evidence_card and is_instance_valid(evidence_card):
+		var fade_tween = create_tween()
 		fade_tween.tween_property(evidence_card, "modulate:a", 0.0, MinigameConfig.TIMING["evidence_fade"])
-	await fade_tween.finished
+		await fade_tween.finished
 
 	_on_correct_answer({"loops": _main_line_index})
-
-func _play_break_label() -> void:
-	_break_label.visible = true
-	_break_label.modulate.a = 1.0
-	var pop = EffectBuilders.scale_pop(_break_label)
-	await pop.finished
-	var flash = EffectBuilders.flash_alpha(_break_label, 2, 0.5, 1.0, 0.1)
-	await flash.finished
 
 func _shatter_panel(panel: DebateTextPanel):
 	var rect = Rect2(panel.global_position, panel.size)

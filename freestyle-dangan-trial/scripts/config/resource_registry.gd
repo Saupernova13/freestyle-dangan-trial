@@ -7,6 +7,7 @@ extends RefCounted
 
 const SCENES := {
 	# Minigame overlays
+	"break_shatter": "res://scenes/minigames/break_shatter.tscn",
 	"debate_ambience": "res://scenes/minigames/debate_ambience.tscn",
 	"nonstop_debate_overlay": "res://scenes/minigames/nonstop_debate_overlay.tscn",
 	"debate_scrum_overlay": "res://scenes/minigames/debate_scrum_overlay.tscn",

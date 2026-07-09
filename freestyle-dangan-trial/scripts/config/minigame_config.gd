@@ -62,7 +62,6 @@ const TIMING := {
 	"impact_frame": 0.05,
 	"shatter_to_wrong": 0.1,
 	"wrong_to_screen_shatter": 0.6,
-	"screen_shatter_to_break": 0.7,
 	"break_to_evidence": 0.25,
 	"evidence_hold": 1.2,
 	"evidence_fade": 0.4,

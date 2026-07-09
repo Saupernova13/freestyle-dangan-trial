@@ -15,42 +15,91 @@ texture_margin_top = 24.0
 texture_margin_right = 160.0
 texture_margin_bottom = 24.0
 
-[sub_resource type="Animation" id="Anim_BgFadeIn"]
-resource_name = "bg_fade_in"
-length = 0.15
+[sub_resource type="Animation" id="Anim_Reset"]
+resource_name = "RESET"
+length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Background:color:a")
+tracks/0/path = NodePath("Slider:anchor_left")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.15),
-"transitions": PackedFloat32Array(1, 1),
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [0.0, 0.85]
+"values": [0.5]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Slider:anchor_right")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.5]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Background:color:a")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
 }
 
-[sub_resource type="Animation" id="Anim_BgFadeOut"]
-resource_name = "bg_fade_out"
-length = 0.25
+[sub_resource type="Animation" id="Anim_Fly"]
+resource_name = "fly"
+length = 1.8
+step = 0.05
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Background:color:a")
+tracks/0/path = NodePath("Slider:anchor_left")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.25),
-"transitions": PackedFloat32Array(1, 1),
+"times": PackedFloat32Array(0, 0.35, 1.55, 1.8),
+"transitions": PackedFloat32Array(0.4, 1, 2.5, 1),
 "update": 0,
-"values": [0.85, 0.0]
+"values": [-0.5, 0.5, 0.5, 1.5]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Slider:anchor_right")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.35, 1.55, 1.8),
+"transitions": PackedFloat32Array(0.4, 1, 2.5, 1),
+"update": 0,
+"values": [-0.5, 0.5, 0.5, 1.5]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Background:color:a")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.15, 1.55, 1.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [0.0, 0.85, 0.85, 0.0]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimLib_TitleCard"]
 _data = {
-&"bg_fade_in": SubResource("Anim_BgFadeIn"),
-&"bg_fade_out": SubResource("Anim_BgFadeOut")
+&"RESET": SubResource("Anim_Reset"),
+&"fly": SubResource("Anim_Fly")
 }
 
 [node name="MinigameTitleCard" type="CanvasLayer"]
@@ -67,7 +116,15 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
 
-[node name="Mount" type="HBoxContainer" parent="."]
+[node name="Slider" type="Control" parent="."]
+unique_name_in_owner = true
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+mouse_filter = 2
+
+[node name="Mount" type="HBoxContainer" parent="Slider"]
 unique_name_in_owner = true
 offset_right = 480.0
 offset_bottom = 110.0
@@ -75,26 +132,26 @@ mouse_filter = 2
 theme_override_constants/separation = -40
 alignment = 1
 
-[node name="Frame" type="PanelContainer" parent="Mount"]
+[node name="Frame" type="PanelContainer" parent="Slider/Mount"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(480, 110)
 mouse_filter = 2
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBox_Frame")
 
-[node name="Margin" type="MarginContainer" parent="Mount/Frame"]
+[node name="Margin" type="MarginContainer" parent="Slider/Mount/Frame"]
 mouse_filter = 2
 theme_override_constants/margin_left = 70
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 70
 theme_override_constants/margin_bottom = 12
 
-[node name="Labels" type="VBoxContainer" parent="Mount/Frame/Margin"]
+[node name="Labels" type="VBoxContainer" parent="Slider/Mount/Frame/Margin"]
 mouse_filter = 2
 theme_override_constants/separation = 2
 alignment = 1
 
-[node name="Title" type="Label" parent="Mount/Frame/Margin/Labels"]
+[node name="Title" type="Label" parent="Slider/Mount/Frame/Margin/Labels"]
 unique_name_in_owner = true
 z_index = 10
 mouse_filter = 2
@@ -106,7 +163,7 @@ text = "MINIGAME NAME"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Subtitle" type="Label" parent="Mount/Frame/Margin/Labels"]
+[node name="Subtitle" type="Label" parent="Slider/Mount/Frame/Margin/Labels"]
 unique_name_in_owner = true
 z_index = 10
 mouse_filter = 2
@@ -117,7 +174,7 @@ theme_override_font_sizes/font_size = 14
 text = "CLASS TRIAL"
 horizontal_alignment = 1
 
-[node name="Bullet" type="TextureRect" parent="Mount"]
+[node name="Bullet" type="TextureRect" parent="Slider/Mount"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 110)
 mouse_filter = 2

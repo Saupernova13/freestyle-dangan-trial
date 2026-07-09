@@ -13,7 +13,7 @@ var _portrait_rect: TextureRect
 
 var _typewriter_speed: float = 30.0
 var _is_typing: bool = false
-var _typewriter_tween: Tween = null
+var _typewriter_anim: AnimationPlayer = null
 
 func setup(rich_label: RichTextLabel, name_label: Label = null, portrait_rect: TextureRect = null):
 	_rich_label = rich_label
@@ -23,6 +23,10 @@ func setup(rich_label: RichTextLabel, name_label: Label = null, portrait_rect: T
 	if _rich_label:
 		_rich_label.bbcode_enabled = true
 		_ensure_styled_font_variants()
+		# The typewriter reveal is a clip on the conversation UI scene.
+		_typewriter_anim = _rich_label.get_parent().get_node_or_null("%TypewriterAnimator")
+		if _typewriter_anim:
+			_typewriter_anim.animation_finished.connect(_on_typewriter_finished)
 
 ## Highlighted text is emitted as [b]...[/b]. RichTextLabel resolves bold /
 ## italic runs through separate theme entries (bold_font, bold_font_size, ...);
@@ -233,17 +237,17 @@ func _start_typewriter():
 	_is_typing = true
 	typewriter_started.emit()
 
-	# Linear char-by-char reveal driven by a Tween instead of a per-frame loop.
-	# Duration is derived from chars/sec so reveal pacing matches the old timer.
-	var duration := float(total_chars) / _typewriter_speed
-	if _typewriter_tween and _typewriter_tween.is_valid():
-		_typewriter_tween.kill()
-	_typewriter_tween = create_tween()
-	_typewriter_tween.tween_property(_rich_label, "visible_characters", total_chars, duration)
-	_typewriter_tween.finished.connect(_on_typewriter_finished)
+	if not _typewriter_anim:
+		# No animator wired (headless / tests): reveal the line immediately.
+		_on_typewriter_finished()
+		return
 
-func _on_typewriter_finished():
-	_typewriter_tween = null
+	# The reveal curve is the `typewriter` clip in the conversation UI scene;
+	# stretching it by chars/sec keeps the pacing the settings ask for.
+	_typewriter_anim.speed_scale = _typewriter_speed / float(total_chars)
+	_typewriter_anim.play("typewriter")
+
+func _on_typewriter_finished(_anim_name: StringName = &""):
 	if not _is_typing:
 		return
 	if _rich_label:
@@ -253,9 +257,8 @@ func _on_typewriter_finished():
 
 func skip_typewriter():
 	if _is_typing and _rich_label:
-		if _typewriter_tween and _typewriter_tween.is_valid():
-			_typewriter_tween.kill()
-		_typewriter_tween = null
+		if _typewriter_anim:
+			_typewriter_anim.stop()
 		_rich_label.visible_characters = -1
 		_is_typing = false
 		typewriter_finished.emit()

@@ -4,23 +4,22 @@ extends CanvasLayer
 ## left, holds, then flies out to the right. Layout, fonts, colors, padding and
 ## the 9-slice frame texture all live in scenes/ui/minigame_title_card.tscn and
 ## are fully editor-editable:
-##   Mount (HBoxContainer, negative separation = frame/bullet overlap)
-##     Frame (PanelContainer, StyleBoxTexture 9-slice — grows to fit the title)
-##       Margin > Labels (VBox) > Title / Subtitle
-##     Bullet (TextureRect)
-## Edit the bg_fade_in / bg_fade_out animations on the AnimationPlayer too.
+##   Slider (Control, anchors animated across the screen)
+##     Mount (HBoxContainer, negative separation = frame/bullet overlap)
+##       Frame (PanelContainer, StyleBoxTexture 9-slice — grows to fit the title)
+##         Margin > Labels (VBox) > Title / Subtitle
+##       Bullet (TextureRect)
+## The whole flight, hold, and background fade are the `fly` animation. It keys
+## the Slider's anchors, which are proportional, so the card enters and exits
+## fully offscreen at any resolution.
 ##
 ## Code only binds data: the title text, the per-game title color, the
-## blue/orange texture variant, and the horizontal slide. The slide stays a
-## Tween (not an AnimationPlayer track) because its start/center/end positions
-## depend on the live viewport width and the banner's content-driven width.
+## blue/orange texture variant, and Mount's centering offset (which depends on
+## the banner's content-driven width).
 
 signal card_finished
 
-@export_group("Animation")
-@export var fly_in_duration: float = 0.35
-@export var hold_duration: float = 1.2
-@export var fly_out_duration: float = 0.25
+@export_group("Layout")
 @export var vertical_offset: float = -20.0
 
 @export_group("Title Colors")
@@ -50,7 +49,6 @@ signal card_finished
 const FRAME_ORANGE := "res://textures/ui/minigame_name_frame_orange.png"
 const BULLET_ORANGE := "res://textures/ui/minigame_name_speed_bullet_orange.png"
 
-@onready var _bg: ColorRect = %Background
 @onready var _mount: HBoxContainer = %Mount
 @onready var _frame: PanelContainer = %Frame
 @onready var _bullet: TextureRect = %Bullet
@@ -74,36 +72,12 @@ func show_title(game_type: String, game_name: String = "") -> void:
 	_subtitle_label.add_theme_color_override("font_color", Color(color, 0.9))
 
 	# Let the containers recompute the banner width from the new title text
-	# before measuring it for the slide.
+	# before centering it on the slider.
 	_mount.reset_size()
 	await get_tree().process_frame
-	_animate()
+	_mount.position = Vector2(-_mount.size.x / 2.0, -_mount.size.y / 2.0 + vertical_offset)
 
-func _animate() -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
-	var mount_size := _mount.size
-
-	var start_x := -(mount_size.x + 200.0)
-	var center_x := (viewport_size.x - mount_size.x) / 2.0
-	var end_x := viewport_size.x + 200.0
-	var center_y := (viewport_size.y - mount_size.y) / 2.0 + vertical_offset
-
-	_mount.position = Vector2(start_x, center_y)
-
-	if _anim.has_animation("bg_fade_in"):
-		_anim.play("bg_fade_in")
-
-	var tween := create_tween()
-	var fly_in := tween.tween_property(_mount, "position:x", center_x, fly_in_duration)
-	fly_in.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	tween.tween_interval(hold_duration)
-	var fly_out := tween.tween_property(_mount, "position:x", end_x, fly_out_duration)
-	fly_out.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
-	tween.parallel().tween_callback(func():
-		if _anim.has_animation("bg_fade_out"):
-			_anim.play("bg_fade_out")
-	)
-	tween.finished.connect(func():
-		card_finished.emit()
-		queue_free()
-	)
+	_anim.play("fly")
+	await _anim.animation_finished
+	card_finished.emit()
+	queue_free()

@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=4 uid="uid://d15txppf4j9hq"]
+[gd_scene load_steps=13 format=4 uid="uid://d15txppf4j9hq"]
 
 [ext_resource type="Texture2D" uid="uid://b6yjbov8i0l74" path="res://models/textures/1x/uv_curtain_1x.jpg" id="1_0q5xb"]
 [ext_resource type="FontFile" uid="uid://cj7wnflnjmjyv" path="res://fonts/lexend_mega_regular.ttf" id="2_rh4x2"]
@@ -31,6 +31,28 @@ bg_color = Color(0.19215687, 0.19215687, 0.19215687, 0.9411765)
 [sub_resource type="FontVariation" id="FontVariation_speech_bold"]
 base_font = ExtResource("2_rh4x2")
 variation_embolden = 0.6
+
+[sub_resource type="Animation" id="Anim_Typewriter"]
+resource_name = "typewriter"
+length = 1.0
+step = 0.01
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("RichTextLabel_Bottom_Speech:visible_ratio")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimLib_Typewriter"]
+_data = {
+&"typewriter": SubResource("Anim_Typewriter")
+}
 
 [node name="Conversation_UI" type="Control"]
 layout_mode = 3
@@ -241,3 +263,9 @@ offset_right = 2039.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_8eapl")
+
+[node name="TypewriterAnimator" type="AnimationPlayer" parent="."]
+unique_name_in_owner = true
+libraries = {
+&"": SubResource("AnimLib_Typewriter")
+}

@@ -19,6 +19,7 @@ var _overlay: CanvasLayer
 var _panels_container: Control
 var _wrong_label: Label
 var _turn_label: Label
+var _overlay_anim: AnimationPlayer
 
 var _is_slow_time: bool = false
 var _slow_vignette: ColorRect = null
@@ -89,6 +90,7 @@ func _build_overlay():
 	_panels_container = _overlay.get_node("%PanelsContainer")
 	_wrong_label = _overlay.get_node("%WrongLabel")
 	_turn_label = _overlay.get_node("%TurnLabel")
+	_overlay_anim = _overlay.get_node("%AnimationPlayer")
 
 ## The red debate filter must outlive this node (MinigameRunner frees the
 ## minigame the moment it completes), so it is parented to the trial room and
@@ -265,7 +267,7 @@ func _on_white_noise_hit(panel: DebateTextPanel, pos: Vector2):
 	var timer = get_hud(HudComponent.TIMER_DISPLAY)
 	if timer:
 		timer.add_time(10.0)
-	EffectBuilders.spawn_drift_popup(_overlay, pos, "+10", UITheme.COLOR_CORRECT_BRIGHT, UITheme.FONT_SIZE_POPUP)
+	_spawn_drift_popup(pos, "+10", UITheme.COLOR_CORRECT_BRIGHT)
 	panel.destroy_with_effect()
 	_panels_on_screen.erase(panel)
 
@@ -273,7 +275,13 @@ func _on_prefix_suffix_hit(pos: Vector2):
 	var timer = get_hud(HudComponent.TIMER_DISPLAY)
 	if timer:
 		timer.add_time(-10.0)
-	EffectBuilders.spawn_drift_popup(_overlay, pos, "-10", UITheme.COLOR_WRONG_BRIGHT, UITheme.FONT_SIZE_POPUP)
+	_spawn_drift_popup(pos, "-10", UITheme.COLOR_WRONG_BRIGHT)
+
+func _spawn_drift_popup(pos: Vector2, text: String, color: Color):
+	var popup = ResourceRegistry.instantiate("drift_popup")
+	popup.position = pos
+	_overlay.add_child(popup)
+	popup.setup(text, color)
 
 func _fire_bullet_at_panel(panel: DebateTextPanel, click_pos: Vector2):
 	var projectile: BulletProjectile = ResourceRegistry.instantiate("bullet_projectile")
@@ -329,10 +337,10 @@ func _on_correct_hit(panel: DebateTextPanel):
 	ScreenEffects.white_flash(0.25)
 	_shatter_panel(panel)
 
-	EffectBuilders.spawn_burst_particles(
-		_overlay, panel_center, UITheme.COLOR_ACCENT_GOLD,
-		MinigameConfig.SHATTER_GRID["particle_count"]
-	)
+	var burst = ResourceRegistry.instantiate("shard_burst")
+	burst.position = panel_center
+	_overlay.add_child(burst)
+	burst.setup(UITheme.COLOR_ACCENT_GOLD)
 	await get_tree().create_timer(MinigameConfig.TIMING["shatter_to_wrong"]).timeout
 
 	_show_wrong_label()
@@ -341,6 +349,7 @@ func _on_correct_hit(panel: DebateTextPanel):
 	# Freeze the frame (wrong label included until this point), then crack,
 	# shatter, and BREAK! — the whole sequence is the break_sequence animation
 	# in scenes/minigames/break_shatter.tscn.
+	_overlay_anim.stop()
 	_wrong_label.visible = false
 	var impact_uv = panel_center / get_viewport().get_visible_rect().size
 	var breaker = ResourceRegistry.instantiate("break_shatter")
@@ -362,18 +371,13 @@ func _on_correct_hit(panel: DebateTextPanel):
 
 func _shatter_panel(panel: DebateTextPanel):
 	var rect = Rect2(panel.global_position, panel.size)
-	EffectBuilders.shatter_rect(
-		_overlay, rect, UITheme.COLOR_SHATTER_SHARD,
-		MinigameConfig.SHATTER_GRID["panel_rows"],
-		MinigameConfig.SHATTER_GRID["panel_cols"]
-	)
+	var shatter = ResourceRegistry.instantiate("panel_shatter")
+	_overlay.add_child(shatter)
+	shatter.setup(rect, UITheme.COLOR_SHATTER_SHARD)
 	panel.queue_free()
 
 func _show_wrong_label():
-	_wrong_label.visible = true
-	_wrong_label.modulate.a = 1.0
-	EffectBuilders.scale_pop(_wrong_label, Vector2(0.05, 0.05), Vector2(1.05, 1.05), Vector2(1.0, 1.0), 0.15, 0.1)
-	EffectBuilders.flash_alpha(_wrong_label, 3, 0.3, 1.0, 0.08)
+	_overlay_anim.play("wrong_pop")
 
 func _show_evidence_card(bullet_id: String) -> Control:
 	var card: EvidenceCard = ResourceRegistry.instantiate("evidence_card")

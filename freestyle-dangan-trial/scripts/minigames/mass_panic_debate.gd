@@ -12,7 +12,7 @@ var _focus_indicator: ColorRect
 var _panels_on_screen: Array = []
 var _spawn_timer: float = 0.0
 var _spawn_interval: float = 3.0
-var _break_label: Label
+var _overlay_anim: AnimationPlayer
 
 func initialize(data: MinigameData):
 	super.initialize(data)
@@ -57,7 +57,7 @@ func _build_overlay():
 		_overlay.get_node("%Row2"),
 	]
 	_focus_indicator = _overlay.get_node("%FocusIndicator")
-	_break_label = _overlay.get_node("%BreakLabel")
+	_overlay_anim = _overlay.get_node("%AnimationPlayer")
 	# Touch path: each row container becomes its own focus target.
 	# A bare Container ignores input by default, so flip mouse_filter to STOP
 	# and listen for press/tap via _gui_input on each row.
@@ -181,15 +181,13 @@ func _on_correct_hit(panel: DebateTextPanel):
 	_solved = true
 	panel.destroy_with_effect()
 
-	_break_label.visible = true
-	_break_label.modulate.a = 1.0
-	EffectBuilders.scale_pop(_break_label, Vector2(0.5, 0.5), Vector2(1.2, 1.2), Vector2(1.2, 1.2), 0.3, 0.01)
-	var fade = EffectBuilders.fade_out(_break_label, 0.5, false)
-	fade.tween_callback(func(): _on_correct_answer({}))
-
 	var timer = get_hud(HudComponent.TIMER_DISPLAY)
 	if timer:
 		timer.stop_timer()
+
+	_overlay_anim.play("break_pop")
+	await _overlay_anim.animation_finished
+	_on_correct_answer({})
 
 func _on_wrong_hit():
 	InfluenceGauge.take_damage(difficulty)

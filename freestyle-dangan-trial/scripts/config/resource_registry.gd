@@ -25,6 +25,11 @@ const SCENES := {
 	"bullet_preview_cell": "res://scenes/minigames/bullet_preview_cell.tscn",
 	"evidence_card": "res://scenes/minigames/evidence_card.tscn",
 
+	# Spawnable VFX
+	"drift_popup": "res://scenes/effects/drift_popup.tscn",
+	"shard_burst": "res://scenes/effects/shard_burst.tscn",
+	"panel_shatter": "res://scenes/effects/panel_shatter.tscn",
+
 	# Shared HUD / UI
 	"influence_gauge": "res://scenes/ui/influence_gauge.tscn",
 	"concentrate_gauge": "res://scenes/ui/concentrate_gauge.tscn",

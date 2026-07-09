@@ -1,9 +1,16 @@
 extends Node
 ## Full-screen per-line effects (flash/fade/overlay text/shader filters). The
-## overlay rects and the filter material are scene-owned — see
-## scenes/ui/screen_effects_overlay.tscn. The effect tweens stay in code: their
-## duration and colors come from script data, so they can't be authored as fixed
-## AnimationPlayer clips.
+## overlay rects, the filter material, and every effect animation are
+## scene-owned — see scenes/ui/screen_effects_overlay.tscn. Each clip is
+## authored at a normalized length of 1 second; this script only binds the
+## data-driven parts (color, text, peak intensity) and sets `speed_scale` so a
+## clip fills the duration the trial data asked for.
+##
+## Each rect has its own AnimationPlayer so two effects on the same line (a
+## flash plus a filter, say) do not cancel each other.
+##
+## Camera effects (screen_shake, fov_pulse) stay in code: they move a Camera3D
+## toward positions only known at runtime.
 
 var _flash_rect: ColorRect
 var _fade_rect: ColorRect
@@ -14,7 +21,11 @@ var _camera: Camera3D
 # driven by shaders/screen_filter.gdshader. One rect, mode-switched.
 var _filter_rect: ColorRect
 var _filter_material: ShaderMaterial
-var _filter_tween: Tween = null
+
+var _flash_anim: AnimationPlayer
+var _fade_anim: AnimationPlayer
+var _label_anim: AnimationPlayer
+var _filter_anim: AnimationPlayer
 
 const FILTER_MODES := {
 	"grayscale": 0,
@@ -37,7 +48,10 @@ func _ready():
 	_overlay_label = overlay.get_node("%OverlayLabel")
 	_filter_rect = overlay.get_node("%FilterRect")
 	_filter_material = _filter_rect.material
-	_filter_material.set_shader_parameter("intensity", 0.0)
+	_flash_anim = overlay.get_node("%FlashAnimator")
+	_fade_anim = overlay.get_node("%FadeAnimator")
+	_label_anim = overlay.get_node("%LabelAnimator")
+	_filter_anim = overlay.get_node("%FilterAnimator")
 
 	_register_effects()
 
@@ -106,6 +120,11 @@ func play_effects(effects_data: Dictionary):
 		if handler.is_valid():
 			handler.call(intensity, duration, color)
 
+## Clips are authored one second long; stretch one to `duration`.
+func _play_for(player: AnimationPlayer, anim: String, duration: float) -> void:
+	player.speed_scale = 1.0 / maxf(duration, 0.01)
+	player.play(anim)
+
 func screen_shake(duration: float, intensity: float = 0.02):
 	if not _camera:
 		return
@@ -130,18 +149,19 @@ func white_flash(duration: float):
 
 ## Flash the screen with an arbitrary color (editor "flash" effect color picker).
 func color_flash(color: Color, duration: float):
-	_flash_rect.color = Color(color.r, color.g, color.b, 0.9)
-	var tween = create_tween()
-	tween.tween_property(_flash_rect, "color:a", 0.0, duration)
+	_flash_rect.color = Color(color.r, color.g, color.b, _flash_rect.color.a)
+	_play_for(_flash_anim, "flash", duration)
 
-## Fade to a solid color, hold, then fade back. `duration` is the full cycle:
-## 40% out, 20% hold, 40% in — so the screen always recovers.
+## Fade to a solid color, hold, then fade back — the screen always recovers.
 func fade_pulse(color: Color, duration: float):
-	_fade_rect.color = Color(color.r, color.g, color.b, 0.0)
-	var tween = create_tween()
-	tween.tween_property(_fade_rect, "color:a", 1.0, duration * 0.4)
-	tween.tween_interval(duration * 0.2)
-	tween.tween_property(_fade_rect, "color:a", 0.0, duration * 0.4)
+	_fade_rect.color = Color(color.r, color.g, color.b, _fade_rect.color.a)
+	_fade_rect.modulate.a = 1.0
+	_play_for(_fade_anim, "fade_pulse", duration)
+
+## Fade to black, hold, and back — used by the camera director's cross dissolve.
+func cross_dissolve(duration: float):
+	fade_pulse(Color.BLACK, duration)
+	await _fade_anim.animation_finished
 
 ## Quick camera FOV punch-in/out ("pulse" editor effect). Intensity 0..1 maps
 ## to up to ~12 degrees of zoom punch.
@@ -157,50 +177,29 @@ func fov_pulse(intensity: float, duration: float):
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
 
 func red_flash(duration: float):
-	_flash_rect.color = Color(0.8, 0.0, 0.0, 0.6)
-	var tween = create_tween()
-	tween.tween_property(_flash_rect, "color:a", 0.0, duration)
+	_play_for(_flash_anim, "flash_red", duration)
 
 func show_overlay_text(text: String, color: Color, duration: float):
 	_overlay_label.text = text
 	_overlay_label.add_theme_color_override("font_color", color)
-	_overlay_label.visible = true
-	_overlay_label.modulate.a = 0.0
-	_overlay_label.scale = Vector2(0.5, 0.5)
-
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(_overlay_label, "modulate:a", 1.0, 0.15)
-	var pop := tween.tween_property(_overlay_label, "scale", Vector2(1.0, 1.0), 0.2)
-	pop.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	tween.chain().tween_interval(duration - 0.4)
-	tween.chain().tween_property(_overlay_label, "modulate:a", 0.0, 0.25)
-	tween.finished.connect(func(): _overlay_label.visible = false)
+	_play_for(_label_anim, "overlay_text", duration)
 
 func glitch_flash(duration: float):
-	_flash_rect.color = Color(0.2, 0.8, 0.2, 0.3)
-	var tween = create_tween()
-	tween.tween_property(_flash_rect, "color:a", 0.0, duration * 0.3)
-	tween.tween_property(_flash_rect, "color", Color(0.8, 0.2, 0.2, 0.2), 0.05)
-	tween.tween_property(_flash_rect, "color:a", 0.0, duration * 0.3)
+	_play_for(_flash_anim, "flash_glitch", duration)
 
 func chromatic_flash(duration: float):
-	_flash_rect.color = Color(1.0, 0.0, 0.0, 0.15)
-	var tween = create_tween()
-	tween.tween_property(_flash_rect, "color", Color(0.0, 0.0, 1.0, 0.15), duration * 0.3)
-	tween.tween_property(_flash_rect, "color", Color(0.0, 1.0, 0.0, 0.1), duration * 0.3)
-	tween.tween_property(_flash_rect, "color:a", 0.0, duration * 0.4)
+	_play_for(_flash_anim, "flash_chromatic", duration)
 
+## The clip peaks at full alpha; `intensity` scales it via the rect's modulate.
 func vignette_pulse(duration: float, intensity: float = 0.5):
-	_fade_rect.color = Color(0, 0, 0, 0)
-	var peak = clampf(0.15 + intensity * 0.5, 0.0, 0.8)
-	var tween = create_tween()
-	tween.tween_property(_fade_rect, "color:a", peak, duration * 0.3)
-	tween.tween_property(_fade_rect, "color:a", 0.0, duration * 0.7)
+	_fade_rect.color = Color(0, 0, 0, _fade_rect.color.a)
+	_fade_rect.modulate.a = clampf(0.15 + intensity * 0.5, 0.0, 0.8)
+	_play_for(_fade_anim, "vignette_pulse", duration)
 
 ## Run a shader filter (grayscale/sepia/invert/scanlines/distortion/blur) as a
-## pulse: ease in 20%, hold 60%, ease out 20% of `duration`. Filters with
-## sensible binary looks (invert/scanlines) still respect intensity as strength.
+## pulse. The in/hold/out shape is the filter_pulse clip's `envelope` track;
+## `intensity` is the peak strength. Filters with sensible binary looks
+## (invert/scanlines) still respect intensity as strength.
 func play_filter(filter_name: String, intensity: float, duration: float):
 	if not _filter_material or not FILTER_MODES.has(filter_name):
 		return
@@ -209,26 +208,13 @@ func play_filter(filter_name: String, intensity: float, duration: float):
 	if filter_name in ["invert", "scanlines", "sepia", "grayscale"]:
 		strength = maxf(strength, 0.6)
 
-	if _filter_tween and _filter_tween.is_valid():
-		_filter_tween.kill()
-
 	_filter_material.set_shader_parameter("mode", FILTER_MODES[filter_name])
-	_filter_material.set_shader_parameter("intensity", 0.0)
-	_filter_rect.visible = true
-
-	_filter_tween = create_tween()
-	_filter_tween.tween_method(_set_filter_intensity, 0.0, strength, duration * 0.2)
-	_filter_tween.tween_interval(duration * 0.6)
-	_filter_tween.tween_method(_set_filter_intensity, strength, 0.0, duration * 0.2)
-	_filter_tween.tween_callback(func(): _filter_rect.visible = false)
-
-func _set_filter_intensity(value: float) -> void:
-	_filter_material.set_shader_parameter("intensity", value)
+	_filter_material.set_shader_parameter("intensity", strength)
+	_play_for(_filter_anim, "filter_pulse", duration)
 
 func impact_frame(duration: float):
-	_flash_rect.color = Color(1, 1, 1, 1)
+	_flash_rect.color = Color(1, 1, 1, _flash_rect.color.a)
 	Engine.time_scale = 0.1
 	await get_tree().create_timer(duration * 0.1).timeout
 	Engine.time_scale = 1.0
-	var tween = create_tween()
-	tween.tween_property(_flash_rect, "color:a", 0.0, 0.2)
+	_play_for(_flash_anim, "flash", 0.2)

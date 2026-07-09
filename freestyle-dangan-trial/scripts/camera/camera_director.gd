@@ -110,18 +110,7 @@ func _execute_shake(
 	_trans_type: Tween.TransitionType,
 	intensity: float = 0.02
 ):
-	var original_pos = _camera.global_position
-	var elapsed = 0.0
-	while elapsed < duration:
-		var offset = Vector3(
-			randf_range(-intensity, intensity),
-			randf_range(-intensity, intensity),
-			0.0
-		)
-		_camera.global_position = original_pos + offset
-		await get_tree().process_frame
-		elapsed += get_process_delta_time()
-	_camera.global_position = original_pos
+	await ScreenEffects.screen_shake(duration, intensity)
 	_finish_motion()
 
 func _execute_dramatic_zoom(
@@ -221,22 +210,8 @@ func _execute_translate(
 func _execute_cross_dissolve(
 	_bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType
 ):
-	var canvas = CanvasLayer.new()
-	canvas.layer = 20
-	add_child(canvas)
-	var rect = ColorRect.new()
-	rect.color = Color(0, 0, 0, 0)
-	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	canvas.add_child(rect)
-
-	var tween = create_tween()
-	tween.tween_property(rect, "color:a", 1.0, duration * 0.4)
-	tween.tween_interval(duration * 0.2)
-	tween.tween_property(rect, "color:a", 0.0, duration * 0.4)
-	tween.finished.connect(func():
-		canvas.queue_free()
-		_finish_motion()
-	)
+	await ScreenEffects.cross_dissolve(duration)
+	_finish_motion()
 
 func _execute_tracking(
 	bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType

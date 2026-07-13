@@ -8,7 +8,7 @@ The project has two main components with different workflows.
 | Path                      | Component                              |
 | ------------------------- | -------------------------------------- |
 | `web-ui-editor/`          | Browser-based trial authoring tool     |
-| `freestyle-dangan-trial/` | Godot 4.5 trial engine                 |
+| `freestyle-dangan-trial/` | Godot 4.7 trial engine                 |
 
 ## Running all checks
 
@@ -54,7 +54,7 @@ npm run check   # lint + tests + build, all must pass
 
 ## Godot engine (freestyle-dangan-trial)
 
-- Open the project in Godot 4.5+ and run with F5.
+- Open the project in Godot 4.7+ and run with F5.
 - GDScript style: gdlint-enforced (see `freestyle-dangan-trial/gdlintrc`);
   tab indentation, snake_case functions/variables, lines up to 120 chars.
 - UI belongs in `.tscn` scenes and animations in resource files — scripts only
@@ -66,11 +66,11 @@ npm run check   # lint + tests + build, all must pass
 
 Unit tests live in `freestyle-dangan-trial/tests/unit/` and run on gdUnit4
 (vendored at `addons/gdUnit4`, currently v6.1.3 — update by replacing the
-directory with a newer release tag). Run them with a Godot 4.5 binary:
+directory with a newer release tag). Run them with a Godot 4.7 binary:
 
 ```powershell
 # Windows
-$env:GODOT_BIN = "C:\path\to\Godot_v4.5.1-stable_win64_console.exe"
+$env:GODOT_BIN = "C:\path\to\Godot_v4.7-stable_win64_console.exe"
 cd freestyle-dangan-trial
 .\addons\gdUnit4\runtest.cmd -a res://tests/unit
 ```

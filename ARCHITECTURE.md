@@ -4,7 +4,7 @@ Two independent components share one data format:
 
 ```
 web-ui-editor/            Browser editor: author a trial, export .drtrial
-freestyle-dangan-trial/   Godot 4.5 engine: load .drtrial, play the trial
+freestyle-dangan-trial/   Godot 4.7 engine: load .drtrial, play the trial
 ```
 
 A `.drtrial` file is a ZIP of the trial folder the editor maintains:

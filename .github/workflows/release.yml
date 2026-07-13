@@ -17,7 +17,7 @@ permissions:
   contents: write
 
 env:
-  GODOT_VERSION: 4.5.1
+  GODOT_VERSION: 4.7
 
 jobs:
   windows-export:
@@ -42,7 +42,7 @@ jobs:
           godot --headless --path freestyle-dangan-trial --import || \
           godot --headless --path freestyle-dangan-trial --import
       - name: Export Windows build
-        # Godot 4.5 segfaults on shutdown after a successful headless export
+        # Godot can segfault on shutdown after a successful headless export
         # (it polls adb for one-click-deploy devices). savepack still finishes
         # and writes the binary, so tolerate the exit code and gate success on
         # the output file being present and a sane size.

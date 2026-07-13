@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Create custom Danganronpa-style class trials: a browser-based authoring tool
-plus a Godot 4.5 engine that plays the result. Design a cast, write a branching
+plus a Godot 4.7 engine that plays the result. Design a cast, write a branching
 script with camera work and effects, configure minigames, and play it back.
 
 **Try it:** [hosted editor](https://saupernova13.github.io/freestyle-dangan-trial/) ·
@@ -63,7 +63,7 @@ honest list, rather than the whole feature set being marked "WIP."
 
 ---
 
-## Game engine (Godot 4.5)
+## Game engine (Godot 4.7)
 
 ### Minigames
 
@@ -146,7 +146,7 @@ a self-contained **Windows** `.exe` (zipped) or an **Android** `.apk`
 
 ```bash
 cd freestyle-dangan-trial
-# Open in Godot 4.5+, press F5
+# Open in Godot 4.7+, press F5
 ```
 
 From the start menu, choose a `.drtrial` file (desktop uses the native file
@@ -183,7 +183,7 @@ freestyle-dangan-trial/
 │   ├── tests/                      # Vitest unit tests
 │   └── js/                         # core/, models/, views/, modals/, ui/, ...
 │
-├── freestyle-dangan-trial/         # Godot 4.5 engine
+├── freestyle-dangan-trial/         # Godot 4.7 engine
 │   ├── scripts/
 │   │   ├── core/                   # Autoload singletons + trial/ loader helpers
 │   │   ├── camera/                 # CameraDirector + bench camera rig
@@ -273,7 +273,7 @@ npm run build      # static build to dist/
 npm run check      # lint + test + build (the CI gate)
 ```
 
-**Engine** — open `freestyle-dangan-trial/` in Godot 4.5+ and press F5. A
+**Engine** — open `freestyle-dangan-trial/` in Godot 4.7+ and press F5. A
 headless compile check:
 ```bash
 godot --headless --quit-after 5 --path freestyle-dangan-trial

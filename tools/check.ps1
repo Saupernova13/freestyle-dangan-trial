@@ -1,6 +1,6 @@
 # Run every check CI runs, locally. Windows PowerShell 5.1 compatible.
 #
-# Engine steps need a Godot 4.5 binary: set GODOT_BIN or have godot on PATH.
+# Engine steps need a Godot 4.7 binary: set GODOT_BIN or have godot on PATH.
 # gdlint comes from gdtoolkit (pip install "gdtoolkit==4.5.*"). Steps whose
 # tools are missing are skipped with a warning, not failed.
 
@@ -60,7 +60,7 @@ if (-not $godotBin) {
 
 if (-not $godotBin) {
     Step "engine: import + tests"
-    Skip "no Godot binary; set GODOT_BIN to a Godot 4.5 executable"
+    Skip "no Godot binary; set GODOT_BIN to a Godot 4.7 executable"
 } else {
     # --- Engine: headless import (twice-tolerant on a cold .godot/) -----------
     Step "engine: headless import"

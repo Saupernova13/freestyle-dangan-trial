@@ -33,7 +33,7 @@ body:
     attributes:
       label: Version / environment
       description: Browser and version for editor bugs; Godot version and OS for engine bugs.
-      placeholder: e.g. Chrome 137 / Godot 4.5.1 on Windows 11
+      placeholder: e.g. Chrome 137 / Godot 4.7 on Windows 11
   - type: textarea
     id: logs
     attributes:

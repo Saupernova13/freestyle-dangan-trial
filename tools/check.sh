@@ -2,7 +2,7 @@
 # Run every check CI runs, locally. Works from any directory; POSIX sh
 # (Git Bash on Windows is fine).
 #
-# Engine steps need a Godot 4.5 binary: set GODOT_BIN or have `godot` on
+# Engine steps need a Godot 4.7 binary: set GODOT_BIN or have `godot` on
 # PATH. gdlint comes from gdtoolkit (pip install "gdtoolkit==4.5.*").
 # Steps whose tools are missing are skipped with a warning, not failed, so
 # web-only contributors can still use this script.
@@ -60,7 +60,7 @@ fi
 
 if [ -z "$godot_bin" ]; then
     step "engine: import + tests"
-    skip "no Godot binary; set GODOT_BIN to a Godot 4.5 executable"
+    skip "no Godot binary; set GODOT_BIN to a Godot 4.7 executable"
 else
     # --- Engine: headless import (twice-tolerant on a cold .godot/) ---------
     step "engine: headless import"

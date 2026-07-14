@@ -19,7 +19,7 @@ jobs:
   no-dotnet:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # The engine is GDScript-only. Addons occasionally vendor a .cs file, and
       # the .NET Godot editor then refuses to export without a C# solution. The
       # standard build this workflow installs ignores .cs entirely, so nothing
@@ -38,7 +38,7 @@ jobs:
   gdlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -51,7 +51,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Godot
         run: |
           curl -fsSL -o godot.zip \

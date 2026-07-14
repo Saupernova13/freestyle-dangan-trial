@@ -24,7 +24,7 @@ jobs:
       run:
         working-directory: web-ui-editor
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Best effort: the default workflow token often may not create the
       # Pages site. If this step fails, enable Pages once by hand
       # (Settings -> Pages -> Source: GitHub Actions) and re-run.

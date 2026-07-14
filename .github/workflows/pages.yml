@@ -40,7 +40,7 @@ jobs:
           cache-dependency-path: web-ui-editor/package-lock.json
       - run: npm ci
       - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: web-ui-editor/dist
 

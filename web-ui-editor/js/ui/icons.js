@@ -1,15 +1,11 @@
 // Inline SVG icon set for the Class Trial editor.
 //
-// Replaces the previous emoji-as-icons. Every glyph is monochrome and
-// stroke-based, drawn on a 24x24 grid and inheriting `currentColor`, so an
-// icon picks up the text color of whatever it sits in (a magenta button, a
-// muted label, a red delete control) with no per-icon coloring.
+// Every glyph is monochrome, stroke-based, drawn on a 24x24 grid, and takes
+// `currentColor`, so it picks up the text color of whatever it sits in.
 //
-// Following this project's existing pattern (inline `onclick` handlers
-// resolve through the global scope), `icon` is published on `window` so the
-// template-string markup in the view/modal modules can call it without each
-// module having to import it. Static markup in index.html inlines the SVG
-// directly instead.
+// `icon` is published on `window` (like the inline onclick handlers) so the
+// template-string markup in the view modules can call it without importing.
+// index.html inlines its SVG directly instead.
 
 const PATHS = {
   // --- chrome / navigation ---
@@ -33,7 +29,7 @@ const PATHS = {
   plus: '<path d="M12 5v14M5 12h14"/>',
   close: '<path d="M18 6 6 18M6 6l12 12"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
-  // disclosure / reorder carets -- replace the last ASCII triangle glyphs
+  // --- disclosure / reorder carets ---
   chevronDown: '<path d="m6 9 6 6 6-6"/>',
   chevronRight: '<path d="m9 6 6 6-6 6"/>',
   chevronUp: '<path d="m6 15 6-6 6 6"/>',
@@ -97,7 +93,6 @@ export function icon(name, opts = {}) {
   return `<svg class="icon${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 }
 
-// Publish for the inline / template-string markup in the view modules.
 if (typeof window !== 'undefined') {
   window.icon = icon;
 }

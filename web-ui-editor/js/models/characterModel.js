@@ -1,4 +1,4 @@
-// Character model - utility functions for working with characters
+// Helpers for reading and rendering cast members.
 import { blockTypes } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { escapeHtml } from '../utils.js';
@@ -23,9 +23,8 @@ const REQUIRED_FIELDS = [
   ['notes', 'Notes'],
 ];
 
-// Which parts of a character profile are still missing. `fields` is the raw
-// field buffer (or a saved character); `hasSprite` says whether at least one
-// sprite is present. Returns an array of human-readable labels.
+// `fields` is the modal's edit buffer or a saved character. Returns the
+// display labels of what is still missing.
 export function missingCharacterFields(fields, hasSprite) {
   const missing = REQUIRED_FIELDS.filter(([key]) => {
     const v = fields[key];
@@ -45,10 +44,8 @@ export function isCharacterComplete(char) {
   return missingCharacterFields(char, hasSprite).length === 0;
 }
 
-// Render an <option> list of the current cast (with a leading "None"),
-// marking `selectedId` selected. Ids in `disabledIds` are shown disabled
-// with an "(already selected)" note - used by editors where the same
-// character cannot fill two roles.
+// `disabledIds` are shown greyed with an "(already selected)" note, for the
+// editors where one character cannot fill two roles.
 export function renderCharacterOptions(selectedId, disabledIds = []) {
   const options = state.cast
     .filter((c) => c)

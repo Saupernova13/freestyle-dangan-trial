@@ -1,4 +1,5 @@
-// Minigame view coordinator - delegates to specific minigame editor modules
+// Minigame list and common settings; each game type's body comes from its
+// own module under views/minigames/.
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { confirmDialog } from '../ui/dialogs.js';
@@ -12,7 +13,6 @@ import { MINIGAME_TYPE_LABELS } from '../core/constants.js';
 import { setHtml } from '../ui/dom.js';
 let expandedMinigameId = null;
 
-// Look up a minigame instance by id.
 export function findMinigame(gameId) {
   return state.minigames.find((mg) => mg.gameId === gameId);
 }
@@ -163,7 +163,6 @@ export function renderMinigameEditor(mg) {
     </div>
   `;
 
-  // Type-specific settings - delegate to module functions
   if (mg.gameType === 'nonstop_debate') {
     editorHtml += renderNonstopDebateEditor(mg);
   } else if (mg.gameType === 'mass_panic_debate') {
@@ -193,7 +192,7 @@ export function updateMinigameField(gameId, field, value) {
   if (mg) {
     mg[field] = value;
 
-    // When game type changes, initialize appropriate typeSpecific structure
+    // A new game type needs its own typeSpecific shape seeded.
     if (field === 'gameType') {
       if (value === 'nonstop_debate' && !mg.typeSpecific) {
         mg.typeSpecific = { selectedBullets: [], dialogueLines: [] };
@@ -219,10 +218,8 @@ export function updateMinigameField(gameId, field, value) {
       }
     }
 
-    // Re-render immediately so UI updates
     renderMinigameDetails();
-    // Save in background (fire and forget)
-    autoSaveTrial();
+    autoSaveTrial(); // deliberately not awaited; the UI is already updated
   }
 }
 

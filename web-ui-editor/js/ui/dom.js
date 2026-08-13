@@ -1,10 +1,8 @@
-// The single sanctioned innerHTML sink. Raw `el.innerHTML = ...` assignments
-// are banned by eslint (no-restricted-syntax) everywhere except this file, so
-// every HTML write in the codebase funnels through here and is greppable.
+// The single sanctioned innerHTML sink; eslint bans raw assignments
+// everywhere else, so every HTML write stays greppable.
 //
-// Callers are responsible for escaping interpolated data with escapeHtml()
-// from utils.js — a missed escape is an XSS hole the moment someone opens a
-// trial file they didn't author.
+// Callers must escape interpolated data with escapeHtml() from utils.js — a
+// missed escape is an XSS hole as soon as someone opens a foreign trial file.
 export function setHtml(el, html) {
   if (el) el.innerHTML = html;
 }

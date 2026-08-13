@@ -1,11 +1,9 @@
-// Hangman's Gambit minigame editor
-// Simple answer key configuration
+// Hangman's Gambit editor: just the answer key.
 import { findMinigame } from '../minigameView.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { escapeHtml } from '../../utils.js';
 
 export function renderHangmansGambitEditor(mg) {
-  // Initialize typeSpecific if needed
   if (!mg.typeSpecific) {
     mg.typeSpecific = {};
   }

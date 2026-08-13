@@ -1,5 +1,4 @@
-// Nonstop Debate minigame editor
-// Handles Truth Bullet selection and dialogue line configuration
+// Nonstop Debate editor: truth bullet selection and dialogue lines.
 
 // Audio players state
 import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
@@ -20,11 +19,8 @@ import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 // Drag state for dialogue lines
 let draggedDialogueLineId = null;
 
-// Collapsible sections state
-// Track which dialogue lines have expanded sections
-const expandedSections = {
-  // lineId: { textStyling: false, characterDisplay: false, feedback: false }
-};
+// lineId -> { textStyling, characterDisplay, feedback }
+const expandedSections = {};
 
 export function toggleSection(lineId, sectionName) {
   if (!expandedSections[lineId]) {
@@ -41,7 +37,6 @@ export function isSectionExpanded(lineId, sectionName) {
 // ==================== Main Rendering ====================
 
 export function renderNonstopDebateEditor(mg) {
-  // Ensure typeSpecific exists
   if (!mg.typeSpecific) {
     mg.typeSpecific = { selectedBullets: [], dialogueLines: [] };
   }
@@ -83,7 +78,6 @@ export function renderNonstopDebateEditor(mg) {
 
   html += `</div>`;
 
-  // Dialogue lines section
   html += `
     <div class="minigame-editor-section">
       <h3>Debate Dialogue Lines (${dialogueLines.length}/30)</h3>
@@ -96,7 +90,6 @@ export function renderNonstopDebateEditor(mg) {
       </div>
     `;
   } else {
-    // Add drop zone before first line
     html += `<div class="dialogue-drop-zone"
                   data-insert-position="0"
                   ondragover="handleDialogueGapDragOver(event)"
@@ -124,7 +117,7 @@ export function renderNonstopDebateEditor(mg) {
 
   html += `</div>`;
 
-  // Add floating button for dialogue lines (only if under max limit)
+  // 30 dialogue lines is the cap.
   if (dialogueLines.length < 30) {
     html += `
       <button class="minigame-floating-btn"
@@ -399,10 +392,8 @@ export function toggleBulletForMinigame(gameId, bulletId) {
   const index = selectedBullets.indexOf(bulletId);
 
   if (index !== -1) {
-    // Deselect
     selectedBullets.splice(index, 1);
   } else {
-    // Select (max 6)
     if (selectedBullets.length >= 6) {
       showToast('Maximum 6 truth bullets can be selected.', { type: 'warning' });
       return;
@@ -456,7 +447,7 @@ export function updateDialogueLine(gameId, lineId, field, value) {
   if (line) {
     line[field] = value;
 
-    // Auto-update isShootable based on answerBulletId
+    // A line is shootable exactly when it has an answer bullet.
     if (field === 'answerBulletId') {
       line.isShootable = value !== '' && value !== null;
     }
@@ -514,7 +505,6 @@ export function handleDialogueDragStart(event, gameId, lineId) {
 export function handleDialogueDragEnd(event) {
   event.target.classList.remove('dragging');
   draggedDialogueLineId = null;
-  // Remove all drag-over classes
   document.querySelectorAll('.drag-over-gap').forEach((el) => {
     el.classList.remove('drag-over-gap');
   });

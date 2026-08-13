@@ -37,7 +37,6 @@
   box-shadow: 1px 1px 0 rgb(0 0 0 / 0.55);
 }
 
-/* Extended variant with text */
 .floating-add-btn.extended {
   width: auto;
   padding: 0.625rem 1.25rem;
@@ -51,7 +50,7 @@
 }
 
 /* ==================== Minigame-Specific Floating Buttons ==================== */
-/* These buttons appear within expanded minigame cards (absolute positioning) */
+/* Anchored inside an expanded minigame card, not the viewport. */
 .minigame-floating-btn {
   position: absolute;
   bottom: 1.5rem;

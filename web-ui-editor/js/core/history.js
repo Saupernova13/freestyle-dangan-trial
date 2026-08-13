@@ -1,11 +1,9 @@
 // Undo/redo history: snapshots of the trial-data slice of state.
 //
-// Recording piggybacks on the persistence choke points in storage.js — every
-// mutation in the app already funnels through scheduleAutoSave() or
-// autoSaveTrial(), so history needs no per-feature wiring. Restores go the
-// other way: app.js injects a callback (via initHistory) that re-renders and
-// persists, because importing the render/storage modules from here would
-// create an import cycle. Keep this module DOM-free for the node-env tests.
+// Recording piggybacks on storage.js's persistence choke points, so history
+// needs no per-feature wiring. Restores go the other way: app.js injects a
+// callback via initHistory, because importing the render/storage modules
+// here would create a cycle. Keep this module DOM-free for the node tests.
 import { state } from './state.js';
 
 const MAX_SNAPSHOTS = 50;
@@ -18,10 +16,9 @@ let recordTimer = null;
 let restoring = false;
 let onRestore = null;
 
-// Deep-copy arrays and plain objects; pass primitives, Blobs, and Files by
-// reference. Blobs are immutable by spec and the app never mutates strings in
-// place, so sharing them keeps 50 snapshots cheap even with sprite dataURLs
-// in the cast, and preserves Blob identity for audio previews across undo.
+// Deep-copies arrays and plain objects; primitives, Blobs and Files go by
+// reference. Blobs are immutable, so sharing them keeps 50 snapshots cheap
+// and preserves Blob identity for audio previews across an undo.
 function cloneValue(v) {
   if (Array.isArray(v)) return v.map(cloneValue);
   if (v && typeof v === 'object' && v.constructor === Object) {
@@ -38,14 +35,12 @@ function takeSnapshot() {
   return snap;
 }
 
-// restoreCallback runs after a snapshot is applied to state (re-render,
-// sync inputs, persist). Injected by app.js at startup.
+// restoreCallback runs after a snapshot is applied to state.
 export function initHistory(restoreCallback) {
   onRestore = restoreCallback;
 }
 
-// Forget everything and treat the current state as the baseline. Called when
-// a trial is opened or created, so undo can never cross trials.
+// Called on open/create, so undo can never cross from one trial into another.
 export function resetHistory() {
   clearTimeout(recordTimer);
   recordTimer = null;
@@ -54,8 +49,8 @@ export function resetHistory() {
   present = takeSnapshot();
 }
 
-// Note that state changed. Debounced (trailing) so a keystroke storm becomes
-// one snapshot of the settled text rather than fifty intermediates.
+// Trailing-debounced, so a keystroke storm yields one snapshot of the
+// settled text rather than fifty intermediates.
 export function recordChange(delayMs = 500) {
   if (restoring || present === null) return;
   clearTimeout(recordTimer);
@@ -113,8 +108,8 @@ function applyPresent() {
   }
 }
 
-// True while a restore's side effects (re-render, persist) are running, so
-// the persistence hooks don't record the restore as a fresh edit.
+// True while a restore's side effects run, so the persistence hooks don't
+// record the restore as a fresh edit.
 export function isRestoring() {
   return restoring;
 }

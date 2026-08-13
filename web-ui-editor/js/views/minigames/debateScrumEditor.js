@@ -1,5 +1,5 @@
-// Debate Scrum minigame editor
-// Handles paired opposition/defense arguments with audio and keywords
+// Debate Scrum editor: paired opposition/defense arguments, with audio and
+// keywords on each side.
 
 // Drag state for arguments
 import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
@@ -20,7 +20,6 @@ let draggedArgumentId = null;
 // ==================== Main Rendering ====================
 
 export function renderDebateScrumEditor(mg) {
-  // Initialize typeSpecific
   if (!mg.typeSpecific) {
     mg.typeSpecific = {};
   }
@@ -48,7 +47,7 @@ export function renderDebateScrumEditor(mg) {
 
   html += `</div>`;
 
-  // Add floating button for arguments (only if under max limit)
+  // 8 arguments is the cap.
   if (args.length < 8) {
     html += `
       <button class="minigame-floating-btn"
@@ -65,7 +64,6 @@ export function renderDebateScrumEditor(mg) {
 export function renderDebateScrumArguments(gameId, args) {
   let html = '';
 
-  // Add drop zone at top
   html += `<div class="argument-drop-zone"
                 data-insert-position="0"
                 ondragover="handleArgumentGapDragOver(event)"
@@ -245,13 +243,11 @@ export function addDebateScrumArgument(gameId) {
   const newArg = {
     argumentId: generateId('arg'),
     order: mg.typeSpecific.arguments.length,
-    // Opposition side
     oppositionStatement: '',
     oppositionCharacterId: '',
     oppositionAudioFile: null,
     oppositionAudioBlob: null,
     oppositionKeywords: [],
-    // Defense side
     defenseStatement: '',
     defenseCharacterId: '',
     defenseAudioFile: null,
@@ -293,7 +289,7 @@ export function updateDebateScrumArgumentKeywords(gameId, argumentId, side, valu
   const arg = mg.typeSpecific.arguments.find((a) => a.argumentId === argumentId);
   if (!arg) return;
 
-  // Split by newlines and filter empty
+  // One keyword per line.
   const keywords = value
     .split('\n')
     .map((k) => k.trim())
@@ -383,12 +379,10 @@ export async function handleDebateScrumAudioUpload(gameId, argumentId, side, eve
   if (!arg) return;
 
   try {
-    // Filename: scrum_{argumentId}_{side}.{ext}
     const ext = file.name.split('.').pop();
     const audioFileName = `scrum_${argumentId}_${side}.${ext}`;
     await saveMinigameAudioFile(gameId, audioFileName, file);
 
-    // Store file information
     if (side === 'opposition') {
       arg.oppositionAudioFile = audioFileName;
       arg.oppositionAudioBlob = file;
@@ -416,7 +410,6 @@ export async function clearDebateScrumAudio(gameId, argumentId, side) {
 
   await deleteMinigameAudioFile(gameId, audioFile);
 
-  // Clear metadata
   if (side === 'opposition') {
     arg.oppositionAudioFile = null;
     arg.oppositionAudioBlob = null;

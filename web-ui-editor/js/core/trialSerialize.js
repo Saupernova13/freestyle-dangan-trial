@@ -1,13 +1,10 @@
-// Serialization of editor state into the trial.json object. Kept separate
-// from storage.js so export.js can use it without an import cycle (storage
-// imports export's updateExportButtonState), and DOM-free so tests can
-// validate its output against schema/trial.schema.json in a node environment.
+// Editor state -> the trial.json object. Separate from storage.js so
+// export.js can use it without an import cycle, and DOM-free so the tests can
+// validate its output against schema/trial.schema.json under node.
 import { blockTypes, FORMAT_VERSION } from './constants.js';
 
-// Assemble the trial.json object from a state-shaped object ({trialName,
-// cast, scriptLines, minigames, truthBullets}).
+// `s` is state-shaped: { trialName, cast, scriptLines, minigames, truthBullets }.
 export function buildTrialJson(s) {
-  // Create minimal ID-only references
   let characterIds = s.cast.map((c) => (c ? c.id : null));
 
   const RUNTIME_FIELDS = new Set(['voiceLineBlob', 'oppositionAudioBlob', 'defenseAudioBlob']);
@@ -17,9 +14,9 @@ export function buildTrialJson(s) {
 
   return {
     trialName: s.trialName,
-    characters: characterIds, // Just an array of IDs or nulls
+    characters: characterIds,
     truthBullets: s.truthBullets.map((b) => ({
-      // Exclude imageDataURL
+      // Listed explicitly to keep imageDataURL out of the file.
       bulletId: b.bulletId,
       name: b.name,
       description: b.description,

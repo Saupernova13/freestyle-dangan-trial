@@ -1,4 +1,4 @@
-// Floating Add Button Manager
+// One floating "add" button, relabelled per view.
 import { addScriptLine } from '../app.js';
 import { state } from '../core/state.js';
 import { addMinigame } from '../views/minigameView.js';
@@ -8,7 +8,6 @@ import { escapeHtml } from '../utils.js';
 let floatingButton = null;
 
 export function initFloatingAddButton() {
-  // Create button if doesn't exist
   if (!floatingButton) {
     floatingButton = document.createElement('button');
     floatingButton.id = 'floatingAddButton';
@@ -19,13 +18,13 @@ export function initFloatingAddButton() {
   }
 }
 
+// Call after every view render.
 export function updateFloatingAddButton() {
   if (!floatingButton) initFloatingAddButton();
 
-  // Hide button immediately to prevent flash/overlay during view switch
+  // Hide first, or the old label flashes over the incoming view.
   floatingButton.style.display = 'none';
 
-  // Determine which button to show based on state.activeView
   let buttonConfig;
 
   switch (state.activeView) {
@@ -61,7 +60,6 @@ export function updateFloatingAddButton() {
     floatingButton.style.display = 'flex';
     floatingButton.onclick = buttonConfig.onclick;
 
-    // Update button text if extended mode
     if (buttonConfig.text) {
       floatingButton.classList.add('extended');
       setHtml(
@@ -76,5 +74,3 @@ export function updateFloatingAddButton() {
     floatingButton.style.display = 'none';
   }
 }
-
-// Call this after every view render

@@ -1,10 +1,7 @@
-// Sprite Magnifier
-// Adds a hover "zoom lens" over sprite thumbnails. When the mouse moves over a
-// sprite image inside a .dr-sprslot, a circular lens follows the cursor and
-// shows a magnified view of the exact area being hovered.
+// A circular zoom lens that follows the cursor over sprite thumbnails.
 //
-// Uses event delegation on the document so it keeps working across the frequent
-// innerHTML re-renders of the character modal (no per-element listeners to rebind).
+// Delegated on the document, so it survives the character modal's frequent
+// re-renders without listeners to rebind.
 
 const SPRITE_MAGNIFIER_ZOOM = 2.5;
 const SPRITE_MAGNIFIER_SIZE = 200; // lens diameter in px
@@ -35,7 +32,6 @@ export function _isSpriteThumb(el) {
 
 export function _showMagnifier(img) {
   _ensureMagnifierLens();
-  // Mirror the source so the lens shows the same picture as the slot.
   if (_magnifierInnerImg.src !== img.src) {
     _magnifierInnerImg.src = img.src;
   }
@@ -59,8 +55,8 @@ export function _moveMagnifier(img, clientX, clientY) {
     return;
   }
 
-  // Scale the slot box uniformly by the zoom factor. The inner img uses the same
-  // object-fit: contain as the slot, so letterboxing lines up automatically.
+  // Uniform scale: the inner img shares the slot's object-fit: contain, so
+  // letterboxing lines up on its own.
   const scaledW = rect.width * SPRITE_MAGNIFIER_ZOOM;
   const scaledH = rect.height * SPRITE_MAGNIFIER_ZOOM;
   _magnifierInnerImg.style.width = scaledW + 'px';
@@ -70,7 +66,7 @@ export function _moveMagnifier(img, clientX, clientY) {
   _magnifierInnerImg.style.left = SPRITE_MAGNIFIER_SIZE / 2 - relX * scaledW + 'px';
   _magnifierInnerImg.style.top = SPRITE_MAGNIFIER_SIZE / 2 - relY * scaledH + 'px';
 
-  // Position the lens near the cursor, flipping to stay on screen.
+  // Near the cursor, flipping sides to stay on screen.
   let lensX = clientX + SPRITE_MAGNIFIER_OFFSET;
   let lensY = clientY + SPRITE_MAGNIFIER_OFFSET;
   if (lensX + SPRITE_MAGNIFIER_SIZE > window.innerWidth) {

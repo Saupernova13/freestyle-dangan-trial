@@ -1,4 +1,4 @@
-// Character modal for creating/editing state.cast members
+// Create/edit modal for a state.cast member.
 import { state } from '../core/state.js';
 import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import {
@@ -31,18 +31,15 @@ let charSprites = [];
 let modalTab = 'details';
 let modalErr = '';
 let modalMsg = '';
-// Set once the user attempts a save, so empty required fields can be flagged
-// in red. Markers showing which fields are still needed are shown regardless.
+// Turns empty required fields red. The "needed" markers show regardless.
 let saveAttempted = false;
 
-// Does the sprite buffer hold at least one usable image?
 function hasAnySprite() {
   return charSprites.some((s) => s && (s.blob || s.dataURL));
 }
 
-// Generate human-readable ID for characters
+// Human-readable and collision-resistant: initials, DOB, random suffix.
 export function generateCharacterId(name, surname, dob) {
-  // Clean and format components
   const cleanName =
     name
       .charAt(0)
@@ -53,7 +50,7 @@ export function generateCharacterId(name, surname, dob) {
       .charAt(0)
       .toUpperCase()
       .replace(/[^A-Za-z0-9]/g, '') || 'Y';
-  const dobFormatted = dob.replace(/-/g, ''); // YYYYMMDD format
+  const dobFormatted = dob.replace(/-/g, ''); // YYYYMMDD
   const randomString = Math.random().toString(36).substring(2, 8).toUpperCase();
 
   return `${cleanSurname}${cleanName}_${dobFormatted}_${randomString}`;
@@ -86,15 +83,13 @@ export async function openCharModal(idx) {
     notes: c.notes || '',
   };
 
-  // Lazy load remaining sprites if character exists (performance optimization)
   if (c.id && c._folderHandle) {
     showLoader(true, 'Loading sprites…');
     await loadRemainingSprites(idx);
-    c = state.cast[idx]; // Refresh reference after loading sprites
+    c = state.cast[idx]; // loadRemainingSprites replaced the slot
     showLoader(false);
   }
 
-  // Load existing sprites if they exist
   if (c.sprites) {
     charSprites = [...c.sprites];
   } else {
@@ -154,8 +149,6 @@ export function fieldUpdate(field, val) {
   charFields[field] = val;
 }
 
-// Inline helpers for the details form: a red border once a save was attempted
-// with the field still empty, and a small "needed" marker on empty fields.
 function invalidClass(key) {
   return saveAttempted && !String(charFields[key] ?? '').trim() ? ' is-invalid' : '';
 }
@@ -291,8 +284,7 @@ export function bulkImportSprites() {
     const files = Array.from(inp.files);
     if (files.length === 0) return;
 
-    // Fill the slots in order, up to the per-character cap. Extra files are
-    // ignored (with a heads-up) rather than rejecting the whole selection.
+    // Extra files are dropped with a heads-up, not rejected wholesale.
     const slots = Math.max(charSprites.length, appSettings.maxSprites);
     const usable = files.slice(0, slots);
     usable.forEach((f, idx) => {
@@ -315,22 +307,19 @@ export async function trySaveChar() {
     return;
   }
 
-  // Drafts are allowed: a character saves with whatever is filled in. We still
-  // compute what's missing so the grid can flag it and the user gets a heads-up.
+  // Drafts are allowed; `missing` only drives the grid flag and the toast.
   saveAttempted = true;
   const missing = missingCharacterFields(charFields, hasAnySprite());
 
   try {
     showLoader(true, 'Saving character…');
 
-    // Generate human-readable ID for new characters or keep existing ID
     const existingChar = state.cast[activeIdx];
     const characterId = existingChar
       ? existingChar.id
       : generateCharacterId(charFields.name, charFields.surname, charFields.dob);
 
-    // Fall back to the id for the folder name when there's no name yet, so
-    // unnamed drafts don't all collide on the same "_" directory.
+    // Falling back to the id keeps unnamed drafts off a shared "_" directory.
     const nameBased = (charFields.name + '_' + charFields.surname)
       .replace(/[^a-zA-Z0-9_\- ]/g, '_')
       .replace(/^[_\s]+|[_\s]+$/g, '');
@@ -338,7 +327,6 @@ export async function trySaveChar() {
     let charsDir = await state.dirHandle.getDirectoryHandle('Characters', { create: true });
     let charDir = await charsDir.getDirectoryHandle(charDirname, { create: true });
 
-    // Save character data (optimized structure)
     let charJson = {
       id: characterId,
       name: charFields.name,
@@ -352,7 +340,7 @@ export async function trySaveChar() {
       likes: charFields.likes,
       dislikes: charFields.dislikes,
       notes: charFields.notes,
-      isHeadmaster: isHeadmaster(activeIdx), // Single boolean instead of redundant fields
+      isHeadmaster: isHeadmaster(activeIdx),
       position: activeIdx,
       lastModified: new Date().toISOString(),
     };
@@ -363,9 +351,8 @@ export async function trySaveChar() {
     await writer.write(JSON.stringify(charJson, null, 2));
     await writer.close();
 
-    // Save sprites with proper error handling. Iterate the buffer length (not
-    // maxSprites) so lowering the setting never drops an existing character's
-    // extra sprites.
+    // Iterate the buffer, not maxSprites, so lowering that setting never
+    // drops an existing character's extra sprites.
     let savedSprites = [];
     for (let k = 0; k < charSprites.length; k++) {
       let s = charSprites[k];
@@ -386,15 +373,14 @@ export async function trySaveChar() {
       }
     }
 
-    // Update state.cast with new character data. Keep the folder handle so a
-    // later edit or removal acts on the same directory.
+    // The folder handle carries over so a later edit or removal hits the
+    // same directory.
     state.cast[activeIdx] = {
       ...charJson,
       sprites: savedSprites,
       _folderHandle: charDir,
     };
 
-    // Save trial data
     await autoSaveTrial();
 
     showLoader(false);
@@ -417,8 +403,7 @@ export async function trySaveChar() {
   }
 }
 
-// Remove the active character: delete its folder, clear the cast slot, and
-// detach it from any speaking lines that referenced it.
+// Also detaches the character from any speaking line that referenced it.
 export async function removeCharacter() {
   const existing = state.cast[activeIdx];
   if (!existing) {

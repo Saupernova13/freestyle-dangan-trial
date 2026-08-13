@@ -1,10 +1,8 @@
-// Storage layer - handles file I/O and trial data persistence.
+// File I/O and trial persistence.
 //
-// A trial lives in a directory handle (state.dirHandle). That handle can come
-// from two backends with an identical interface:
-//   - an on-disk folder picked via showDirectoryPicker (Chromium), or
-//   - an OPFS subfolder (Firefox/Safari/Chromium) — see core/opfs.js.
-// Everything below works the same against either.
+// A trial lives in state.dirHandle, which is either an on-disk folder from
+// showDirectoryPicker (Chromium) or an OPFS subfolder (see core/opfs.js).
+// The two backends share an interface, so everything below works on either.
 import JSZip from 'jszip';
 import { BLOCK_COUNT } from './constants.js';
 import { recordChange, resetHistory } from './history.js';
@@ -25,7 +23,6 @@ import { setSaveStatus } from '../ui/saveStatus.js';
 import { fileToDataUrl, renderDirDisplay, showLoader } from '../utils.js';
 import { renderActiveView } from '../views/viewManager.js';
 
-// Reset state to an empty trial (used for new/blank or unreadable folders).
 function resetEmptyTrial() {
   state.trialName = '';
   document.getElementById('trialNameInput').value = '';
@@ -35,7 +32,7 @@ function resetEmptyTrial() {
   state.truthBullets = [];
 }
 
-// Read the trial in state.dirHandle into state. Assumes state.dirHandle is set.
+// Assumes state.dirHandle is set.
 async function loadTrialIntoState() {
   const files = [];
   for await (const entry of state.dirHandle.values()) files.push(entry.name);
@@ -50,9 +47,7 @@ async function loadTrialIntoState() {
     const file = await state.dirHandle.getFileHandle('trial.json').then((fh) => fh.getFile());
     const data = JSON.parse(await file.text());
 
-    // Contract checks (schema/trial.schema.json). Never block opening — the
-    // author needs the editor to fix a broken trial — but say what's wrong
-    // before an auto-save quietly rewrites the file.
+    // Warn but never block: the author needs the editor to fix a broken trial.
     const versionCheck = checkFormatVersion(data);
     if (versionCheck.message) {
       await alertDialog({
@@ -100,8 +95,7 @@ async function loadTrialIntoState() {
     }
   } catch (error) {
     console.error('Failed to parse trial.json:', error);
-    // Warn before presenting an empty editor — continuing to edit and auto-save
-    // would overwrite the (possibly recoverable) file.
+    // Warn first: auto-saving over an empty editor would destroy a recoverable file.
     await alertDialog({
       title: 'Could not read trial.json',
       type: 'warning',
@@ -116,14 +110,12 @@ async function loadTrialIntoState() {
   }
 }
 
-// Open a trial from any directory handle (on-disk or OPFS) into the editor.
 export async function openTrialFromHandle(dirHandle) {
   try {
     showLoader(true, 'Loading trial…');
     state.dirHandle = dirHandle;
     await loadTrialIntoState();
-    // The freshly loaded trial is the undo baseline; history never crosses
-    // from one trial into another.
+    // Undo history never crosses from one trial into another.
     resetHistory();
     renderDirDisplay(state.dirHandle, state.trialName);
     showLoader(false);
@@ -152,7 +144,7 @@ export async function chooseTrialDir() {
   try {
     dH = await window.showDirectoryPicker({ id: 'dr-trial-dir', mode: 'readwrite' });
   } catch (err) {
-    // AbortError means the user cancelled the picker — not an error.
+    // AbortError = the user cancelled the picker.
     if (err && err.name === 'AbortError') return;
     console.error('Failed to open trial folder:', err);
     await alertDialog({
@@ -165,7 +157,7 @@ export async function chooseTrialDir() {
   await openTrialFromHandle(dH);
 }
 
-// Return to the trial picker (welcome hub). Work is already auto-saved.
+// Safe to leave without saving: work is already auto-saved.
 export function openTrialHub() {
   state.dirHandle = null;
   renderDirDisplay(null);
@@ -173,7 +165,6 @@ export function openTrialHub() {
   renderActiveView();
 }
 
-// Create a fresh trial in browser storage (OPFS).
 export async function newOpfsTrial() {
   if (!(await opfsCanWrite())) {
     await alertDialog({
@@ -206,7 +197,7 @@ export async function newOpfsTrial() {
   }
 }
 
-// Open an existing browser-storage trial by its folder slug.
+// `folder` is the OPFS folder slug, not the display name.
 export async function openOpfsTrialByName(folder) {
   try {
     const dir = await getOpfsTrial(folder, { create: false });
@@ -217,7 +208,6 @@ export async function openOpfsTrialByName(folder) {
   }
 }
 
-// Delete a browser-storage trial, then refresh the hub.
 export async function deleteOpfsTrialAndRefresh(folder) {
   const confirmed = await confirmDialog({
     title: 'Delete trial',
@@ -239,7 +229,7 @@ export async function deleteOpfsTrialAndRefresh(folder) {
   openTrialHub();
 }
 
-// Import a .drtrial (a ZIP) into a new browser-storage trial and open it.
+// A .drtrial is a ZIP; it lands in a new browser-storage trial.
 export async function importTrialFromFile(file) {
   if (!(await opfsCanWrite())) {
     await alertDialog({
@@ -282,7 +272,6 @@ export async function importTrialFromFile(file) {
   }
 }
 
-// Open a file picker for importing a .drtrial.
 export function triggerImportTrial() {
   const inp = document.createElement('input');
   inp.type = 'file';
@@ -294,7 +283,7 @@ export function triggerImportTrial() {
   inp.click();
 }
 
-// Write a (possibly nested) zip path into a directory handle, creating subdirs.
+// Creates intermediate subdirectories for a nested zip path.
 async function writeFileToDir(dir, path, blob) {
   const parts = path.split('/').filter(Boolean);
   const fileName = parts.pop();
@@ -311,24 +300,21 @@ const OPFS_WRITE_MSG =
   'Firefox, Safari, or a Chromium browser, or use a Chromium browser to edit a ' +
   'folder on disk.';
 
-// Lazy load remaining sprites for a character (performance optimization)
+// Fills in the sprites the cast grid skipped; called when the modal opens.
 export async function loadRemainingSprites(charIndex) {
   const char = state.cast[charIndex];
   if (!char || !char._folderHandle) return;
 
-  // Check if sprites already loaded
   if (char.sprites && char.sprites.length === appSettings.maxSprites) {
-    return; // Already loaded
+    return;
   }
 
-  // Initialize sprites array if needed
   if (!char.sprites) {
     char.sprites = [];
   }
 
   const spriteCount = appSettings.maxSprites;
   for (let j = 1; j <= spriteCount; j++) {
-    // Skip if already loaded
     if (char.sprites[j - 1]) continue;
 
     try {
@@ -350,8 +336,7 @@ export async function loadCharactersFromIds(characterIds) {
     .catch(() => null);
   if (!charsDir) return;
 
-  // Scan the Characters directory once, building an id -> data index.
-  // (The previous version re-walked every folder for every cast slot.)
+  // One pass over Characters/, indexed by id, rather than a walk per cast slot.
   const charactersById = new Map();
   for await (const [, folderHandle] of charsDir.entries()) {
     if (folderHandle.kind !== 'directory') continue;
@@ -359,12 +344,12 @@ export async function loadCharactersFromIds(characterIds) {
       const charFile = await folderHandle.getFileHandle('character.json');
       const charData = JSON.parse(await (await charFile.getFile()).text());
       if (charData && charData.id) {
-        // Store folder handle for lazy loading the remaining sprites later.
+        // Kept for lazy-loading the remaining sprites.
         charData._folderHandle = folderHandle;
         charactersById.set(charData.id, charData);
       }
     } catch {
-      continue; // not a character folder, or unreadable - skip it
+      continue; // not a character folder, or unreadable
     }
   }
 
@@ -372,8 +357,7 @@ export async function loadCharactersFromIds(characterIds) {
     const charData = characterIds[i] ? charactersById.get(characterIds[i]) : null;
     if (!charData) continue;
 
-    // Load only the first sprite for the cast grid (performance optimization);
-    // the rest load lazily when the character modal opens.
+    // Only the first sprite; the rest load lazily via loadRemainingSprites.
     charData.sprites = [];
     try {
       const f = await charData._folderHandle.getFileHandle('sprite_01.png');
@@ -417,7 +401,6 @@ export async function loadMinigameAudio() {
       try {
         const gameAudioDir = await minigamesDir.getDirectoryHandle(mg.gameId, { create: false });
 
-        // Load Nonstop Debate dialogue audio
         if (mg.gameType === 'nonstop_debate' && mg.typeSpecific && mg.typeSpecific.dialogueLines) {
           for (let line of mg.typeSpecific.dialogueLines) {
             if (line.voiceLineFile) {
@@ -432,7 +415,6 @@ export async function loadMinigameAudio() {
           }
         }
 
-        // Load Debate Scrum argument audio
         if (mg.gameType === 'debate_scrum' && mg.typeSpecific && mg.typeSpecific.arguments) {
           for (let arg of mg.typeSpecific.arguments) {
             if (arg.oppositionAudioFile) {
@@ -459,10 +441,8 @@ export async function loadMinigameAudio() {
           }
         }
 
-        // Load Mass Panic Debate speaker audio (line groups structure)
         if (mg.gameType === 'mass_panic_debate' && mg.typeSpecific && mg.typeSpecific.lineGroups) {
           for (let group of mg.typeSpecific.lineGroups) {
-            // Each group has speaker1, speaker2, speaker3 lines
             for (let speakerKey of ['speaker1', 'speaker2', 'speaker3']) {
               const line = group[speakerKey];
               if (line && line.voiceLineFile) {
@@ -492,13 +472,9 @@ export async function loadMinigameAudio() {
 let autoSaveTimer = null;
 let autoSaveFailureNotified = false;
 
-// Debounced auto-save for keystroke-frequency callers (dialogue inputs,
-// trial name). Writing trial.json on every keypress hammers the disk and
-// can interleave writes; one trailing save after the user pauses is enough.
-//
-// Persistence doubles as the undo-history choke point: every mutation in the
-// app reaches one of these two functions, so recordChange here covers them
-// all. The timer path passes skipHistory to avoid snapshotting twice.
+// Debounced save for keystroke-frequency callers; a per-keypress write would
+// interleave. Also the undo choke point — every mutation reaches this or
+// autoSaveTrial, so recordChange here covers them all.
 export function scheduleAutoSave(delayMs = 600) {
   if (state.dirHandle) setSaveStatus('saving');
   recordChange(delayMs);
@@ -515,8 +491,7 @@ export async function autoSaveTrial(opts = {}) {
     autoSaveFailureNotified = false;
     setSaveStatus('saved');
   } catch (err) {
-    // Surface the first failure loudly (revoked permission, disk full, ...)
-    // but don't re-alert on every subsequent keystroke until a save succeeds.
+    // Alert once, not on every subsequent keystroke, until a save succeeds.
     console.error('Auto-save failed:', err);
     setSaveStatus('error');
     if (!autoSaveFailureNotified) {
@@ -536,9 +511,7 @@ export async function autoSaveTrial(opts = {}) {
 async function writeTrialJson() {
   const trialJs = buildTrialJson(state);
 
-  // Contract self-check. Only warn — blocking an auto-save over a validation
-  // bug would risk losing the author's work, which is worse than persisting
-  // an imperfect file.
+  // Warn only: blocking auto-save over a validation bug would lose real work.
   const issues = validateTrialData(trialJs);
   if (issues.length > 0) {
     console.warn('trial.json being saved does not match the schema:', issues);

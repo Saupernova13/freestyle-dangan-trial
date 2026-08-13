@@ -1,4 +1,4 @@
-// Cast view - displays the character grid
+// The character grid: one slot per cast position, filled or empty.
 import { BLOCK_COUNT, blockNames, blockTypes } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { openCharModal } from '../modals/characterModal.js';
@@ -33,7 +33,6 @@ export function renderCastGrid() {
     };
 
     if (c) {
-      // Character exists - show sprite and name
       let spriteHtml;
       if (c.sprites && c.sprites[0] && c.sprites[0].dataURL) {
         spriteHtml = `<img src="${c.sprites[0].dataURL}" class="blk-ppic" alt="Character sprite">`;
@@ -54,7 +53,6 @@ export function renderCastGrid() {
       `
       );
     } else {
-      // Empty slot - show plus and default name
       setHtml(
         div,
         `

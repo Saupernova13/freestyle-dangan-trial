@@ -1,10 +1,6 @@
-// Shared audio preview player.
-//
-// Four places in the editor preview voice audio (the script line modal and
-// three minigame editors); each used to maintain its own Audio element,
-// play/pause toggle, seek bar sync, and button repaint. This component owns
-// a registry of players keyed by caller-chosen ids; callers supply the DOM
-// ids of their controls and a lazy blob loader.
+// Shared audio preview player for the script line modal and the three
+// minigame editors. Holds a registry of players keyed by caller-chosen ids;
+// callers supply their control ids and a lazy blob loader.
 import { showToast } from '../ui/dialogs.js';
 import { formatAudioTime } from '../utils.js';
 
@@ -32,12 +28,11 @@ function updateSeekDisplay(entry) {
   totalEl.textContent = formatAudioTime(duration || 0);
 }
 
-// Toggle playback for the player identified by `key`.
 // opts:
-//   getBlob       async () => Blob|null - lazy audio source (may hit disk)
-//   buttonId      id of the play/pause button to repaint
-//   seekBarId, timeCurrentId, timeTotalId  optional seek-bar control ids
-//   onError       optional (message) => void; defaults to an error toast
+//   getBlob       async () => Blob|null; may hit disk
+//   buttonId      play/pause button to repaint
+//   seekBarId, timeCurrentId, timeTotalId  optional
+//   onError       (message) => void; defaults to an error toast
 export async function toggleAudioPreview(key, opts) {
   const fail = (msg) => (opts.onError ? opts.onError(msg) : showToast(msg, { type: 'error' }));
 
@@ -89,7 +84,7 @@ export async function toggleAudioPreview(key, opts) {
   }
 }
 
-// Seek the player identified by `key` to `percent` (0-100).
+// `percent` is 0-100.
 export function seekAudioPreview(key, percent) {
   const entry = players[key];
   if (entry && entry.audio.duration) {
@@ -97,13 +92,12 @@ export function seekAudioPreview(key, percent) {
   }
 }
 
-// True while the player identified by `key` is actively playing.
 export function isAudioPreviewPlaying(key) {
   const entry = players[key];
   return !!(entry && !entry.audio.paused);
 }
 
-// Stop and dispose the player identified by `key` (e.g. on modal close).
+// Call on modal close; also revokes the object URL.
 export function stopAudioPreview(key) {
   const entry = players[key];
   if (!entry) return;

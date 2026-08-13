@@ -111,7 +111,6 @@ export function renderCameraMotionTab() {
 }
 
 export function updateCameraMotion(field, value) {
-  // Validate duration is within range
   if (field === 'duration') {
     const duration = parseFloat(value);
     if (isNaN(duration) || duration < 0.1 || duration > 10) {
@@ -124,6 +123,6 @@ export function updateCameraMotion(field, value) {
   sl.err = '';
   sl.fields.cameraMotion[field] = value;
 
-  // Repaint just this tab so the duration/easing controls show or hide.
+  // Tab-only repaint, so the duration/easing controls show or hide.
   if (sl.tab === 'cameraMotion') refreshTabBody(renderCameraMotionTab());
 }

@@ -13,7 +13,7 @@
   min-height: 0;
 }
 
-/* Full-width containers that should span entire grid */
+/* Containers that span the whole grid */
 #minigameDetailsContainer,
 #truthBulletsContainer,
 #scriptEditorContainer {
@@ -156,9 +156,8 @@
   color: var(--bg-primary);
 }
 
-/* Character type indicators: the headmaster slot reads in the warning hue at
-   every width. These previously lived inside the max-width:768px media query,
-   so the distinction only showed on narrow screens. */
+/* The headmaster slot reads in the warning hue at every width -- keep these
+   out of the max-width:768px media query. */
 .cast-block[data-type='headmaster'] {
   border: 2px solid var(--warning);
 }
@@ -181,8 +180,7 @@
   border: 2px solid transparent;
 }
 
-/* First-run prompt shown in #mainGrid before a trial folder is chosen
-   (see views/viewManager.js). */
+/* First-run prompt, rendered into #mainGrid by views/viewManager.js. */
 .welcome-screen {
   grid-column: 1 / -1;
   display: flex;

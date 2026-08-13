@@ -21,7 +21,7 @@ export function renderDirDisplay(dH, label) {
   setHtml(el, dH ? `${window.icon('folder', { size: 15 })} ${escapeHtml(label || dH.name)}` : '');
 }
 
-// Format seconds as M:SS for audio player time displays.
+// Seconds as M:SS.
 export function formatAudioTime(seconds) {
   if (isNaN(seconds) || seconds === Infinity) return '0:00';
   const mins = Math.floor(seconds / 60);
@@ -39,14 +39,12 @@ export function escapeHtml(text) {
     .replace(/'/g, '&#39;');
 }
 
-// Normalize dialogue highlight ranges into the only shape previews, saves,
-// and the engine should ever see: sorted, disjoint, clamped to the text.
+// Returns the only shape previews, saves and the engine ever see: sorted,
+// disjoint, clamped to the text.
 //
-// Ranges are painted onto a per-character color map (later entries win,
-// exactly like going over text again with a highlighter) and re-emitted as
-// runs. This makes overlapping selections, stale ranges left behind by a
-// dialogue edit, out-of-bounds indices, and malformed colors all impossible
-// to persist — the data is repaired at every boundary it passes through.
+// Ranges are painted onto a per-character color map — later entries win, like
+// going over text again with a highlighter — then re-emitted as runs. Overlaps,
+// stale ranges, out-of-bounds indices and bad colors cannot survive it.
 export function normalizeHighlights(highlights, textLength) {
   if (!Array.isArray(highlights) || textLength <= 0) return [];
 
@@ -80,8 +78,7 @@ export function normalizeHighlights(highlights, textLength) {
   return out;
 }
 
-// Generate a collision-resistant id: <prefix>_<timestamp>_<random>.
-// Matches the historical id format used throughout trial.json.
+// <prefix>_<timestamp>_<random>, the id format trial.json expects.
 export function generateId(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }

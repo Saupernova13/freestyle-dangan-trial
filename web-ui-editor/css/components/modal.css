@@ -215,12 +215,12 @@
   min-width: 120px;
 }
 
-/* Destructive action (e.g. Remove character) sits at the far left. */
+/* Destructive actions sit at the far left, away from Save. */
 .dr-btn-row .dr-btn-remove {
   margin-right: auto;
 }
 
-/* Inline form validation: marker on empty required fields + invalid border. */
+/* Inline form validation markers. */
 .req-flag {
   margin-left: 0.4rem;
   font-size: 0.7rem;

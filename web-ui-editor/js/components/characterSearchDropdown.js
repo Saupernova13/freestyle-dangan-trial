@@ -1,11 +1,9 @@
-// Character search dropdown used by speaking script lines.
+// Character search dropdown for speaking script lines; the markup lives in
+// app.js's renderScriptLineBar.
 //
-// Each speaking line renders a text input plus a results list (markup lives in
-// app.js's renderScriptLineBar). Only one dropdown is open at a time, so this
-// module keeps a single open-state and drives every open list. Item clicks and
-// hover are handled by document-level delegation wired once in
-// initCharacterSearchDropdown — the list re-renders on each keystroke, so
-// per-item listeners would have to be rebound every time.
+// Only one dropdown is ever open, so a single open-state drives all of them.
+// Clicks and hover go through document-level delegation, because the list
+// re-renders on every keystroke and per-item listeners would need rebinding.
 import { updateScriptLine } from '../app.js';
 import { state } from '../core/state.js';
 import { escapeHtml } from '../utils.js';
@@ -15,7 +13,7 @@ let activeDropdownLineId = null;
 let filteredCharacters = [];
 let highlightedIndex = -1;
 
-// Wire the document-level delegation once, at app init.
+// Call once, at app init.
 export function initCharacterSearchDropdown() {
   // Click outside any dropdown closes the open one.
   document.addEventListener('click', (e) => {
@@ -24,7 +22,6 @@ export function initCharacterSearchDropdown() {
     }
   });
 
-  // Click an item to select it.
   document.addEventListener('click', (e) => {
     const item = e.target.closest('.searchable-dropdown-item');
     if (item && item.dataset.charId && activeDropdownLineId) {
@@ -32,7 +29,6 @@ export function initCharacterSearchDropdown() {
     }
   });
 
-  // Hover an item to highlight it.
   document.addEventListener('mouseover', (e) => {
     const item = e.target.closest('.searchable-dropdown-item');
     if (item && item.dataset.charIndex !== undefined && activeDropdownLineId) {
@@ -46,7 +42,6 @@ export function initCharacterSearchDropdown() {
 }
 
 export function openCharacterDropdown(lineId) {
-  // Close any other dropdown first.
   if (activeDropdownLineId && activeDropdownLineId !== lineId) {
     closeCharacterDropdown(activeDropdownLineId);
   }
@@ -91,7 +86,6 @@ export function filterCharacters(lineId, searchTerm) {
 export function handleCharacterKeydown(lineId, event) {
   const listEl = document.getElementById(`char-dropdown-list-${lineId}`);
 
-  // Only handle keys while the dropdown is open.
   if (!listEl || listEl.style.display === 'none') {
     return;
   }
@@ -134,7 +128,6 @@ export function selectCharacterFromDropdown(lineId, characterId) {
   updateScriptLine(lineId, 'characterId', characterId);
   closeCharacterDropdown(lineId);
 
-  // Reflect the selection in the input.
   const selectedChar = state.cast.find((c) => c && c.id === characterId);
   if (selectedChar) {
     const inputEl = document.getElementById(`char-dropdown-input-${lineId}`);
@@ -180,7 +173,6 @@ export function renderCharacterDropdownList(lineId) {
 
   setHtml(listEl, itemsHtml);
   listEl.style.display = 'block';
-  // Clicks and hover are handled by document-level delegation set up at init.
 }
 
 export function updateDropdownHighlighting(lineId) {

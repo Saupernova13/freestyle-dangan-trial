@@ -1,11 +1,8 @@
-// Contract tests for schema/trial.schema.json.
-//
-// The JSON Schema file is the normative trial.json contract. Two things must
-// track it: the editor's hand-rolled validator (js/core/trialSchema.js) and
-// the engine's trial_validator.gd (exercised against the same fixture by the
-// gdUnit4 suite). Here we compile the schema with ajv and assert that the
-// hand-rolled validator reaches the same verdict on every corpus entry, so
-// the schema and the runtime validator cannot drift apart silently.
+// Contract tests for schema/trial.schema.json, the normative trial.json
+// contract. Two things must track it: the editor's hand-rolled validator
+// (js/core/trialSchema.js) and the engine's trial_validator.gd, which the
+// gdUnit4 suite drives against the same fixture. Compiling the schema with
+// ajv and comparing verdicts across the corpus is what stops silent drift.
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

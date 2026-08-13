@@ -7,8 +7,7 @@ import { setHtml } from '../../ui/dom.js';
 export function renderHighlightingTab(line) {
   const dialogue = line.dialogue || line.text || '';
 
-  // Repair any stale/overlapping ranges (e.g. dialogue edited after
-  // highlighting) before they are shown or re-saved.
+  // Dialogue may have been edited since; repair stale ranges before showing them.
   sl.fields.highlights = normalizeHighlights(sl.fields.highlights, dialogue.length);
 
   const highlightedText = renderHighlightedDialogue(dialogue, sl.fields.highlights);
@@ -30,7 +29,7 @@ export function renderHighlightingTab(line) {
     })
     .join('');
 
-  // Render dialogue as individual character spans for drag selection.
+  // One span per character so a drag can address them individually.
   const selectableDialogue = dialogue
     .split('')
     .map(
@@ -46,7 +45,6 @@ export function renderHighlightingTab(line) {
         Click and drag across the text to select the portion you want to highlight.
       </p>
 
-      <!-- Single unified preview -->
       <div class="highlight-preview">
         <h4>Text Preview:</h4>
         <div class="preview-text" id="highlight-unified-preview">
@@ -57,7 +55,6 @@ export function renderHighlightingTab(line) {
         </div>
       </div>
 
-      <!-- Existing highlights list -->
       ${
         sl.fields.highlights.length > 0
           ? `
@@ -69,18 +66,15 @@ export function renderHighlightingTab(line) {
           : ''
       }
 
-      <!-- Drag-to-select controls -->
       <div class="highlight-controls">
         <h4>Add New Highlight:</h4>
 
-        <!-- Selectable dialogue text -->
         <div class="dialogue-selector" id="dialogue-selector">
           <div class="dialogue-text">
             ${selectableDialogue}
           </div>
         </div>
 
-        <!-- Color selection -->
         <div class="color-selection">
           <label>Text Color:</label>
           <div class="color-presets">
@@ -121,12 +115,11 @@ export function renderHighlightingTab(line) {
   `;
 }
 
-// Removes the document-level listener from the previous wiring. The tab is
-// re-rendered (and re-wired) on every highlight add/remove and tab switch, so
-// without this the document pointerup handlers would pile up.
+// The tab re-wires on every highlight add/remove and tab switch, so without
+// this the document pointerup handlers would pile up.
 let detachDragSelection = null;
 
-// Drop any active drag-selection listeners (called when the modal closes).
+// Called when the modal closes.
 export function teardownDragSelection() {
   if (detachDragSelection) {
     detachDragSelection();
@@ -134,8 +127,7 @@ export function teardownDragSelection() {
   }
 }
 
-// Wire up drag selection after the highlighting tab is in the DOM. Uses pointer
-// events (+ elementFromPoint) so it works with both mouse and touch.
+// Call once the tab is in the DOM. Pointer events, so mouse and touch both work.
 export function initializeDragSelection() {
   teardownDragSelection();
 
@@ -149,8 +141,8 @@ export function initializeDragSelection() {
   let isSelecting = false;
   let startIndex = -1;
 
-  // The span under a point. For touch, the implicit pointer capture keeps
-  // e.target on the start span, so resolve the element by coordinates instead.
+  // Touch's implicit pointer capture pins e.target to the start span, so the
+  // span under the cursor has to be resolved by coordinates.
   const charIndexAt = (x, y) => {
     const el = document.elementFromPoint(x, y);
     if (el && el.classList.contains('char-selectable')) {
@@ -176,7 +168,7 @@ export function initializeDragSelection() {
     const idx = charIndexAt(e.clientX, e.clientY);
     if (idx < 0) return;
     e.preventDefault();
-    // Handle backward selection (drag right-to-left).
+    // min/max so a right-to-left drag still selects.
     sl.highlighting.startChar = Math.min(startIndex, idx);
     sl.highlighting.endChar = Math.max(startIndex, idx) + 1;
     clearPreviousSelection();
@@ -240,13 +232,11 @@ export function initializeDragSelection() {
   }
 }
 
-// Render dialogue with all highlights applied.
 export function renderHighlightedDialogue(dialogue, highlights) {
   if (!dialogue) return '<em>No dialogue text</em>';
 
-  // normalizeHighlights guarantees sorted, disjoint, in-bounds ranges, so
-  // this preview renders exactly what the engine will — including data that
-  // arrives overlapping or stale from older trial files.
+  // Normalizing first makes the preview match what the engine renders, even
+  // for stale ranges out of an older trial file.
   const normalized = normalizeHighlights(highlights, dialogue.length);
   if (normalized.length === 0) return escapeHtml(dialogue);
 
@@ -264,10 +254,8 @@ export function renderHighlightedDialogue(dialogue, highlights) {
   return result;
 }
 
-// Clear the highlight drag-selection.
-// Named distinctly from app.js's clearSelection (script line multi-select):
-// both files share the global namespace, and a shared name meant whichever
-// file loaded last silently won.
+// Do not rename to clearSelection: app.js exports one too, and these share a
+// global namespace where the last file loaded silently wins.
 export function clearHighlightSelection() {
   sl.highlighting.startChar = 0;
   sl.highlighting.endChar = 0;
@@ -300,14 +288,13 @@ export function selectHighlightColor(color) {
   sl.err = '';
   sl.highlighting.currentColor = color;
 
-  // Update the color preview without a full re-render.
+  // Patch the preview in place rather than re-rendering the whole modal.
   const colorPreview = document.querySelector('.current-color-preview');
   if (colorPreview) {
     colorPreview.style.background = color;
     colorPreview.querySelector('span').textContent = color;
   }
 
-  // Update color preset active states.
   document.querySelectorAll('.color-preset').forEach((btn) => {
     const btnColor = normalizeColorFormat(btn.style.background);
     const targetColor = normalizeColorFormat(color);
@@ -318,8 +305,7 @@ export function selectHighlightColor(color) {
     }
   });
 
-  // Repaint the unified preview so an in-progress selection reflects the
-  // newly chosen color.
+  // Repaint so an in-progress selection takes the new color.
   const line = activeLine();
   const unifiedPreview = document.getElementById('highlight-unified-preview');
   if (unifiedPreview && line && sl.highlighting.endChar > sl.highlighting.startChar) {
@@ -336,7 +322,7 @@ export function selectHighlightColor(color) {
   }
 }
 
-// Normalize a CSS color (hex or rgb()) to #RRGGBB for comparison.
+// hex or rgb() -> #RRGGBB, so the two can be compared.
 function normalizeColorFormat(color) {
   if (!color || typeof color !== 'string') return null;
   color = color.trim();
@@ -376,9 +362,8 @@ export function addHighlightFromSelection() {
     return;
   }
 
-  // Add the highlight, then normalize so a selection over existing highlights
-  // repaints them (highlighter semantics) instead of stacking overlapping
-  // ranges that older versions corrupted at render time.
+  // Normalizing after the push gives highlighter semantics: painting over an
+  // existing highlight repaints it instead of stacking overlapping ranges.
   sl.fields.highlights.push({
     startChar: sl.highlighting.startChar,
     endChar: sl.highlighting.endChar,

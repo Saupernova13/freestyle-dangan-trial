@@ -1,9 +1,8 @@
 // Shared working state for the script line modal and its tabs.
 //
-// One script line is edited at a time, so the modal keeps a single `sl`
-// object that every tab reads and writes directly. The coordinator
-// (modals/scriptLineModal.js) resets it when the modal opens and closes;
-// the tab modules mutate `sl.fields` / `sl.highlighting` as the user edits.
+// Only one line is edited at a time, so a single `sl` object serves every
+// tab. scriptLineModal.js resets it on open and close; the tabs mutate
+// `sl.fields` and `sl.highlighting` directly.
 import { state } from '../../core/state.js';
 
 import { setHtml } from '../../ui/dom.js';
@@ -39,7 +38,7 @@ export const sl = {
   },
 };
 
-// Replace the per-tab edit buffers from a freshly opened line.
+// Loads the edit buffers from a freshly opened line.
 export function resetFields(line) {
   sl.fields = {
     spriteIndex: line.spriteIndex ?? null,
@@ -53,13 +52,11 @@ export function resetFields(line) {
   sl.highlighting = { startChar: 0, endChar: 0, currentColor: DEFAULT_HIGHLIGHT_COLOR };
 }
 
-// Returns the script line currently being edited, or undefined.
 export function activeLine() {
   return state.scriptLines.find((l) => l.id === sl.activeLineId);
 }
 
-// Re-render only the open tab's body in place (used by inline edits that
-// must not steal focus or reset scroll the way a full re-render would).
+// For inline edits: a full re-render would steal focus and reset scroll.
 export function refreshTabBody(html) {
   const content = document.querySelector('.dr-modal-content');
   if (content) setHtml(content, html);

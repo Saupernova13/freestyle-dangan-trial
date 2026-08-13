@@ -1,8 +1,5 @@
-// Audio file storage for minigame voice lines.
-//
-// Every minigame editor stores its audio under Audio/Minigames/<gameId>/ in
-// the trial folder; this module owns that layout so editors don't each
-// re-implement the directory walk, write, delete, and lazy-load logic.
+// Audio storage for minigame voice lines. Owns the
+// Audio/Minigames/<gameId>/ layout so no editor re-implements the walk.
 import { state } from './state.js';
 import { showToast } from '../ui/dialogs.js';
 
@@ -12,7 +9,7 @@ async function getMinigameAudioDir(gameId, create) {
   return minigamesDir.getDirectoryHandle(gameId, { create });
 }
 
-// Write an uploaded audio file. Throws on failure (callers report to user).
+// Throws on failure; callers report it.
 export async function saveMinigameAudioFile(gameId, fileName, file) {
   const dir = await getMinigameAudioDir(gameId, true);
   const handle = await dir.getFileHandle(fileName, { create: true });
@@ -32,7 +29,7 @@ export async function deleteMinigameAudioFile(gameId, fileName) {
   }
 }
 
-// Load an audio file from disk for preview playback. Returns File or null.
+// File, or null if it can't be read.
 export async function loadMinigameAudioFile(gameId, fileName) {
   try {
     const dir = await getMinigameAudioDir(gameId, false);
@@ -44,8 +41,7 @@ export async function loadMinigameAudioFile(gameId, fileName) {
   }
 }
 
-// Validate an <input type="file"> change event holds an audio file.
-// Returns the File, or null after warning and resetting the input.
+// The File, or null after warning and clearing the input.
 export function validateAudioUpload(event) {
   const file = event.target.files[0];
   if (!file) return null;

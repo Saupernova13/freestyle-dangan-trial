@@ -1,7 +1,6 @@
 /* ============================================================
-   Themed confirm/alert dialogs + toasts
-   Replacements for the native alert()/confirm(). Layered above
-   the editor modal (z 100) and loader (z 200).
+   Themed confirm/alert dialogs + toasts.
+   Layered above the editor modal (z 100) and loader (z 200).
    ============================================================ */
 
 /* --- Confirm / alert dialog --- */

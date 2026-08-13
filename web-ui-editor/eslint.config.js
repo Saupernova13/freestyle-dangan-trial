@@ -13,13 +13,12 @@ export default [
       },
     },
     rules: {
-      // Catches any global reference left behind by the ES-module conversion.
       'no-undef': 'error',
       'no-unused-vars': ['error', { args: 'none' }],
       'no-redeclare': 'error',
       eqeqeq: ['error', 'smart'],
-      // All HTML writes funnel through setHtml() (js/ui/dom.js) so the XSS
-      // surface stays greppable. Reads of innerHTML are fine.
+      // Writes funnel through setHtml() so the XSS surface stays greppable;
+      // reads of innerHTML are fine.
       'no-restricted-syntax': [
         'error',
         {

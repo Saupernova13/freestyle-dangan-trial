@@ -1,8 +1,5 @@
-// Modal coordinator - closes whichever modal is currently open.
-//
-// Each modal's close function is idempotent and resets only its own state,
-// so closing all of them is safe and avoids the coordinator having to peek
-// at other modules' internals.
+// Closes whichever modal is open. Each close function is idempotent and
+// touches only its own state, so calling all of them beats inspecting them.
 import { closeCharModal } from './characterModal.js';
 import { closeScriptLineModal } from './scriptLineModal.js';
 import { closeTruthBulletModal } from './truthBulletModal.js';

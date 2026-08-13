@@ -1,9 +1,6 @@
-// Central mutable application state.
-//
-// Every module reads and writes trial data through this single object, which
-// makes data flow explicit (`state.scriptLines`, not an ambient global) and
-// keeps cross-module mutation auditable. UI-local state (open modal, active
-// dropdown, drag-in-progress) stays module-local in the file that owns it.
+// Central mutable application state: all trial data goes through this one
+// object, so cross-module mutation stays auditable. UI-local state (open
+// modal, active dropdown) stays module-local in the file that owns it.
 import { BLOCK_COUNT } from './constants.js';
 
 export const state = {

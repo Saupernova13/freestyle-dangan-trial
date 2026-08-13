@@ -1,5 +1,4 @@
-// Mass Panic Debate minigame editor
-// Handles line groups with 3 simultaneous speakers
+// Mass Panic Debate editor: line groups of 3 simultaneous speakers.
 
 // Audio players state
 import {
@@ -19,7 +18,6 @@ import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 // ==================== Main Rendering ====================
 
 export function renderMassPanicDebateEditor(mg) {
-  // Initialize typeSpecific
   if (!mg.typeSpecific) {
     mg.typeSpecific = {};
   }
@@ -120,12 +118,11 @@ export function renderMassPanicLineGroup(gameId, group, groupIndex) {
 }
 
 export function renderMassPanicLine(gameId, group, line, speakerKey, speakerIndex, color, label) {
-  // Get character ID for this speaker
   const mg = findMinigame(gameId);
   const speakerCharIdField = `speaker${speakerIndex + 1}CharacterId`;
   const speakerCharId = mg?.typeSpecific?.[speakerCharIdField];
 
-  // Build enhanced label with character name
+  // Append the character's name to the slot label once one is assigned.
   let enhancedLabel = label;
   if (speakerCharId) {
     const character = state.cast.find((c) => c && c.id === speakerCharId);
@@ -269,7 +266,7 @@ export function validateSpeakerSelection(gameId, speakerField, selectedCharacter
   const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific) return true;
 
-  // Check if this character is already selected in another speaker slot
+  // The same character cannot fill two speaker slots.
   const otherSpeakers = [
     'speaker1CharacterId',
     'speaker2CharacterId',
@@ -297,10 +294,9 @@ export function updateMassPanicField(gameId, field, value) {
   const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific) return;
 
-  // Validate speaker selection if it's a character field
   if (field.includes('CharacterId')) {
     if (!validateSpeakerSelection(gameId, field, value)) {
-      renderMinigameDetails(); // Reset to previous value
+      renderMinigameDetails(); // snaps the select back to the old value
       return;
     }
   }
@@ -360,8 +356,7 @@ export async function deleteMassPanicLineGroup(gameId, groupId) {
   const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.lineGroups) return;
 
-  // Delete audio files first (awaited; the previous forEach(async) version
-  // fired the deletions without waiting or reporting failures)
+  // Awaited, so a failed delete surfaces instead of being fired and forgotten.
   const group = mg.typeSpecific.lineGroups.find((g) => g.groupId === groupId);
   if (group) {
     for (const speakerKey of ['speaker1', 'speaker2', 'speaker3']) {
@@ -372,7 +367,6 @@ export async function deleteMassPanicLineGroup(gameId, groupId) {
 
   mg.typeSpecific.lineGroups = mg.typeSpecific.lineGroups.filter((g) => g.groupId !== groupId);
 
-  // Re-index orders
   mg.typeSpecific.lineGroups.forEach((group, index) => {
     group.order = index;
   });
@@ -399,7 +393,7 @@ export function handleLoudAssertionToggle(gameId, groupId, speakerKey, checked) 
   const group = mg.typeSpecific.lineGroups.find((g) => g.groupId === groupId);
   if (!group) return;
 
-  // If checking this speaker as loud, uncheck all others in the group
+  // At most one loud assertion per group.
   if (checked) {
     ['speaker1', 'speaker2', 'speaker3'].forEach((key) => {
       if (key !== speakerKey && group[key]) {
@@ -420,12 +414,11 @@ export function handleMassPanicAnswerSelection(gameId, groupId, speakerKey, bull
   const currentGroup = mg.typeSpecific.lineGroups.find((g) => g.groupId === groupId);
   if (!currentGroup || !currentGroup[speakerKey]) return;
 
-  // If setting a new answer (not clearing), clear all other answers in the entire minigame
+  // The whole minigame has one answer line, so setting one clears the rest.
   if (bulletId) {
     mg.typeSpecific.lineGroups.forEach((group) => {
       ['speaker1', 'speaker2', 'speaker3'].forEach((key) => {
         if (group[key]) {
-          // Clear all answers except the one we're setting
           if (group.groupId !== groupId || key !== speakerKey) {
             group[key].answerBulletId = null;
           }
@@ -434,7 +427,6 @@ export function handleMassPanicAnswerSelection(gameId, groupId, speakerKey, bull
     });
   }
 
-  // Set the answer for the current line
   currentGroup[speakerKey].answerBulletId = bulletId || null;
   renderMinigameDetails();
   autoSaveTrial();

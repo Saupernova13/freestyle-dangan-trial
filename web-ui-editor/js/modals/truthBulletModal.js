@@ -1,4 +1,4 @@
-// Truth Bullet modal for editing bullet details
+// Create/edit modal for a single truth bullet.
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { showToast } from '../ui/dialogs.js';
@@ -156,7 +156,7 @@ export function handleBulletImageUpload(event) {
   bulletFields.imageFile = file.name;
   bulletFields.imageBlob = file;
 
-  // Create data URL for immediate preview
+  // Preview before the file is written to the trial folder.
   const reader = new FileReader();
   reader.onload = (e) => {
     const bullet = state.truthBullets.find((b) => b.bulletId === activeBulletId);
@@ -203,7 +203,6 @@ export async function saveTruthBullet() {
   try {
     showLoader(true, 'Saving truth bullet…');
 
-    // Handle image upload
     if (bulletFields.imageBlob) {
       const bulletsDir = await state.dirHandle.getDirectoryHandle('TruthBullets', { create: true });
       const imageFileName = `${bullet.bulletId}.${bulletFields.imageBlob.name.split('.').pop()}`;
@@ -214,14 +213,13 @@ export async function saveTruthBullet() {
 
       bullet.imageFile = imageFileName;
 
-      // Store data URL for preview
       const reader = new FileReader();
       reader.onload = (e) => {
         bullet.imageDataURL = e.target.result;
       };
       reader.readAsDataURL(bulletFields.imageBlob);
     } else if (bulletFields.imageFile === null && bullet.imageFile) {
-      // Image was cleared, remove the file
+      // Cleared: delete the file, but don't fail the save if it is already gone.
       try {
         const bulletsDir = await state.dirHandle.getDirectoryHandle('TruthBullets', {
           create: false,

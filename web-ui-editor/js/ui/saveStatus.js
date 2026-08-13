@@ -1,9 +1,6 @@
-// Persistent autosave status shown in the trial bar.
-//
-// The editor writes trial.json silently on every edit; without feedback the
-// user has no idea whether their work is on disk. storage.js drives this:
-// 'saving' while a write is pending/in flight, 'saved' on success (auto-clears),
-// 'error' on failure (sticks until the next successful save).
+// Autosave indicator in the trial bar, driven by storage.js: 'saving' while a
+// write is in flight, 'saved' on success (auto-clears), 'error' on failure
+// (sticks until the next successful save).
 import { setHtml } from './dom.js';
 let hideTimer = null;
 

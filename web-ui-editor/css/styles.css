@@ -1,9 +1,8 @@
-/* Class Trial editor styles.
+/* Class Trial editor styles. Each partial owns one section of the UI.
  *
- * This file is the cascade order: each partial owns one section of the UI.
- * Vite/PostCSS inlines these @imports into a single bundle at build time,
- * so the load order here is the cascade the browser sees. Keep imports in
- * dependency order: tokens and reset first, then layout, components, views.
+ * These @imports are inlined at build time, so the order below is the cascade
+ * the browser sees. Keep it in dependency order: tokens and reset, then
+ * layout, components, views.
  */
 @import './base/tokens.css';
 @import './base/reset.css';

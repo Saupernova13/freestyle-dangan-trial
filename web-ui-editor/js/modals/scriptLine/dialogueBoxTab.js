@@ -88,14 +88,12 @@ export function renderDialogueBoxTab() {
 }
 
 export function updateDialogueBoxStyle(field, value) {
-  // Validate color input if it's a border color
   if (field === 'borderColor' && !COLOR_REGEX.test(value)) {
     sl.err = 'Border color must be a valid hex color (e.g., #FFFFFF)';
     renderScriptLineModal();
     return;
   }
 
-  // Validate opacity is between 0 and 1
   if (field === 'bgOpacity') {
     const opacity = parseFloat(value);
     if (isNaN(opacity) || opacity < 0 || opacity > 1) {
@@ -105,7 +103,6 @@ export function updateDialogueBoxStyle(field, value) {
     }
   }
 
-  // Validate border thickness
   if (field === 'borderThickness') {
     const thickness = parseInt(value, 10);
     if (isNaN(thickness) || thickness < 0 || thickness > 10) {
@@ -118,6 +115,6 @@ export function updateDialogueBoxStyle(field, value) {
   sl.err = '';
   sl.fields.dialogueBoxStyle[field] = value;
 
-  // Repaint just this tab so the live preview updates without losing focus.
+  // Tab-only repaint, so the preview updates without losing focus.
   if (sl.tab === 'dialogueBox') refreshTabBody(renderDialogueBoxTab());
 }

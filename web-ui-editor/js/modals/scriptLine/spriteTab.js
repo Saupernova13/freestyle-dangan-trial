@@ -22,8 +22,8 @@ export function renderSpriteSelectionTab(character) {
       `;
       }
 
-      // spriteIndex is 1-based — it maps directly to sprite_NN.png on disk and
-      // to what the engine reads. The sprites array itself is 0-based.
+      // spriteIndex is 1-based, matching sprite_NN.png on disk and what the
+      // engine reads; the sprites array is 0-based.
       const isSelected = sl.fields.spriteIndex === idx + 1;
       return `
       <div class="dr-sprslot ${isSelected ? 'selected-sprite' : ''}"
@@ -52,7 +52,6 @@ export function renderSpriteSelectionTab(character) {
 export function selectSprite(index) {
   const spriteIndex = parseInt(index, 10);
 
-  // Validate sprite index is a valid positive integer
   if (!Number.isFinite(spriteIndex) || spriteIndex < 1) {
     sl.err = 'Invalid sprite selection';
     renderScriptLineModal();

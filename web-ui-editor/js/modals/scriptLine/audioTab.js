@@ -73,7 +73,6 @@ export function handleAudioUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
-  // Validate file type
   if (!file.type.startsWith('audio/')) {
     sl.err = 'Please select a valid audio file (mp3, wav, ogg, etc.)';
     renderScriptLineModal();

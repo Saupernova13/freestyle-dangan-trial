@@ -1,11 +1,8 @@
 // Application entry point.
 //
-// Imports every module (wiring their imports/exports together) and bridges
-// the public functions onto `window`, because the rendered HTML uses inline
-// `onclick="..."` handlers which resolve through the global scope.
-//
-// Modules call each other through explicit imports; the window bridge exists
-// only for the inline handlers in generated markup and index.html.
+// Imports every module and bridges their public functions onto `window`,
+// because the rendered HTML uses inline `onclick="..."` handlers. That bridge
+// exists only for those handlers — modules call each other through imports.
 import * as utils from './utils.js';
 import * as icons from './ui/icons.js';
 import * as dialogs from './ui/dialogs.js';
@@ -64,8 +61,7 @@ for (const mod of modules) {
   for (const [name, value] of Object.entries(mod)) {
     if (typeof value === 'function') {
       if (name in window && window[name] !== value) {
-        // Two modules exporting the same name is exactly the class of bug the
-        // module conversion is meant to prevent — fail loudly in dev.
+        // Whichever module loads last would silently win the global.
         console.error(`Duplicate global handler name: ${name}`);
       }
       window[name] = value;

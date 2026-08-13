@@ -1,5 +1,4 @@
-// Logic Dive minigame editor
-// Handles question creation, answers, and drag-drop reordering
+// Logic Dive editor: questions, their answers, and drag-to-reorder.
 
 // Drag state for questions
 import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
@@ -11,7 +10,6 @@ let draggedQuestionId = null;
 // ==================== Main Rendering ====================
 
 export function renderLogicDiveEditor(mg) {
-  // Initialize typeSpecific.questions if needed
   if (!mg.typeSpecific) {
     mg.typeSpecific = {};
   }
@@ -53,7 +51,6 @@ export function renderLogicDiveEditor(mg) {
 export function renderLogicDiveQuestions(gameId, questions) {
   let html = '';
 
-  // Add drop zone at top
   html += `<div class="question-drop-zone"
                 data-insert-position="0"
                 ondragover="handleQuestionGapDragOver(event)"
@@ -250,7 +247,7 @@ export function deleteLogicDiveAnswer(gameId, questionId, answerId) {
 
   question.answers = question.answers.filter((a) => a.answerId !== answerId);
 
-  // If deleted answer was correct, make first answer correct
+  // A question always has exactly one correct answer.
   if (!question.answers.some((a) => a.isCorrect)) {
     question.answers[0].isCorrect = true;
   }
@@ -280,7 +277,6 @@ export function setCorrectAnswer(gameId, questionId, answerId) {
   const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
   if (!question) return;
 
-  // Set all answers to false, then set selected to true
   question.answers.forEach((a) => {
     a.isCorrect = a.answerId === answerId;
   });

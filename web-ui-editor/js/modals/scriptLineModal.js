@@ -1,10 +1,9 @@
-// Script line modal: coordinates the per-line "advanced properties" editor.
+// Script line modal: the per-line "advanced properties" editor.
 //
-// This module owns the modal shell (tab bar, footer, open/close lifecycle and
-// save), and delegates each tab's body and handlers to a focused module under
-// ./scriptLine/. Those tab handlers are re-exported here so the single
-// `import * as scriptLineModal` in main.js still bridges every inline onclick
-// handler onto window, and existing import paths keep resolving.
+// Owns the modal shell — tab bar, footer, open/close, save — and delegates
+// each tab to a module under ./scriptLine/. Those tabs are re-exported here
+// so main.js's single `import * as scriptLineModal` still bridges every
+// inline onclick handler onto window.
 import { stopAudioPreview } from '../components/audioPreview.js';
 import { renderScriptEditor } from '../app.js';
 import { state } from '../core/state.js';
@@ -35,7 +34,7 @@ export * from './scriptLine/cameraTab.js';
 export * from './scriptLine/effectsTab.js';
 export * from './scriptLine/highlightingTab.js';
 
-/** Tabs available for a script line, in display order, keyed by line type. */
+// In display order; which tabs apply depends on the line type.
 export function getAvailableTabs(line) {
   if (!line || typeof line !== 'object') return [];
   if (line.type === 'narrator') {
@@ -46,10 +45,6 @@ export function getAvailableTabs(line) {
   return [];
 }
 
-/**
- * Open the advanced editor for a script line, loading its sprites/audio/etc.
- * @param {string} lineId - The ID of the script line to edit.
- */
 export async function openScriptLineModal(lineId) {
   if (!state.dirHandle) {
     showToast('Choose a trial folder first.', { type: 'warning' });
@@ -71,8 +66,7 @@ export async function openScriptLineModal(lineId) {
     return;
   }
 
-  // Speaking lines need every sprite loaded for the picker; the cast grid only
-  // loads the first one eagerly.
+  // The picker needs every sprite; the cast grid only loaded the first.
   if (line.type === 'speaking') {
     const character = state.cast.find((c) => c && c.id === line.characterId);
     if (character && character.id && character._folderHandle) {
@@ -97,7 +91,7 @@ export function renderScriptLineModal() {
   const root = document.getElementById('modalroot');
   const line = activeLine();
 
-  // Speaking lines require a character; bail rather than render a broken tab.
+  // Bail rather than render a sprite tab with no character behind it.
   if (line.type === 'speaking') {
     const character = state.cast.find((c) => c && c.id === line.characterId);
     if (!character) {
@@ -176,14 +170,13 @@ export function switchScriptLineTab(tab) {
   sl.msg = '';
   renderScriptLineModal();
 
-  // The highlighting tab wires up drag selection against the freshly
-  // rendered character spans.
+  // Deferred so drag selection binds to the freshly rendered char spans.
   if (tab === 'highlighting') {
     setTimeout(() => initializeDragSelection(), 0);
   }
 }
 
-/** Close and reset the modal. Safe to call when nothing is open. */
+// Safe to call when nothing is open.
 export function closeScriptLineModal() {
   stopAudioPreview(AUDIO_PREVIEW_KEY);
   teardownDragSelection();
@@ -219,8 +212,8 @@ export async function saveScriptLineAdvanced() {
       line.cameraMotion = sl.fields.cameraMotion;
     }
 
-    // Common to narrator and speaking. Highlights are normalized against the
-    // line's current text so stale or overlapping ranges never reach trial.json.
+    // Normalized against the line's current text, so no stale or overlapping
+    // range reaches trial.json.
     line.highlights = normalizeHighlights(sl.fields.highlights, dialogue.length);
     line.specialEffects = sl.fields.specialEffects;
     line.dialogueBoxStyle = sl.fields.dialogueBoxStyle;
@@ -232,8 +225,7 @@ export async function saveScriptLineAdvanced() {
 
       const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: true });
 
-      // Name the file after the line id; default to mp3 when the source has no
-      // extension.
+      // Named after the line id; mp3 when the source has no extension.
       const ext = sl.fields.audioBlob.name.includes('.')
         ? sl.fields.audioBlob.name.split('.').pop()
         : 'mp3';
@@ -246,8 +238,7 @@ export async function saveScriptLineAdvanced() {
 
       line.audioFile = audioFileName;
     } else if (sl.fields.audioFile === null && line.audioFile) {
-      // Audio was cleared — remove the file, but don't fail the save if it's
-      // already gone.
+      // Cleared: delete the file, but don't fail the save if it is already gone.
       try {
         if (state.dirHandle) {
           const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
@@ -274,7 +265,7 @@ export async function saveScriptLineAdvanced() {
   }
 }
 
-// Validate the edit buffer before saving so corrupt data never reaches disk.
+// Guards the edit buffer so corrupt data never reaches disk.
 function validateScriptLineFields(dialogue) {
   if (Array.isArray(sl.fields.highlights)) {
     for (const h of sl.fields.highlights) {

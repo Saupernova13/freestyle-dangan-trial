@@ -1,8 +1,7 @@
 /* ============================================================
    FREESTYLE DANGAN TRIAL -- CLASS TRIAL UI
-   Reference: Danganronpa's class-trial interface.
-   Magenta on near-black, angular clipped panels, condensed
-   display type.
+   After Danganronpa's class trial: magenta on near-black,
+   angular clipped panels, condensed display type.
    ============================================================ */
 
 :root {
@@ -24,8 +23,8 @@
   --error-rgb: 255, 71, 71;
   --secondary-rgb: 40, 215, 215;
 
-  /* Neutral ramp -- named gray-50..900 kept for back-compat, but
-     oriented dark->light (50 = darkest) as the dark UI expects. */
+  /* Neutral ramp -- inverted for the dark UI: 50 is darkest, 900 lightest.
+     The gray-50..900 names are kept for back-compat. */
   --gray-50: #1a1820;
   --gray-100: #211e29;
   --gray-200: #2c2836;

@@ -1,10 +1,7 @@
-// Runtime validation for trial.json, mirroring schema/trial.schema.json at
-// the repo root. The JSON Schema file is normative; this module re-implements
-// its structural requirements by hand so the editor ships no schema-engine
-// dependency and can emit author-friendly messages. tests/schema.test.js
-// cross-checks this module against the schema with ajv, so the two cannot
-// drift silently. Keep this file DOM-free: the tests run in a node
-// environment.
+// Runtime validation for trial.json. schema/trial.schema.json is normative;
+// this hand-written mirror keeps a schema engine out of the bundle and emits
+// author-friendly messages. tests/schema.test.js cross-checks the two with
+// ajv, so they cannot drift. Keep DOM-free: those tests run under node.
 import { FORMAT_VERSION, MINIGAME_TYPE_LABELS } from './constants.js';
 
 const LINE_TYPES = ['speaking', 'narrator', 'minigame'];
@@ -17,12 +14,8 @@ const isString = (v) => typeof v === 'string';
 const isNumber = (v) => typeof v === 'number' && Number.isFinite(v);
 const isStringOrNull = (v) => v === null || typeof v === 'string';
 
-/**
- * Compare a trial's declared format version against this editor's.
- * Returns { ok, message }: ok=false only for files from a NEWER major
- * (unreadable without an editor update); missing or unparseable versions
- * pass with a warning message so legacy files stay openable.
- */
+// ok=false only for a NEWER major. A missing or unparseable version still
+// passes, with a warning, so legacy files stay openable.
 export function checkFormatVersion(data) {
   const supportedMajor = parseInt(FORMAT_VERSION.split('.')[0], 10);
   const version = isObject(data) && isObject(data.metadata) ? data.metadata.version : undefined;
@@ -133,12 +126,8 @@ function validateTruthBullet(b, n, issues) {
     issues.push(`Truth bullet ${n}: inversedLieBulletName is not a string.`);
 }
 
-/**
- * Structural validation of a parsed trial.json. Returns an array of
- * human-readable issues; empty means the trial matches the contract in
- * schema/trial.schema.json. Content-level checks (empty dialogue, draft
- * characters, dangling minigame references) stay in validateTrialForExport.
- */
+// Structure only — empty dialogue, draft characters and dangling minigame
+// references are validateTrialForExport's job.
 export function validateTrialData(data) {
   const issues = [];
   if (!isObject(data)) {

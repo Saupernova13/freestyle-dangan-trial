@@ -1,4 +1,4 @@
-// Truth bullets view - displays truth bullet list in split-pane layout
+// Truth bullets, as a split pane: list on the left, detail on the right.
 import { updateFloatingAddButton } from '../components/floatingAddButton.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
@@ -30,12 +30,11 @@ export function renderTruthBulletsView() {
     return;
   }
 
-  // Auto-select first bullet if none selected
   if (!state.selectedTruthBulletId && state.truthBullets.length > 0) {
     state.selectedTruthBulletId = state.truthBullets[0].bulletId;
   }
 
-  // Check if selected bullet still exists (might have been deleted)
+  // The selection can be stale after a delete or an undo.
   const selectedStillExists = state.truthBullets.some(
     (b) => b.bulletId === state.selectedTruthBulletId
   );
@@ -45,10 +44,8 @@ export function renderTruthBulletsView() {
 
   const selectedBullet = state.truthBullets.find((b) => b.bulletId === state.selectedTruthBulletId);
 
-  // Render list on left
   const listHtml = state.truthBullets.map((bullet) => renderTruthBulletListItem(bullet)).join('');
 
-  // Render details on right
   const detailHtml = selectedBullet
     ? renderTruthBulletDetail(selectedBullet)
     : '<div class="no-selection">Select a truth bullet to view details</div>';
@@ -75,7 +72,6 @@ export function renderTruthBulletsView() {
   `
   );
 
-  // Update floating add button
   updateFloatingAddButton();
 }
 
@@ -155,7 +151,6 @@ export function addTruthBullet() {
   };
   state.truthBullets.push(newBullet);
 
-  // Auto-select the newly created bullet
   state.selectedTruthBulletId = newBullet.bulletId;
 
   renderTruthBulletsView();
@@ -171,13 +166,12 @@ export async function deleteTruthBullet(bulletId) {
   });
   if (!confirmed) return;
 
-  // Find the index of the bullet being deleted
+  // Captured before the removal, to pick the replacement selection below.
   const bulletIndex = state.truthBullets.findIndex((b) => b.bulletId === bulletId);
 
-  // Remove the bullet
   state.truthBullets = state.truthBullets.filter((b) => b.bulletId !== bulletId);
 
-  // Remove from all minigame selections
+  // A deleted bullet must not linger in any debate that referenced it.
   state.minigames.forEach((mg) => {
     if (mg.typeSpecific && mg.typeSpecific.selectedBullets) {
       mg.typeSpecific.selectedBullets = mg.typeSpecific.selectedBullets.filter(
@@ -186,10 +180,9 @@ export async function deleteTruthBullet(bulletId) {
     }
   });
 
-  // Smart selection: if deleting the selected bullet, select another one
+  // Land on the next bullet, or the previous one if the last was deleted.
   if (state.selectedTruthBulletId === bulletId) {
     if (state.truthBullets.length > 0) {
-      // Try to select the next bullet, or the previous one if it was the last
       const newIndex = Math.min(bulletIndex, state.truthBullets.length - 1);
       state.selectedTruthBulletId = state.truthBullets[newIndex].bulletId;
     } else {

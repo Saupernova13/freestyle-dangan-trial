@@ -1,6 +1,5 @@
-// Undo/redo history behavior. history.js only imports core/state.js, so it
-// runs in the node environment; render/persist side effects are stubbed via
-// initHistory.
+// Undo/redo history. history.js only imports core/state.js, so this runs
+// under node; render and persist side effects are stubbed via initHistory.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   canRedo,
@@ -83,7 +82,7 @@ describe('undo/redo', () => {
 
     expect(undo()).toBe(true);
     expect(state.trialName).toBe('Original');
-    // Only one settled edit existed, so a second undo has nothing left.
+    // Only one settled edit existed.
     expect(undo()).toBe(false);
   });
 
@@ -129,7 +128,7 @@ describe('undo/redo', () => {
     edit(() => {
       state.scriptLines.push({ id: 'l2', type: 'narrator', text: 'two' });
     });
-    // Mutate without recording; undo must still restore the recorded shape.
+    // Mutating without recording must not reach the snapshot.
     state.scriptLines[1].text = 'tampered';
     undo();
     expect(state.scriptLines).toHaveLength(1);
@@ -151,8 +150,7 @@ describe('undo/redo', () => {
     edit(() => {
       state.truthBullets = [];
     });
-    // Selection is transient (not snapshotted): restoring the empty-bullets
-    // state must clear the now-dangling selection.
+    // Selection is transient, so a restore must clear a dangling one.
     state.selectedTruthBulletId = 'tb1';
     redo(); // nothing to redo yet; selection untouched
     expect(state.selectedTruthBulletId).toBe('tb1');

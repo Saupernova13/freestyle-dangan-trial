@@ -55,9 +55,9 @@
 }
 
 .minigame-card-body {
-  position: relative; /* For absolute positioning of floating buttons */
+  position: relative; /* containing block for .minigame-floating-btn */
   padding: 0 1.25rem 1.25rem 1.25rem;
-  padding-bottom: 5rem; /* Extra space for floating button */
+  padding-bottom: 5rem; /* clears the floating button */
   border-top: 1px solid var(--border-primary);
   background: var(--bg-primary);
 }
@@ -139,7 +139,7 @@
   margin-bottom: 1rem;
 }
 
-/* Bullet Selection Grid - Inline Editor (compact layout with 120px cells) */
+/* Bullet Selection Grid -- compact inline-editor variant */
 .bullet-selection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -283,8 +283,7 @@
   min-width: 0;
 }
 
-/* Make placeholder hints clearly distinct from user-entered text:
-   muted color + italic so empty fields read as guidance, not content. */
+/* Muted and italic, so a hint never reads as entered content. */
 .sentence-part::placeholder {
   color: var(--text-tertiary);
   font-style: italic;

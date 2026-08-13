@@ -1,4 +1,4 @@
-// View manager - handles switching between different views
+// Switches the main grid between the editor views and the welcome hub.
 import { renderScriptEditor } from '../app.js';
 import { updateFloatingAddButton } from '../components/floatingAddButton.js';
 import { state } from '../core/state.js';
@@ -52,9 +52,8 @@ export function renderActiveView() {
   }
 }
 
-// Welcome / trial-picker hub. Adapts to what the browser supports: a real
-// on-disk folder picker on Chromium, plus browser storage (OPFS) wherever it
-// exists. The inline handlers resolve through the window bridge (storage.js).
+// Trial picker. Offers the on-disk folder picker only on Chromium, browser
+// storage wherever OPFS exists.
 function renderWelcomeHub(mainGrid) {
   const hasPicker = supportsFsPicker();
   const hasOpfs = supportsOpfs();
@@ -131,7 +130,7 @@ async function populateHubTrials() {
     return;
   }
 
-  // Resolve each trial's display name from its trial.json (fallback: folder).
+  // Display name comes from trial.json; the folder slug is the fallback.
   const rows = await Promise.all(
     folders.map(async (folder) => {
       let name = folder;
@@ -148,9 +147,9 @@ async function populateHubTrials() {
     })
   );
 
-  // Folder names ride in data attributes and are read back with .dataset —
-  // never interpolated into inline JS, where HTML entity escaping alone
-  // wouldn't be enough (the browser decodes entities before evaluating).
+  // Folder names go in data attributes and come back via .dataset, never
+  // interpolated into inline JS: the browser decodes entities before it
+  // evaluates, so escaping alone would not be enough.
   setHtml(
     container,
     `

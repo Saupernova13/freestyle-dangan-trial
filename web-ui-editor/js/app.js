@@ -1,6 +1,5 @@
-// Script editor view: renders the script line list and owns line CRUD plus
-// drag-and-drop reordering. The per-line character search dropdown lives in
-// components/characterSearchDropdown.js.
+// Script editor view: the line list, line CRUD, and drag-to-reorder.
+// The per-line character search dropdown lives in components/characterSearchDropdown.js.
 import { initCharacterSearchDropdown } from './components/characterSearchDropdown.js';
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
 import { initSpriteMagnifier } from './components/spriteMagnifier.js';
@@ -19,7 +18,7 @@ import { renderActiveView } from './views/viewManager.js';
 import { MINIGAME_TYPE_LABELS } from './core/constants.js';
 
 import { setHtml } from './ui/dom.js';
-// Initialize app
+
 document.addEventListener('DOMContentLoaded', function () {
   initializeTheme();
   loadSettings();
@@ -29,16 +28,14 @@ document.addEventListener('DOMContentLoaded', function () {
   initKeyboardActivation();
   renderActiveView();
 
-  // Trial name input handler
   document.getElementById('trialNameInput').addEventListener('input', (e) => {
     state.trialName = e.target.value.trim();
     updateExportButtonState();
     scheduleAutoSave();
   });
 
-  // Undo/redo. History lives in core/history.js; this callback applies a
-  // restored snapshot to the UI and persists it (skipHistory keeps the
-  // restore itself from being recorded as a new edit).
+  // Applies a restored snapshot to the UI; skipHistory keeps the restore
+  // itself from being recorded as a new edit.
   initHistory(() => {
     document.getElementById('trialNameInput').value = state.trialName;
     renderActiveView();
@@ -56,16 +53,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // No trial open: nothing to undo.
     if (!state.dirHandle) return;
-    // A modal or dialog is open: its own inputs (and Escape/close flows) own
-    // the keyboard; app-level history would yank data out from under it.
+    // A modal owns the keyboard; undoing under it would yank out its data.
     if (
       document.getElementById('modalroot')?.childElementCount ||
       document.getElementById('dialogroot')?.childElementCount
     ) {
       return;
     }
-    // Native text-field editing keeps its native undo. Those edits flow
-    // through scheduleAutoSave, so app history stays consistent anyway.
+    // Text fields keep native undo; their edits still reach scheduleAutoSave.
     const t = event.target;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
 
@@ -75,12 +70,10 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 
-// Script Editor functions
 export function renderScriptEditor() {
   const grid = document.getElementById('mainGrid');
 
   if (state.scriptLines.length === 0) {
-    // Empty state
     setHtml(
       grid,
       `
@@ -97,13 +90,11 @@ export function renderScriptEditor() {
     `
     );
   } else {
-    // Render script lines with drop zones between them
+    // A drop zone before the first line, then one after every line.
     let linesHtml = '';
 
-    // Add drop zone at the top (before first line)
     linesHtml += `<div class="script-drop-zone" data-insert-position="0" ondragover="handleGapDragOver(event)" ondrop="handleDropInGap(event, 0)" ondragleave="handleGapDragLeave(event)"></div>`;
 
-    // Add each line with a drop zone after it
     state.scriptLines.forEach((line, index) => {
       linesHtml += renderScriptLineBar(line, index);
       linesHtml += `<div class="script-drop-zone" data-insert-position="${index + 1}" ondragover="handleGapDragOver(event)" ondrop="handleDropInGap(event, ${index + 1})" ondragleave="handleGapDragLeave(event)"></div>`;
@@ -141,16 +132,13 @@ export function renderScriptEditor() {
     );
   }
 
-  // Re-apply any active search filter to the freshly rendered rows.
   applyScriptFilter();
-
-  // Update floating add button
   updateFloatingAddButton();
 }
 
 // --- Search / filter -------------------------------------------------------
-// Filter is applied by toggling row visibility (not re-rendering) so the
-// search box keeps focus and caret position while typing.
+// Toggles row visibility rather than re-rendering, so the search box keeps
+// focus and caret position while typing.
 let scriptFilter = '';
 
 export function filterScript(value) {
@@ -178,7 +166,7 @@ function applyScriptFilter() {
   if (noMatches) noMatches.style.display = q.length > 0 && matches === 0 ? 'block' : 'none';
 }
 
-// Match against the speaker name, dialogue/narration text, and type label.
+// Matches speaker name, dialogue/narration text, and type label.
 function lineMatchesQuery(line, q) {
   const parts = [line.type];
   if (line.type === 'speaking') {
@@ -219,9 +207,7 @@ export function addScriptLine() {
   autoSaveTrial();
 }
 
-// Multi-select functions
 export function toggleLineSelection(event, lineId) {
-  // Ctrl+Click or Cmd+Click to multi-select
   if (event.ctrlKey || event.metaKey) {
     event.preventDefault();
     if (state.selectedLineIds.has(lineId)) {
@@ -229,7 +215,7 @@ export function toggleLineSelection(event, lineId) {
     } else {
       state.selectedLineIds.add(lineId);
     }
-    renderScriptEditor(); // Re-render to show selection
+    renderScriptEditor();
   }
 }
 
@@ -238,14 +224,12 @@ export function clearSelection() {
   renderScriptEditor();
 }
 
-// Drag-and-drop event handlers
+// Dragging a selected line drags the whole selection; dragging any other
+// line drops the selection and moves that line alone.
 export function handleDragStart(event, lineId) {
-  // Check if this line is part of a selection
   if (state.selectedLineIds.size > 0 && state.selectedLineIds.has(lineId)) {
-    // Dragging multiple selected lines
     state.draggedLineIds = Array.from(state.selectedLineIds);
   } else {
-    // Dragging single line
     state.draggedLineIds = [lineId];
     state.selectedLineIds.clear();
   }
@@ -254,17 +238,15 @@ export function handleDragStart(event, lineId) {
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData('text/html', event.target.innerHTML);
 
-  // Create ghost element for visual preview
   createDragGhost(state.draggedLineIds);
 
-  // Set custom drag image
   if (state.dragGhostElement) {
     event.dataTransfer.setDragImage(state.dragGhostElement, 0, 0);
   }
 }
 
+// Parked off-screen because setDragImage needs a rendered element.
 export function createDragGhost(lineIds) {
-  // Create a ghost element showing what's being dragged
   state.dragGhostElement = document.createElement('div');
   state.dragGhostElement.className = 'drag-ghost';
 
@@ -281,10 +263,9 @@ export function createDragGhost(lineIds) {
 }
 
 export function handleGapDragOver(event) {
-  event.preventDefault(); // Allow drop
+  event.preventDefault(); // required to allow the drop
   event.dataTransfer.dropEffect = 'move';
 
-  // Add visual feedback to the gap
   const gap = event.currentTarget;
   if (gap.classList.contains('script-drop-zone')) {
     gap.classList.add('drag-over-gap');
@@ -292,7 +273,6 @@ export function handleGapDragOver(event) {
 }
 
 export function handleGapDragLeave(event) {
-  // Remove visual feedback when leaving the gap
   const gap = event.currentTarget;
   if (gap.classList.contains('script-drop-zone')) {
     gap.classList.remove('drag-over-gap');
@@ -309,19 +289,17 @@ export function handleDropInGap(event, insertPosition) {
     return;
   }
 
-  // Add animation class for smooth transition
   document.querySelectorAll('.script-line-bar').forEach((el) => {
     el.classList.add('reordering');
   });
 
-  // Remove animation class after transition
+  // 300ms matches the .reordering transition in css/views/script-editor.css.
   setTimeout(() => {
     document.querySelectorAll('.script-line-bar').forEach((el) => {
       el.classList.remove('reordering');
     });
   }, 300);
 
-  // Clean up and re-render
   cleanupDrag();
   renderScriptEditor();
   autoSaveTrial();
@@ -333,7 +311,6 @@ export function handleDragEnd(event) {
 }
 
 export function cleanupDrag() {
-  // Clean up all visual feedback
   document.querySelectorAll('.drag-over').forEach((el) => {
     el.classList.remove('drag-over');
   });
@@ -342,13 +319,11 @@ export function cleanupDrag() {
     el.classList.remove('drag-over-gap');
   });
 
-  // Remove ghost element
   if (state.dragGhostElement && state.dragGhostElement.parentNode) {
     state.dragGhostElement.parentNode.removeChild(state.dragGhostElement);
   }
   state.dragGhostElement = null;
 
-  // Clear selection after successful drag
   state.selectedLineIds.clear();
   state.draggedLineIds = [];
 }
@@ -366,8 +341,7 @@ export async function deleteScriptLine(lineId) {
   });
   if (!confirmed) return;
 
-  // Remove the line's voice audio so the trial folder doesn't accumulate
-  // orphaned files that would be bundled into every export.
+  // Orphaned audio would otherwise be bundled into every export.
   await removeLineAudioFile(line);
 
   state.scriptLines = state.scriptLines.filter((l) => l.id !== lineId);
@@ -376,7 +350,6 @@ export async function deleteScriptLine(lineId) {
   autoSaveTrial();
 }
 
-// Delete a script line's audio file from the trial folder, if any.
 async function removeLineAudioFile(line) {
   if (!line.audioFile || !state.dirHandle) return;
   try {
@@ -405,9 +378,8 @@ export async function changeScriptLineType(lineId, newType) {
   if (!line) return;
   if (line.type === newType) return;
 
-  // Switching type clears type-specific content and settings. Confirm first if
-  // the line actually has something to lose, and re-render to restore the
-  // dropdown if the user backs out.
+  // Switching type clears type-specific content, so confirm if there is
+  // anything to lose; backing out re-renders to reset the dropdown.
   const hasData = !!(
     (line.dialogue && line.dialogue.trim()) ||
     (line.text && line.text.trim()) ||
@@ -433,16 +405,14 @@ export async function changeScriptLineType(lineId, newType) {
     }
   }
 
-  // Clear type-specific fields
   delete line.characterId;
   delete line.dialogue;
   delete line.text;
   delete line.minigameId;
 
-  // Clear advanced properties that no longer apply, so stale data never
-  // reaches trial.json. Audio/highlights/effects are valid for both spoken
-  // and narrated lines, but nothing carries over to a minigame trigger, and
-  // sprite/camera settings are speaking-only.
+  // Drop advanced properties the new type can't carry, so nothing stale
+  // reaches trial.json: a minigame trigger keeps none, sprite/camera are
+  // speaking-only, and audio/highlights/effects survive speaking<->narrator.
   if (newType === 'minigame') {
     await removeLineAudioFile(line);
     delete line.audioFile;
@@ -455,7 +425,6 @@ export async function changeScriptLineType(lineId, newType) {
     delete line.cameraMotion;
   }
 
-  // Set new type and initialize fields
   line.type = newType;
   if (newType === 'speaking') {
     line.characterId = '';
@@ -475,7 +444,7 @@ export function updateScriptLine(lineId, field, value) {
   if (!line) return;
 
   line[field] = value;
-  // Fires on every keystroke of the dialogue inputs - debounce the write.
+  // Fires on every keystroke of the dialogue inputs, so debounce the write.
   scheduleAutoSave();
 }
 
@@ -483,9 +452,7 @@ export function renderScriptLineBar(line, index) {
   const lineNumber = index + 1;
   let contentHtml = '';
 
-  // Generate content based on type
   if (line.type === 'speaking') {
-    // Get selected character name for display
     const selectedChar = state.cast.find((c) => c && c.id === line.characterId);
     const displayValue = selectedChar ? `${selectedChar.name} ${selectedChar.surname}` : '';
 
@@ -541,8 +508,7 @@ export function renderScriptLineBar(line, index) {
 
   const isSelected = state.selectedLineIds.has(line.id);
 
-  // Badges advertise which advanced properties this line carries, so authors
-  // can see at a glance what's configured without opening the editor.
+  // Badges show which advanced properties a line carries without opening it.
   const badgeDefs = [];
   if (line.type === 'speaking' && line.spriteIndex != null)
     badgeDefs.push(['sprite', 'Sprite selected']);

@@ -1,17 +1,11 @@
-// Themed replacements for the native alert()/confirm() and a toast helper.
+// Themed, awaitable replacements for alert()/confirm(), plus toasts.
 //
-// The browser's alert/confirm block the page, can't be styled, and clash with
-// the Class Trial theme. These render into #dialogroot (modal confirms/alerts)
-// and #toastroot (transient toasts), both of which sit above #modalroot so a
+// Renders into #dialogroot and #toastroot, which sit above #modalroot so a
 // confirm can appear over an open editor modal.
-//
-// confirmDialog/alertDialog return Promises so callers can `await` them in
-// place of the synchronous native calls.
 import { escapeHtml } from '../utils.js';
 
 import { setHtml } from './dom.js';
-// Escape text, then turn newlines into <br> so multi-line messages (the old
-// alert strings used \n\n) keep their line breaks.
+// Escapes first, so the <br> substitution can't inject markup.
 function formatMessage(text) {
   return escapeHtml(String(text)).replace(/\n/g, '<br>');
 }
@@ -23,7 +17,7 @@ const TOAST_ICONS = {
   info: 'bulb',
 };
 
-// Show a transient toast. Returns a function that dismisses it early.
+// Returns a function that dismisses the toast early.
 export function showToast(message, opts = {}) {
   const type = opts.type || 'info';
   const duration = opts.duration ?? 3200;
@@ -56,9 +50,8 @@ export function showToast(message, opts = {}) {
   return remove;
 }
 
-// Core dialog renderer. `buttons` is an array of
-// { label, value, class, default?, escapes? }. Resolves with the value of the
-// clicked button (or the `escapes` button's value on Esc / backdrop click).
+// `buttons`: { label, value, class, default?, escapes? }. Resolves with the
+// clicked button's value, or the `escapes` button's on Esc / backdrop click.
 function openDialog({ title, message, icon = 'alert', buttons }) {
   return new Promise((resolve) => {
     const root = document.getElementById('dialogroot');
@@ -110,7 +103,6 @@ function openDialog({ title, message, icon = 'alert', buttons }) {
       btn.addEventListener('click', () => settle(buttons[Number(btn.dataset.dialogIndex)].value));
     });
 
-    // Backdrop click dismisses with the escape button's value.
     wrap.addEventListener('mousedown', (e) => {
       if (e.target === wrap) settle(escapeButton.value);
     });
@@ -127,7 +119,7 @@ function openDialog({ title, message, icon = 'alert', buttons }) {
     }
     document.addEventListener('keydown', onKeydown, true);
 
-    // Focus the default action so Enter/Space work immediately.
+    // Focus the default action so Enter/Space work without a click first.
     const defaultIndex = buttons.findIndex((b) => b.default);
     const focusTarget = wrap.querySelector(
       `[data-dialog-index="${defaultIndex >= 0 ? defaultIndex : buttons.length - 1}"]`
@@ -136,8 +128,7 @@ function openDialog({ title, message, icon = 'alert', buttons }) {
   });
 }
 
-// Promise<boolean> replacement for confirm(). Accepts a string or an options
-// object.
+// Promise<boolean>. Takes a string or an options object.
 export function confirmDialog(opts = {}) {
   if (typeof opts === 'string') opts = { message: opts };
   const {
@@ -163,7 +154,7 @@ export function confirmDialog(opts = {}) {
   });
 }
 
-// Promise<void> replacement for alert(). Accepts a string or an options object.
+// Promise<void>. Takes a string or an options object.
 export function alertDialog(opts = {}) {
   if (typeof opts === 'string') opts = { message: opts };
   const { title, message = '', okLabel = 'OK', type = 'info' } = opts;
@@ -177,8 +168,7 @@ export function alertDialog(opts = {}) {
   }).then(() => undefined);
 }
 
-// Themed text-input prompt. Resolves with the trimmed value, or null if the
-// user cancels / dismisses / leaves it blank.
+// Resolves with the trimmed value, or null on cancel, dismiss, or blank.
 export function promptDialog(opts = {}) {
   const {
     title = 'Enter a value',

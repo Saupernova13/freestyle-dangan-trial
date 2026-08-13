@@ -1,9 +1,7 @@
 // Shared keyboard/pointer behaviour for the editor modals.
 //
-// Every editor modal (character, script line, truth bullet, settings) renders
-// into #modalroot as `.dr-modal-bg > .dr-modal`, so one delegated set of
-// listeners covers them all: Escape and backdrop-click close, and Enter in a
-// single-line field triggers the modal's primary action.
+// Every modal renders into #modalroot as `.dr-modal-bg > .dr-modal`, so one
+// delegated set of listeners covers them all.
 import { closeModal } from '../modals/modalCoordinator.js';
 
 let initialized = false;
@@ -32,9 +30,8 @@ export function initModalBehaviors() {
       return;
     }
 
-    // Enter in a single-line field submits, mirroring native form behaviour.
-    // Textareas keep Enter for newlines; the searchable dropdown handles its
-    // own Enter for picking a result.
+    // Textareas keep Enter for newlines, and the searchable dropdown uses it
+    // to pick a result.
     if (e.key === 'Enter') {
       const el = e.target;
       const isTextInput =
@@ -53,7 +50,7 @@ export function initModalBehaviors() {
 
   const modalRoot = document.getElementById('modalroot');
   if (modalRoot) {
-    // Click on the dimmed backdrop (not the panel) closes the modal.
+    // The backdrop closes; the panel itself does not.
     modalRoot.addEventListener('mousedown', (e) => {
       if (e.target.classList && e.target.classList.contains('dr-modal-bg')) {
         closeModal();
@@ -62,8 +59,7 @@ export function initModalBehaviors() {
   }
 }
 
-// Focus the first editable field of the open modal. Call once on open (not on
-// re-render) so it doesn't steal focus while the user is typing or tabbing.
+// Call on open only, never on re-render: it would steal focus mid-typing.
 export function focusFirstField() {
   const root = document.getElementById('modalroot');
   if (!root) return;

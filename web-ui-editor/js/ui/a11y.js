@@ -1,8 +1,5 @@
-// Keyboard activation for click-only widgets.
-//
-// The nav items and cast slots are <div>s with onclick handlers. They're
-// focusable (tabindex), but a keyboard user couldn't activate them. One
-// delegated listener lets Enter/Space trigger their existing click handler.
+// Nav items and cast slots are focusable <div>s with onclick handlers, which
+// a keyboard alone cannot fire. This lets Enter/Space reach them.
 export function initKeyboardActivation() {
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;

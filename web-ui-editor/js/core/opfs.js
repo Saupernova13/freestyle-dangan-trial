@@ -1,15 +1,11 @@
 // Origin Private File System (OPFS) backend.
 //
-// Firefox and Safari deliberately don't implement showDirectoryPicker (the
-// pick-a-folder-on-disk API), but they do implement OPFS via
-// navigator.storage.getDirectory(). OPFS exposes the *same*
-// FileSystemDirectoryHandle interface, so once the rest of the app is handed an
-// OPFS subdirectory as state.dirHandle, all the existing read/write code works
-// unchanged.
-//
-// The trade-off: OPFS is private to the browser/origin and invisible in the OS
-// file manager, so trials live "inside the browser" and move in and out via
-// Import / Export .drtrial. Each trial gets its own subfolder under trials/.
+// Firefox and Safari ship no showDirectoryPicker but do ship OPFS, which
+// exposes the same FileSystemDirectoryHandle interface — so handing the app
+// an OPFS subdirectory as state.dirHandle makes all the read/write code work
+// unchanged. The trade-off is that OPFS is invisible to the OS file manager,
+// so trials only move in and out via Import / Export .drtrial. One subfolder
+// per trial under trials/.
 
 const TRIALS_DIR = 'trials';
 
@@ -26,12 +22,11 @@ async function opfsTrialsRoot() {
   return root.getDirectoryHandle(TRIALS_DIR, { create: true });
 }
 
-// Turn a trial name into a safe folder slug.
 function slugify(name) {
   return (name || 'trial').replace(/[^a-zA-Z0-9_\- ]/g, '_').trim() || 'trial';
 }
 
-// Folder slugs of every trial currently stored in OPFS.
+// Folder slugs, not display names.
 export async function listOpfsTrialFolders() {
   if (!supportsOpfs()) return [];
   const root = await opfsTrialsRoot();
@@ -48,7 +43,7 @@ export async function getOpfsTrial(folder, { create = false } = {}) {
   return root.getDirectoryHandle(folder, { create });
 }
 
-// Create a fresh trial folder, choosing a unique slug derived from `name`.
+// Suffixes the slug (_2, _3, ...) until it is unique.
 export async function createOpfsTrial(name) {
   const root = await opfsTrialsRoot();
   const existing = await listOpfsTrialFolders();
@@ -66,8 +61,7 @@ export async function deleteOpfsTrial(folder) {
   await root.removeEntry(folder, { recursive: true });
 }
 
-// Read a single file's text from an OPFS trial folder (used to show the real
-// trial name in the hub list). Returns null if absent/unreadable.
+// Null if absent or unreadable.
 export async function readOpfsFileText(folder, fileName) {
   try {
     const dir = await getOpfsTrial(folder, { create: false });
@@ -78,8 +72,8 @@ export async function readOpfsFileText(folder, fileName) {
   }
 }
 
-// Probe whether OPFS file handles support createWritable() in this browser.
-// Cached, because the answer can't change within a session.
+// Does this browser's OPFS support createWritable()? Cached: it can't change
+// within a session.
 let writeProbe = null;
 export function opfsCanWrite() {
   if (writeProbe) return writeProbe;

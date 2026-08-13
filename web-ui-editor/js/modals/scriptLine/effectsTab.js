@@ -101,7 +101,6 @@ export function toggleEffect(effectType) {
   } else {
     const newEffect = { type: effectType };
 
-    // Set defaults based on effect type
     if (['shake', 'blur', 'distortion', 'vignette', 'pulse'].includes(effectType)) {
       newEffect.intensity = 0.5;
       newEffect.duration = 0.5;

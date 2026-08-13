@@ -1,4 +1,3 @@
-// Settings management
 import { closeModal } from './modals/modalCoordinator.js';
 import { alertDialog, showToast } from './ui/dialogs.js';
 import { focusFirstField } from './ui/modalBehaviors.js';

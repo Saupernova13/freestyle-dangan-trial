@@ -2,10 +2,9 @@ class_name TrialArchive
 extends RefCounted
 ## Extracts .drtrial (ZIP) archives into a destination directory.
 
-## Wipe `dest_dir` and unpack the archive into it. The wipe matters: stale
-## files from a previous trial could otherwise be resolved by name (Android
-## repro: trial B picked up assets left behind by trial A).
-## `progress` (optional) is called with (files_done, files_total) per entry.
+## Wipes `dest_dir` first, which matters: leftovers resolve by name, and on
+## Android trial B was seen picking up trial A's assets.
+## `progress` is called with (files_done, files_total) per entry.
 static func extract(zip_path: String, dest_dir: String, progress: Callable = Callable()) -> bool:
 	var reader = ZIPReader.new()
 	var err = reader.open(zip_path)

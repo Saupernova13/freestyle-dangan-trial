@@ -1,13 +1,12 @@
 extends Node
 ##
-## Global seeded randomness. One seed is chosen per game launch and drives all
-## minigame procedural variation, so an entire session is reproducible from it.
-## Set the DANGAN_SEED environment variable to force a specific seed.
+## Global seeded randomness: one seed per launch drives every minigame's
+## procedural variation, so a whole session replays from it.
+## Set DANGAN_SEED to force a specific seed.
 
 var seed_value: int = 0
 
-# Per-label call counter so repeated stream() calls with the same label still
-# produce distinct (but reproducible) streams.
+# Keeps repeated stream() calls on one label distinct but still reproducible.
 var _stream_counts: Dictionary = {}
 
 func _ready() -> void:
@@ -20,9 +19,8 @@ func _ready() -> void:
 		seed_value = entropy.randi()
 	Log.info("GameRandom", "Session seed = %d" % seed_value)
 
-## Returns a fresh RNG for `label`. Each call with the same label yields a
-## distinct stream (so repeated plays of one minigame differ), while the same
-## seed always reproduces the same sequence of calls.
+## Each call on a label yields a distinct stream, so repeated plays of one
+## minigame differ, while one seed still reproduces the whole call sequence.
 func stream(label: String) -> RandomNumberGenerator:
 	var index: int = _stream_counts.get(label, 0)
 	_stream_counts[label] = index + 1
@@ -30,23 +28,21 @@ func stream(label: String) -> RandomNumberGenerator:
 	rng.seed = hash("%d:%s:%d" % [seed_value, label, index])
 	return rng
 
-## A value-stable RNG for `label`, seeded only by the session seed (no per-call
-## index). Every call with the same label in one session yields the identical
-## sequence — use for session-wide "personality" values (e.g. how often an
-## effect occurs this run), not for distinct per-instance rolls.
+## Seeded by the session alone, with no per-call index, so every call on a
+## label repeats the identical sequence. For session-wide "personality"
+## values, not per-instance rolls.
 func session_stream(label: String) -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d:%s" % [seed_value, label])
 	return rng
 
-## Force a specific seed (e.g. for testing). Resets all stream counters so the
-## next stream() calls start fresh.
+## Resets every stream counter, so the next stream() calls start fresh.
 func reseed(value: int) -> void:
 	seed_value = value
 	_stream_counts.clear()
 
-## Fisher-Yates shuffle of `array` in place using `rng` — the engine's built-in
-## Array.shuffle() can only use the global RNG, which would not be seed-driven.
+## In-place Fisher-Yates. Array.shuffle() can only use the global RNG, which
+## the session seed does not drive.
 static func shuffle_with(array: Array, rng: RandomNumberGenerator) -> void:
 	for i in range(array.size() - 1, 0, -1):
 		var j := rng.randi_range(0, i)

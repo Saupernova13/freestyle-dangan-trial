@@ -1,9 +1,8 @@
 class_name ResourceRegistry
 extends RefCounted
 ##
-## Central registry for scene paths with lazy load caching.
-## Resolves "res://" paths in one place so renames/reorganizations only need
-## to touch this file.
+## Scene paths with lazy load caching. Every "res://" lives here, so a rename
+## touches one file.
 
 const SCENES := {
 	# Minigame overlays

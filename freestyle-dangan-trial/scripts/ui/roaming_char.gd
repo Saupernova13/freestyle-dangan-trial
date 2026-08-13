@@ -1,10 +1,9 @@
 extends PathFollow2D
 
-## One character of the roaming background text. Scene-driven — see
-## scenes/ui/roaming_char.tscn. Edit the font, size, color, and z-index on the
-## Label, and the orbit speed curve in the looping `orbit` animation.
-## The caller supplies only the character, its phase along the path, how long a
-## full lap takes, and the travel direction.
+## One character of the roaming background text. Font, size, color, z-index
+## and the looping `orbit` speed curve are all editor-owned in
+## scenes/ui/roaming_char.tscn. The caller supplies only the character, its
+## phase along the path, the lap duration, and the direction.
 
 func setup(character: String, phase: float, lap_duration: float, forward: bool, animate: bool = true) -> void:
 	var label: Label = %Label

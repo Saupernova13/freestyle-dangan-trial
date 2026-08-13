@@ -1,13 +1,11 @@
 extends CanvasLayer
-## On-screen touch HUD for actions that are otherwise keyboard/mouse-only:
-## settings (replaces ESC), bullet prev/next (replaces Q/E and scroll wheel),
-## focus toggle (replaces right-click and F), and slow-time hold (replaces the
-## debate_slow_time keyboard action).
+## Touch HUD for the otherwise keyboard/mouse-only actions: settings, bullet
+## prev/next, focus toggle, and slow-time hold.
 ##
-## Layout and styling are scene-owned — see scenes/ui/mobile_hud.tscn. setup()
-## just shows the buttons a given minigame asked for; each button fires the same
-## InputManager signal the keyboard/mouse handlers do, so downstream listeners
-## need no mobile-specific path. Spawned by MinigameBase on mobile builds.
+## Layout and styling are scene-owned in scenes/ui/mobile_hud.tscn; setup()
+## only shows the buttons a minigame asked for. Each button fires the same
+## InputManager signal its keyboard equivalent does, so no listener needs a
+## mobile-specific path. MinigameBase spawns it on mobile builds.
 
 @onready var _settings_btn: Button = %SettingsButton
 @onready var _focus_btn: Button = %FocusButton
@@ -19,10 +17,9 @@ var _slow_holding: bool = false
 
 func _ready():
 	_settings_btn.pressed.connect(func(): InputManager.settings_toggle_requested.emit())
-	# Drive focus through InputManager so Crosshair gets the same
-	# focus_started/ended pair as a right-click or F press.
+	# Via InputManager, so Crosshair sees the same pair a right-click sends.
 	_focus_btn.toggled.connect(func(pressed): InputManager.set_focus(pressed))
-	# button_down/up mirror the desktop "hold key" slow-time semantics.
+	# button_down/up mirror the desktop hold-to-slow semantics.
 	_slow_btn.button_down.connect(func(): _set_slow_held(true))
 	_slow_btn.button_up.connect(func(): _set_slow_held(false))
 	(%BulletPrev as Button).pressed.connect(func(): InputManager.bullet_prev.emit())
@@ -39,8 +36,7 @@ func _set_slow_held(held: bool) -> void:
 	if held == _slow_holding:
 		return
 	_slow_holding = held
-	# NonstopDebate polls Input.is_action_pressed("debate_slow_time") in
-	# _process(); drive that action so touch takes the same code path as the key.
+	# NonstopDebate polls this action in _process(), so touch must set it too.
 	if held:
 		Input.action_press("debate_slow_time")
 	else:

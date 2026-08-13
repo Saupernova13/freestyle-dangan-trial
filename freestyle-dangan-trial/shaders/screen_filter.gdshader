@@ -1,15 +1,14 @@
 shader_type canvas_item;
 
-// Full-screen filter for per-line special effects (ScreenEffectsManager).
-// One shader, mode-switched, so a single overlay rect covers all filters.
+// Full-screen filter for per-line effects, driven by ScreenEffectsManager.
+// Mode-switched so one overlay rect covers every filter.
 // mode: 0 = grayscale, 1 = sepia, 2 = invert, 3 = scanlines,
 //       4 = distortion/ripple, 5 = blur
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
 uniform int mode = 0;
 uniform float intensity : hint_range(0.0, 1.0) = 0.0;
-// Normalized in/hold/out ramp keyed by the FilterAnimator, so the pulse shape
-// is editable in the animation editor while `intensity` stays the peak
-// strength supplied per line by the trial data.
+// Keyed by the FilterAnimator, so the pulse shape stays editable in the
+// animation editor. `intensity` is the peak strength from the trial data.
 uniform float envelope : hint_range(0.0, 1.0) = 0.0;
 
 void fragment() {

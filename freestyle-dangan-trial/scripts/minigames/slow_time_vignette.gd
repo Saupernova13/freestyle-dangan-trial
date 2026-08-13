@@ -1,8 +1,7 @@
 extends CanvasLayer
 
-## Blue vignette shown while the player holds slow-time in a debate.
-## Scene-driven — see scenes/minigames/slow_time_vignette.tscn. Edit the tint
-## and the fade timing in the scene's show/dismiss animations.
+## Blue vignette shown while slow-time is held. Tint and fade timing are in
+## the scene's show/dismiss animations.
 
 @onready var _anim: AnimationPlayer = %AnimationPlayer
 

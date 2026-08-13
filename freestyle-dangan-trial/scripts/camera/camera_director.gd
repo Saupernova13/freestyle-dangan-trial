@@ -6,9 +6,9 @@ var _original_fov: float = 30.0
 var _original_position: Vector3
 var _is_executing: bool = false
 
-## Motion vocabulary (the web editor's camera tab). Every handler takes
-## (bench_index, duration, ease_type, trans_type); parameterized variants are
-## pre-bound. Adding a motion = registering it here.
+## The web editor's camera tab. Handlers all take
+## (bench_index, duration, ease_type, trans_type), with variants pre-bound.
+## A new motion only needs an entry here.
 var _motions: Dictionary = {}
 
 signal motion_completed
@@ -39,9 +39,9 @@ func _register_motions() -> void:
 		"low_angle": _execute_low_angle,
 		"dolly_in": _execute_dolly.bind(-0.5),
 		"dolly_out": _execute_dolly.bind(0.5),
-		# Pans/tilts rotate in place; trucks/pedestals translate in local space.
-		# They persist for the line — the next speaking line hard-cuts to its
-		# bench, which resets the camera anyway.
+		# Pans and tilts rotate in place; trucks and pedestals translate
+		# locally. Both persist for the line, since the next speaking line
+		# hard-cuts to its bench and resets the camera anyway.
 		"pan_left": _execute_rotate.bind(Vector3(0, deg_to_rad(15.0), 0)),
 		"pan_right": _execute_rotate.bind(Vector3(0, deg_to_rad(-15.0), 0)),
 		"pan_up": _execute_rotate.bind(Vector3(deg_to_rad(10.0), 0, 0)),
@@ -175,7 +175,7 @@ func _execute_dolly(
 	tween.tween_property(_camera, "global_position", target_pos, duration)
 	tween.finished.connect(_finish_motion)
 
-## Rotate the camera by a relative delta (radians per axis) over duration.
+## Relative delta, in radians per axis.
 func _execute_rotate(
 	_bench_index: int,
 	duration: float,
@@ -190,7 +190,7 @@ func _execute_rotate(
 	tween.tween_property(_camera, "rotation", target_rot, duration)
 	tween.finished.connect(_finish_motion)
 
-## Translate the camera by a local-space offset (x = right, y = up) over duration.
+## Local-space offset: x is right, y is up.
 func _execute_translate(
 	_bench_index: int,
 	duration: float,

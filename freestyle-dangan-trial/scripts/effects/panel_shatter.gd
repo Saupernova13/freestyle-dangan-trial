@@ -1,13 +1,13 @@
 extends GPUParticles2D
 
-## Debate panel breaking apart into shards. Scene-driven — see
-## scenes/effects/panel_shatter.tscn. Edit the shard look, speed, and lifetime
-## on the process material; the caller only supplies the panel rect and tint.
+## A debate panel breaking into shards. Shard look, speed and lifetime are on
+## the process material in scenes/effects/panel_shatter.tscn; the caller
+## supplies only the panel rect and tint.
 
 func _ready():
 	finished.connect(queue_free)
 
-## Fit the emission box to the panel being shattered and center on it.
+## Fits the emission box to the panel and centres on it.
 func setup(rect: Rect2, color: Color):
 	global_position = rect.get_center()
 	modulate = color

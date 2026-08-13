@@ -1,13 +1,12 @@
 class_name TrialManifest
 extends RefCounted
-## The whole trial.json, parsed once by TrialLoader into typed objects.
-## Consumers (ScriptDirector, TrialRoomManager, MinigameRunner, ...) read
-## these fields instead of spelunking through nested Dictionaries.
+## The whole trial.json, parsed once by TrialLoader into typed objects, so no
+## consumer has to walk nested Dictionaries.
 
 var trial_name: String = ""
 var format_version: String = ""
-## Positional bench slots; entries are character-id Strings or null for an
-## empty bench. Kept untyped because the nulls are meaningful.
+## Bench slots: character-id Strings, or null for an empty bench. Untyped
+## because those nulls are meaningful.
 var character_ids: Array = []
 var script_lines: Array[ScriptLine] = []
 var minigames: Array[MinigameData] = []

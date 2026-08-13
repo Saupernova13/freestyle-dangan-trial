@@ -1,9 +1,8 @@
 extends Node
 ##
-## Drives the trial script: walks through dialogue/narrator/minigame lines,
-## tracks high-level state, and coordinates pause / settings menu / auto-skip.
-## Input is delegated to InputManager — this node reacts to its signals
-## instead of running its own _input().
+## Drives the trial script: walks the lines, tracks high-level state, and
+## coordinates pause, settings and auto-skip. Reacts to InputManager's signals
+## rather than running its own _input().
 
 enum State {
 	IDLE,
@@ -92,7 +91,7 @@ func _handle_speaking_line(line: ScriptLine):
 
 func _handle_narrator_line(line: ScriptLine):
 	_transition_to(State.DIALOGUE)
-	# Narrator lines can carry audio (SFX / narration VO) just like speaking lines.
+	# Narrator lines carry audio too, for SFX and narration VO.
 	_play_line_audio(line)
 	narrator_displayed.emit(line.display_text())
 	_transition_to(State.WAITING_FOR_ADVANCE)
@@ -128,7 +127,7 @@ func on_minigame_finished(success: bool):
 	_active_minigame = null
 	_transition_to(State.MINIGAME_RESULT)
 	minigame_completed.emit(success)
-	# Brief pause for result display, then advance
+	# Long enough for the result card to be read.
 	await get_tree().create_timer(MinigameConfig.MINIGAME_RESULT_PAUSE).timeout
 	_transition_to(State.DIALOGUE)
 	advance_to_next_line()

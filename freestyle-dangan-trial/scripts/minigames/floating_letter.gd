@@ -1,10 +1,9 @@
 class_name FloatingLetter
 extends Control
 
-## A single drifting letter in Hangman's Gambit. Scene-driven — see
-## scenes/minigames/floating_letter.tscn. Edit the circle styles, font, and the
-## three destroy animations in the scene. Drift is procedural: velocity and
-## spawn point come from the minigame's difficulty settings.
+## A drifting letter in Hangman's Gambit. Circle styles, font and the three
+## destroy animations are scene-owned. Only the drift is procedural: velocity
+## and spawn point come from the difficulty settings.
 
 signal clicked(letter_node: FloatingLetter)
 

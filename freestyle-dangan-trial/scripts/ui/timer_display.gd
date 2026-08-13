@@ -1,8 +1,7 @@
 extends CanvasLayer
 
-## Countdown timer HUD. Scene-driven — see scenes/ui/timer_display.tscn.
-## Edit position and styling there. The script handles countdown logic, color
-## changes at thresholds, and triggers the pulse animation when time is low.
+## Countdown timer HUD; position and styling live in the scene. This handles
+## the countdown, the threshold colors, and the low-time pulse.
 
 signal time_expired
 

@@ -1,9 +1,9 @@
 class_name BulletProjectile
 extends Control
 
-## Truth bullet projectile fired toward debate panels. Scene-driven —
-## see scenes/minigames/bullet_projectile.tscn.
-## The script handles flight physics, trail tracking, and hit/miss detection.
+## Truth bullet fired at a debate panel; the look is scene-owned in
+## scenes/minigames/bullet_projectile.tscn. This script does flight, the
+## trail, and hit detection.
 
 signal hit_target
 signal missed
@@ -21,9 +21,8 @@ var _direction: Vector2
 var _trail_points: Array = []
 
 func fire(from: Vector2, to: Vector2):
-	# Ensure the Control has a size before computing position (custom_minimum_size
-	# from the scene is the floor, but explicit size avoids edge cases when
-	# instantiated outside a layout container).
+	# Set explicitly, because instantiating outside a layout container leaves
+	# size at zero and the position maths needs it.
 	if size.x <= 0 or size.y <= 0:
 		size = Vector2(16, 16)
 	_start_pos = from

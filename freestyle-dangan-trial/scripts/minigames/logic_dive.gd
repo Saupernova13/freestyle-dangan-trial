@@ -30,8 +30,7 @@ func start():
 		_show_question(0)
 
 func _build_overlay():
-	# Scene-driven — see scenes/minigames/logic_dive_overlay.tscn.
-	# Lane buttons spawn dynamically into %LanesContainer per question.
+	# Layout is scene-owned; lane buttons spawn into %LanesContainer.
 	_overlay = ResourceRegistry.instantiate("logic_dive_overlay")
 	add_child(_overlay)
 	_question_label = _overlay.get_node("%QuestionLabel")
@@ -105,9 +104,8 @@ func _on_answer_selected(original_index: int, is_correct: bool):
 		await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
 		_show_question(current_question_index + 1)
 	else:
-		# Match NonstopDebate: a wrong answer ends the attempt and the trial
-		# manager replays the whole minigame. The player must answer every
-		# question correctly to advance.
+		# As in NonstopDebate: one wrong answer ends the attempt, and every
+		# question must be right to advance.
 		InfluenceGauge.take_damage(difficulty)
 		await get_tree().create_timer(1.5).timeout
 		_finish(false, {"reason": "wrong_answer"})

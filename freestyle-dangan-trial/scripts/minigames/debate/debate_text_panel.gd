@@ -1,11 +1,10 @@
 class_name DebateTextPanel
 extends Control
 
-## A scrolling debate-statement panel. Scene-driven —
-## see scenes/minigames/debate_text_panel.tscn.
-## The scene supplies Panel + HBox + 3 RichTextLabels. The script handles
-## per-instance configuration (text, styling, white-noise/main sizing,
-## scrolling animation).
+## A scrolling debate-statement panel, driven by
+## scenes/minigames/debate_text_panel.tscn.
+## The scene supplies the Panel, HBox and RichTextLabels; this script only
+## configures and animates them per instance.
 
 signal panel_exited_screen(panel: DebateTextPanel)
 
@@ -24,29 +23,25 @@ const WHITE_NOISE_MIN_WIDTH: float = 150.0
 
 const VOICE_EXIT_BUFFER: float = 0.5
 
-# Occurrence chance is not fixed. The session seed picks a probability somewhere
-# within each effect's floor..ceiling, and every panel then rolls against that
-# session probability — so one run may ramp/squash often, another rarely.
+# The seed picks one probability inside each floor..ceiling for the whole
+# session, then every panel rolls against it — so runs differ in how often
+# these effects fire, not just in which panels get them.
 const RAMP_CHANCE_FLOOR: float = 0.25
 const RAMP_CHANCE_CEIL: float = 0.90
 const SQUASH_CHANCE_FLOOR: float = 0.20
 const SQUASH_CHANCE_CEIL: float = 0.85
 
-# Ramp pacing — panels with a ramp rush in, ease through the readable middle,
-# then accelerate out. Lower powers keep the slow stretch brief (a high power
-# flattens velocity across a wide band, so the slow part drags). RAMP_MIN_SPEED
-# is the fraction of average speed kept at mid-crossing: the pure eased curve
-# dead-stops at centre, so we blend in this much constant drift to keep it
-# moving and blend the transitions smoothly.
+# Ramped panels rush in, ease through the readable middle, then accelerate out.
+# A higher power widens the slow band until it drags. RAMP_MIN_SPEED is the
+# fraction of average speed kept at centre, where the eased curve would
+# otherwise stop dead.
 const RAMP_POWER_FLOOR: float = 1.4
 const RAMP_POWER_CEIL: float = 2.2
 const RAMP_MIN_SPEED: float = 0.35
 
 # --- Depth / parallax -------------------------------------------------------
-# Each panel is assigned a _depth in [0,1] (0 = far back, 1 = near). Depth drives
-# size, opacity, draw order and extrusion thickness so statements read as sitting
-# at different distances. White-noise chatter biases far (small, dim, behind);
-# the shootable main line biases near (big, bright, in front).
+# _depth runs [0,1], far to near, and drives size, opacity, draw order and
+# extrusion thickness. Noise chatter biases far, the shootable line near.
 const DEPTH_SIZE_FAR: float = 0.95
 const DEPTH_SIZE_NEAR: float = 1.55
 const DEPTH_ALPHA_FAR: float = 0.55
@@ -55,10 +50,9 @@ const DEPTH_Z_NEAR: int = 8
 const NOISE_DEPTH_SPEED_FAR: float = 0.7  # far noise drifts slower (parallax)
 
 # --- Faux extrusion + bevel -------------------------------------------------
-# The scene stacks several dimmed copies of the text behind the front face; we
-# offset them along a fixed local light direction and darken with depth so the
-# glyphs read as solid blocks with a shaded side. The front face adds a light
-# top-edge highlight (built-in RichTextLabel shadow offset up-left) for a bevel.
+# Dimmed copies of the text stack behind the front face, offset along a fixed
+# local light direction and darkened with depth, so glyphs read as solid blocks
+# with a shaded side. The front face takes a light top-edge highlight to bevel.
 const EXTRUDE_DIR: Vector2 = Vector2(1.0, 1.2)  # local light/extrude direction
 const EXTRUDE_LAYERS_FAR: float = 2.0
 const EXTRUDE_LAYERS_NEAR: float = 4.0          # must be <= shadow layers in scene
@@ -74,9 +68,8 @@ const BEVEL_HIGHLIGHT_OFFSET: int = -3
 @onready var _suffix_label: RichTextLabel = %SuffixLabel
 @onready var _shadow_root: Control = %ShadowLayers
 
-# Each entry mirrors the front [prefix, weak, suffix] trio for one extrusion layer,
-# closest-first. Gathered from the scene's ShadowLayers so the count is whatever
-# the .tscn provides — no UI is built in code.
+# One [prefix, weak, suffix] trio per extrusion layer, closest first. Read from
+# the scene's ShadowLayers, so the .tscn decides the count.
 var _shadow_sets: Array = []
 
 var line_data: Dictionary = {}
@@ -97,8 +90,8 @@ var _pending_speed_multiplier: float = 1.0
 var _pending_audio_duration: float = -1.0
 var _setup_pending: bool = false
 
-# Per-panel seeded variation (size, slant, ramp-in pacing, squash/stretch).
-# All rolled from one GameRandom stream so a session seed reproduces it exactly.
+# Per-panel variation, all rolled from one GameRandom stream so a session seed
+# reproduces it exactly.
 var _elapsed: float = 0.0
 var _start_pos: Vector2 = Vector2.ZERO
 var _end_x: float = 0.0
@@ -135,8 +128,8 @@ func _ready():
 		position.x = viewport_width + 50
 		_end_x = -500.0
 
-	# Drive traversal by elapsed/total time so the ramp-in profile can redistribute
-	# speed across the crossing without changing how long it takes (keeps voice sync).
+	# Traversal runs on elapsed/total time, so a ramp can redistribute speed
+	# across the crossing without changing its duration. Voice sync depends on it.
 	_start_pos = position
 	_travel_distance = _end_x - _start_pos.x
 	_total_time = abs(_travel_distance) / max(_move_speed, 1.0)
@@ -158,31 +151,27 @@ func _apply_setup():
 	_roll_variance()
 
 	if _pending_audio_duration > 0.0:
-		# Voice-synced lines keep their exact crossing time — don't parallax-scale.
+		# Voice-synced lines keep their exact crossing time; no parallax scaling.
 		var viewport_width = get_viewport_rect().size.x
 		var total_distance = viewport_width + 500.0
 		_move_speed = total_distance / (_pending_audio_duration + VOICE_EXIT_BUFFER)
 	else:
 		_move_speed = 200.0 * _pending_speed_multiplier
-		# Parallax: unvoiced chatter drifts slower the farther back it sits.
+		# Parallax: chatter drifts slower the farther back it sits.
 		if is_white_noise:
 			_move_speed *= lerp(NOISE_DEPTH_SPEED_FAR, 1.0, _depth)
 
 	_apply_sizing()
 	_rebuild_text()
 
-# Roll all per-panel cosmetic variation from one seeded stream, including the
-# parallax depth that then drives size, opacity, draw order and extrusion.
 func _roll_variance():
 	var rng := GameRandom.stream("debate_panel")
 
-	# Session-stable chances: the seed sets how often each effect occurs this run
-	# (a probability inside its floor..ceiling); each panel rolls against it below.
+	# Session-stable: how often each effect fires is fixed for the whole run.
 	var session := GameRandom.session_stream("debate_chances")
 	var ramp_chance := session.randf_range(RAMP_CHANCE_FLOOR, RAMP_CHANCE_CEIL)
 	var squash_chance := session.randf_range(SQUASH_CHANCE_FLOOR, SQUASH_CHANCE_CEIL)
 
-	# Depth biases by role: noise sits back, the shootable main line comes forward.
 	if is_white_noise:
 		_depth = rng.randf_range(0.0, 0.55)
 	else:
@@ -196,8 +185,6 @@ func _roll_variance():
 	_squash_freq = rng.randf_range(1.5, 4.0)
 	_squash_phase = rng.randf() * TAU
 
-# Collect the scene's extrusion layers once (closest layer first). Each is an
-# HBox holding a [prefix, weak, suffix] trio that mirrors the front face.
 func _gather_shadows():
 	if not _shadow_sets.is_empty() or not _shadow_root:
 		return
@@ -220,15 +207,14 @@ func _apply_sizing():
 	var panel_height = base_height * _size_scale
 	var min_width = base_width * _size_scale
 
-	# Every layer (front + extrusion copies) needs the same glyph metrics so the
-	# stacked copies register exactly behind the front face.
+	# Identical glyph metrics on every layer, or the copies stop registering
+	# behind the front face.
 	for lbl in _all_labels():
 		for size_key in ["normal_font_size", "bold_font_size", "italic_font_size", "bold_italic_font_size"]:
 			lbl.add_theme_font_size_override(size_key, font_size)
 
-	# No panel background or border — the text reads directly over the scene, so
-	# the front face gets a dark outline for legibility plus a light top-edge
-	# highlight (built-in shadow offset up-left) to bevel against the extrusion.
+	# The text sits directly on the scene with no panel behind it, so the front
+	# face carries its own dark outline plus a top-edge highlight for the bevel.
 	for lbl in [_prefix_label, _weak_label, _suffix_label]:
 		lbl.add_theme_color_override("font_outline_color", TEXT_OUTLINE_COLOR)
 		lbl.add_theme_constant_override("outline_size", TEXT_OUTLINE_SIZE)
@@ -239,7 +225,7 @@ func _apply_sizing():
 
 	custom_minimum_size = Vector2(min_width, panel_height)
 	size = custom_minimum_size
-	# Rotate / squash about the visual center, not the top-left corner.
+	# Rotate and squash about the visual centre, not the top-left corner.
 	pivot_offset = size / 2.0
 	rotation = _slant_rad
 
@@ -251,10 +237,7 @@ func _all_labels() -> Array:
 		labels.append_array(layer)
 	return labels
 
-# Push the depth roll into the visible cues: opacity, draw order and how many
-# extrusion layers show + how far apart they sit (thicker block when near). The
-# layers are children, so EXTRUDE_DIR lives in local space and rotates with the
-# panel's slant automatically.
+# The layers are children, so EXTRUDE_DIR is local and follows the slant.
 func _apply_depth():
 	z_index = int(round(lerp(float(DEPTH_Z_FAR), float(DEPTH_Z_NEAR), _depth)))
 	_base_alpha = lerp(DEPTH_ALPHA_FAR, 1.0, _depth)
@@ -268,7 +251,7 @@ func _apply_depth():
 		if i < visible_layers:
 			hbox.visible = true
 			hbox.position = dir * step * float(i + 1)
-			# Closest layer brightest, deepest darkest — a shaded extruded side.
+			# Brightest at the front, darkest at the back: a shaded side.
 			var t = float(i + 1) / float(maxi(visible_layers, 1))
 			var shade = lerp(EXTRUDE_SHADE_TOP, EXTRUDE_SHADE_DEEP, t)
 			hbox.modulate = Color(shade, shade, shade, 1.0)
@@ -317,8 +300,7 @@ func _rebuild_text():
 	suffix_bbcode = _apply_effect_wrap(suffix_bbcode)
 	_suffix_label.text = suffix_bbcode
 
-	# Mirror the rendered text into every extrusion layer. The dark per-layer
-	# modulate set in _apply_depth flattens the copies to a shaded silhouette.
+	# The copies carry the same bbcode; _apply_depth's modulate flattens them.
 	for layer in _shadow_sets:
 		layer[0].text = prefix_bbcode
 		layer[1].text = weak_bbcode
@@ -362,8 +344,8 @@ func set_shootable(value: bool):
 	is_shootable = value
 	_rebuild_text()
 
-# Hit-test in the node's own space so the zone tracks the live scale (font size +
-# squash) and rotation (slant) instead of an axis-aligned screen rect.
+# Tests in node space, so the hit zone follows the live scale and slant rather
+# than an axis-aligned screen rect.
 func _transform_has_point(node: Control, click_pos: Vector2) -> bool:
 	var local = node.get_global_transform().affine_inverse() * click_pos
 	return Rect2(Vector2.ZERO, node.size).has_point(local)
@@ -391,10 +373,10 @@ func _process(delta):
 
 	if text_effect == "fade":
 		_fade_timer += delta
-		# Pulse around the depth-based base alpha so far panels stay dimmer.
+		# Pulses around the depth alpha, so far panels stay dimmer.
 		modulate.a = _base_alpha * (0.5 + 0.5 * sin(_fade_timer * 3.0))
 
-	# Mild, volume-preserving squash/stretch — x and y pulse in opposition.
+	# x and y pulse in opposition, so the panel keeps its area.
 	if _has_squash:
 		var q = sin(_elapsed * _squash_freq + _squash_phase) * _squash_amp
 		scale = Vector2(1.0 + q, 1.0 - q)
@@ -413,11 +395,9 @@ func _process(delta):
 	var movement_dir = Vector2(cos(_slant_rad), sin(_slant_rad))
 	position = _start_pos + movement_dir * movement_distance
 
-# Remap normalised crossing time so the panel rushes in, eases through the centre
-# to read, then accelerates out — while still mapping [0,1] -> [0,1] (same total
-# time). The eased curve alone halts dead at centre and lingers; blending in
-# RAMP_MIN_SPEED of linear drift keeps it gliding so the slow stretch stays short
-# and the speed transitions blend smoothly.
+# Redistributes crossing time without changing it: still maps [0,1] -> [0,1].
+# The eased curve alone would halt dead at centre, so RAMP_MIN_SPEED of linear
+# drift is blended in to keep the panel gliding.
 func _ramp_remap(u: float) -> float:
 	if not _has_ramp:
 		return u

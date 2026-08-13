@@ -1,12 +1,11 @@
 class_name MinigameRunner
 extends Node
 ## Runs a trial's minigame line: title card, then a replay loop where a wrong
-## answer or timeout retries the minigame (showing its failure card) and only a
-## success advances the trial. Hides the conversation UI for the duration.
-## Reports back to ScriptDirector, the trial's flow controller.
+## answer or a timeout retries and only success advances the trial. Hides the
+## conversation UI throughout and reports back to ScriptDirector.
 
-## Minigame gameType -> script path. Adding a minigame = one entry here plus the
-## script (a MinigameBase subclass).
+## gameType -> script path. A new minigame needs one entry here plus a
+## MinigameBase subclass.
 const MINIGAME_SCRIPTS := {
 	"nonstop_debate": "res://scripts/minigames/nonstop_debate.gd",
 	"hangmans_gambit": "res://scripts/minigames/hangmans_gambit.gd",
@@ -40,7 +39,7 @@ func run(minigame: MinigameData) -> void:
 		_dialogue_label.text = ""
 	_hide_conversation_ui()
 
-	# Title card plays once; each attempt then gets its own result card.
+	# The title card plays once; every attempt gets its own result card.
 	var title_card = ResourceRegistry.instantiate("minigame_title_card")
 	add_child(title_card)
 	title_card.show_title(minigame.game_type, minigame.name)
@@ -56,8 +55,8 @@ func _start_attempt(minigame_data: MinigameData) -> void:
 		minigame.cleanup()
 		minigame.queue_free()
 
-		# An emptied influence gauge is a hard fail — the game-over screen
-		# takes over, so skip the result card and the replay.
+		# An emptied gauge is a hard fail: the game-over screen takes over,
+		# so there is no result card and no replay.
 		if not success and data.get("reason", "") == "influence_depleted":
 			return
 
@@ -82,8 +81,7 @@ func _instantiate(game_type: String) -> MinigameBase:
 	return script.new() as MinigameBase
 
 func _hide_conversation_ui() -> void:
-	# The roaming background text is part of the dialogue presentation — hide it
-	# alongside the conversation UI so minigames get a clean screen.
+	# The roaming text belongs to the dialogue presentation, so it hides too.
 	if _conversation_ui:
 		_conversation_ui_was_visible = _conversation_ui.visible
 		_conversation_ui.visible = false

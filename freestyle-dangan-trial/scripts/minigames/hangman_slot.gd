@@ -1,8 +1,7 @@
 class_name HangmanSlot
 extends PanelContainer
 ## One answer-letter slot in Hangman's Gambit. Layout and the unrevealed "_"
-## styling are scene-owned (scenes/minigames/hangman_slot.tscn); the script only
-## flips the slot to a revealed letter or an inert space.
+## are scene-owned; this only flips it to a letter or an inert space.
 
 @onready var _letter: Label = %Letter
 

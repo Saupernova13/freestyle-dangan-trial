@@ -1,13 +1,11 @@
 extends Node
-## Full-screen per-line effects (flash/fade/overlay text/shader filters). The
-## overlay rects, the filter material, and every effect animation are
-## scene-owned — see scenes/ui/screen_effects_overlay.tscn. Each clip is
-## authored at a normalized length of 1 second; this script only binds the
-## data-driven parts (color, text, peak intensity) and sets `speed_scale` so a
-## clip fills the duration the trial data asked for.
+## Full-screen per-line effects: flash, fade, overlay text, shader filters.
+## The rects, filter material and every animation are scene-owned — see
+## scenes/ui/screen_effects_overlay.tscn. Clips are authored one second long;
+## this script binds the data-driven parts and sets `speed_scale` to stretch a
+## clip to the duration the trial data asked for.
 ##
-## Each rect has its own AnimationPlayer so two effects on the same line (a
-## flash plus a filter, say) do not cancel each other.
+## Each rect owns an AnimationPlayer, so two effects on one line don't cancel.
 ##
 ## Camera effects (screen_shake, fov_pulse) stay in code: they move a Camera3D
 ## toward positions only known at runtime.
@@ -17,8 +15,7 @@ var _fade_rect: ColorRect
 var _overlay_label: Label
 var _camera: Camera3D
 
-# Full-screen filter overlay (grayscale/sepia/invert/scanlines/distortion/blur)
-# driven by shaders/screen_filter.gdshader. One rect, mode-switched.
+# One mode-switched rect, driven by shaders/screen_filter.gdshader.
 var _filter_rect: ColorRect
 var _filter_material: ShaderMaterial
 
@@ -39,8 +36,7 @@ const FILTER_MODES := {
 var _effects: Dictionary = {}
 
 func _ready():
-	# The scene renders FilterRect below Flash/Fade/Label, so filters stay under
-	# the flash and fade layers.
+	# The scene orders FilterRect below Flash/Fade/Label deliberately.
 	var overlay := ResourceRegistry.instantiate("screen_effects_overlay")
 	add_child(overlay)
 	_flash_rect = overlay.get_node("%FlashRect")
@@ -58,17 +54,15 @@ func _ready():
 	await get_tree().process_frame
 	_camera = get_viewport().get_camera_3d()
 
-## Effect vocabulary: maps editor effect names (and aliases) to handlers taking
-## (intensity: float, duration: float, color: Color). duration <= 0.0 means
-## "use this effect's default"; color comes from the editor's flash color
-## picker and defaults to white. Adding an effect = registering it here —
-## play_effects() needs no changes.
+## Editor effect names and aliases -> handlers taking
+## (intensity: float, duration: float, color: Color). A duration <= 0.0 means
+## "use this effect's default". A new effect only needs an entry here.
 func _register_effects() -> void:
 	_register(["screen_shake", "shake"],
 		func(i: float, d: float, _c: Color): screen_shake(d if d > 0.0 else 0.5, i * 0.04))
 	_register(["white_flash", "flash"],
 		func(_i: float, d: float, c: Color): color_flash(c, d if d > 0.0 else 0.3))
-	# A per-line fade must resolve on its own — fade out, hold, fade back in.
+	# A per-line fade must resolve itself: out, hold, back in.
 	_register(["screen_fade_black", "fade_black"],
 		func(_i: float, d: float, _c: Color): fade_pulse(Color.BLACK, d if d > 0.0 else 1.0))
 	_register(["screen_fade_white", "fade_white"],
@@ -152,19 +146,18 @@ func color_flash(color: Color, duration: float):
 	_flash_rect.color = Color(color.r, color.g, color.b, _flash_rect.color.a)
 	_play_for(_flash_anim, "flash", duration)
 
-## Fade to a solid color, hold, then fade back — the screen always recovers.
+## Out, hold, back in, so the screen always recovers on its own.
 func fade_pulse(color: Color, duration: float):
 	_fade_rect.color = Color(color.r, color.g, color.b, _fade_rect.color.a)
 	_fade_rect.modulate.a = 1.0
 	_play_for(_fade_anim, "fade_pulse", duration)
 
-## Fade to black, hold, and back — used by the camera director's cross dissolve.
+## Used by the camera director's cut between benches.
 func cross_dissolve(duration: float):
 	fade_pulse(Color.BLACK, duration)
 	await _fade_anim.animation_finished
 
-## Quick camera FOV punch-in/out ("pulse" editor effect). Intensity 0..1 maps
-## to up to ~12 degrees of zoom punch.
+## Intensity 0..1 maps to up to ~12 degrees of zoom punch.
 func fov_pulse(intensity: float, duration: float):
 	if not _camera:
 		return
@@ -196,15 +189,13 @@ func vignette_pulse(duration: float, intensity: float = 0.5):
 	_fade_rect.modulate.a = clampf(0.15 + intensity * 0.5, 0.0, 0.8)
 	_play_for(_fade_anim, "vignette_pulse", duration)
 
-## Run a shader filter (grayscale/sepia/invert/scanlines/distortion/blur) as a
-## pulse. The in/hold/out shape is the filter_pulse clip's `envelope` track;
-## `intensity` is the peak strength. Filters with sensible binary looks
-## (invert/scanlines) still respect intensity as strength.
+## The in/hold/out shape is the filter_pulse clip's `envelope` track;
+## `intensity` sets the peak strength.
 func play_filter(filter_name: String, intensity: float, duration: float):
 	if not _filter_material or not FILTER_MODES.has(filter_name):
 		return
 	var strength = clampf(intensity, 0.0, 1.0)
-	# Binary-look filters read badly when faint — give them a floor.
+	# These read as broken rather than subtle when faint.
 	if filter_name in ["invert", "scanlines", "sepia", "grayscale"]:
 		strength = maxf(strength, 0.6)
 

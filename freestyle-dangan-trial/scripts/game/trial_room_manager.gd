@@ -1,8 +1,7 @@
 extends Node3D
-## Composition root for the trial room. Loads the trial, wires ScriptDirector's
-## flow signals to the collaborators that render them — CharacterStage (3D bench
-## sprites), the DialogueBox (speech), and MinigameRunner (minigame lines) — and
-## owns the speaker name/portrait presentation plus the game-over hand-off.
+## Composition root for the trial room: loads the trial and wires
+## ScriptDirector's flow signals to CharacterStage, the DialogueBox and
+## MinigameRunner. Also owns speaker presentation and the game-over hand-off.
 
 @onready var trial_posts = $Trial_Posts/Trial_Benches
 @onready var name_label = get_node("../UI/Conversation_UI/Control_Center_Name_Label/Label_Center_Name")
@@ -42,10 +41,9 @@ func _ready():
 
 	add_to_group("trial_room")
 
-	# Wire script signals BEFORE loading the trial. start_trial() emits
-	# line_started / dialogue_displayed for the first line synchronously, so the
-	# listeners must already be connected — otherwise line 0 is lost and the
-	# trial appears to open on a blank dialogue box one line early.
+	# Must precede loading: start_trial() emits line_started and
+	# dialogue_displayed for line 0 synchronously, so an unconnected listener
+	# loses that line and the trial opens on a blank box.
 	ScriptDirector.line_started.connect(_on_line_started)
 	ScriptDirector.dialogue_displayed.connect(_on_dialogue_displayed)
 	ScriptDirector.narrator_displayed.connect(_on_narrator_displayed)
@@ -57,11 +55,11 @@ func _ready():
 
 func _load_and_display_trial():
 	if TrialLoader.loaded_async:
-		# Pre-loaded via loading screen — jump straight to scene setup
+		# The loading screen already loaded it; go straight to scene setup.
 		_setup_trial_room()
 		return
 
-	# Fallback synchronous path (direct launch from editor, etc.)
+	# Synchronous fallback, for a direct launch out of the editor.
 	if TrialLoader.has_meta("pending_trial_path"):
 		trial_file_path = TrialLoader.get_meta("pending_trial_path")
 		TrialLoader.remove_meta("pending_trial_path")
@@ -85,7 +83,7 @@ func _setup_trial_room() -> void:
 	ScriptDirector.start_trial()
 
 # ---------------------------------------------------------------------------
-# Speaker presentation — the conversation UI reflecting the current line.
+# Speaker presentation
 # ---------------------------------------------------------------------------
 func _set_name(character_name: String) -> void:
 	if name_label:
@@ -116,10 +114,9 @@ func _present_speaking_line(line: ScriptLine) -> void:
 	var character_id := line.character_id
 	var sprite_index := line.sprite_index
 
-	# Resolve the speaker by id — never via bench index, so a sparse cast can't
-	# redirect the lookup. Fall back to the character file for speakers without
-	# a bench (or report "???"), because leaving the previous speaker's name on
-	# screen is never acceptable.
+	# By id, never bench index: a sparse cast would redirect the lookup.
+	# Speakers with no bench fall back to the character file, or to "???" —
+	# leaving the previous speaker's name up is never acceptable.
 	var char_data: Dictionary = _stage.character_at_bench(_stage.find_bench(character_id))
 	if char_data.is_empty():
 		char_data = TrialLoader.load_character(character_id)
@@ -136,7 +133,7 @@ func _present_speaking_line(line: ScriptLine) -> void:
 	_set_name(full_name.strip_edges())
 
 	if bench_index >= 0:
-		# Always hard-cut to the speaking character first (no smooth pan)
+		# Hard cut, never a pan.
 		if camera and camera.has_method("jump_to_bench"):
 			camera.jump_to_bench(bench_index, false)
 		var camera_motion := line.camera_motion
@@ -167,10 +164,9 @@ func _on_trial_ended():
 # Called by the bench-focus camera (player free-look) and MinigameBase.
 # ---------------------------------------------------------------------------
 func on_bench_focused(bench_index: int):
-	# The bench-focus camera calls this from its own _ready(), which can run
-	# before this manager finishes _ready() and assigns _stage (there is an
-	# await'd frame first). Ignore focus events until the stage exists — the
-	# first dialogue line sets the speaker name/portrait anyway.
+	# The camera calls this from its own _ready(), which can beat this
+	# manager's (there's an awaited frame first). Ignoring focus until _stage
+	# exists is safe: the first dialogue line sets the speaker anyway.
 	if _stage == null:
 		return
 

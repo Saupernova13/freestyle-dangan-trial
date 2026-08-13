@@ -1,8 +1,8 @@
 class_name AudioStreamLoader
 extends RefCounted
-## Decodes raw audio bytes into an AudioStream, chosen by file extension.
-## Trials ship compressed audio the editor never re-encodes, so playback has to
-## build the stream at runtime rather than importing it.
+## Raw bytes -> AudioStream, picked by file extension. Trials ship compressed
+## audio the editor never re-encodes, so streams are built at runtime rather
+## than imported.
 
 static func from_bytes(bytes: PackedByteArray, extension: String) -> AudioStream:
 	if bytes.is_empty():
@@ -19,9 +19,8 @@ static func from_bytes(bytes: PackedByteArray, extension: String) -> AudioStream
 	push_warning("AudioStreamLoader: Unsupported format: ", extension)
 	return null
 
-## Minimal WAV header parse. Godot has no runtime WAV loader equivalent to the
-## mp3/ogg buffer constructors, so read channel count, sample rate and bit depth
-## straight from the header and locate the "data" chunk.
+## Godot ships no runtime WAV loader to match the mp3/ogg buffer constructors,
+## so channel count, sample rate and bit depth are read from the header here.
 static func _parse_wav(bytes: PackedByteArray) -> AudioStreamWAV:
 	if bytes.size() < 44:
 		return null

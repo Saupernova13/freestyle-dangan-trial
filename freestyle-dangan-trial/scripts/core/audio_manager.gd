@@ -29,8 +29,7 @@ func play_voice_line(audio_filename: String):
 func stop_voice():
 	voice_player.stop()
 
-## Set voice playback volume from a 0..1 linear value (silence at 0). Called by
-## Settings so the volume knob doesn't have to know the player node or decibels.
+## Linear 0..1, silent at 0. Keeps the volume knob out of decibels.
 func set_voice_volume_linear(linear: float) -> void:
 	voice_player.volume_db = linear_to_db(linear) if linear > 0.0 else -80.0
 

@@ -47,8 +47,7 @@ func start():
 	Log.info("MassPanicDebate", "%d groups, 3 speakers" % line_groups.size())
 
 func _build_overlay():
-	# Scene-driven — see scenes/minigames/mass_panic_debate_overlay.tscn.
-	# Text panels spawn dynamically into %Row0/Row1/Row2 containers.
+	# Layout is scene-owned; panels spawn into %Row0/%Row1/%Row2.
 	_overlay = ResourceRegistry.instantiate("mass_panic_debate_overlay")
 	add_child(_overlay)
 	_row_containers = [
@@ -58,9 +57,8 @@ func _build_overlay():
 	]
 	_focus_indicator = _overlay.get_node("%FocusIndicator")
 	_overlay_anim = _overlay.get_node("%AnimationPlayer")
-	# Touch path: each row container becomes its own focus target.
-	# A bare Container ignores input by default, so flip mouse_filter to STOP
-	# and listen for press/tap via _gui_input on each row.
+	# Each row becomes its own touch target. A bare Container ignores input,
+	# hence mouse_filter STOP plus a per-row _gui_input.
 	for i in range(_row_containers.size()):
 		var row: Control = _row_containers[i]
 		if row == null:

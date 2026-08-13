@@ -1,9 +1,8 @@
 shader_type canvas_item;
 
-// Nonstop-debate ambience grade: darkens the scene and pushes it toward a
-// crimson tint with an edge vignette (DebateAmbience overlay).
-// Only `intensity` is animated (AnimationPlayer show/dismiss); everything
-// else is an editor-tunable look parameter on the material.
+// Nonstop-debate ambience: darkens the scene toward crimson with an edge
+// vignette. Only `intensity` is animated, by the overlay's show/dismiss
+// clips; the rest are editor-tunable material parameters.
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
 uniform float intensity : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 tint_color : source_color = vec4(0.55, 0.03, 0.06, 1.0);

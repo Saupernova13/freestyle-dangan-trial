@@ -1,11 +1,11 @@
 class_name MinigameConfig
 extends RefCounted
 ##
-## Centralized configuration for all minigame magic numbers.
-## Use static lookups instead of hardcoding values in minigame scripts.
+## Every minigame's tuning constant, in one place. Look values up here rather
+## than hardcoding them in a minigame script.
 
 # ---------------------------------------------------------------------------
-# Spawn intervals (seconds between panel/letter/group spawns) per difficulty.
+# Seconds between spawns, per difficulty.
 # ---------------------------------------------------------------------------
 const SPAWN_INTERVALS := {
 	"nonstop_debate": {"easy": 2.8, "medium": 2.0, "hard": 1.5},
@@ -13,11 +13,11 @@ const SPAWN_INTERVALS := {
 	"mass_panic_debate": {"easy": 3.5, "medium": 3.0, "hard": 2.0},
 }
 
-# Secondary spawn intervals (white noise lines, etc.).
+# Secondary spawns, such as white noise lines.
 const NOISE_SPAWN_INTERVAL: float = 1.2
 
 # ---------------------------------------------------------------------------
-# Difficulty multipliers used for panel scroll speed, damage, etc.
+# Applied to panel scroll speed, damage, and similar.
 # ---------------------------------------------------------------------------
 const DIFFICULTY_MULTIPLIERS := {
 	"easy": 0.7,
@@ -26,7 +26,7 @@ const DIFFICULTY_MULTIPLIERS := {
 }
 
 # ---------------------------------------------------------------------------
-# Logic-Dive floating letter speeds per difficulty.
+# Logic Dive floating-letter speeds.
 # ---------------------------------------------------------------------------
 const FLOATING_LETTER_SPEEDS := {
 	"easy": {"base": 40.0, "range": 40.0},
@@ -35,7 +35,7 @@ const FLOATING_LETTER_SPEEDS := {
 }
 
 # ---------------------------------------------------------------------------
-# Screen layout (debate panel safe areas and row counts).
+# Debate panel safe areas and row counts.
 # ---------------------------------------------------------------------------
 const SCREEN_LAYOUT := {
 	"debate_safe_top": 100,
@@ -45,8 +45,8 @@ const SCREEN_LAYOUT := {
 }
 
 # ---------------------------------------------------------------------------
-# Gaps between the beats of the break sequence. The beats themselves are
-# animations: see scenes/minigames/break_shatter.tscn and evidence_card.tscn.
+# Gaps between break-sequence beats. The beats themselves are animations in
+# scenes/minigames/break_shatter.tscn and evidence_card.tscn.
 # ---------------------------------------------------------------------------
 const TIMING := {
 	"impact_frame": 0.05,
@@ -58,8 +58,8 @@ const TIMING := {
 }
 
 # ---------------------------------------------------------------------------
-# Concentrate gauge / slow-time tuning. The vignette's tint and fade timing
-# live in scenes/minigames/slow_time_vignette.tscn.
+# Concentrate gauge and slow-time. The vignette's tint and fade timing live in
+# scenes/minigames/slow_time_vignette.tscn.
 # ---------------------------------------------------------------------------
 const SLOW_TIME_SCALE: float = 0.4
 

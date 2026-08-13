@@ -1,8 +1,8 @@
 class_name CharacterLibrary
 extends RefCounted
-## Repository for the extracted trial's character data and sprite textures.
-## Data dictionaries and Images are safe to read off the main thread;
-## get_texture()/store_texture() must stay on the main thread (GPU alloc).
+## Character data and sprite textures for the extracted trial.
+## Dictionaries and Images are safe off the main thread; get_texture() and
+## store_texture() are not, because they allocate on the GPU.
 
 var _characters_dir: String
 var _data_cache: Dictionary = {}     # char_id -> character dict (+ folder_path)
@@ -15,9 +15,8 @@ func clear() -> void:
 	_data_cache.clear()
 	_texture_cache.clear()
 
-## Character dictionary for `character_id`, or an empty dict if not found.
-## Character folders carry no id in their name, so the first lookup scans every
-## folder's character.json; hits are cached.
+## Empty dict when not found. Folder names carry no id, so the first lookup
+## scans every character.json; hits are cached.
 func get_character(character_id: String) -> Dictionary:
 	if character_id.is_empty() or character_id == "null":
 		return {}
@@ -48,7 +47,7 @@ func get_character(character_id: String) -> Dictionary:
 	push_warning("Character not found: " + character_id)
 	return {}
 
-## Absolute path to sprite_NN.png for the character, or "" if missing.
+## "" when the sprite is missing.
 func sprite_path(character_id: String, sprite_index: int) -> String:
 	var char_data := get_character(character_id)
 	var folder_path: String = char_data.get("folder_path", "")
@@ -63,8 +62,7 @@ func load_image(character_id: String, sprite_index: int) -> Image:
 		return null
 	return Image.load_from_file(path)
 
-## Cached ImageTexture for a sprite, loading from disk on first use.
-## Returns null when the sprite is missing.
+## Loads from disk on first use, then caches. Null when the sprite is missing.
 func get_texture(character_id: String, sprite_index: int) -> ImageTexture:
 	var key := _key(character_id, sprite_index)
 	if _texture_cache.has(key):

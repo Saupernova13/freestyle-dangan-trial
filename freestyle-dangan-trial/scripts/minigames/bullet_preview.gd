@@ -1,9 +1,8 @@
 class_name BulletPreview
 extends CanvasLayer
 ## Pre-round overlay listing the truth bullets in play. Layout and the
-## fade-in/hold/fade-out are scene-owned (scenes/minigames/bullet_preview.tscn);
-## show_bullets() fills the grid with one cell per bullet, plays "show", and
-## frees itself. Await the call to block until it's done.
+## fade/hold/fade are scene-owned. show_bullets() fills the grid, plays
+## "show", then frees itself; await it to block until that finishes.
 
 @onready var _grid: GridContainer = %Grid
 @onready var _anim: AnimationPlayer = %AnimationPlayer

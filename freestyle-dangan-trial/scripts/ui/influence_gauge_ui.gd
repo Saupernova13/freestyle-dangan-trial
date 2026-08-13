@@ -1,8 +1,8 @@
 extends CanvasLayer
 
-## Influence (HP) gauge HUD. Scene-driven — see scenes/ui/influence_gauge.tscn.
-## The scene supplies the node tree; this script handles signal hookup, fill
-## tween, and triggers AnimationPlayer animations for the damage flash.
+## Influence (HP) gauge HUD; the node tree lives in
+## scenes/ui/influence_gauge.tscn. This script wires signals, tweens the fill,
+## and triggers the damage-flash animation.
 
 @export var bar_max_width: float = 300.0
 @export var color_full: Color = Color(0.9, 0.2, 0.5, 1.0)
@@ -28,9 +28,8 @@ func hide_gauge():
 func _on_influence_changed(current: float, maximum: float):
 	var pct = current / maximum if maximum > 0 else 0.0
 	var target_width = bar_max_width * pct
-	# Fill is a dynamic target — Tween stays in code (AnimationPlayer animations
-	# have fixed end values). The static animations live in the scene's
-	# AnimationPlayer; this is the one piece that can't.
+	# The one animation that can't be scene-owned: AnimationPlayer clips have
+	# fixed end values, and the fill target is dynamic.
 	var tween = create_tween()
 	tween.tween_property(bar_fill, "size:x", target_width, 0.3).set_ease(Tween.EASE_OUT)
 

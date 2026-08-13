@@ -1,10 +1,9 @@
 class_name MobileToast
 extends CanvasLayer
-## Top-of-screen toast for status / error messages, on desktop and mobile — a
-## visible feedback channel on Android where push_error()/print() aren't seen.
-## Scene-owned — see scenes/ui/mobile_toast.tscn (layout + fade animations). The
-## script only fills in the text, tints for the error/info state, and runs the
-## fade → hold → fade sequence.
+## Top-of-screen toast for status and error messages. It exists because on
+## Android nobody ever sees push_error() or print().
+## Layout and fades are scene-owned in scenes/ui/mobile_toast.tscn; the script
+## fills in text, tints for error or info, and runs the sequence.
 
 @export var info_bg: Color = Color(0.05, 0.1, 0.2, 0.92)
 @export var info_border: Color = Color(0.4, 0.7, 1.0)
@@ -17,9 +16,8 @@ const _DEFAULT_DURATION: float = 3.0
 @onready var _label: Label = %Label
 @onready var _anim: AnimationPlayer = %AnimationPlayer
 
-## Spawn a toast inside `host`. Returns the instance (self-frees after `duration`)
-## so the caller can dismiss it early. Not named show() — CanvasLayer.show() is a
-## built-in, and a static override would shadow it.
+## Returns the instance, which self-frees after `duration`, so the caller can
+## dismiss it early. Not named show(): that would shadow CanvasLayer.show().
 ##   MobileToast.show_message(self, "Trial file failed to load", true)
 static func show_message(
 	host: Node, message: String, is_error: bool = false, duration: float = _DEFAULT_DURATION

@@ -1,8 +1,8 @@
 class_name MinigameData
 extends RefCounted
-## One minigame definition from trial.json's minigames catalog. Common fields
-## are typed; type_specific stays a Dictionary because its shape belongs to
-## each minigame implementation (and its editor view), not to the loader.
+## One entry from trial.json's minigames catalog. Common fields are typed;
+## type_specific stays a Dictionary, because its shape belongs to each
+## minigame rather than to the loader.
 
 var game_id: String = ""
 var name: String = ""

@@ -1,7 +1,7 @@
 extends CanvasLayer
-## Settings overlay. Fully scene-owned — see scenes/ui/settings_menu.tscn for the
-## rows, styling, and open/close animations. This script only binds the controls
-## to Settings values and mirrors slider values into their readout labels.
+## Settings overlay. Rows, styling and the open/close animations are all in
+## scenes/ui/settings_menu.tscn; this binds controls to Settings and mirrors
+## slider values into their readout labels.
 
 signal closed
 

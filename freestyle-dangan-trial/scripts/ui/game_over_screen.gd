@@ -1,8 +1,7 @@
 extends CanvasLayer
 
-## Game over overlay. Scene-driven — see scenes/ui/game_over_screen.tscn.
-## Edit the button styles, layout, title text, and show/dismiss animations
-## directly in the scene file.
+## Game over overlay. Button styles, layout, title text and the show/dismiss
+## animations are all editable in scenes/ui/game_over_screen.tscn.
 
 signal retry_requested
 signal return_to_menu

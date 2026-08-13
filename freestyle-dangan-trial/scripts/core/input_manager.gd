@@ -1,8 +1,7 @@
 extends Node
 ##
-## Centralized input detection. Emits semantic signals that game systems
-## (ScriptDirector, minigames, HUD) react to. Avoid adding _input() handlers
-## in other scripts — extend this autoload with a new signal instead.
+## Centralized input detection, emitting semantic signals for the rest of the
+## game. Don't add _input() handlers elsewhere; add a signal here instead.
 
 # Aim / shoot / focus (minigame inputs)
 signal shoot_pressed(position: Vector2)
@@ -45,7 +44,7 @@ func _handle_motion(event: InputEvent) -> void:
 func _handle_keyboard(event: InputEvent) -> void:
 	if not (event is InputEventKey):
 		return
-	# CTRL modifier — fast-forward / skip.
+	# CTRL is fast-forward / skip.
 	if event.keycode == KEY_CTRL:
 		var pressed: bool = event.pressed
 		if pressed != _skip_held:
@@ -92,8 +91,8 @@ func _handle_touch(event: InputEvent) -> void:
 	if event.pressed:
 		cursor_position = event.position
 		var vp = get_viewport().get_visible_rect().size
-		# Wide horizontal band → minigame shoot. Narrow center band also fires
-		# advance_pressed so touch users can step through dialogue.
+		# The wide band shoots; the narrow centre also advances, so touch users
+		# can step through dialogue.
 		if event.position.x > vp.x * 0.15 and event.position.x < vp.x * 0.85:
 			shoot_pressed.emit(event.position)
 		if event.position.x > vp.x / 3.0 and event.position.x < vp.x * 2.0 / 3.0:
@@ -101,8 +100,7 @@ func _handle_touch(event: InputEvent) -> void:
 	else:
 		_set_focus(false)
 
-## Public API — used by MobileHud (and any future remote-control surface) to
-## drive focus mode through the same code path as right-click / F.
+## Lets MobileHud drive focus mode down the same path as right-click or F.
 func toggle_focus() -> void:
 	set_focus(not is_focus_active)
 

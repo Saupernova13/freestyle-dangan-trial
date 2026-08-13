@@ -4,10 +4,9 @@ extends Control
 ## Scrolling road decoration drawn behind LogicDive minigame.
 ## Attached as a node in scenes/minigames/logic_dive_overlay.tscn.
 ##
-## `scroll_phase` advances 0 -> 1 over one dash period, driven by the looping
-## road_scroll animation in that scene. Because the phase is normalized, the
-## loop stays seamless no matter what dash_length and gap_length are set to;
-## change the animation's length to change the scroll speed.
+## `scroll_phase` runs 0 -> 1 over one dash period, driven by that scene's
+## looping road_scroll animation. Being normalized, it stays seamless at any
+## dash_length or gap_length; change the clip's length to change the speed.
 
 @export var dash_length: float = 40.0
 @export var gap_length: float = 30.0

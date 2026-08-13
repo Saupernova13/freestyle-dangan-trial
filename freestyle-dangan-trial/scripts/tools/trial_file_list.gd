@@ -1,8 +1,7 @@
 class_name TrialFileList
 extends CanvasLayer
-## Fallback trial chooser: a simple list of found .drtrial files, shown only on
-## mobile when the native file dialog is unavailable. Layout is scene-owned
-## (scenes/ui/trial_file_list.tscn); populate() adds one row button per file.
+## Fallback trial chooser, shown only on mobile when the native file dialog is
+## unavailable. Layout is scene-owned; populate() adds one row per file.
 
 signal file_chosen(path: String)
 signal cancelled

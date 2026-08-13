@@ -1,8 +1,8 @@
 class_name UITheme
 extends RefCounted
-## Shared colors/sizes for the small bits of runtime state-coloring that aren't
-## scene-authored: the tint passed to spawned VFX scenes, timer warning tints,
-## and the Hangman space width. Editable UI styling lives in the .tscn scenes.
+## The few colors and sizes that can't be scene-authored: tints handed to
+## spawned VFX, timer warning colors, the Hangman space width. Everything
+## else styling-related belongs in a .tscn.
 
 const COLOR_ACCENT_GOLD := Color(1.0, 0.855, 0.039)
 const COLOR_CORRECT := Color(0.3, 1.0, 0.5)

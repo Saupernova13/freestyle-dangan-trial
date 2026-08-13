@@ -1,9 +1,7 @@
 extends Control
 
-## Small "+10" / "-10" feedback popup that drifts upward and fades.
-## Scene-driven — see scenes/effects/drift_popup.tscn. Edit the drift distance,
-## timing, and font in the scene; the caller only supplies position, text, and
-## tint.
+## Small "+10" / "-10" popup that drifts up and fades. Drift distance, timing
+## and font are scene-owned; the caller supplies position, text and tint.
 
 func _ready():
 	var anim: AnimationPlayer = %AnimationPlayer

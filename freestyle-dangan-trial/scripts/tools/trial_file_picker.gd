@@ -1,9 +1,8 @@
 extends Node
 
-## File picker for .drtrial files.
-## Desktop: uses Godot's FileDialog node.
-## Android: uses DisplayServer.file_dialog_show (native SAF picker, Godot 4.3+).
-## Falls back to a custom file-list browser only if the native dialog is unavailable.
+## File picker for .drtrial files: Godot's FileDialog on desktop, the native
+## SAF picker on Android. A custom file-list browser is the last resort, used
+## only when the native dialog is unavailable.
 
 signal file_selected(path: String)
 signal cancelled
@@ -19,22 +18,18 @@ func _ready():
 
 func open_picker():
 	if _is_mobile:
-		# Belt and suspenders: SAF normally grants per-URI temp permission
-		# without READ_EXTERNAL_STORAGE, but some Android versions/providers
-		# require the underlying permission to actually read the file. Ask
-		# every time the picker is opened — Android only re-prompts if the
-		# user hasn't already decided.
+		# SAF usually grants per-URI permission without READ_EXTERNAL_STORAGE,
+		# but some versions and providers still need it. Asking every open is
+		# safe: Android only re-prompts if the user hasn't decided yet.
 		_request_storage_permissions()
 		_open_mobile_picker()
 	else:
 		_open_desktop_picker()
 
 func _request_storage_permissions() -> void:
-	# OS.request_permissions() asks for everything declared in the manifest
-	# that the app doesn't already have. Returns immediately; user response
-	# arrives via OS.request_permissions_result, which we don't need to
-	# block on — the picker dialog won't actually appear until any modal
-	# permission prompt is dismissed.
+	# Returns immediately; the result arrives via OS.request_permissions_result.
+	# No need to await it — the picker can't appear until the modal prompt is
+	# dismissed anyway.
 	if OS.has_method("request_permissions"):
 		var granted = OS.request_permissions()
 		Log.info("TrialFilePicker", "Requested permissions, granted=%s" % str(granted))
@@ -48,7 +43,7 @@ func _open_desktop_picker():
 	_file_dialog.size = Vector2(800, 500)
 	_file_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_MAIN_WINDOW_SCREEN
 
-	# Prefer the scripter/output directory if it exists (dev convenience), else desktop
+	# Prefer the scripter output directory when present; it's a dev convenience.
 	var scripter_output = OS.get_user_data_dir().path_join("../../../scripter/output")
 	if DirAccess.dir_exists_absolute(scripter_output):
 		_file_dialog.current_dir = scripter_output
@@ -64,8 +59,7 @@ func _open_desktop_picker():
 	_file_dialog.popup_centered()
 
 func _open_mobile_picker():
-	# Godot 4.3+ exposes the platform's native file dialog via DisplayServer.
-	# On Android this uses the Storage Access Framework — no permissions needed.
+	# On Android this routes through SAF, so it needs no storage permission.
 	if DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):
 		var filters = PackedStringArray(["*.drtrial,*.json ; Trial Files"])
 		var err = DisplayServer.file_dialog_show(
@@ -83,13 +77,12 @@ func _open_mobile_picker():
 			cancelled.emit()
 		return
 
-	# Last-resort fallback: scan known directories. Likely returns nothing on
-	# Android 11+ due to scoped storage, but keeps older devices and other
-	# mobile targets working.
+	# Scoped storage means this usually finds nothing on Android 11+, but it
+	# keeps older devices and other mobile targets working.
 	_open_legacy_directory_scan()
 
-## Last error context set by _copy_to_user_dir() so the caller can surface a
-## specific diagnostic to the user (path attempted + Godot error code).
+## Set by _copy_to_user_dir(): the path attempted plus the Godot error code,
+## so the caller can show something specific.
 var _last_copy_error_detail: String = ""
 
 func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, _filter_index: int):
@@ -107,16 +100,14 @@ func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, _
 		return
 	file_selected.emit(local_copy)
 
-## Copies the picked file (which may be a content:// URI on Android) into
-## user://imported_trial.drtrial so subsequent reads work even if the original
-## URI permission expires. Returns the writable path, or "" on failure and
-## sets _last_copy_error_detail with a user-facing diagnostic.
+## The pick may be a content:// URI whose permission expires, so it is copied
+## into user://imported_trial.drtrial first. Returns the writable path, or ""
+## on failure with _last_copy_error_detail set.
 func _copy_to_user_dir(source_path: String) -> String:
 	_last_copy_error_detail = ""
 
-	# Primary path: get_file_as_bytes() handles Android content URIs cleanly
-	# in Godot 4.3+. Falls back to FileAccess.open() chunked-read if that
-	# returns empty (older drivers / non-standard providers).
+	# get_file_as_bytes() handles Android content URIs; the chunked read below
+	# covers older drivers and non-standard providers that return empty.
 	var data := FileAccess.get_file_as_bytes(source_path)
 	var err := FileAccess.get_open_error()
 	if data.is_empty():
@@ -145,8 +136,7 @@ func _copy_to_user_dir(source_path: String) -> String:
 	dst.store_buffer(data)
 	dst.close()
 
-	# Verify the file is readable and non-empty after writing — protects against
-	# silent failures where the write reports success but the file ends up empty.
+	# A write can report success and still leave the file empty.
 	if not FileAccess.file_exists(IMPORTED_TRIAL_PATH):
 		_last_copy_error_detail = "imported file missing after copy"
 		push_error("Imported file missing after copy: %s" % IMPORTED_TRIAL_PATH)

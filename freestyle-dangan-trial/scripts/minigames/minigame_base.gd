@@ -1,9 +1,8 @@
 class_name MinigameBase
 extends Node
 ##
-## Base class for all minigames. Handles common lifecycle (initialize/start/
-## pause/resume/cleanup), shared HUD setup, managed signal connections, and
-## the standard influence/timer/concentrate result paths.
+## Base class for all minigames: lifecycle, shared HUD setup, managed signal
+## connections, and the standard influence/timer/concentrate result paths.
 
 signal minigame_completed(success: bool, result_data: Dictionary)
 signal state_changed(new_state: State)
@@ -19,8 +18,7 @@ enum HudComponent {
 	TRUTH_BULLET_SELECTOR,
 }
 
-## How each HudComponent is built and torn down. Adding a component = one
-## entry here plus its scene in ResourceRegistry.
+## A new component needs one entry here plus its scene in ResourceRegistry.
 const _HUD_SPECS := {
 	HudComponent.INFLUENCE_GAUGE: {"scene": "influence_gauge", "show": "show_gauge", "hide": "hide_gauge"},
 	HudComponent.CONCENTRATE_GAUGE: {"scene": "concentrate_gauge", "show": "show_gauge", "hide": "hide_gauge"},
@@ -36,19 +34,17 @@ var time_limit: float = 60.0
 var time_remaining: float = 60.0
 var state: State = State.IDLE
 
-# HUD components keyed by HudComponent enum, populated by setup_standard_ui().
+# Keyed by HudComponent; populated by setup_standard_ui().
 var hud: Dictionary = {}
 
 var _timer_node: Timer
 var _has_finished: bool = false
-# (signal, callable) pairs registered via connect_managed(), auto-disconnected
-# in cleanup() so a forgotten teardown can't leak connections.
+# (signal, callable) pairs from connect_managed(), disconnected in cleanup()
+# so a forgotten teardown can't leak connections.
 var _managed_signal_connections: Array = []
-# Active mobile touch HUD, when one was spawned for this minigame.
 var _mobile_hud: Node = null
 
-# Backwards-compat read-only mirror of `state == ACTIVE`. Existing minigames
-# read `is_active` in _process(); keep the property name working.
+# Kept because existing minigames read `is_active` in _process().
 var is_active: bool:
 	get: return state == State.ACTIVE
 
@@ -85,8 +81,7 @@ func cleanup():
 # ---------------------------------------------------------------------------
 # Standard HUD setup
 # ---------------------------------------------------------------------------
-## Instantiate and parent the requested HUD components. Stored in `hud` keyed
-## by the HudComponent enum value, and torn down automatically by cleanup().
+## Instantiates the requested components into `hud`; cleanup() tears them down.
 ##   var ui = setup_standard_ui([HudComponent.INFLUENCE_GAUGE, HudComponent.TIMER_DISPLAY])
 func setup_standard_ui(components: Array) -> Dictionary:
 	for component in components:
@@ -94,8 +89,7 @@ func setup_standard_ui(components: Array) -> Dictionary:
 		if spec.is_empty():
 			continue
 		var node = _add_hud(component, spec["scene"], spec["show"])
-		# The timer is the one component with extra wiring: it drives the
-		# minigame's time limit rather than just displaying state.
+		# The timer is the one component that drives state, not just shows it.
 		if component == HudComponent.TIMER_DISPLAY and node:
 			connect_managed(node.time_expired, _on_time_expired)
 			if time_limit > 0:
@@ -103,11 +97,8 @@ func setup_standard_ui(components: Array) -> Dictionary:
 	_maybe_spawn_mobile_hud(components)
 	return hud
 
-## On mobile, spawn the touch HUD with buttons mirroring whatever keyboard /
-## mouse actions the requested components would otherwise need.
-##   - bullet_cycle: shown whenever the truth-bullet selector is active
-##   - focus: shown whenever the crosshair is active
-##   - slow_time: opted in by subclasses via wants_mobile_slow_time()
+## The touch HUD mirrors whatever keyboard/mouse actions the requested
+## components would otherwise need.
 func _maybe_spawn_mobile_hud(components: Array) -> void:
 	if not OS.has_feature("mobile"):
 		return
@@ -122,8 +113,7 @@ func _maybe_spawn_mobile_hud(components: Array) -> void:
 		"slow_time": wants_mobile_slow_time(),
 	})
 
-## Override in subclasses that poll Input.is_action_pressed("debate_slow_time")
-## — currently just NonstopDebate.
+## Override in subclasses that poll the "debate_slow_time" action.
 func wants_mobile_slow_time() -> bool:
 	return false
 
@@ -155,8 +145,8 @@ func _teardown_standard_ui():
 
 # ---------------------------------------------------------------------------
 # Managed signal connections — auto-disconnected by cleanup().
-# Why: hand-rolled is_connected()/disconnect() chains were repeated in every
-# minigame and easy to forget, risking leaked callbacks across plays.
+# A forgotten disconnect leaks callbacks across plays, so registration is
+# centralised here instead of hand-rolled per minigame.
 # ---------------------------------------------------------------------------
 func connect_managed(sig: Signal, callable: Callable, flags: int = 0) -> void:
 	if not sig.is_connected(callable):
@@ -202,8 +192,7 @@ func _finish(success: bool, data: Dictionary = {}):
 	if _has_finished:
 		return
 	_has_finished = true
-	# Fall back to the minigame-level fail comment when the subclass didn't
-	# supply a per-line one — so every minigame's result card can show text.
+	# Without a fallback the result card would come up blank.
 	if not success and str(data.get("failComment", "")).is_empty():
 		if minigame_data and not minigame_data.fail_comment.is_empty():
 			data["failComment"] = minigame_data.fail_comment
@@ -222,14 +211,12 @@ func get_difficulty_multiplier() -> float:
 	return MinigameConfig.get_difficulty_multiplier(difficulty)
 
 # ---------------------------------------------------------------------------
-# Shared helper: focus the trial-room camera on a speaker bench.
-# Used by NonstopDebate, MassPanicDebate, etc.
+# Focus the trial-room camera on a speaker bench.
 #
-# NOTE: This is CAMERA FOCUS, not a "spotlight". A spotlight (environment
-# darkens, light source aimed at a character) is a separate, NOT YET
-# IMPLEMENTED visual effect — the editor's `characterSpotlight` flag is
-# reserved for it and must never gate camera focus. The camera should always
-# follow whoever is currently speaking.
+# NOTE: this is CAMERA FOCUS, not a spotlight. The spotlight (darkened
+# environment, light aimed at a character) is a separate and NOT YET
+# IMPLEMENTED effect; the editor's `characterSpotlight` flag is reserved for
+# it and must never gate camera focus, which always follows the speaker.
 # ---------------------------------------------------------------------------
 func focus_camera_on_character(char_id: String) -> void:
 	var trial_room = get_tree().get_first_node_in_group("trial_room")

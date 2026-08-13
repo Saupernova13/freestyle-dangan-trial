@@ -1,14 +1,12 @@
 class_name TrialValidator
 extends RefCounted
-## Structural validation for trial.json. The normative contract lives in
-## schema/trial.schema.json at the repo root; keep this file and the editor's
-## js/core/trialSchema.js in sync with it. CI cross-checks all three against
-## the shared fixture in tests/fixtures/minimal-trial/.
+## Structural validation for trial.json. schema/trial.schema.json is normative;
+## this file and the editor's js/core/trialSchema.js must track it, and CI
+## cross-checks all three against tests/fixtures/minimal-trial/.
 ##
-## The engine validates less strictly than the editor: it checks only what it
-## needs to play the trial, so imperfect files stay playable. Per-line content
-## problems (unknown type, empty dialogue) degrade at runtime with warnings
-## instead of failing the load.
+## Deliberately laxer than the editor: it checks only what playback needs, so
+## imperfect files stay playable. Per-line problems warn at runtime rather
+## than failing the load.
 
 const SUPPORTED_FORMAT_MAJOR := 4
 const LINE_TYPES := ["speaking", "narrator", "minigame"]
@@ -39,8 +37,8 @@ static func check_version(data: Dictionary) -> String:
 	return ""
 
 
-## Structural essentials only; deep typeSpecific shapes are each minigame's
-## concern. Returns human-readable errors; empty means loadable.
+## Essentials only — typeSpecific shapes are each minigame's concern.
+## Returns human-readable errors; empty means loadable.
 static func validate(data: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
 	if not data.get("trialName") is String:

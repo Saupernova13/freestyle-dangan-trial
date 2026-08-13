@@ -1,9 +1,8 @@
 class_name EvidenceCard
 extends PanelContainer
-## The "TRUTH BULLET" card shown when the player breaks a statement. Layout,
-## styling and the appear/dismiss animations are scene-owned
-## (scenes/minigames/evidence_card.tscn); this script only binds the name and
-## triggers the animations.
+## The "TRUTH BULLET" card shown on a break. Layout, styling and the
+## appear/dismiss animations are scene-owned; this binds the name and plays
+## the clips.
 
 @onready var _name: Label = %Name
 @onready var _anim: AnimationPlayer = %AnimationPlayer

@@ -1,8 +1,8 @@
 class_name ScriptLine
 extends RefCounted
-## One script line from trial.json, parsed once at load into typed fields.
-## The JSON shape is defined by schema/trial.schema.json; all key access and
-## default handling lives here so consumers never touch raw Dictionaries.
+## One trial.json script line, parsed once at load into typed fields. Every
+## key access and default lives here, so consumers never touch raw
+## Dictionaries. The JSON shape is schema/trial.schema.json.
 
 const TYPE_SPEAKING := "speaking"
 const TYPE_NARRATOR := "narrator"
@@ -16,8 +16,7 @@ var dialogue: String = ""
 var text: String = ""
 var audio_file: String = ""
 var minigame_id: String = ""
-## 1-based sprite selector; values below 1 are clamped here so no consumer
-## needs its own coercion.
+## 1-based. Clamped here, so no consumer needs its own coercion.
 var sprite_index: int = 1
 var camera_motion: Dictionary = {}  # consumed by CameraDirector as-is
 var special_effects: Dictionary = {}  # {"effects": [...]}, consumed by ScreenEffects
@@ -25,8 +24,7 @@ var highlights: Array = []
 var dialogue_box_style: Dictionary = {}
 
 
-## JSON null-safety: a "key": null in trial.json comes through as a Variant
-## null, and str(null) would yield "<null>". These force clean defaults.
+## A `"key": null` arrives as a Variant null, and str(null) gives "<null>".
 static func _s(v: Variant) -> String:
 	return v if v is String else ""
 
@@ -57,7 +55,6 @@ static func from_dict(d: Dictionary) -> ScriptLine:
 	return line
 
 
-## Narrator display text falls back to `dialogue` (legacy files authored the
-## narration there before `text` existed).
+## Falls back to `dialogue`: legacy files put narration there before `text`.
 func display_text() -> String:
 	return text if not text.is_empty() else dialogue

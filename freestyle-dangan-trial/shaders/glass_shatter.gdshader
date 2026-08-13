@@ -1,12 +1,12 @@
 shader_type canvas_item;
 
-// Glass shatter for the BREAK! sequence (BreakShatter overlay).
-// The frozen screenshot is split into jittered-grid voronoi shards. Two
-// animated uniforms drive the whole effect from an AnimationPlayer:
-//   crack_progress  0..1  crack lines grow outward from impact_center
-//   shatter_progress 0..1 shards fly out, rotate and fall, leaving
-//                         transparency (the BlackFill behind shows through)
-// Everything else is an editor-tunable pattern/look parameter.
+// Glass shatter for the BREAK! sequence. The frozen screenshot is split into
+// jittered-grid voronoi shards. An AnimationPlayer drives the whole effect
+// through two uniforms:
+//   crack_progress   0..1  crack lines grow outward from impact_center
+//   shatter_progress 0..1  shards fly out, rotate and fall, leaving the
+//                          BlackFill behind them visible
+// Everything else is an editor-tunable look parameter.
 uniform float crack_progress : hint_range(0.0, 1.0) = 0.0;
 uniform float shatter_progress : hint_range(0.0, 1.0) = 0.0;
 uniform int cell_count : hint_range(3, 20) = 8;
@@ -19,9 +19,8 @@ uniform float fly_distance : hint_range(0.0, 6.0) = 1.8;
 uniform float rotation_amount : hint_range(0.0, 3.14) = 1.1;
 uniform float gravity_pull : hint_range(0.0, 3.0) = 0.5;
 uniform float stagger : hint_range(0.0, 0.9) = 0.4;
-// Shards start fading at this fraction of their flight. Keep it low enough
-// that shards are invisible before their offset exceeds the 5x5 candidate
-// window (~2 cells with the default fly_distance), or they pop out instead
+// Keep low enough that a shard is invisible before its offset leaves the 5x5
+// candidate window (~2 cells at the default fly_distance), or it pops instead
 // of fading.
 uniform float fade_start : hint_range(0.0, 1.0) = 0.45;
 
@@ -73,8 +72,8 @@ void fragment() {
 	max_r = max(max_r, distance(impact_p, grid_max));
 
 	bool flying = shatter_progress > 0.0001;
-	// At rest every pixel belongs to its own voronoi cell (3x3 window); in
-	// flight a shard from up to 2 cells away may have moved over this pixel.
+	// At rest a 3x3 window suffices; in flight a shard from 2 cells away can
+	// have moved over this pixel.
 	int search = flying ? 2 : 1;
 
 	vec4 out_col = vec4(0.0);
@@ -142,8 +141,7 @@ void fragment() {
 			float ring = crack_progress * max_r * 1.15;
 			float active = smoothstep(ring, ring - crack_feather, distance(f, impact_p));
 			float line = 1.0 - smoothstep(crack_width * 0.5, crack_width, border);
-			// Darkening halo sits beside the line, never on it, so the crack
-			// itself stays bright instead of greying out.
+			// Beside the line, never on it, so the crack stays bright.
 			float halo = clamp((1.0 - smoothstep(crack_width, crack_width * 2.5, border)) - line, 0.0, 1.0);
 			col *= 1.0 - 0.35 * active * halo;
 			col = mix(col, crack_color.rgb, active * line * crack_color.a);

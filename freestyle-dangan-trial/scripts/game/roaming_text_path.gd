@@ -1,55 +1,53 @@
 extends Path2D
-## Roaming background text: builds a viewport-fitting oval path and spawns one
-## roaming_char scene per character of the JSON-configured text. Character count
-## is data-driven, so the characters are instanced rather than authored one by
-## one — but each is a scene: edit the font, size, color, z-index, and the
-## looping orbit animation in scenes/ui/roaming_char.tscn.
-## The oval curve itself is procedural because it refits the live viewport.
+## Roaming background text: an oval path fitted to the viewport, with one
+## roaming_char scene per character of the JSON-configured text. The count is
+## data-driven, so characters are instanced rather than authored — but each is
+## still a scene: edit font, size, color, z-index and the orbit animation in
+## scenes/ui/roaming_char.tscn. Only the curve is procedural, because it has to
+## refit the live viewport.
 
-## Path to the JSON file containing configuration paths (paths.json)
+## JSON file holding the configuration paths.
 @export_file("*.json") var paths_config_file: String = "res://data/paths.json"
 
-## Spacing between characters as a percentage of the total path length (0.0 to 1.0)
-## Lower values bring letters closer together
+## Character spacing, as a fraction of total path length. Lower packs tighter.
 @export_range(0.001, 0.2, 0.001) var character_spacing: float = 0.015
 
-## Enable or disable the animation of text moving along the path
+## Animate the text along the path.
 @export var animate: bool = true
 
-## Duration in seconds for one complete loop around the path
+## Seconds per complete loop.
 @export_range(1.0, 60.0, 0.1) var animation_speed: float = 20.0
 
-## Padding from the left edge of the viewport (positive = inset, negative = expand beyond viewport)
+## Left inset. Negative values expand past the viewport edge.
 @export_range(-500.0, 500.0, 1.0) var padding_left: float = 185.0
 
-## Padding from the right edge of the viewport (positive = inset, negative = expand beyond viewport)
+## Right inset. Negative values expand past the viewport edge.
 @export_range(-500.0, 500.0, 1.0) var padding_right: float = 275.0
 
-## Padding from the top edge of the viewport (positive = inset, negative = expand beyond viewport)
+## Top inset. Negative values expand past the viewport edge.
 @export_range(-500.0, 500.0, 1.0) var padding_top: float = -50.0
 
-## Padding from the bottom edge of the viewport (positive = inset, negative = expand beyond viewport)
+## Bottom inset. Negative values expand past the viewport edge.
 @export_range(-500.0, 500.0, 1.0) var padding_bottom: float = -200.0
 
-## Direction of rotation (true = clockwise, false = counter-clockwise)
+## Rotate clockwise rather than counter-clockwise.
 @export var clockwise: bool = false
 
-## Starting position on the path (0.0 = right, 0.25 = bottom, 0.5 = left, 0.75 = top)
+## Start point on the path: 0 right, 0.25 bottom, 0.5 left, 0.75 top.
 @export_range(0.0, 1.0, 0.01) var start_position: float = 0.25
 
-## Z-index for rendering order (lower values render behind everything)
+## Render order; lower sits behind everything.
 @export_range(-1000, 1000, 1) var render_z_index: int = -1000
 
-## Draw the path outline for visual debugging
+## Draw the path outline, for debugging.
 @export var draw_path: bool = false
 
-## Color of the drawn path outline
+## Color of the debug outline.
 @export var path_color: Color = Color(1.0, 1.0, 1.0, 0.3)
 
-## Width of the drawn path outline in pixels
+## Width of the debug outline, in pixels.
 @export_range(1.0, 10.0, 0.5) var path_width: float = 2.0
 
-# Internal variables
 var character_nodes: Array[PathFollow2D] = []
 var text_config_path: String = ""
 
@@ -83,8 +81,7 @@ func load_paths_config():
 		push_error("Paths config missing 'text_config_path' field")
 		text_config_path = "res://data/curved_text.json"
 
-## Rebuild the oval curve to fit the current viewport. Runs on ready and on
-## every resize.
+## Runs on ready and on every viewport resize.
 func update_oval_path():
 	position = Vector2.ZERO
 	var viewport_size = get_viewport_rect().size
@@ -101,8 +98,7 @@ func update_oval_path():
 
 	var new_curve = Curve2D.new()
 
-	# 0.551915 is the cubic-bezier handle length that best approximates a quarter
-	# circle; the four control points below trace the oval clockwise from the right.
+	# 0.551915 is the cubic-bezier handle length that best fits a quarter circle.
 	var handle_length = 0.551915
 
 	new_curve.add_point(  # right (0.0)
@@ -134,8 +130,7 @@ func update_oval_path():
 	curve = new_curve
 	queue_redraw()
 
-## Rebuild one PathFollow2D + Label per character of the configured text, spaced
-## evenly along the curve and centered on start_position.
+## Characters are spaced evenly along the curve, centred on start_position.
 func generate_curved_text():
 	for node in character_nodes:
 		node.queue_free()

@@ -4,8 +4,7 @@ signal settings_changed
 
 const SAVE_PATH = "user://settings.cfg"
 
-# Bounds for the UI Scale option so no value can push the interface off-screen
-# or shrink it into illegibility.
+# Bounds the UI Scale option, so it can't go off-screen or illegibly small.
 const UI_SCALE_MIN := 0.75
 const UI_SCALE_MAX := 2.0
 
@@ -79,9 +78,8 @@ func _apply_and_save():
 func _apply_all():
 	if AudioManager:
 		AudioManager.set_voice_volume_linear(voice_volume)
-	# Extra uniform UI zoom on top of the window stretch (canvas_items/expand,
-	# which already fills the window on resize). This factor lets the player
-	# nudge overall UI size independently of the window.
+	# Sits on top of the canvas_items/expand stretch, which already fills the
+	# window, so the player can size the UI independently of it.
 	var window := get_window()
 	if window:
 		window.content_scale_factor = ui_scale

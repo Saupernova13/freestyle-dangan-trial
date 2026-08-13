@@ -1,8 +1,7 @@
 extends CanvasLayer
 
-## Crosshair / reticle HUD. Scene-driven — see scenes/ui/crosshair.tscn.
-## The reticle visual is drawn by CrosshairDrawer attached to %CrosshairNode/Drawer.
-## This script handles aim position smoothing, focus mode time scale, and pulse animation.
+## Crosshair HUD. CrosshairDrawer on %CrosshairNode/Drawer paints the reticle;
+## this handles aim smoothing, the focus-mode time scale, and the pulse.
 
 @export var crosshair_size: float = 32.0
 @export var normal_follow_speed: float = 20.0

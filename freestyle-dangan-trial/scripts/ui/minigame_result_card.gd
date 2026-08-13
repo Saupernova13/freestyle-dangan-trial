@@ -1,13 +1,11 @@
 extends CanvasLayer
 
-## Full-screen "ALL RIGHT! / WRONG!" flash shown after each minigame attempt,
-## with an optional failure message below. Scene-driven:
-## scenes/ui/minigame_result_card.tscn — edit the layout, fonts and the
-## show / show_message AnimationPlayer animations in the editor.
+## The "ALL RIGHT! / WRONG!" flash after each minigame attempt, with an
+## optional failure message. Layout, fonts and the show / show_message
+## animations are editor-owned in scenes/ui/minigame_result_card.tscn.
 ##
-## Code only binds data: the result word, its color, and the optional message.
-## A wrong-answer card with a message holds longer ("show_message") so the
-## player can read it before the replay.
+## Code binds data only: the word, its color, and the message. A card carrying
+## a message holds longer, so the player can read it before the replay.
 
 signal card_finished
 

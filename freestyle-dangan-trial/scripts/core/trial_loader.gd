@@ -1,7 +1,7 @@
 extends Node
-## Autoload facade for .drtrial loading. Owns the trial manifest, the load
-## signals, and the background load thread; delegates extraction to
-## TrialArchive and character/sprite access to CharacterLibrary.
+## Autoload facade for .drtrial loading: owns the manifest, the load signals
+## and the background thread. Extraction goes to TrialArchive, character and
+## sprite access to CharacterLibrary.
 
 signal loading_progress(fraction: float, status_text: String)
 signal loading_complete()
@@ -11,20 +11,17 @@ const EXTRACT_DIR := "user://trials/extracted/"
 
 var current_trial_path: String = ""
 
-## Typed view of the loaded trial (see scripts/core/trial/model/). Null until
-## a trial has loaded successfully.
+## Typed view of the trial (scripts/core/trial/model/). Null until one loads.
 var manifest: TrialManifest = null
 
-## Populated by load_trial() on failure so the caller (start menu, trial room)
-## can surface a useful message to the user. Empty when the last load succeeded.
+## Set by load_trial() on failure, empty on success, so callers can report it.
 var last_load_error: String = ""
 
-## Set by _parse_manifest() when trial.json exists but fails validation, so
-## both load paths can report the specific problem instead of a generic one.
+## Set when trial.json exists but fails validation, so both load paths can
+## report the specific problem rather than a generic one.
 var last_parse_error: String = ""
 
-## True once load_trial_async() has finished; the trial room uses it to skip
-## the synchronous fallback load.
+## The trial room reads this to skip its synchronous fallback load.
 var loaded_async: bool = false
 
 var characters := CharacterLibrary.new(EXTRACT_DIR + "Characters/")
@@ -32,7 +29,7 @@ var characters := CharacterLibrary.new(EXTRACT_DIR + "Characters/")
 var _pending_images: Dictionary = {}  # char_id -> Image, filled by the load thread
 var _thread: Thread = null
 
-## Load a trial from a .drtrial file. Sets last_load_error on failure.
+## Sets last_load_error on failure.
 func load_trial(file_path: String) -> bool:
 	Log.info("TrialLoader", "Loading trial from: %s" % file_path)
 	last_load_error = ""
@@ -66,9 +63,8 @@ func load_trial(file_path: String) -> bool:
 	Log.info("TrialLoader", "Trial loaded: %s" % manifest.trial_name)
 	return true
 
-## Async version of load_trial(). Runs extraction, JSON parse, and sprite
-## Image loading in a background thread. ImageTexture creation and signal
-## emission happen on the main thread via call_deferred.
+## Extraction, JSON parse and sprite Image loading run on a worker thread;
+## ImageTexture creation and signal emission are deferred to the main thread.
 func load_trial_async(file_path: String) -> void:
 	loaded_async = false
 	last_load_error = ""
@@ -83,17 +79,17 @@ func load_character(character_id: String) -> Dictionary:
 func get_sprite_texture(character_id: String, sprite_index: int) -> ImageTexture:
 	return characters.get_texture(character_id, sprite_index)
 
-## Resolve an audio filename from the trial's Audio/ directory, or "" if absent.
+## Returns "" when the file is absent.
 func get_audio_path(audio_filename: String) -> String:
 	if audio_filename.is_empty():
 		return ""
 
-	# Primary: flat Audio/ directory (used by script lines)
+	# Script lines keep their audio flat in Audio/.
 	var flat_path = EXTRACT_DIR + "Audio/" + audio_filename
 	if FileAccess.file_exists(flat_path):
 		return flat_path
 
-	# Fallback: scan Audio/Minigames/<gameId>/ subdirectories for nonstop debate voices
+	# Minigame voices live under Audio/Minigames/<gameId>/ instead.
 	var minigames_dir = EXTRACT_DIR + "Audio/Minigames/"
 	var dir = DirAccess.open(minigames_dir)
 	if dir:
@@ -158,7 +154,7 @@ func _parse_manifest() -> Dictionary:
 		push_error(last_parse_error)
 		return {}
 
-	# Contract checks against schema/trial.schema.json (see TrialValidator).
+	# Checked against schema/trial.schema.json; see TrialValidator.
 	var version_issue := TrialValidator.check_version(data)
 	if not version_issue.is_empty():
 		last_parse_error = version_issue
@@ -221,14 +217,14 @@ func _load_in_thread(file_path: String) -> void:
 		call_deferred("_report_progress", frac,
 			"Loading characters... %d / %d" % [i + 1, character_ids.size()])
 
-	# Phase 4 (texture creation + completion) must run on main thread
+	# --- Phase 4: Textures + completion (main thread only) ---
 	call_deferred("_finalize_on_main_thread")
 
 func _report_progress(fraction: float, status_text: String) -> void:
 	loading_progress.emit(fraction, status_text)
 
 func _finalize_on_main_thread() -> void:
-	# ImageTexture.create_from_image() requires the main thread (GPU alloc)
+	# create_from_image() allocates on the GPU, so it must be main-thread.
 	for char_id in _pending_images:
 		var img: Image = _pending_images[char_id]
 		characters.store_texture(char_id, 1, ImageTexture.create_from_image(img))

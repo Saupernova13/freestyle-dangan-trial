@@ -1,27 +1,26 @@
 class_name CharacterStage
 extends RefCounted
-## The 3D bench sprites: populates each bench's quad with a character's sprite,
-## swaps sprites, and answers id<->bench lookups. Owns nothing visual of its
-## own — it drives MeshInstance3D nodes that already exist under `trial_posts`.
+## The 3D bench sprites: fills each bench quad, swaps sprites, and answers
+## id<->bench lookups. Owns nothing visual of its own; it drives the
+## MeshInstance3D nodes already under `trial_posts`.
 
 const BENCH_COUNT := 17
 const MONOKUMA_BENCH := 16  # 0-based; its marker has a distinct name
 
 var _trial_posts: Node3D
 
-# The cast is keyed two ways from a single insert point:
-#   - by character id  -> script lines and minigame camera focus reference ids
-#   - by bench index   -> the camera and player navigation reference benches
-# The cast can be sparse (empty seats, failed loads, the Monokuma seat), so a
-# dense Array indexed by bench would drift out of step with load order — that
-# exact conflation once made lines display under the previous speaker.
+# Keyed both by character id (what script lines reference) and by bench index
+# (what the camera and navigation reference), from one insert point.
+# The cast is sparse — empty seats, failed loads, the Monokuma seat — so a
+# dense Array indexed by bench drifts out of step with load order, which once
+# put lines under the previous speaker.
 var _by_id: Dictionary = {}
 var _by_bench: Dictionary = {}
 
 func _init(trial_posts: Node3D) -> void:
 	_trial_posts = trial_posts
 
-## Populate every bench from the trial's ordered character id list.
+## Benches are filled in the order the trial lists character ids.
 func populate(character_ids: Array) -> void:
 	if character_ids.size() != BENCH_COUNT:
 		push_warning("Expected %d characters, got %d" % [BENCH_COUNT, character_ids.size()])
@@ -60,7 +59,7 @@ func _populate_bench(bench_index: int, character_id: String) -> void:
 	_ensure_black_backplane(mesh_instance)
 	Log.debug("CharacterStage", "Loaded character: %s at bench %d" % [char_data.get("name", ""), bench_index])
 
-## Swap a bench's sprite to a different sprite index (e.g. an emotion change).
+## Used for emotion changes mid-line.
 func update_sprite(bench_index: int, character_id: String, sprite_index: int) -> void:
 	var texture := TrialLoader.get_sprite_texture(character_id, sprite_index)
 	if not texture:
@@ -124,12 +123,10 @@ func _ensure_black_backplane(mesh_instance: MeshInstance3D) -> void:
 	back.material_override = black_mat
 	mesh_instance.add_child(back)
 
-## Resize a character's sprite plane so the texture keeps its native aspect
-## ratio instead of being stretched to the bench quad's fixed proportions.
-## Each bench bakes its own (often non-uniform) scale into its transform, so
-## the plane gets its own QuadMesh — never the shared bench mesh — and its
-## width is derived from the sprite while the bench's world height is kept.
-## The black backplane shares this QuadMesh by reference, so it tracks resizes.
+## Keeps the texture's native aspect instead of stretching it to the bench
+## quad. Each bench bakes its own non-uniform scale into its transform, so the
+## plane needs its own QuadMesh — never the shared bench mesh. The backplane
+## holds that QuadMesh by reference and tracks resizes for free.
 func _fit_quad_to_texture(mesh_instance: MeshInstance3D, texture: Texture2D) -> void:
 	if not texture:
 		return
@@ -146,9 +143,8 @@ func _fit_quad_to_texture(mesh_instance: MeshInstance3D, texture: Texture2D) -> 
 		mesh_instance.mesh = quad
 		mesh_instance.set_meta("own_quad", true)
 
-	# The bench transform applies a non-uniform scale; keep world height
-	# (size.y * sy) untouched and solve width so the on-screen quad matches
-	# the sprite: (size.x * sx) / (size.y * sy) == tex_w / tex_h.
+	# Hold world height (size.y * sy) and solve width, so the on-screen quad
+	# satisfies (size.x * sx) / (size.y * sy) == tex_w / tex_h.
 	var node_scale := mesh_instance.transform.basis.get_scale()
 	var sx := maxf(absf(node_scale.x), 0.0001)
 	var sy := maxf(absf(node_scale.y), 0.0001)

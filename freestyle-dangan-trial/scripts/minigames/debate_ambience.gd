@@ -1,9 +1,8 @@
 extends CanvasLayer
 
 ## Nonstop-debate ambience overlay: darkens the scene and applies the red
-## debate filter. Scene-driven — see scenes/minigames/debate_ambience.tscn.
-## Edit the grade (tint, desaturation, vignette) on the TintRect material and
-## the fade timing in the show/dismiss animations.
+## filter. The grade lives on the TintRect material and the fade timing in the
+## show/dismiss clips, both in scenes/minigames/debate_ambience.tscn.
 
 @onready var _anim: AnimationPlayer = %AnimationPlayer
 

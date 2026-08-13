@@ -1,12 +1,12 @@
 extends Camera3D
-## Focuses the camera on one trial bench at a time.
-## Arrow keys / left-right screen thirds navigate; drag free-looks and springs
-## back on release. jump_to_bench() lets the script and minigames aim it.
+## Focuses the camera on one trial bench at a time. Arrow keys and the outer
+## screen thirds navigate; drag free-looks and springs back on release.
+## jump_to_bench() lets the script and minigames aim it.
 
 @export_range(0.1, 2.0, 0.1) var transition_duration: float = 0.2
 @export var enable_swipe_input: bool = true
 
-## Field of view. Lower = zoomed in, higher = wide.
+## Field of view; lower is more zoomed in.
 @export_range(30.0, 120.0, 1.0) var camera_fov: float = 30.0
 @export_range(-45.0, 45.0, 1.0) var default_pitch_offset: float = 0.0
 @export_range(-45.0, 45.0, 1.0) var default_yaw_offset: float = 0.0
@@ -20,9 +20,8 @@ extends Camera3D
 @export_range(0.05, 0.5, 0.05) var hold_repeat_interval: float = 0.15
 
 var bench_markers: Array[Marker3D] = []
-# Player-navigable bench count. The Monokuma bench is appended AFTER this count,
-# so script lines and minigame focus can reach it via jump_to_bench() while
-# navigate_to_next/previous wrap within the first _nav_count and never land on it.
+# The Monokuma bench sits after this count, so jump_to_bench() can reach it
+# while navigate_to_next/previous wrap below it and never land there.
 var _nav_count: int = 0
 var current_index: int = 0
 var is_transitioning: bool = false
@@ -110,7 +109,7 @@ func _process(delta):
 	if is_transitioning:
 		return
 
-	# Spring the free-look offset back to zero, snapping once it's negligible.
+	# Springs back to zero, snapping once the offset is negligible.
 	if not is_dragging and current_free_look_offset != Vector2.ZERO:
 		current_free_look_offset = current_free_look_offset.lerp(Vector2.ZERO, free_look_return_speed * delta)
 		if current_free_look_offset.length() > 0.001:
@@ -162,7 +161,7 @@ func _input(event):
 		and not is_transitioning
 		and not _is_free_look_blocked()
 	):
-		# Offsets invert the drag delta so the view follows the finger/cursor.
+		# Inverted, so the view follows the finger rather than fleeing it.
 		current_free_look_offset.x -= event.relative.x * free_look_sensitivity
 		current_free_look_offset.y -= event.relative.y * free_look_sensitivity
 		apply_free_look_offset()
@@ -176,7 +175,7 @@ func _input(event):
 				touch_moved = false
 				is_dragging = true
 
-				# Left / right screen thirds are the navigation zones.
+				# The outer thirds are the navigation zones.
 				if not _is_nav_blocked():
 					var viewport_width = get_viewport().get_visible_rect().size.x
 					var tap_x = event.position.x
@@ -204,7 +203,7 @@ func _input(event):
 			and not _is_free_look_blocked()
 		):
 			touch_moved = true
-			# A real drag cancels the hold-to-repeat that a tap in a nav zone started.
+			# A real drag cancels the hold-to-repeat a nav-zone tap started.
 			if is_holding_touch and event.relative.length() > 10.0:
 				is_holding_touch = false
 				hold_direction = 0
@@ -225,9 +224,8 @@ func navigate_to_previous():
 	current_index = (current_index - 1 + _nav_count) % _nav_count
 	focus_on_bench(current_index, true)
 
-## Point the camera at bench `index` (0-based), tweening the rotation unless
-## `animate` is false. Notifies TrialRoom so the focused speaker's name/portrait
-## update during free navigation.
+## Tweens the rotation unless `animate` is false, and notifies TrialRoom so the
+## name and portrait track free navigation.
 func focus_on_bench(index: int, animate: bool):
 	if index < 0 or index >= bench_markers.size():
 		push_warning("Invalid bench index: %d" % index)
@@ -265,7 +263,7 @@ func focus_on_bench(index: int, animate: bool):
 	if trial_manager and trial_manager.has_method("on_bench_focused"):
 		trial_manager.on_bench_focused(index)
 
-## Jump directly to bench `index` (0-based; 16 = Monokuma).
+## `index` is 0-based; 16 is Monokuma.
 func jump_to_bench(index: int, animate: bool = true):
 	if index >= 0 and index < bench_markers.size():
 		current_index = index

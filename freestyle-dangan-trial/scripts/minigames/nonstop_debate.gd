@@ -40,9 +40,8 @@ func wants_mobile_slow_time() -> bool:
 func _split_dialogue_lines():
 	_main_lines.clear()
 	_white_noise_lines.clear()
-	# White noise is disabled: its panel positioning is flawed and slated for a
-	# fundamental rework. Until then we ignore the isWhiteNoise flag entirely and
-	# treat every line as a main line, so no white-noise panels ever spawn.
+	# White noise is disabled pending a rework of its panel positioning: the
+	# isWhiteNoise flag is ignored and every line spawns as a main line.
 	for line in dialogue_lines:
 		_main_lines.append(line)
 
@@ -83,8 +82,7 @@ func start():
 	)
 
 func _build_overlay():
-	# Scene-driven — see scenes/minigames/nonstop_debate_overlay.tscn for the
-	# static layout (panels container, wrong label, turn label).
+	# Layout is scene-owned; see scenes/minigames/nonstop_debate_overlay.tscn.
 	_overlay = ResourceRegistry.instantiate("nonstop_debate_overlay")
 	add_child(_overlay)
 	_panels_container = _overlay.get_node("%PanelsContainer")
@@ -92,9 +90,8 @@ func _build_overlay():
 	_turn_label = _overlay.get_node("%TurnLabel")
 	_overlay_anim = _overlay.get_node("%AnimationPlayer")
 
-## The red debate filter must outlive this node (MinigameRunner frees the
-## minigame the moment it completes), so it is parented to the trial room and
-## dismisses itself.
+## MinigameRunner frees the minigame the moment it completes, so the filter is
+## parented to the trial room instead and dismisses itself.
 func _show_ambience():
 	_ambience = ResourceRegistry.instantiate("debate_ambience")
 	var room = get_tree().get_first_node_in_group("trial_room")
@@ -161,9 +158,7 @@ func _deactivate_slow_time():
 	if _slow_vignette:
 		_slow_vignette.hide_vignette()
 
-## Compute the vertical position for a panel given its row index. Same layout
-## logic for main and noise lines — keep them in one place so the safe area
-## only needs tweaking once.
+## Shared by main and noise lines, so the safe area is tuned in one place.
 func _row_y_for(index: int) -> float:
 	var viewport_height = get_viewport().get_visible_rect().size.y
 	var safe_top = MinigameConfig.SCREEN_LAYOUT["debate_safe_top"]
@@ -178,7 +173,7 @@ func _spawn_main_line():
 	if _main_lines.is_empty() or _current_main_panel != null:
 		return
 
-	# Nonstop debate loops its statements until the player shoots the right one.
+	# Statements loop until the player shoots the right one.
 	if _main_line_index >= _main_lines.size():
 		_main_line_index = 0
 
@@ -203,10 +198,9 @@ func _spawn_main_line():
 	_panels_on_screen.append(panel)
 	_current_main_panel = panel
 
-	# Camera always follows the currently-speaking character so the displayed
-	# character matches the spoken line. (Not related to the editor's
-	# `characterSpotlight` flag — that is reserved for the unimplemented
-	# spotlight lighting effect and must never gate camera focus.)
+	# The camera always follows the speaker. Unrelated to `characterSpotlight`,
+	# which is reserved for the unimplemented spotlight effect and must never
+	# gate camera focus.
 	if not panel.character_id.is_empty():
 		focus_camera_on_character(panel.character_id)
 
@@ -286,8 +280,7 @@ func _fire_bullet_at_panel(panel: DebateTextPanel, click_pos: Vector2):
 		panel.use_negative_bullet
 	)
 
-	# Capture a WeakRef so the lambda doesn't strong-hold the panel — it may be
-	# queue_free()'d during cleanup() before the projectile lands.
+	# A WeakRef, because cleanup() can free the panel before the shot lands.
 	var panel_ref = weakref(panel)
 	if is_correct:
 		projectile.hit_target.connect(func():
@@ -335,8 +328,7 @@ func _on_correct_hit(panel: DebateTextPanel):
 	_show_wrong_label()
 	await get_tree().create_timer(MinigameConfig.TIMING["wrong_to_screen_shatter"]).timeout
 
-	# Freeze the frame (wrong label included until this point), then crack,
-	# shatter, and BREAK! — the whole sequence is the break_sequence animation
+	# The freeze/crack/shatter/BREAK sequence is the break_sequence animation
 	# in scenes/minigames/break_shatter.tscn.
 	_overlay_anim.stop()
 	_wrong_label.visible = false
@@ -379,8 +371,7 @@ func _on_wrong_hit(panel: DebateTextPanel):
 	AudioManager.stop_voice()
 	InfluenceGauge.take_damage(difficulty)
 
-	# End the attempt — TrialRoomManager shows this line's wrong-answer dialog
-	# and replays the minigame.
+	# TrialRoomManager shows the wrong-answer dialog and replays the minigame.
 	var wrong_comment = panel.line_data.get("userWrongAnswerComment", "")
 	_finish(false, {
 		"reason": "wrong_answer",

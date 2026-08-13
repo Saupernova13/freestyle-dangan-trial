@@ -37,8 +37,7 @@ func start():
 	_show_argument(0)
 
 func _build_overlay():
-	# Scene-driven — see scenes/minigames/debate_scrum_overlay.tscn.
-	# Defense (rebuttal) buttons are spawned dynamically into %KeywordContainer.
+	# Layout is scene-owned; see scenes/minigames/debate_scrum_overlay.tscn.
 	_overlay = ResourceRegistry.instantiate("debate_scrum_overlay")
 	add_child(_overlay)
 	_progress_bar = _overlay.get_node("%ProgressBar")
@@ -48,7 +47,7 @@ func _build_overlay():
 	_score_label = _overlay.get_node("%ScoreLabel")
 	_turn_timer_label = _overlay.get_node("%TurnTimerLabel")
 
-	# The keyword buttons are authored in the overlay scene (KeywordButton0..N).
+	# Buttons are authored in the overlay scene as KeywordButton0..N.
 	_defense_buttons.clear()
 	for i in range(MinigameConfig.SCRUM_KEYWORD_BUTTON_COUNT):
 		_defense_buttons.append(_overlay.get_node("%%KeywordButton%d" % i))
@@ -73,9 +72,8 @@ func _process(delta):
 
 func _show_argument(index: int):
 	if index >= arguments.size():
-		# Reaching the end only happens after every round was answered
-		# correctly — wrong answers exit through _finish(false, ...) and the
-		# trial manager replays the whole minigame.
+		# Only reachable with every round correct: a wrong answer exits via
+		# _finish(false, ...) and the trial manager replays the minigame.
 		_update_progress_bar(1.0)
 		_on_correct_answer({"rounds": arguments.size()})
 		return
@@ -145,8 +143,8 @@ func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
 		await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
 		_show_argument(current_argument_index + 1)
 	else:
-		# Match NonstopDebate: a wrong keyword ends the attempt and the trial
-		# manager replays the minigame. Player must clear every round to win.
+		# As in NonstopDebate: one wrong keyword ends the attempt, and every
+		# round must be cleared to win.
 		btn.modulate = UITheme.COLOR_WRONG
 		InfluenceGauge.take_damage(difficulty)
 		await get_tree().create_timer(MinigameConfig.TIMING["result_pause"]).timeout
@@ -161,8 +159,7 @@ func _update_score_display():
 	_score_label.text = "Round %d / %d" % [current_argument_index + 1, arguments.size()]
 
 func _auto_advance_turn():
-	# Match NonstopDebate timeout: running out of time on a round ends the
-	# attempt and the trial manager replays the minigame.
+	# As in NonstopDebate: a round timeout ends the whole attempt.
 	_turn_active = false
 	for b in _defense_buttons:
 		b.disabled = true

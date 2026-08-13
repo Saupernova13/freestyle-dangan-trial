@@ -1,8 +1,7 @@
 extends Node
 ## Renders a script line into the dialogue box: highlight BBCode, per-line box
-## styling, and the typewriter reveal. Reports reveal start/finish as signals so
-## the flow controller (ScriptDirector) can gate input without this view knowing
-## about it.
+## styling, and the typewriter reveal. Reveal start/finish are signals, so
+## ScriptDirector can gate input without this view knowing about it.
 
 signal typewriter_started
 signal typewriter_finished
@@ -28,13 +27,10 @@ func setup(rich_label: RichTextLabel, name_label: Label = null, portrait_rect: T
 		if _typewriter_anim:
 			_typewriter_anim.animation_finished.connect(_on_typewriter_finished)
 
-## Highlighted text is emitted as [b]...[/b]. RichTextLabel resolves bold /
-## italic runs through separate theme entries (bold_font, bold_font_size, ...);
-## if the scene only customizes the normal font, styled runs silently fall back
-## to the default theme font at its default size (~16px) and highlighted words
-## render tiny. Mirror the resolved normal font/size into every variant the
-## scene or an attached Theme doesn't explicitly define, so styled text always
-## matches the dialogue's look — for any label handed to this controller.
+## Highlights emit [b]...[/b], which RichTextLabel resolves through separate
+## theme entries. A scene that only customizes the normal font makes styled
+## runs fall back to the ~16px default, rendering highlights tiny. Mirroring
+## the normal font into every undefined variant keeps them matched.
 func _ensure_styled_font_variants():
 	var normal_size := _rich_label.get_theme_font_size("normal_font_size")
 	for size_name in ["bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]:
@@ -47,9 +43,8 @@ func _ensure_styled_font_variants():
 			if not _theme_chain_defines(font_name, true):
 				_rich_label.add_theme_font_override(font_name, normal_font)
 
-## True if the label, any ancestor's attached Theme, or the project theme
-## explicitly defines this RichTextLabel font (is_font=true) or font size
-## entry. Only unset entries get mirrored — deliberate styling always wins.
+## Searches the label, every ancestor Theme, and the project theme. Only unset
+## entries get mirrored, so deliberate styling always wins.
 func _theme_chain_defines(prop: String, is_font: bool) -> bool:
 	if is_font and _rich_label.has_theme_font_override(prop):
 		return true
@@ -93,8 +88,7 @@ func display_narrator_line(line: ScriptLine):
 		return
 
 	var text := line.display_text()
-	# Narrator lines support the same highlight + box style data as speaking
-	# lines — the editor exposes both tabs for them.
+	# Narrator lines carry highlights and box style too; the editor offers both.
 	var highlights := line.highlights
 	var bbcode = _apply_highlights(text, highlights)
 	_rich_label.text = "[center][color=#AABBCC]" + bbcode + "[/color][/center]"
@@ -108,27 +102,23 @@ func display_narrator_line(line: ScriptLine):
 
 	_start_typewriter()
 
-## Highlight range keys: the web editor writes startChar/endChar; older trials
-## may carry startIndex/endIndex. Accept both.
+## The web editor writes startChar/endChar; older trials carry startIndex/
+## endIndex. Both are accepted.
 static func _highlight_start(h: Dictionary) -> int:
 	return int(h.get("startChar", h.get("startIndex", 0)))
 
 static func _highlight_end(h: Dictionary) -> int:
 	return int(h.get("endChar", h.get("endIndex", 0)))
 
-## User-typed "[" must never be parsed as a BBCode tag. "[lb]" renders as a
-## literal left bracket; a "]" without an opener is already literal.
+## A user-typed "[" must never parse as a tag. "[lb]" renders as a literal
+## bracket; a "]" without an opener already is one.
 static func _escape_bbcode(text: String) -> String:
 	return text.replace("[", "[lb]")
 
-## Build display BBCode from plain dialogue text + highlight ranges.
-##
-## Highlights are painted onto a per-character color map (later entries win,
-## like going over text again with a highlighter) and the map is then emitted
-## as disjoint runs. Tags are generated only around whole runs and every text
-## segment is BBCode-escaped, so no input — overlapping ranges, stale ranges
-## from edited dialogue, out-of-bounds indices, brackets typed by the user,
-## malformed color strings — can ever produce broken tags or literal markup.
+## Highlights are painted onto a per-character color map — later entries win,
+## like going over text again with a highlighter — then emitted as disjoint
+## runs. Tags wrap whole runs only and every segment is escaped, so overlapping
+## or stale ranges, bad indices and typed brackets cannot break the markup.
 func _apply_highlights(text: String, highlights: Array) -> String:
 	var length := text.length()
 	if highlights.is_empty() or length == 0:
@@ -142,8 +132,7 @@ func _apply_highlights(text: String, highlights: Array) -> String:
 		var start_idx: int = clampi(_highlight_start(h), 0, length)
 		var end_idx: int = clampi(_highlight_end(h), 0, length)
 		var color := str(h.get("color", "#FFFF00"))
-		# Reject anything that isn't a clean HTML color — a malformed string
-		# here would otherwise be injected straight into a [color=...] tag.
+		# Unvalidated, this string goes straight into a [color=...] tag.
 		if not Color.html_is_valid(color):
 			color = "#FFFF00"
 		for i in range(start_idx, end_idx):
@@ -172,8 +161,8 @@ func _apply_box_style(style: Dictionary):
 	if not panel or not panel is PanelContainer:
 		return
 
-	# Cache the scene's pristine stylebox once; every line then styles a fresh
-	# duplicate of it, so one line's style can never leak into the next.
+	# Cached pristine, so each line styles a fresh duplicate and no style
+	# leaks into the next line.
 	if _default_panel_style == null:
 		var base = panel.get_theme_stylebox("panel")
 		if base and base is StyleBoxFlat:
@@ -184,7 +173,7 @@ func _apply_box_style(style: Dictionary):
 	var stylebox: StyleBoxFlat = _default_panel_style.duplicate()
 
 	if not style.is_empty():
-		# Shape variants — StyleBoxFlat approximations of the editor presets.
+		# StyleBoxFlat approximations of the editor's presets.
 		match str(style.get("style", "default")):
 			"slant_left":
 				stylebox.skew = Vector2(-0.2, 0.0)
@@ -238,12 +227,12 @@ func _start_typewriter():
 	typewriter_started.emit()
 
 	if not _typewriter_anim:
-		# No animator wired (headless / tests): reveal the line immediately.
+		# Headless or tests: no animator, so reveal immediately.
 		_on_typewriter_finished()
 		return
 
-	# The reveal curve is the `typewriter` clip in the conversation UI scene;
-	# stretching it by chars/sec keeps the pacing the settings ask for.
+	# The curve lives in the scene's `typewriter` clip; scaling it by chars/sec
+	# is what honours the speed setting.
 	_typewriter_anim.speed_scale = _typewriter_speed / float(total_chars)
 	_typewriter_anim.play("typewriter")
 

@@ -33,8 +33,7 @@ func start():
 	Log.debug("HangmansGambit", "Answer is '%s' (%d letters)" % [answer_key, answer_key.length()])
 
 func _build_overlay():
-	# Scene-driven — see scenes/minigames/hangmans_gambit_overlay.tscn for the
-	# static layout. Answer-letter slots are spawned dynamically below.
+	# Layout is scene-owned; the answer-letter slots spawn below.
 	_overlay = ResourceRegistry.instantiate("hangmans_gambit_overlay")
 	add_child(_overlay)
 	_letters_container = _overlay.get_node("%LettersContainer")

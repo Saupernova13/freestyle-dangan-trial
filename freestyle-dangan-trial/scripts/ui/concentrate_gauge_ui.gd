@@ -1,8 +1,8 @@
 extends CanvasLayer
 
-## FOCUS / Concentrate gauge HUD. Scene-driven — see scenes/ui/concentrate_gauge.tscn.
-## Position/style is editable directly in that scene. This script handles fill
-## tween (dynamic target) and triggers AnimationPlayer animations for color shifts.
+## FOCUS / Concentrate gauge HUD; position and style live in
+## scenes/ui/concentrate_gauge.tscn. This tweens the fill, whose target is
+## dynamic, and triggers the color-shift animations.
 
 @export var bar_width: float = 130.0
 
@@ -43,6 +43,6 @@ func _on_concentrate_changed(current: float, maximum: float):
 			_anim.play(anim_name)
 		_last_tier = new_tier
 
-	# Bar fill width — dynamic target, stays as Tween
+	# Dynamic target, so this one can't be an AnimationPlayer clip.
 	var tween = create_tween()
 	tween.tween_property(_bar_fill, "offset_right", bar_width * pct, 0.2)

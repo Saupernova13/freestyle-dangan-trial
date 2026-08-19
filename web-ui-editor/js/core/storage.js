@@ -95,7 +95,7 @@ async function loadTrialIntoState() {
     }
   } catch (error) {
     console.error('Failed to parse trial.json:', error);
-    // Warn first: auto-saving over an empty editor would destroy a recoverable file.
+    // Warn first: auto-saving over an empty editor would destroy the file.
     await alertDialog({
       title: 'Could not read trial.json',
       type: 'warning',
@@ -336,7 +336,7 @@ export async function loadCharactersFromIds(characterIds) {
     .catch(() => null);
   if (!charsDir) return;
 
-  // One pass over Characters/, indexed by id, rather than a walk per cast slot.
+  // One pass over Characters/, indexed by id, not a walk per cast slot.
   const charactersById = new Map();
   for await (const [, folderHandle] of charsDir.entries()) {
     if (folderHandle.kind !== 'directory') continue;
@@ -357,7 +357,7 @@ export async function loadCharactersFromIds(characterIds) {
     const charData = characterIds[i] ? charactersById.get(characterIds[i]) : null;
     if (!charData) continue;
 
-    // Only the first sprite; the rest load lazily via loadRemainingSprites.
+    // Only the first sprite; the rest load via loadRemainingSprites.
     charData.sprites = [];
     try {
       const f = await charData._folderHandle.getFileHandle('sprite_01.png');
@@ -510,7 +510,7 @@ export async function autoSaveTrial(opts = {}) {
 async function writeTrialJson() {
   const trialJs = buildTrialJson(state);
 
-  // Warn only: blocking auto-save over a validation bug would lose real work.
+  // Warn only: blocking auto-save over a validation bug would lose work.
   const issues = validateTrialData(trialJs);
   if (issues.length > 0) {
     console.warn('trial.json being saved does not match the schema:', issues);

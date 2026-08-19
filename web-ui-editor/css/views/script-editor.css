@@ -1,12 +1,8 @@
-/* ==================== Script Editor Styles ==================== */
-
-/* Script Editor Container */
 #scriptEditorContainer {
   padding: 2rem;
   grid-column: 1 / -1;
 }
 
-/* Empty State */
 .script-empty-state {
   display: flex;
   flex-direction: column;
@@ -38,7 +34,6 @@
   padding: 1rem 2rem;
 }
 
-/* Script Header */
 .script-header {
   display: flex;
   justify-content: space-between;
@@ -54,14 +49,12 @@
   font-size: 1.125rem;
 }
 
-/* Script Lines Container */
 .script-lines-container {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-/* Script Line Bar */
 .script-line-bar {
   display: flex;
   align-items: center;
@@ -79,7 +72,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-/* Line Number */
 .script-line-number {
   font-weight: 700;
   color: var(--text-tertiary);
@@ -96,7 +88,6 @@
   align-items: center;
 }
 
-/* Character Select */
 .script-character-select {
   min-width: 160px;
   padding: 0.625rem 0.75rem;
@@ -287,7 +278,6 @@
   color: var(--text-tertiary);
 }
 
-/* Minigame Select */
 .script-minigame-select {
   flex: 1;
   padding: 0.75rem;
@@ -777,7 +767,6 @@
   color: var(--text-tertiary);
 }
 
-/* Delete Button */
 .script-line-delete {
   padding: 0.5rem 0.625rem;
   border: 1px solid var(--border-primary);
@@ -794,7 +783,6 @@
   color: var(--error);
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .script-line-bar {
     flex-direction: column;
@@ -815,7 +803,6 @@
    DRAG-AND-DROP FUNCTIONALITY
    ============================================================ */
 
-/* Drag Handle */
 .script-drag-handle {
   display: flex;
   flex-direction: column;
@@ -832,7 +819,6 @@
   cursor: grabbing;
 }
 
-/* Arrow Buttons */
 .arrow-btn {
   font-size: 0.875rem;
   color: var(--text-tertiary);
@@ -858,7 +844,6 @@
   background: rgba(var(--primary-rgb), 0.2);
 }
 
-/* Dragging State */
 .script-line-bar.dragging {
   opacity: 0.5;
   border: 2px dashed var(--primary);
@@ -874,7 +859,6 @@
   flex-shrink: 0;
 }
 
-/* Drop Zone Hover State - Show highlight line */
 .script-drop-zone.drag-over-gap {
   height: 1.5rem;
 }
@@ -903,19 +887,16 @@
   }
 }
 
-/* Prevent text selection during drag */
 .script-line-bar[draggable='true'] {
   user-select: none;
 }
 
-/* Multi-Select State */
 .script-line-bar.selected {
   background: rgba(var(--primary-rgb), 0.15);
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.3);
 }
 
-/* Reordering Animation */
 .script-line-bar.reordering {
   transition:
     transform 0.3s ease,
@@ -934,7 +915,6 @@
   pointer-events: none;
 }
 
-/* Smooth transitions for all state changes */
 .script-line-bar {
   transition:
     all 0.2s ease,

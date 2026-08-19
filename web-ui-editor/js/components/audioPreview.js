@@ -1,6 +1,6 @@
-// Shared audio preview player for the script line modal and the three
-// minigame editors. Holds a registry of players keyed by caller-chosen ids;
-// callers supply their control ids and a lazy blob loader.
+// Shared audio preview player for the script line modal and the minigame
+// editors. Players are registered under caller-chosen ids; callers supply
+// their control ids and a lazy blob loader.
 import { showToast } from '../ui/dialogs.js';
 import { formatAudioTime } from '../utils.js';
 

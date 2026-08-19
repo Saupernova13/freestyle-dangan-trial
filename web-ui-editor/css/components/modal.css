@@ -1,4 +1,3 @@
-/* Modal */
 .dr-modal-bg {
   position: fixed;
   inset: 0;
@@ -100,7 +99,6 @@
   overflow-x: hidden;
 }
 
-/* Forms */
 .dr-form {
   padding: 2rem;
   max-width: 1000px;
@@ -295,7 +293,6 @@
   cursor: zoom-in;
 }
 
-/* ==================== Sprite Magnifier Lens ==================== */
 .sprite-magnifier-lens {
   position: fixed;
   width: 200px;
@@ -372,7 +369,6 @@
   color: var(--text-primary);
 }
 
-/* Alerts */
 .dr-err {
   background: rgba(var(--error-rgb), 0.08);
   color: var(--error);
@@ -395,7 +391,6 @@
   font-size: 0.875rem;
 }
 
-/* Loader */
 #loaderOverlay {
   position: fixed;
   inset: 0;

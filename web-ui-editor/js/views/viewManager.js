@@ -52,8 +52,8 @@ export function renderActiveView() {
   }
 }
 
-// Trial picker. Offers the on-disk folder picker only on Chromium, browser
-// storage wherever OPFS exists.
+// Trial picker: the on-disk folder picker on Chromium, browser storage
+// wherever OPFS exists.
 function renderWelcomeHub(mainGrid) {
   const hasPicker = supportsFsPicker();
   const hasOpfs = supportsOpfs();

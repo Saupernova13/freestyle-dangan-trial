@@ -51,7 +51,7 @@ export function showToast(message, opts = {}) {
 }
 
 // `buttons`: { label, value, class, default?, escapes? }. Resolves with the
-// clicked button's value, or the `escapes` button's on Esc / backdrop click.
+// clicked button's value, or the `escapes` one on Esc / backdrop click.
 function openDialog({ title, message, icon = 'alert', buttons }) {
   return new Promise((resolve) => {
     const root = document.getElementById('dialogroot');

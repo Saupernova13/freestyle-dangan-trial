@@ -17,8 +17,8 @@ let restoring = false;
 let onRestore = null;
 
 // Deep-copies arrays and plain objects; primitives, Blobs and Files go by
-// reference. Blobs are immutable, so sharing them keeps 50 snapshots cheap
-// and preserves Blob identity for audio previews across an undo.
+// reference. Blobs are immutable, so sharing keeps snapshots cheap and
+// preserves Blob identity for audio previews across an undo.
 function cloneValue(v) {
   if (Array.isArray(v)) return v.map(cloneValue);
   if (v && typeof v === 'object' && v.constructor === Object) {
@@ -49,8 +49,7 @@ export function resetHistory() {
   present = takeSnapshot();
 }
 
-// Trailing-debounced, so a keystroke storm yields one snapshot of the
-// settled text rather than fifty intermediates.
+// Trailing-debounced, so a keystroke storm yields one settled snapshot.
 export function recordChange(delayMs = 500) {
   if (restoring || present === null) return;
   clearTimeout(recordTimer);
@@ -109,7 +108,7 @@ function applyPresent() {
 }
 
 // True while a restore's side effects run, so the persistence hooks don't
-// record the restore as a fresh edit.
+// record it as a fresh edit.
 export function isRestoring() {
   return restoring;
 }

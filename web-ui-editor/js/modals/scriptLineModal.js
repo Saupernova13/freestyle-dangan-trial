@@ -102,7 +102,7 @@ export function renderScriptLineModal() {
 
   const availableTabs = getAvailableTabs(line);
 
-  // Fall back to the first available tab if the current one no longer applies.
+  // Fall back to the first available tab when the current one doesn't apply.
   if (!availableTabs.includes(sl.tab)) {
     sl.tab = availableTabs[0] || 'audio';
   }

@@ -351,8 +351,8 @@ export async function trySaveChar() {
     await writer.write(JSON.stringify(charJson, null, 2));
     await writer.close();
 
-    // Iterate the buffer, not maxSprites, so lowering that setting never
-    // drops an existing character's extra sprites.
+    // Iterate the buffer, not maxSprites: lowering that setting must not drop
+    // a character's existing extra sprites.
     let savedSprites = [];
     for (let k = 0; k < charSprites.length; k++) {
       let s = charSprites[k];
@@ -373,8 +373,7 @@ export async function trySaveChar() {
       }
     }
 
-    // The folder handle carries over so a later edit or removal hits the
-    // same directory.
+    // The folder handle carries over, so a later edit hits the same directory.
     state.cast[activeIdx] = {
       ...charJson,
       sprites: savedSprites,

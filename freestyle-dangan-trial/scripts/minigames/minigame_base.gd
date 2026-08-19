@@ -39,8 +39,7 @@ var hud: Dictionary = {}
 
 var _timer_node: Timer
 var _has_finished: bool = false
-# (signal, callable) pairs from connect_managed(), disconnected in cleanup()
-# so a forgotten teardown can't leak connections.
+# (signal, callable) pairs from connect_managed(), disconnected in cleanup().
 var _managed_signal_connections: Array = []
 var _mobile_hud: Node = null
 
@@ -97,8 +96,7 @@ func setup_standard_ui(components: Array) -> Dictionary:
 	_maybe_spawn_mobile_hud(components)
 	return hud
 
-## The touch HUD mirrors whatever keyboard/mouse actions the requested
-## components would otherwise need.
+## The touch HUD mirrors the keyboard/mouse actions the components would need.
 func _maybe_spawn_mobile_hud(components: Array) -> void:
 	if not OS.has_feature("mobile"):
 		return
@@ -144,9 +142,8 @@ func _teardown_standard_ui():
 	_mobile_hud = null
 
 # ---------------------------------------------------------------------------
-# Managed signal connections — auto-disconnected by cleanup().
-# A forgotten disconnect leaks callbacks across plays, so registration is
-# centralised here instead of hand-rolled per minigame.
+# Managed signal connections — auto-disconnected by cleanup(), so a forgotten
+# disconnect can't leak callbacks across plays.
 # ---------------------------------------------------------------------------
 func connect_managed(sig: Signal, callable: Callable, flags: int = 0) -> void:
 	if not sig.is_connected(callable):
@@ -211,12 +208,9 @@ func get_difficulty_multiplier() -> float:
 	return MinigameConfig.get_difficulty_multiplier(difficulty)
 
 # ---------------------------------------------------------------------------
-# Focus the trial-room camera on a speaker bench.
-#
-# NOTE: this is CAMERA FOCUS, not a spotlight. The spotlight (darkened
-# environment, light aimed at a character) is a separate and NOT YET
-# IMPLEMENTED effect; the editor's `characterSpotlight` flag is reserved for
-# it and must never gate camera focus, which always follows the speaker.
+# Camera focus, NOT a spotlight. The spotlight is a separate, unimplemented
+# lighting effect; `characterSpotlight` is reserved for it and must never gate
+# camera focus, which always follows the speaker.
 # ---------------------------------------------------------------------------
 func focus_camera_on_character(char_id: String) -> void:
 	var trial_room = get_tree().get_first_node_in_group("trial_room")

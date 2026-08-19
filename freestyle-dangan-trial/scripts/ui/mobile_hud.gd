@@ -1,11 +1,11 @@
 extends CanvasLayer
 ## Touch HUD for the otherwise keyboard/mouse-only actions: settings, bullet
-## prev/next, focus toggle, and slow-time hold.
+## prev/next, focus toggle, and slow-time hold. Spawned by MinigameBase on
+## mobile builds.
 ##
-## Layout and styling are scene-owned in scenes/ui/mobile_hud.tscn; setup()
-## only shows the buttons a minigame asked for. Each button fires the same
-## InputManager signal its keyboard equivalent does, so no listener needs a
-## mobile-specific path. MinigameBase spawns it on mobile builds.
+## Layout is scene-owned; setup() shows only the buttons a minigame asked for.
+## Each button fires the same InputManager signal its keyboard equivalent does,
+## so no listener needs a mobile-specific path.
 
 @onready var _settings_btn: Button = %SettingsButton
 @onready var _focus_btn: Button = %FocusButton

@@ -1,10 +1,9 @@
 extends CanvasLayer
 
 ## BREAK! sequence: freezes the viewport, cracks and shatters it over black,
-## then zooms the BREAK! text past the camera. The whole thing is one
-## break_sequence timeline in scenes/minigames/break_shatter.tscn, with the
-## crack pattern on the FrozenFrame material. This script only captures the
-## screenshot and starts the animation.
+## then zooms the BREAK! text past the camera. One break_sequence timeline in
+## scenes/minigames/break_shatter.tscn; this script captures the screenshot and
+## starts the animation.
 
 signal sequence_finished
 

@@ -2,11 +2,10 @@ class_name TrialValidator
 extends RefCounted
 ## Structural validation for trial.json. schema/trial.schema.json is normative;
 ## this file and the editor's js/core/trialSchema.js must track it, and CI
-## cross-checks all three against tests/fixtures/minimal-trial/.
+## cross-checks all three.
 ##
-## Deliberately laxer than the editor: it checks only what playback needs, so
-## imperfect files stay playable. Per-line problems warn at runtime rather
-## than failing the load.
+## Deliberately laxer than the editor: checks only what playback needs, so
+## imperfect files stay playable and per-line problems warn instead of failing.
 
 const SUPPORTED_FORMAT_MAJOR := 4
 const LINE_TYPES := ["speaking", "narrator", "minigame"]

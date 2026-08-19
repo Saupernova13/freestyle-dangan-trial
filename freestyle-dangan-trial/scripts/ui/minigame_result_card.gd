@@ -1,11 +1,11 @@
 extends CanvasLayer
 
-## The "ALL RIGHT! / WRONG!" flash after each minigame attempt, with an
-## optional failure message. Layout, fonts and the show / show_message
-## animations are editor-owned in scenes/ui/minigame_result_card.tscn.
+## The "ALL RIGHT! / WRONG!" flash after each minigame attempt, with an optional
+## failure message. Layout and the show / show_message animations are
+## editor-owned in scenes/ui/minigame_result_card.tscn.
 ##
-## Code binds data only: the word, its color, and the message. A card carrying
-## a message holds longer, so the player can read it before the replay.
+## Code binds the word, its color and the message. A card carrying a message
+## holds longer, so the player can read it before the replay.
 
 signal card_finished
 

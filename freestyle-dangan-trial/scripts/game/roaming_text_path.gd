@@ -1,10 +1,9 @@
 extends Path2D
 ## Roaming background text: an oval path fitted to the viewport, with one
 ## roaming_char scene per character of the JSON-configured text. The count is
-## data-driven, so characters are instanced rather than authored — but each is
-## still a scene: edit font, size, color, z-index and the orbit animation in
-## scenes/ui/roaming_char.tscn. Only the curve is procedural, because it has to
-## refit the live viewport.
+## data-driven, so characters are instanced rather than authored; look and orbit
+## stay editable in scenes/ui/roaming_char.tscn. Only the curve is procedural,
+## because it refits the live viewport.
 
 ## JSON file holding the configuration paths.
 @export_file("*.json") var paths_config_file: String = "res://data/paths.json"

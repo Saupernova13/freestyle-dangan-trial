@@ -20,8 +20,8 @@ extends Camera3D
 @export_range(0.05, 0.5, 0.05) var hold_repeat_interval: float = 0.15
 
 var bench_markers: Array[Marker3D] = []
-# The Monokuma bench sits after this count, so jump_to_bench() can reach it
-# while navigate_to_next/previous wrap below it and never land there.
+# The Monokuma bench sits after this count: jump_to_bench() reaches it, but
+# navigate_to_next/previous wrap below and never land there.
 var _nav_count: int = 0
 var current_index: int = 0
 var is_transitioning: bool = false
@@ -225,7 +225,7 @@ func navigate_to_previous():
 	focus_on_bench(current_index, true)
 
 ## Tweens the rotation unless `animate` is false, and notifies TrialRoom so the
-## name and portrait track free navigation.
+## name and portrait follow.
 func focus_on_bench(index: int, animate: bool):
 	if index < 0 or index >= bench_markers.size():
 		push_warning("Invalid bench index: %d" % index)

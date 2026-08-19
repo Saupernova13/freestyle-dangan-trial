@@ -40,8 +40,7 @@ func _register_motions() -> void:
 		"dolly_in": _execute_dolly.bind(-0.5),
 		"dolly_out": _execute_dolly.bind(0.5),
 		# Pans and tilts rotate in place; trucks and pedestals translate
-		# locally. Both persist for the line, since the next speaking line
-		# hard-cuts to its bench and resets the camera anyway.
+		# locally. Both persist for the line: the next speaking line resets it.
 		"pan_left": _execute_rotate.bind(Vector3(0, deg_to_rad(15.0), 0)),
 		"pan_right": _execute_rotate.bind(Vector3(0, deg_to_rad(-15.0), 0)),
 		"pan_up": _execute_rotate.bind(Vector3(deg_to_rad(10.0), 0, 0)),

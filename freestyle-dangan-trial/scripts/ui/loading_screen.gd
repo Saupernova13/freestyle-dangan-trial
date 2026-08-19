@@ -1,12 +1,10 @@
 extends CanvasLayer
 
-## Shown while TrialLoader.load_trial_async extracts the archive and caches
-## character assets on a worker thread.
+## Shown while TrialLoader.load_trial_async works on a worker thread.
 ##
-## Layout, colors and fonts live in scenes/ui/loading_screen.tscn; the
-## entrance and exit animations in animations/loading_screen_anim_lib.tres,
-## where "show" autoplays and "dismiss" fires before leaving. This script
-## binds progress to the UI and triggers the dismiss.
+## Layout is scene-owned; animations live in
+## animations/loading_screen_anim_lib.tres ("show" autoplays, "dismiss" fires
+## before leaving). This script binds progress and triggers the dismiss.
 
 @onready var _progress_bar: ProgressBar = %ProgressBar
 @onready var _status_label: Label = %StatusLabel

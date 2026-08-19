@@ -10,10 +10,8 @@ const MONOKUMA_BENCH := 16  # 0-based; its marker has a distinct name
 var _trial_posts: Node3D
 
 # Keyed both by character id (what script lines reference) and by bench index
-# (what the camera and navigation reference), from one insert point.
-# The cast is sparse — empty seats, failed loads, the Monokuma seat — so a
-# dense Array indexed by bench drifts out of step with load order, which once
-# put lines under the previous speaker.
+# (what the camera and navigation reference), from one insert point. The cast is
+# sparse, so a dense Array indexed by bench drifts out of step with load order.
 var _by_id: Dictionary = {}
 var _by_bench: Dictionary = {}
 
@@ -123,10 +121,9 @@ func _ensure_black_backplane(mesh_instance: MeshInstance3D) -> void:
 	back.material_override = black_mat
 	mesh_instance.add_child(back)
 
-## Keeps the texture's native aspect instead of stretching it to the bench
-## quad. Each bench bakes its own non-uniform scale into its transform, so the
-## plane needs its own QuadMesh — never the shared bench mesh. The backplane
-## holds that QuadMesh by reference and tracks resizes for free.
+## Keeps the texture's native aspect instead of stretching it to the bench quad.
+## Each bench bakes its own non-uniform scale, so the plane needs its own
+## QuadMesh — never the shared bench mesh.
 func _fit_quad_to_texture(mesh_instance: MeshInstance3D, texture: Texture2D) -> void:
 	if not texture:
 		return

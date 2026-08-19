@@ -1,10 +1,8 @@
 extends CanvasLayer
 
-## Placeholder overlay for the not-yet-implemented minigames:
-## RebuttalShowdown, PsycheTaxi, ClosingArgument.
-##
-## Each instantiates scenes/minigames/stub_minigame_overlay.tscn, calls
-## set_title() with its own name and color, then auto-completes.
+## Placeholder overlay for the unimplemented minigames: RebuttalShowdown,
+## PsycheTaxi, ClosingArgument. Each sets its own title and color, then
+## auto-completes.
 
 @onready var _title: Label = %Title
 @onready var _subtitle: Label = %Subtitle

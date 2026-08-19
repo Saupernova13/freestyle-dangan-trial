@@ -1,9 +1,8 @@
 extends CanvasLayer
 
-## Spinning truth-bullet HUD, bottom-left during minigames. Positioning,
-## sizing, colors and the looping idle rotation are all editor-owned in
-## scenes/ui/truth_bullet_selector.tscn; this script wires signals, updates
-## text, and applies lie-mode coloring.
+## Spinning truth-bullet HUD, bottom-left during minigames. Look and the looping
+## idle rotation are editor-owned; this script wires signals, updates text and
+## applies lie-mode coloring.
 
 @export var bullet_text_color: Color = Color(1, 1, 1, 1)
 @export var lie_color: Color = Color(1.0, 0.3, 0.3)

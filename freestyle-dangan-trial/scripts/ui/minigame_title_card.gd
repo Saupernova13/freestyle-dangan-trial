@@ -1,18 +1,11 @@
 extends CanvasLayer
 
-## Cinematic minigame title card: the banner flies in from the left, holds,
-## then exits right. Layout, fonts, colors, padding and the 9-slice frame are
-## all editor-owned in scenes/ui/minigame_title_card.tscn:
-##   Slider (Control, anchors animated across the screen)
-##     Mount (HBoxContainer, negative separation = frame/bullet overlap)
-##       Frame (PanelContainer, StyleBoxTexture 9-slice — grows to fit the title)
-##         Margin > Labels (VBox) > Title / Subtitle
-##       Bullet (TextureRect)
-## Flight, hold and background fade are all the `fly` animation. It keys the
-## Slider's anchors, which are proportional, so the card clears the screen at
-## any resolution.
+## Cinematic minigame title card: flies in from the left, holds, exits right.
+## Layout and the `fly` animation are editor-owned in
+## scenes/ui/minigame_title_card.tscn; `fly` keys the Slider's proportional
+## anchors, so the card clears the screen at any resolution.
 ##
-## Code binds data only: title text, title color, texture variant, and Mount's
+## Code binds data only: title text and color, texture variant, and Mount's
 ## centering offset, which depends on the content-driven banner width.
 
 signal card_finished

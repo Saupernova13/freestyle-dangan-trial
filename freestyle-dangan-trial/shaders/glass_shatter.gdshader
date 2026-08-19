@@ -1,11 +1,9 @@
 shader_type canvas_item;
 
-// Glass shatter for the BREAK! sequence. The frozen screenshot is split into
-// jittered-grid voronoi shards. An AnimationPlayer drives the whole effect
-// through two uniforms:
+// Glass shatter for the BREAK! sequence: the frozen screenshot split into
+// jittered-grid voronoi shards. An AnimationPlayer drives two uniforms:
 //   crack_progress   0..1  crack lines grow outward from impact_center
-//   shatter_progress 0..1  shards fly out, rotate and fall, leaving the
-//                          BlackFill behind them visible
+//   shatter_progress 0..1  shards fly out, rotate and fall
 // Everything else is an editor-tunable look parameter.
 uniform float crack_progress : hint_range(0.0, 1.0) = 0.0;
 uniform float shatter_progress : hint_range(0.0, 1.0) = 0.0;
@@ -19,9 +17,8 @@ uniform float fly_distance : hint_range(0.0, 6.0) = 1.8;
 uniform float rotation_amount : hint_range(0.0, 3.14) = 1.1;
 uniform float gravity_pull : hint_range(0.0, 3.0) = 0.5;
 uniform float stagger : hint_range(0.0, 0.9) = 0.4;
-// Keep low enough that a shard is invisible before its offset leaves the 5x5
-// candidate window (~2 cells at the default fly_distance), or it pops instead
-// of fading.
+// Keep low enough that a shard fades out before its offset leaves the 5x5
+// candidate window (~2 cells at the default fly_distance), or it pops.
 uniform float fade_start : hint_range(0.0, 1.0) = 0.45;
 
 vec2 hash2(vec2 c) {
@@ -72,8 +69,7 @@ void fragment() {
 	max_r = max(max_r, distance(impact_p, grid_max));
 
 	bool flying = shatter_progress > 0.0001;
-	// At rest a 3x3 window suffices; in flight a shard from 2 cells away can
-	// have moved over this pixel.
+	// 3x3 suffices at rest; in flight a shard 2 cells away can reach this pixel.
 	int search = flying ? 2 : 1;
 
 	vec4 out_col = vec4(0.0);

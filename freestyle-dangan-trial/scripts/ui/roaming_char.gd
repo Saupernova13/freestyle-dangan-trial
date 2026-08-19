@@ -1,9 +1,8 @@
 extends PathFollow2D
 
-## One character of the roaming background text. Font, size, color, z-index
-## and the looping `orbit` speed curve are all editor-owned in
-## scenes/ui/roaming_char.tscn. The caller supplies only the character, its
-## phase along the path, the lap duration, and the direction.
+## One character of the roaming background text. Look and the looping `orbit`
+## curve are editor-owned; the caller supplies the character, its phase along
+## the path, the lap duration and the direction.
 
 func setup(character: String, phase: float, lap_duration: float, forward: bool, animate: bool = true) -> void:
 	var label: Label = %Label

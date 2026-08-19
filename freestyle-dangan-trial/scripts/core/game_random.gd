@@ -19,8 +19,8 @@ func _ready() -> void:
 		seed_value = entropy.randi()
 	Log.info("GameRandom", "Session seed = %d" % seed_value)
 
-## Each call on a label yields a distinct stream, so repeated plays of one
-## minigame differ, while one seed still reproduces the whole call sequence.
+## Each call on a label yields a distinct stream, so repeated plays differ while
+## one seed still reproduces the whole call sequence.
 func stream(label: String) -> RandomNumberGenerator:
 	var index: int = _stream_counts.get(label, 0)
 	_stream_counts[label] = index + 1
@@ -28,9 +28,8 @@ func stream(label: String) -> RandomNumberGenerator:
 	rng.seed = hash("%d:%s:%d" % [seed_value, label, index])
 	return rng
 
-## Seeded by the session alone, with no per-call index, so every call on a
-## label repeats the identical sequence. For session-wide "personality"
-## values, not per-instance rolls.
+## Seeded by the session alone, so every call on a label repeats the identical
+## sequence. For session-wide "personality" values, not per-instance rolls.
 func session_stream(label: String) -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d:%s" % [seed_value, label])
@@ -41,8 +40,8 @@ func reseed(value: int) -> void:
 	seed_value = value
 	_stream_counts.clear()
 
-## In-place Fisher-Yates. Array.shuffle() can only use the global RNG, which
-## the session seed does not drive.
+## In-place Fisher-Yates: Array.shuffle() only uses the global RNG, which the
+## session seed does not drive.
 static func shuffle_with(array: Array, rng: RandomNumberGenerator) -> void:
 	for i in range(array.size() - 1, 0, -1):
 		var j := rng.randi_range(0, i)

@@ -40,8 +40,8 @@ func wants_mobile_slow_time() -> bool:
 func _split_dialogue_lines():
 	_main_lines.clear()
 	_white_noise_lines.clear()
-	# White noise is disabled pending a rework of its panel positioning: the
-	# isWhiteNoise flag is ignored and every line spawns as a main line.
+	# White noise is disabled pending a positioning rework: isWhiteNoise is
+	# ignored and every line spawns as a main line.
 	for line in dialogue_lines:
 		_main_lines.append(line)
 
@@ -198,9 +198,8 @@ func _spawn_main_line():
 	_panels_on_screen.append(panel)
 	_current_main_panel = panel
 
-	# The camera always follows the speaker. Unrelated to `characterSpotlight`,
-	# which is reserved for the unimplemented spotlight effect and must never
-	# gate camera focus.
+	# The camera always follows the speaker. `characterSpotlight` is reserved
+	# for the unimplemented spotlight effect and must never gate this.
 	if not panel.character_id.is_empty():
 		focus_camera_on_character(panel.character_id)
 
@@ -328,8 +327,7 @@ func _on_correct_hit(panel: DebateTextPanel):
 	_show_wrong_label()
 	await get_tree().create_timer(MinigameConfig.TIMING["wrong_to_screen_shatter"]).timeout
 
-	# The freeze/crack/shatter/BREAK sequence is the break_sequence animation
-	# in scenes/minigames/break_shatter.tscn.
+	# The whole sequence is the break_sequence animation in break_shatter.tscn.
 	_overlay_anim.stop()
 	_wrong_label.visible = false
 	var impact_uv = panel_center / get_viewport().get_visible_rect().size

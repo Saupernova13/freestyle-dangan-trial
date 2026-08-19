@@ -1,9 +1,8 @@
 class_name MobileToast
 extends CanvasLayer
-## Top-of-screen toast for status and error messages. It exists because on
-## Android nobody ever sees push_error() or print().
-## Layout and fades are scene-owned in scenes/ui/mobile_toast.tscn; the script
-## fills in text, tints for error or info, and runs the sequence.
+## Top-of-screen toast for status and error messages: on Android nobody sees
+## push_error() or print(). Layout and fades are scene-owned; the script fills
+## in text, tints for error or info, and runs the sequence.
 
 @export var info_bg: Color = Color(0.05, 0.1, 0.2, 0.92)
 @export var info_border: Color = Color(0.4, 0.7, 1.0)

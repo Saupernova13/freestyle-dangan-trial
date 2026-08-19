@@ -18,9 +18,8 @@ func _ready():
 
 func open_picker():
 	if _is_mobile:
-		# SAF usually grants per-URI permission without READ_EXTERNAL_STORAGE,
-		# but some versions and providers still need it. Asking every open is
-		# safe: Android only re-prompts if the user hasn't decided yet.
+		# Some Android versions and providers still need this alongside SAF.
+		# Asking every open is safe: Android re-prompts only if undecided.
 		_request_storage_permissions()
 		_open_mobile_picker()
 	else:
@@ -28,8 +27,7 @@ func open_picker():
 
 func _request_storage_permissions() -> void:
 	# Returns immediately; the result arrives via OS.request_permissions_result.
-	# No need to await it — the picker can't appear until the modal prompt is
-	# dismissed anyway.
+	# No await needed: the picker can't appear until the prompt is dismissed.
 	if OS.has_method("request_permissions"):
 		var granted = OS.request_permissions()
 		Log.info("TrialFilePicker", "Requested permissions, granted=%s" % str(granted))
@@ -43,7 +41,7 @@ func _open_desktop_picker():
 	_file_dialog.size = Vector2(800, 500)
 	_file_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_MAIN_WINDOW_SCREEN
 
-	# Prefer the scripter output directory when present; it's a dev convenience.
+	# Prefer the scripter output directory when present, as a dev convenience.
 	var scripter_output = OS.get_user_data_dir().path_join("../../../scripter/output")
 	if DirAccess.dir_exists_absolute(scripter_output):
 		_file_dialog.current_dir = scripter_output
@@ -77,12 +75,10 @@ func _open_mobile_picker():
 			cancelled.emit()
 		return
 
-	# Scoped storage means this usually finds nothing on Android 11+, but it
-	# keeps older devices and other mobile targets working.
+	# Scoped storage finds nothing on Android 11+; kept for older devices.
 	_open_legacy_directory_scan()
 
-## Set by _copy_to_user_dir(): the path attempted plus the Godot error code,
-## so the caller can show something specific.
+## Set by _copy_to_user_dir(): the attempted path plus the Godot error code.
 var _last_copy_error_detail: String = ""
 
 func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, _filter_index: int):
@@ -100,14 +96,14 @@ func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, _
 		return
 	file_selected.emit(local_copy)
 
-## The pick may be a content:// URI whose permission expires, so it is copied
-## into user://imported_trial.drtrial first. Returns the writable path, or ""
-## on failure with _last_copy_error_detail set.
+## A content:// URI's permission expires, so the pick is copied into
+## user://imported_trial.drtrial. Returns the writable path, or "" on failure
+## with _last_copy_error_detail set.
 func _copy_to_user_dir(source_path: String) -> String:
 	_last_copy_error_detail = ""
 
-	# get_file_as_bytes() handles Android content URIs; the chunked read below
-	# covers older drivers and non-standard providers that return empty.
+	# get_file_as_bytes() handles Android content URIs; the chunked read covers
+	# older drivers and providers that return empty.
 	var data := FileAccess.get_file_as_bytes(source_path)
 	var err := FileAccess.get_open_error()
 	if data.is_empty():

@@ -1,8 +1,7 @@
 class_name MinigameRunner
 extends Node
-## Runs a trial's minigame line: title card, then a replay loop where a wrong
-## answer or a timeout retries and only success advances the trial. Hides the
-## conversation UI throughout and reports back to ScriptDirector.
+## Runs a trial's minigame line: title card, then a replay loop where only
+## success advances. Hides the conversation UI and reports to ScriptDirector.
 
 ## gameType -> script path. A new minigame needs one entry here plus a
 ## MinigameBase subclass.
@@ -55,8 +54,7 @@ func _start_attempt(minigame_data: MinigameData) -> void:
 		minigame.cleanup()
 		minigame.queue_free()
 
-		# An emptied gauge is a hard fail: the game-over screen takes over,
-		# so there is no result card and no replay.
+		# An emptied gauge is a hard fail: the game-over screen takes over.
 		if not success and data.get("reason", "") == "influence_depleted":
 			return
 

@@ -1,14 +1,12 @@
 extends Node
 ## Full-screen per-line effects: flash, fade, overlay text, shader filters.
-## The rects, filter material and every animation are scene-owned — see
-## scenes/ui/screen_effects_overlay.tscn. Clips are authored one second long;
-## this script binds the data-driven parts and sets `speed_scale` to stretch a
-## clip to the duration the trial data asked for.
+## Rects, materials and animations are scene-owned in
+## scenes/ui/screen_effects_overlay.tscn. Clips are authored one second long and
+## stretched to the requested duration via `speed_scale`. Each rect owns an
+## AnimationPlayer, so two effects on one line don't cancel.
 ##
-## Each rect owns an AnimationPlayer, so two effects on one line don't cancel.
-##
-## Camera effects (screen_shake, fov_pulse) stay in code: they move a Camera3D
-## toward positions only known at runtime.
+## Camera effects (screen_shake, fov_pulse) stay in code: they need runtime
+## Camera3D positions.
 
 var _flash_rect: ColorRect
 var _fade_rect: ColorRect

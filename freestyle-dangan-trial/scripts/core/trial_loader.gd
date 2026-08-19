@@ -18,7 +18,7 @@ var manifest: TrialManifest = null
 var last_load_error: String = ""
 
 ## Set when trial.json exists but fails validation, so both load paths can
-## report the specific problem rather than a generic one.
+## report the specific problem.
 var last_parse_error: String = ""
 
 ## The trial room reads this to skip its synchronous fallback load.
@@ -63,8 +63,8 @@ func load_trial(file_path: String) -> bool:
 	Log.info("TrialLoader", "Trial loaded: %s" % manifest.trial_name)
 	return true
 
-## Extraction, JSON parse and sprite Image loading run on a worker thread;
-## ImageTexture creation and signal emission are deferred to the main thread.
+## Extraction, JSON parse and Image loading run on a worker thread; texture
+## creation and signal emission are deferred to the main thread.
 func load_trial_async(file_path: String) -> void:
 	loaded_async = false
 	last_load_error = ""

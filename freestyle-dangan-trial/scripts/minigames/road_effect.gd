@@ -1,12 +1,12 @@
 class_name RoadEffect
 extends Control
 
-## Scrolling road decoration drawn behind LogicDive minigame.
-## Attached as a node in scenes/minigames/logic_dive_overlay.tscn.
+## Scrolling road decoration behind the LogicDive minigame, attached in
+## scenes/minigames/logic_dive_overlay.tscn.
 ##
 ## `scroll_phase` runs 0 -> 1 over one dash period, driven by that scene's
-## looping road_scroll animation. Being normalized, it stays seamless at any
-## dash_length or gap_length; change the clip's length to change the speed.
+## looping road_scroll animation. Normalized, so it stays seamless at any
+## dash/gap length; change the clip's length to change the speed.
 
 @export var dash_length: float = 40.0
 @export var gap_length: float = 30.0

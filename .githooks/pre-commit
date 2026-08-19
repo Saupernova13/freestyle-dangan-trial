@@ -1,7 +1,6 @@
 #!/bin/sh
-# Fast pre-commit checks on staged files only (<5s target; full checks live
-# in tools/check.sh). Opt in with:
-#   git config core.hooksPath .githooks
+# Fast checks on staged files only; full checks live in tools/check.sh.
+# Opt in with: git config core.hooksPath .githooks
 
 set -u
 

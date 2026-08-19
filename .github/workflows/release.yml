@@ -1,12 +1,11 @@
 name: Release
 
 # Builds the Windows and Android engine binaries for each version tag and
-# attaches them to the GitHub release. The web editor is NOT published here
-# (it is hosted via GitHub Pages). The trial-room textures the main scene
-# needs (models/textures/1x) are committed, so a clean checkout can export.
+# attaches them to the GitHub release. The web editor ships via GitHub Pages,
+# not here.
 #
-# workflow_dispatch runs the two export jobs as a build-only dry run; the
-# publish job is gated on tag refs so dispatch never creates a release.
+# workflow_dispatch runs the export jobs as a build-only dry run; the publish
+# job is gated on tag refs so dispatch never creates a release.
 
 on:
   push:
@@ -43,9 +42,8 @@ jobs:
           godot --headless --path freestyle-dangan-trial --import
       - name: Export Windows build
         # Godot can segfault on shutdown after a successful headless export
-        # (it polls adb for one-click-deploy devices). savepack still finishes
-        # and writes the binary, so tolerate the exit code and gate success on
-        # the output file being present and a sane size.
+        # (it polls adb for one-click-deploy devices), so gate success on the
+        # output file instead of the exit code.
         run: |
           mkdir -p freestyle-dangan-trial/builds/win
           godot --headless --path freestyle-dangan-trial --export-release "Windows" builds/win/trial.exe || true

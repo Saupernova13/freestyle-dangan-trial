@@ -1,8 +1,7 @@
 # Run every check CI runs, locally. Windows PowerShell 5.1 compatible.
 #
-# Engine steps need a Godot 4.7 binary: set GODOT_BIN or have godot on PATH.
-# gdlint comes from gdtoolkit (pip install "gdtoolkit==4.5.*"). Steps whose
-# tools are missing are skipped with a warning, not failed.
+# Engine steps need a Godot 4.7 binary (GODOT_BIN or godot on PATH) and gdlint
+# (pip install "gdtoolkit==4.5.*"). Missing tools skip, never fail.
 
 $ErrorActionPreference = "Continue"
 $repoRoot = Split-Path -Parent $PSScriptRoot
@@ -19,7 +18,6 @@ function Have($cmd) {
     return $null -ne (Get-Command $cmd -ErrorAction SilentlyContinue)
 }
 
-# --- Editor: lint + tests + build -------------------------------------------
 Step "editor: npm run check (lint + vitest + build)"
 if (Have "npm") {
     if (-not (Test-Path (Join-Path $editorDir "node_modules"))) {
@@ -36,7 +34,6 @@ if (Have "npm") {
     Skip "npm not found; skipping editor checks"
 }
 
-# --- Engine: gdlint -----------------------------------------------------------
 Step "engine: gdlint"
 if (Have "gdlint") {
     Push-Location $engineDir
@@ -62,7 +59,7 @@ if (-not $godotBin) {
     Step "engine: import + tests"
     Skip "no Godot binary; set GODOT_BIN to a Godot 4.7 executable"
 } else {
-    # --- Engine: headless import (twice-tolerant on a cold .godot/) -----------
+    # A cold .godot/ can fail the first import; the retry is a no-op otherwise.
     Step "engine: headless import"
     & $godotBin --headless --path $engineDir --import
     if ($LASTEXITCODE -ne 0) {
@@ -70,7 +67,6 @@ if (-not $godotBin) {
     }
     if ($LASTEXITCODE -eq 0) { Ok "import" } else { Fail "import" }
 
-    # --- Engine: gdUnit4 tests --------------------------------------------------
     Step "engine: gdUnit4 tests"
     Push-Location $engineDir
     $env:GODOT_BIN = $godotBin

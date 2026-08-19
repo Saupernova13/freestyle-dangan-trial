@@ -1,10 +1,8 @@
 #!/bin/sh
-# Run every check CI runs, locally. Works from any directory; POSIX sh
-# (Git Bash on Windows is fine).
+# Run every check CI runs, locally. POSIX sh, any directory.
 #
-# Engine steps need a Godot 4.7 binary: set GODOT_BIN or have `godot` on
-# PATH. gdlint comes from gdtoolkit (pip install "gdtoolkit==4.5.*").
-# Steps whose tools are missing are skipped with a warning, not failed, so
+# Engine steps need a Godot 4.7 binary (GODOT_BIN or `godot` on PATH) and
+# gdlint (pip install "gdtoolkit==4.5.*"). Missing tools skip, never fail, so
 # web-only contributors can still use this script.
 
 set -u
@@ -19,7 +17,6 @@ ok() { printf '[OK] %s\n' "$1"; }
 fail() { printf '[FAIL] %s\n' "$1"; failed=1; }
 skip() { printf '[SKIP] %s\n' "$1"; }
 
-# --- Editor: lint + tests + build -----------------------------------------
 step "editor: npm run check (lint + vitest + build)"
 if command -v npm >/dev/null 2>&1; then
     if [ ! -d "$editor_dir/node_modules" ]; then
@@ -34,7 +31,6 @@ else
     skip "npm not found; skipping editor checks"
 fi
 
-# --- Engine: gdlint ---------------------------------------------------------
 step "engine: gdlint"
 if command -v gdlint >/dev/null 2>&1; then
     if (cd "$engine_dir" && gdlint scripts tests); then
@@ -62,7 +58,7 @@ if [ -z "$godot_bin" ]; then
     step "engine: import + tests"
     skip "no Godot binary; set GODOT_BIN to a Godot 4.7 executable"
 else
-    # --- Engine: headless import (twice-tolerant on a cold .godot/) ---------
+    # A cold .godot/ can fail the first import; the retry is a no-op otherwise.
     step "engine: headless import"
     if "$godot_bin" --headless --path "$engine_dir" --import \
         || "$godot_bin" --headless --path "$engine_dir" --import; then
@@ -71,7 +67,6 @@ else
         fail "import"
     fi
 
-    # --- Engine: gdUnit4 tests ----------------------------------------------
     step "engine: gdUnit4 tests"
     if (cd "$engine_dir" && GODOT_BIN="$godot_bin" sh addons/gdUnit4/runtest.sh -a res://tests/unit); then
         ok "gdUnit4"

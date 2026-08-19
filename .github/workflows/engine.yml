@@ -20,10 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # The engine is GDScript-only. Addons occasionally vendor a .cs file, and
-      # the .NET Godot editor then refuses to export without a C# solution. The
-      # standard build this workflow installs ignores .cs entirely, so nothing
-      # else here would notice.
+      # The engine is GDScript-only. A vendored .cs makes the .NET Godot editor
+      # refuse to export, and the standard build used here would not notice.
       - name: Reject C#/.NET files
         run: |
           found=$(find freestyle-dangan-trial \
@@ -59,9 +57,8 @@ jobs:
           unzip -q godot.zip
           install -D "Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$HOME/.local/bin/godot"
       - name: Import project
-        # .godot/ is gitignored, so CI must import from scratch (this also
-        # resolves the uid:// main-scene reference). A cold first import can
-        # exit nonzero on resource ordering; the second pass is a cheap no-op
+        # .godot/ is gitignored, so CI imports from scratch. A cold first import
+        # can exit nonzero on resource ordering; the second pass is a no-op
         # when the first succeeded.
         run: |
           godot --headless --path freestyle-dangan-trial --import || \

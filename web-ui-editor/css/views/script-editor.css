@@ -189,9 +189,8 @@
   box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.15);
 }
 
-/* Dialogue/narration are textareas that grow with their content (Chromium
-   field-sizing), so long lines wrap and stay readable instead of scrolling
-   inside a one-line box. */
+/* Textareas that grow with their content (Chromium field-sizing), so long
+   lines wrap instead of scrolling inside a one-line box. */
 .script-dialogue-input,
 .script-narration-input {
   field-sizing: content;
@@ -942,7 +941,7 @@
     transform 0.3s ease;
 }
 
-/* Update mobile responsive to include drag handle and drop zones */
+/* Mobile: drag handle and drop zones */
 @media (max-width: 768px) {
   .script-drag-handle {
     padding: 0.5rem;

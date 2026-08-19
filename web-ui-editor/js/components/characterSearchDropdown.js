@@ -1,9 +1,8 @@
 // Character search dropdown for speaking script lines; the markup lives in
 // app.js's renderScriptLineBar.
 //
-// Only one dropdown is ever open, so a single open-state drives all of them.
-// Clicks and hover go through document-level delegation, because the list
-// re-renders on every keystroke and per-item listeners would need rebinding.
+// Only one is ever open, so a single open-state drives all of them. Clicks and
+// hover are delegated on the document, since the list re-renders per keystroke.
 import { updateScriptLine } from '../app.js';
 import { state } from '../core/state.js';
 import { escapeHtml } from '../utils.js';

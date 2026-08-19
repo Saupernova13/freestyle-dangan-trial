@@ -2,8 +2,8 @@
 //
 // Recording piggybacks on storage.js's persistence choke points, so history
 // needs no per-feature wiring. Restores go the other way: app.js injects a
-// callback via initHistory, because importing the render/storage modules
-// here would create a cycle. Keep this module DOM-free for the node tests.
+// callback via initHistory, since importing render/storage here would cycle.
+// Keep this module DOM-free for the node tests.
 import { state } from './state.js';
 
 const MAX_SNAPSHOTS = 50;

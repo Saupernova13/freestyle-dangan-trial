@@ -1,7 +1,7 @@
 // Runtime validation for trial.json. schema/trial.schema.json is normative;
 // this hand-written mirror keeps a schema engine out of the bundle and emits
-// author-friendly messages. tests/schema.test.js cross-checks the two with
-// ajv, so they cannot drift. Keep DOM-free: those tests run under node.
+// author-friendly messages. tests/schema.test.js cross-checks the two with ajv.
+// Keep DOM-free: those tests run under node.
 import { FORMAT_VERSION, MINIGAME_TYPE_LABELS } from './constants.js';
 
 const LINE_TYPES = ['speaking', 'narrator', 'minigame'];

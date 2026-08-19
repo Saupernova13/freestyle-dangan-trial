@@ -42,9 +42,8 @@ export function escapeHtml(text) {
 // Returns the only shape previews, saves and the engine ever see: sorted,
 // disjoint, clamped to the text.
 //
-// Ranges are painted onto a per-character color map — later entries win, like
-// going over text again with a highlighter — then re-emitted as runs. Overlaps,
-// stale ranges, out-of-bounds indices and bad colors cannot survive it.
+// Ranges paint a per-character color map (later entries win), then re-emit as
+// runs, so overlaps, stale ranges and bad indices cannot survive.
 export function normalizeHighlights(highlights, textLength) {
   if (!Array.isArray(highlights) || textLength <= 0) return [];
 

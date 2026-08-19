@@ -4,9 +4,7 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 // The editor is a static single-page app; Vite supplies the dev server, since
 // ES modules cannot load over file://.
 //
-// `npm run build:single` inlines all JS/CSS into one self-contained
-// dist/index.html. If a browser blocks the folder picker over file://, serve
-// it over HTTP instead (`npm run preview`).
+// `npm run build:single` inlines all JS/CSS into one dist/index.html.
 export default defineConfig(({ mode }) => ({
   base: './',
   plugins: mode === 'single' ? [viteSingleFile()] : [],

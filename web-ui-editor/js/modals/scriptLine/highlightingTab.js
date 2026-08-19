@@ -115,8 +115,8 @@ export function renderHighlightingTab(line) {
   `;
 }
 
-// The tab re-wires on every highlight add/remove and tab switch, so without
-// this the document pointerup handlers would pile up.
+// The tab re-wires on every add/remove and tab switch, so document pointerup
+// handlers would otherwise pile up.
 let detachDragSelection = null;
 
 // Called when the modal closes.
@@ -142,7 +142,7 @@ export function initializeDragSelection() {
   let startIndex = -1;
 
   // Touch's implicit pointer capture pins e.target to the start span, so the
-  // span under the cursor has to be resolved by coordinates.
+  // span under the cursor is resolved by coordinates.
   const charIndexAt = (x, y) => {
     const el = document.elementFromPoint(x, y);
     if (el && el.classList.contains('char-selectable')) {
@@ -235,8 +235,7 @@ export function initializeDragSelection() {
 export function renderHighlightedDialogue(dialogue, highlights) {
   if (!dialogue) return '<em>No dialogue text</em>';
 
-  // Normalizing first makes the preview match what the engine renders, even
-  // for stale ranges out of an older trial file.
+  // Normalizing first makes the preview match what the engine renders.
   const normalized = normalizeHighlights(highlights, dialogue.length);
   if (normalized.length === 0) return escapeHtml(dialogue);
 
@@ -254,7 +253,7 @@ export function renderHighlightedDialogue(dialogue, highlights) {
   return result;
 }
 
-// Do not rename to clearSelection: app.js exports one too, and these share a
+// Do not rename to clearSelection: app.js exports one too, and they share a
 // global namespace where the last file loaded silently wins.
 export function clearHighlightSelection() {
   sl.highlighting.startChar = 0;
@@ -363,7 +362,7 @@ export function addHighlightFromSelection() {
   }
 
   // Normalizing after the push gives highlighter semantics: painting over an
-  // existing highlight repaints it instead of stacking overlapping ranges.
+  // existing highlight repaints it rather than stacking ranges.
   sl.fields.highlights.push({
     startChar: sl.highlighting.startChar,
     endChar: sl.highlighting.endChar,

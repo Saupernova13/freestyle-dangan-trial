@@ -1,11 +1,10 @@
-// Origin Private File System (OPFS) backend.
+// Origin Private File System (OPFS) backend, for browsers without
+// showDirectoryPicker. OPFS exposes the same FileSystemDirectoryHandle
+// interface, so passing an OPFS subdirectory as state.dirHandle leaves the
+// read/write code unchanged. One subfolder per trial under trials/.
 //
-// Firefox and Safari ship no showDirectoryPicker but do ship OPFS, which
-// exposes the same FileSystemDirectoryHandle interface — so handing the app
-// an OPFS subdirectory as state.dirHandle makes all the read/write code work
-// unchanged. The trade-off is that OPFS is invisible to the OS file manager,
-// so trials only move in and out via Import / Export .drtrial. One subfolder
-// per trial under trials/.
+// OPFS is invisible to the OS file manager: trials move in and out only via
+// Import / Export .drtrial.
 
 const TRIALS_DIR = 'trials';
 

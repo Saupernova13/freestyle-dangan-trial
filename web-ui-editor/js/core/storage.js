@@ -1,8 +1,8 @@
 // File I/O and trial persistence.
 //
-// A trial lives in state.dirHandle, which is either an on-disk folder from
-// showDirectoryPicker (Chromium) or an OPFS subfolder (see core/opfs.js).
-// The two backends share an interface, so everything below works on either.
+// A trial lives in state.dirHandle: an on-disk folder from showDirectoryPicker
+// or an OPFS subfolder (core/opfs.js). Both share an interface, so everything
+// below works on either.
 import JSZip from 'jszip';
 import { BLOCK_COUNT } from './constants.js';
 import { recordChange, resetHistory } from './history.js';
@@ -472,9 +472,8 @@ export async function loadMinigameAudio() {
 let autoSaveTimer = null;
 let autoSaveFailureNotified = false;
 
-// Debounced save for keystroke-frequency callers; a per-keypress write would
-// interleave. Also the undo choke point — every mutation reaches this or
-// autoSaveTrial, so recordChange here covers them all.
+// Debounced save for keystroke-frequency callers, and the undo choke point:
+// every mutation reaches this or autoSaveTrial.
 export function scheduleAutoSave(delayMs = 600) {
   if (state.dirHandle) setSaveStatus('saving');
   recordChange(delayMs);

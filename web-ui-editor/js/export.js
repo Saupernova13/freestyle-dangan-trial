@@ -77,8 +77,7 @@ export function validateTrialForExport() {
 
 /**
  * Last gate before packaging: older files and hand edits carry overlapping or
- * out-of-bounds highlight ranges, so renormalize them against each line's text.
- * Unparseable content is returned untouched.
+ * out-of-bounds highlight ranges, so renormalize against each line's text.
  */
 export function sanitizeTrialJson(content) {
   try {

@@ -1,8 +1,7 @@
 // Shared working state for the script line modal and its tabs.
 //
-// Only one line is edited at a time, so a single `sl` object serves every
-// tab. scriptLineModal.js resets it on open and close; the tabs mutate
-// `sl.fields` and `sl.highlighting` directly.
+// Only one line is edited at a time, so a single `sl` object serves every tab.
+// scriptLineModal.js resets it on open and close; the tabs mutate it directly.
 import { state } from '../../core/state.js';
 
 import { setHtml } from '../../ui/dom.js';

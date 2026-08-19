@@ -1,8 +1,7 @@
 // Application entry point.
 //
-// Imports every module and bridges their public functions onto `window`,
-// because the rendered HTML uses inline `onclick="..."` handlers. That bridge
-// exists only for those handlers — modules call each other through imports.
+// Bridges every module's public functions onto `window`, because the rendered
+// HTML uses inline `onclick="..."` handlers. Modules themselves use imports.
 import * as utils from './utils.js';
 import * as icons from './ui/icons.js';
 import * as dialogs from './ui/dialogs.js';

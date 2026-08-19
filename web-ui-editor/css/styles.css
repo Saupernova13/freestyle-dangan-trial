@@ -1,8 +1,6 @@
-/* Class Trial editor styles. Each partial owns one section of the UI.
- *
- * These @imports are inlined at build time, so the order below is the cascade
- * the browser sees. Keep it in dependency order: tokens and reset, then
- * layout, components, views.
+/* Class Trial editor styles; each partial owns one section of the UI.
+ * The @imports are inlined at build time, so this order is the cascade the
+ * browser sees: tokens and reset, then layout, components, views.
  */
 @import './base/tokens.css';
 @import './base/reset.css';

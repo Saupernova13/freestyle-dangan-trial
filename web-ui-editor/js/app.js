@@ -1,5 +1,5 @@
 // Script editor view: the line list, line CRUD, and drag-to-reorder.
-// The per-line character search dropdown lives in components/characterSearchDropdown.js.
+// The per-line character dropdown lives in components/characterSearchDropdown.js.
 import { initCharacterSearchDropdown } from './components/characterSearchDropdown.js';
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
 import { initSpriteMagnifier } from './components/spriteMagnifier.js';
@@ -34,8 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
     scheduleAutoSave();
   });
 
-  // Applies a restored snapshot to the UI; skipHistory keeps the restore
-  // itself from being recorded as a new edit.
+  // skipHistory keeps the restore itself from being recorded as a new edit.
   initHistory(() => {
     document.getElementById('trialNameInput').value = state.trialName;
     renderActiveView();
@@ -137,8 +136,7 @@ export function renderScriptEditor() {
 }
 
 // --- Search / filter -------------------------------------------------------
-// Toggles row visibility rather than re-rendering, so the search box keeps
-// focus and caret position while typing.
+// Toggles row visibility rather than re-rendering, so the box keeps focus.
 let scriptFilter = '';
 
 export function filterScript(value) {
@@ -378,8 +376,7 @@ export async function changeScriptLineType(lineId, newType) {
   if (!line) return;
   if (line.type === newType) return;
 
-  // Switching type clears type-specific content, so confirm if there is
-  // anything to lose; backing out re-renders to reset the dropdown.
+  // Switching type clears type-specific content, so confirm before losing it.
   const hasData = !!(
     (line.dialogue && line.dialogue.trim()) ||
     (line.text && line.text.trim()) ||
@@ -410,9 +407,9 @@ export async function changeScriptLineType(lineId, newType) {
   delete line.text;
   delete line.minigameId;
 
-  // Drop advanced properties the new type can't carry, so nothing stale
-  // reaches trial.json: a minigame trigger keeps none, sprite/camera are
-  // speaking-only, and audio/highlights/effects survive speaking<->narrator.
+  // Drop advanced properties the new type can't carry: a minigame trigger
+  // keeps none, sprite/camera are speaking-only, and audio/highlights/effects
+  // survive speaking<->narrator.
   if (newType === 'minigame') {
     await removeLineAudioFile(line);
     delete line.audioFile;

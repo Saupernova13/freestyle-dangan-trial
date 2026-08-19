@@ -1,11 +1,8 @@
-// Inline SVG icon set for the Class Trial editor.
+// Inline SVG icon set for the Class Trial editor. Every glyph is monochrome,
+// stroke-based, on a 24x24 grid, and takes `currentColor`.
 //
-// Every glyph is monochrome, stroke-based, drawn on a 24x24 grid, and takes
-// `currentColor`, so it picks up the text color of whatever it sits in.
-//
-// `icon` is published on `window` (like the inline onclick handlers) so the
+// `icon` is published on `window`, like the inline onclick handlers, so the
 // template-string markup in the view modules can call it without importing.
-// index.html inlines its SVG directly instead.
 
 const PATHS = {
   // --- chrome / navigation ---

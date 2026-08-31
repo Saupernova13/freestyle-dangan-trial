@@ -3,7 +3,12 @@
 // stayed visible and permanently unshootable - and the export pre-flight
 // passed clean, so the break surfaced only in the shipped trial.
 import { describe, expect, it } from 'vitest';
-import { detachTruthBullet, findDanglingBulletReferences } from '../js/core/references.js';
+import {
+  detachCharacter,
+  detachTruthBullet,
+  findDanglingBulletReferences,
+  findDanglingCharacterReferences,
+} from '../js/core/references.js';
 
 const BULLET = 'tb_knife';
 
@@ -106,5 +111,116 @@ describe('findDanglingBulletReferences', () => {
 
   it('ignores a null answer rather than calling it dangling', () => {
     expect(findDanglingBulletReferences(minigames(), [{ bulletId: BULLET }])).toHaveLength(2);
+  });
+});
+
+// removeCharacter cleared characterId on speaking script lines only. Every
+// minigame reference survived, so the exported trial kept speaker1CharacterId
+// pointing at a deleted folder - and nothing validated characterId against the
+// cast anywhere, so the export check passed clean and it broke at runtime.
+const CHAR = 'SJ_20000101_AAA';
+
+function castMinigames() {
+  return [
+    {
+      gameId: 'mg_panic',
+      name: 'Everyone at once',
+      gameType: 'mass_panic_debate',
+      typeSpecific: {
+        speaker1CharacterId: CHAR,
+        speaker2CharacterId: 'SJ_20000101_BBB',
+        speaker3CharacterId: '',
+        lineGroups: [],
+      },
+    },
+    {
+      gameId: 'mg_nonstop',
+      name: 'Who held the knife?',
+      gameType: 'nonstop_debate',
+      typeSpecific: {
+        dialogueLines: [
+          { lineId: 'l1', characterId: CHAR },
+          { lineId: 'l2', characterId: 'SJ_20000101_BBB' },
+        ],
+      },
+    },
+    {
+      gameId: 'mg_scrum',
+      name: 'Scrum',
+      gameType: 'debate_scrum',
+      typeSpecific: {
+        arguments: [
+          { argumentId: 'a1', oppositionCharacterId: CHAR, defenseCharacterId: CHAR },
+          {
+            argumentId: 'a2',
+            oppositionCharacterId: 'SJ_20000101_BBB',
+            defenseCharacterId: 'SJ_20000101_BBB',
+          },
+        ],
+      },
+    },
+    { gameId: 'mg_bare', gameType: 'logic_dive' },
+  ];
+}
+
+describe('detachCharacter', () => {
+  it('clears mass panic speaker slots', () => {
+    const mgs = castMinigames();
+    detachCharacter(mgs, CHAR);
+    expect(mgs[0].typeSpecific.speaker1CharacterId).toBe('');
+    expect(mgs[0].typeSpecific.speaker2CharacterId).toBe('SJ_20000101_BBB');
+  });
+
+  it('clears nonstop dialogue line speakers', () => {
+    const mgs = castMinigames();
+    detachCharacter(mgs, CHAR);
+    expect(mgs[1].typeSpecific.dialogueLines[0].characterId).toBe('');
+    expect(mgs[1].typeSpecific.dialogueLines[1].characterId).toBe('SJ_20000101_BBB');
+  });
+
+  it('clears both sides of a scrum argument', () => {
+    const mgs = castMinigames();
+    detachCharacter(mgs, CHAR);
+    expect(mgs[2].typeSpecific.arguments[0].oppositionCharacterId).toBe('');
+    expect(mgs[2].typeSpecific.arguments[0].defenseCharacterId).toBe('');
+    expect(mgs[2].typeSpecific.arguments[1].oppositionCharacterId).toBe('SJ_20000101_BBB');
+  });
+
+  it('tolerates minigames with no character references', () => {
+    expect(() => detachCharacter(castMinigames(), CHAR)).not.toThrow();
+    expect(() => detachCharacter(undefined, CHAR)).not.toThrow();
+  });
+});
+
+describe('findDanglingCharacterReferences', () => {
+  const cast = [{ id: 'SJ_20000101_BBB', name: 'B' }, null];
+
+  it('reports every minigame slot left pointing at a removed character', () => {
+    const issues = findDanglingCharacterReferences(castMinigames(), cast, []);
+    // speaker1, one dialogue line, both sides of one scrum argument.
+    expect(issues).toHaveLength(4);
+  });
+
+  it('reports a speaking line whose character is no longer in the cast', () => {
+    const lines = [
+      { type: 'speaking', characterId: CHAR, dialogue: 'x' },
+      { type: 'speaking', characterId: 'SJ_20000101_BBB', dialogue: 'y' },
+      { type: 'narrator', text: 'z' },
+    ];
+    const issues = findDanglingCharacterReferences([], cast, lines);
+    expect(issues).toEqual(['Line 1: references a character that is no longer in the cast.']);
+  });
+
+  it('says nothing after a detach, which is the point', () => {
+    const mgs = castMinigames();
+    detachCharacter(mgs, CHAR);
+    expect(findDanglingCharacterReferences(mgs, cast, [])).toEqual([]);
+  });
+
+  it('treats an empty slot as unset rather than dangling', () => {
+    const mgs = [
+      { gameId: 'mg', gameType: 'mass_panic_debate', typeSpecific: { speaker1CharacterId: '' } },
+    ];
+    expect(findDanglingCharacterReferences(mgs, cast, [])).toEqual([]);
   });
 });

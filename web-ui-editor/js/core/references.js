@@ -62,3 +62,62 @@ export function findDanglingBulletReferences(minigames, truthBullets) {
   });
   return issues;
 }
+
+// gameType -> the paths that hold a character id. Each editor named the same
+// relationship differently, which is how a delete cascade came to cover the
+// script lines and none of these.
+function forEachCharacterReference(minigames, visit) {
+  for (const mg of minigames || []) {
+    const ts = mg && mg.typeSpecific;
+    if (!ts) continue;
+
+    for (const key of ['speaker1CharacterId', 'speaker2CharacterId', 'speaker3CharacterId']) {
+      if (key in ts) visit({ mg, container: ts, key });
+    }
+    for (const line of ts.dialogueLines || []) {
+      if (line && 'characterId' in line) visit({ mg, container: line, key: 'characterId' });
+    }
+    for (const arg of ts.arguments || []) {
+      if (!arg) continue;
+      for (const key of ['oppositionCharacterId', 'defenseCharacterId']) {
+        if (key in arg) visit({ mg, container: arg, key });
+      }
+    }
+  }
+}
+
+// Removes every minigame reference to `characterId`. The script lines are the
+// caller's job, since only it knows which lines belong to the open trial.
+//
+// The confirmation dialog says removing a character "clears any script lines
+// that use them", which is accurate as written and misleading in effect: the
+// exported trial kept speaker1CharacterId pointing at a deleted folder, the
+// export check passed clean, and the minigame broke at runtime.
+export function detachCharacter(minigames, characterId) {
+  forEachCharacterReference(minigames, (ref) => {
+    if (ref.container[ref.key] === characterId) ref.container[ref.key] = '';
+  });
+}
+
+// Human-readable descriptions of character ids no longer in the cast. Nothing
+// validated characterId against the cast anywhere in export.js or
+// trialSchema.js, in a minigame or on a script line.
+export function findDanglingCharacterReferences(minigames, cast, scriptLines) {
+  const known = new Set((cast || []).filter(Boolean).map((c) => c.id));
+  const issues = [];
+
+  (scriptLines || []).forEach((line, i) => {
+    if (!line || line.type !== 'speaking') return;
+    if (!line.characterId || known.has(line.characterId)) return;
+    issues.push(`Line ${i + 1}: references a character that is no longer in the cast.`);
+  });
+
+  forEachCharacterReference(minigames, (ref) => {
+    const id = ref.container[ref.key];
+    if (!id || known.has(id)) return;
+    const name = ref.mg.name && ref.mg.name.trim() ? ref.mg.name : ref.mg.gameId;
+    issues.push(`Minigame "${name}": ${ref.key} references a character no longer in the cast.`);
+  });
+
+  return issues;
+}

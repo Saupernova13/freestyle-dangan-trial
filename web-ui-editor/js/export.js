@@ -3,7 +3,10 @@ import JSZip from 'jszip';
 import { state } from './core/state.js';
 import { MINIGAME_TYPE_LABELS } from './core/constants.js';
 import { validateTrialData } from './core/trialSchema.js';
-import { findDanglingBulletReferences } from './core/references.js';
+import {
+  findDanglingBulletReferences,
+  findDanglingCharacterReferences,
+} from './core/references.js';
 import { buildTrialJson } from './core/trialSerialize.js';
 import { isCharacterComplete, missingCharacterFields } from './models/characterModel.js';
 import { alertDialog, confirmDialog, showToast } from './ui/dialogs.js';
@@ -76,6 +79,7 @@ export function validateTrialForExport() {
   // Dangling minigameId was already checked; this is the reference that makes
   // a debate unwinnable rather than merely untidy.
   issues.push(...findDanglingBulletReferences(state.minigames, state.truthBullets));
+  issues.push(...findDanglingCharacterReferences(state.minigames, state.cast, state.scriptLines));
 
   return issues;
 }

@@ -67,5 +67,7 @@ func _load_audio_from_file(file_path: String) -> AudioStream:
 func set_voice_pitch(scale: float):
 	voice_player.pitch_scale = scale
 
+## Called by TrialLoader between trials. Keys are EXTRACT_DIR paths, which
+## every trial reuses, so entries from one trial resolve for the next.
 func clear_cache():
 	_audio_cache.clear()

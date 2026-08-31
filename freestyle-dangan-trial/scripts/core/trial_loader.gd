@@ -162,6 +162,10 @@ func _reset_trial_state() -> void:
 	manifest = null
 	current_trial_path = ""
 	characters.clear()
+	# Every trial extracts to the same EXTRACT_DIR, so the audio cache is keyed
+	# on paths that two trials share. TrialArchive already wipes the files;
+	# without this, a cache hit still returns the previous trial's voice line.
+	AudioManager.clear_cache()
 
 func _parse_manifest() -> Dictionary:
 	last_parse_error = ""

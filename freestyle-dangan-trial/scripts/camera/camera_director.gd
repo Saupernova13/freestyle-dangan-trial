@@ -14,13 +14,26 @@ signal motion_completed
 func _ready():
 	_register_motions()
 
-	await get_tree().process_frame
-	_camera = get_viewport().get_camera_3d()
-	if _camera:
-		_original_fov = _camera.fov
-		_original_position = _camera.global_position
-		if _camera.has_method("jump_to_bench"):
-			_bench_camera = _camera
+## Autoload _ready() runs while the main scene is current, and that is the start
+## menu, which has no Camera3D - so latching one at startup left every motion a
+## no-op for the whole session. The reference would dangle again after each
+## change_scene_to_file, so resolve per call instead.
+##
+## The rest pose is re-captured whenever a different camera comes into view:
+## _execute_reset returns to the fov the trial camera was authored with, not to
+## whatever a preceding zoom left behind.
+func _resolve_camera() -> bool:
+	var cam: Camera3D = get_viewport().get_camera_3d()
+	if cam == null:
+		_camera = null
+		_bench_camera = null
+		return false
+	if cam != _camera:
+		_camera = cam
+		_original_fov = cam.fov
+		_original_position = cam.global_position
+		_bench_camera = cam if cam.has_method("jump_to_bench") else null
+	return true
 
 ## Editor motion names -> handlers taking
 ## (bench_index, duration, ease_type, trans_type), with variants pre-bound.
@@ -61,7 +74,8 @@ func _register_motions() -> void:
 	}
 
 func execute_motion(motion_data: Dictionary, target_bench_index: int = -1):
-	if not _camera:
+	if not _resolve_camera():
+		Log.warn("CameraDirector", "No current Camera3D; skipping camera motion.")
 		motion_completed.emit()
 		return
 

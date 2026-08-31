@@ -11,7 +11,6 @@ extends Node
 var _flash_rect: ColorRect
 var _fade_rect: ColorRect
 var _overlay_label: Label
-var _camera: Camera3D
 
 # One mode-switched rect, driven by shaders/screen_filter.gdshader.
 var _filter_rect: ColorRect
@@ -49,9 +48,6 @@ func _ready():
 	_filter_anim = overlay.get_node("%FilterAnimator")
 
 	_register_effects()
-
-	await get_tree().process_frame
-	_camera = get_viewport().get_camera_3d()
 
 ## Editor effect names and aliases -> handlers taking
 ## (intensity: float, duration: float, color: Color). A duration <= 0.0 means
@@ -118,24 +114,37 @@ func _play_for(player: AnimationPlayer, anim: String, duration: float) -> void:
 	player.speed_scale = 1.0 / maxf(duration, 0.01)
 	player.play(anim)
 
+## Resolved per call, never latched: this autoload starts while the start menu is
+## current and the start menu has no Camera3D, so a lookup at startup returns
+## null for the rest of the session. Null when nothing is rendering a 3D view.
+func _current_camera() -> Camera3D:
+	return get_viewport().get_camera_3d()
+
 func screen_shake(duration: float, intensity: float = 0.02):
-	if not _camera:
+	var camera := _current_camera()
+	if camera == null:
+		Log.warn("ScreenEffects", "No current Camera3D; skipping screen shake.")
 		return
 	intensity *= Settings.screen_shake_intensity if Settings else 1.0
 	if intensity <= 0.0:
 		return
-	var original_pos = _camera.global_position
+	var original_pos = camera.global_position
 	var elapsed = 0.0
 	while elapsed < duration:
+		# A scene change mid-shake frees the camera under us, and the position
+		# this was restoring belonged to a room that no longer exists.
+		if not is_instance_valid(camera):
+			return
 		var offset = Vector3(
 			randf_range(-intensity, intensity),
 			randf_range(-intensity, intensity),
 			0.0
 		)
-		_camera.global_position = original_pos + offset
+		camera.global_position = original_pos + offset
 		await get_tree().process_frame
 		elapsed += get_process_delta_time()
-	_camera.global_position = original_pos
+	if is_instance_valid(camera):
+		camera.global_position = original_pos
 
 func white_flash(duration: float):
 	color_flash(Color.WHITE, duration)
@@ -158,14 +167,17 @@ func cross_dissolve(duration: float):
 
 ## Intensity 0..1 maps to up to ~12 degrees of zoom punch.
 func fov_pulse(intensity: float, duration: float):
-	if not _camera:
+	var camera := _current_camera()
+	if camera == null:
+		Log.warn("ScreenEffects", "No current Camera3D; skipping fov pulse.")
 		return
-	var original_fov = _camera.fov
+	var original_fov = camera.fov
 	var punch = clampf(intensity, 0.0, 1.0) * 12.0
-	var tween = create_tween()
-	tween.tween_property(_camera, "fov", original_fov - punch, duration * 0.35) \
+	# Bound to the camera, so freeing it with its scene kills the tween too.
+	var tween = camera.create_tween()
+	tween.tween_property(camera, "fov", original_fov - punch, duration * 0.35) \
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	tween.tween_property(_camera, "fov", original_fov, duration * 0.65) \
+	tween.tween_property(camera, "fov", original_fov, duration * 0.65) \
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
 
 func red_flash(duration: float):

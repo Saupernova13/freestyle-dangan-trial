@@ -7,11 +7,11 @@ import { initHistory, redo, undo } from './core/history.js';
 import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
 import { state } from './core/state.js';
 import { autoSaveTrial, hasPendingWrites, scheduleAutoSave } from './core/storage.js';
-import { confirmDialog } from './ui/dialogs.js';
+import { alertDialog, confirmDialog } from './ui/dialogs.js';
 import { initModalBehaviors } from './ui/modalBehaviors.js';
 import { initKeyboardActivation } from './ui/a11y.js';
 import { updateExportButtonState } from './export.js';
-import { loadSettings } from './settings.js';
+import { clearStoredSettings, loadSettings } from './settings.js';
 import { initializeTheme } from './ui/theme.js';
 import { generateId, escapeHtml } from './utils.js';
 import { renderActiveView } from './views/viewManager.js';
@@ -32,7 +32,21 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   initializeTheme();
-  loadSettings();
+
+  // Nothing after this point runs if an initialiser throws, and there is no
+  // window.onerror to catch it, so the settings load reports failure instead:
+  // a corrupt localStorage value used to leave a permanently blank editor.
+  if (!loadSettings()) {
+    clearStoredSettings();
+    alertDialog({
+      title: 'Settings reset',
+      type: 'warning',
+      message:
+        'Your saved editor settings could not be read and have been reset to ' +
+        'their defaults. Your trials are unaffected.',
+    });
+  }
+
   initSpriteMagnifier();
   initCharacterSearchDropdown();
   initModalBehaviors();

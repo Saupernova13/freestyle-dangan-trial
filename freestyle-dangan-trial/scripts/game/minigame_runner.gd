@@ -40,6 +40,13 @@ func run(minigame: MinigameData) -> void:
 		ScriptDirector.on_minigame_finished(true)
 		return
 
+	# Before the conversation UI is hidden and before the title card, so a
+	# minigame that cannot be played is never presented as one.
+	var errors: Array[String] = _validation_errors(minigame)
+	if not errors.is_empty():
+		_skip_unplayable(minigame, errors)
+		return
+
 	if _dialogue_label:
 		_dialogue_label.text = ""
 	_hide_conversation_ui()
@@ -89,6 +96,37 @@ func _start_attempt(minigame_data: MinigameData) -> void:
 	)
 	ScriptDirector.on_minigame_started(minigame)
 	minigame.start()
+
+## validate_data() needs an initialised instance, and the one that actually
+## plays is not built until the title card has finished. This probe is never
+## added to the tree and start() is never called on it.
+func _validation_errors(minigame_data: MinigameData) -> Array[String]:
+	var probe: MinigameBase = _instantiate(minigame_data.game_type)
+	if probe == null:
+		# _start_attempt reports and recovers from a failed instantiation.
+		return []
+	probe.initialize(minigame_data)
+	var errors: Array[String] = probe.validate_data()
+	probe.free()
+	return errors
+
+## An authoring error must not be a soft-lock. Four minigames spin on empty
+## data - nothing spawns, nothing can be hit, the timer expires, the attempt
+## replays identically - and the diagnostics they do emit are Log.info, which
+## prints nothing at all in an exported build.
+func _skip_unplayable(minigame_data: MinigameData, errors: Array[String]) -> void:
+	var detail := ", ".join(errors)
+	Log.error(
+		"MinigameRunner",
+		"Skipping unplayable '%s': %s" % [minigame_data.game_type, detail]
+	)
+	MobileToast.show_message(
+		get_tree().root,
+		"Minigame '%s' has no playable data (%s); skipping." % [minigame_data.name, detail],
+		true,
+		6.0
+	)
+	ScriptDirector.on_minigame_finished(true)
 
 ## Returns null on any of the three ways this can fail; each one logs which.
 func _instantiate(game_type: String) -> MinigameBase:

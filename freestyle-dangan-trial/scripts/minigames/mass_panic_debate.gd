@@ -26,6 +26,12 @@ func initialize(data: MinigameData):
 
 	_spawn_interval = MinigameConfig.get_spawn_interval("mass_panic_debate", difficulty)
 
+func validate_data() -> Array[String]:
+	# _spawn_group() returns on every tick with no groups; nothing to shoot.
+	if line_groups.is_empty():
+		return ["lineGroups is empty"]
+	return []
+
 func start():
 	super.start()
 	_solved = false

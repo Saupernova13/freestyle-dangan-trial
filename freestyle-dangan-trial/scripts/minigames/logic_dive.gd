@@ -17,6 +17,11 @@ func initialize(data: MinigameData):
 	var type_specific := data.type_specific
 	questions = type_specific.get("questions", [])
 
+func validate_data() -> Array[String]:
+	if questions.is_empty():
+		return ["questions is empty"]
+	return []
+
 func start():
 	super.start()
 	_build_overlay()
@@ -24,9 +29,11 @@ func start():
 	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
 	Log.info("LogicDive", "%d questions" % questions.size())
 
-	if not questions.is_empty():
-		await get_tree().create_timer(0.5).timeout
-		_show_question(0)
+	await get_tree().create_timer(0.5).timeout
+	# Unguarded on purpose: _show_question() completes the game when the index
+	# runs past the end, so an empty list that slips past validation resolves
+	# itself instead of leaving the overlay up until the timer expires.
+	_show_question(0)
 
 func _build_overlay():
 	# Layout is scene-owned; lane buttons spawn into %LanesContainer.

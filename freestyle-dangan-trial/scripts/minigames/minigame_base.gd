@@ -52,6 +52,14 @@ func initialize(data: MinigameData):
 	time_limit = data.time_limit
 	time_remaining = time_limit
 
+## Authoring errors that make this minigame unplayable, empty when it is fine.
+## Called by MinigameRunner on an initialised instance before the title card:
+## a minigame with no data spawns nothing and can never be completed, so it
+## would otherwise run the clock down and replay to the attempt cap while the
+## player watches an empty screen. Override where empty data is possible.
+func validate_data() -> Array[String]:
+	return []
+
 func start():
 	_transition_to(State.ACTIVE)
 	if time_limit > 0:

@@ -24,6 +24,13 @@ func initialize(data: MinigameData):
 
 	_spawn_interval = MinigameConfig.get_spawn_interval("hangmans_gambit", difficulty)
 
+func validate_data() -> Array[String]:
+	# With no letters to reveal there are no answer slots, so _check_complete()
+	# is unreachable and the only way out is influence depletion.
+	if answer_key.strip_edges().is_empty():
+		return ["answerKey is empty"]
+	return []
+
 func start():
 	super.start()
 	_build_overlay()

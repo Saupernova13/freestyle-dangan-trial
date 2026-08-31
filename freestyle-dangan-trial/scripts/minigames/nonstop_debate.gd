@@ -34,6 +34,13 @@ func initialize(data: MinigameData):
 	_main_spawn_interval = MinigameConfig.get_spawn_interval("nonstop_debate", difficulty)
 	_split_dialogue_lines()
 
+func validate_data() -> Array[String]:
+	# _spawn_main_line() returns on every tick with no lines, so no panel ever
+	# appears and _on_shoot can never register a hit.
+	if _main_lines.is_empty():
+		return ["dialogueLines is empty"]
+	return []
+
 func wants_mobile_slow_time() -> bool:
 	return true
 

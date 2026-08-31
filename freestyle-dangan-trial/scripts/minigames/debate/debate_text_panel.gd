@@ -129,6 +129,8 @@ func _apply_setup():
 	_setup_pending = false
 	var data = _pending_setup_data
 	line_data = data
+	# Defaults to false to match the editor, which sets isShootable exactly when
+	# a line is given an answerBulletId and always writes the field.
 	is_shootable = data.get("isShootable", false)
 	var raw_bullet_id = data.get("answerBulletId", "")
 	answer_bullet_id = raw_bullet_id if raw_bullet_id != null else ""
@@ -344,6 +346,8 @@ func _transform_has_point(node: Control, click_pos: Vector2) -> bool:
 	var local = node.get_global_transform().affine_inverse() * click_pos
 	return Rect2(Vector2.ZERO, node.size).has_point(local)
 
+## Returns "", "white_noise", "prefix", "weakpoint", "suffix", or "inert" - the
+## last being a weak point on a line the author marked isShootable: false.
 func get_hit_zone(click_pos: Vector2) -> String:
 	if not _is_active:
 		return ""
@@ -354,7 +358,10 @@ func get_hit_zone(click_pos: Vector2) -> String:
 	if _prefix_label.visible and _transform_has_point(_prefix_label, click_pos):
 		return "prefix"
 	if _weak_label.visible and _transform_has_point(_weak_label, click_pos):
-		return "weakpoint"
+		# isShootable gates the weak point and nothing else. White noise is a
+		# separate mechanic keyed off isWhiteNoise, and a decoy's highlighted
+		# text is still text - hitting it is a mis-shot, not a non-event.
+		return "weakpoint" if is_shootable else "inert"
 	if _suffix_label.visible and _transform_has_point(_suffix_label, click_pos):
 		return "suffix"
 	return ""

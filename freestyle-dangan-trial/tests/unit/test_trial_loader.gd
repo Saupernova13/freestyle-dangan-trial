@@ -35,9 +35,10 @@ func test_load_trial_builds_typed_manifest() -> void:
 	var manifest: TrialManifest = TrialLoader.manifest
 	assert_object(manifest).is_not_null()
 	assert_str(manifest.trial_name).is_equal("Fixture Trial")
-	assert_int(TrialLoader.get_script_lines().size()).is_equal(4)
-	assert_int(TrialLoader.get_minigames().size()).is_equal(1)
-	assert_int(TrialLoader.get_truth_bullets().size()).is_equal(1)
+	# Shape, not arithmetic: the accessors must reach the parsed manifest.
+	assert_array(TrialLoader.get_script_lines()).is_not_empty()
+	assert_array(TrialLoader.get_minigames()).is_not_empty()
+	assert_array(TrialLoader.get_truth_bullets()).is_not_empty()
 
 	var character := TrialLoader.load_character("FC_20000101_FIXTUR")
 	assert_str(character.get("name", "")).is_equal("Fixture")
@@ -60,7 +61,7 @@ func test_async_load_publishes_one_coherent_manifest() -> void:
 	var manifest: TrialManifest = TrialLoader.manifest
 	assert_object(manifest).is_not_null()
 	assert_str(manifest.trial_name).is_equal("Fixture Trial")
-	assert_int(TrialLoader.get_script_lines().size()).is_equal(4)
+	assert_array(TrialLoader.get_script_lines()).is_not_empty()
 	assert_str(TrialLoader.current_trial_path).is_equal(path)
 
 

@@ -1,8 +1,12 @@
 class_name TrialValidator
 extends RefCounted
-## Structural validation for trial.json. schema/trial.schema.json is normative;
-## this file and the editor's js/core/trialSchema.js must track it, and CI
-## cross-checks all three.
+## Structural validation for trial.json. schema/trial.schema.json is normative
+## and this file must track it, but only two things are actually enforced: the
+## editor cross-checks its own validator against the schema case by case
+## (web-ui-editor/tests/schema.test.js), and test_trial_manifest.gd pins the
+## gameType enum to MinigameRunner's registry. Everything else here can drift
+## from the schema without CI noticing - the missing per-line required-field
+## checks especially.
 ##
 ## Deliberately laxer than the editor: checks only what playback needs, so
 ## imperfect files stay playable and per-line problems warn instead of failing.

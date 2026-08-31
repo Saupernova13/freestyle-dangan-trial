@@ -1,7 +1,8 @@
 extends GdUnitTestSuite
-## Engine half of the trial.json contract tests. The editor validates the same
-## fixture against schema/trial.schema.json (web-ui-editor/tests/schema.test.js),
-## so a contract change that only updates one side fails CI on the other.
+## Engine half of the trial.json contract tests. These are hand-written cases
+## against the fixture, not a schema check: the only artifact shared with the
+## editor's suite is the fixture file itself. The one assertion that genuinely
+## ties the two together is the gameType enum check in test_trial_manifest.gd.
 
 const FIXTURE_PATH := "res://tests/fixtures/minimal-trial/trial.json"
 

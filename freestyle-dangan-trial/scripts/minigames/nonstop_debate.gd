@@ -39,11 +39,20 @@ func initialize(data: MinigameData):
 	_split_dialogue_lines()
 
 func validate_data() -> Array[String]:
+	var errors: Array[String] = []
 	# _spawn_main_line() returns on every tick with no lines, so no panel ever
 	# appears and _on_shoot can never register a hit.
 	if _main_lines.is_empty():
-		return ["dialogueLines is empty"]
-	return []
+		errors.append("dialogueLines is empty")
+	# An empty selection means "all bullets" and is fine. A non-empty one where
+	# nothing resolves is not: every shot misses, so the attempt ends on the
+	# player's first correct-looking one and replays to the cap.
+	if (
+		not selected_bullets.is_empty()
+		and TruthBulletManager.resolve_ids(selected_bullets).is_empty()
+	):
+		errors.append("no selectedBullets id resolves to a truth bullet")
+	return errors
 
 func wants_mobile_slow_time() -> bool:
 	return true

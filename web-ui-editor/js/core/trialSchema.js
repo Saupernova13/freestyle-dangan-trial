@@ -9,10 +9,60 @@ const GAME_TYPES = Object.keys(MINIGAME_TYPE_LABELS);
 const VERSION_PATTERN = /^\d+\.\d+$/;
 const COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
+// Ids are interpolated into inline event handlers and data-* attributes all
+// over the views, so their shape is a security boundary rather than a style
+// rule: a quote character in an id closes the handler's string argument and
+// the rest of the id is evaluated as JavaScript the moment the view renders,
+// with no click required. Sharing .drtrial files is the format's purpose, so
+// ids arrive from other people by design.
+export const ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+
 const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isString = (v) => typeof v === 'string';
 const isNumber = (v) => typeof v === 'number' && Number.isFinite(v);
 const isStringOrNull = (v) => v === null || typeof v === 'string';
+const isId = (v) => typeof v === 'string' && ID_PATTERN.test(v);
+
+// Quoted and clipped: this text is shown to the author, and the whole point is
+// that the value may contain markup or script.
+const describeId = (value, where) =>
+  `${where} is not a valid id: ${JSON.stringify(String(value)).slice(0, 80)}`;
+
+// Every id the views interpolate, checked in one pass. Empty means the file is
+// safe to render. Unlike validateTrialData this is a gate, not a report:
+// callers refuse the file rather than opening it with warnings.
+export function findUnsafeIds(data) {
+  const bad = [];
+  if (!isObject(data)) return bad;
+
+  const check = (value, where) => {
+    if (value === undefined || value === null) return;
+    if (!isId(value)) bad.push(describeId(value, where));
+  };
+
+  if (Array.isArray(data.characters)) {
+    data.characters.forEach((c, i) => check(c, `characters[${i}]`));
+  }
+  if (isObject(data.script) && Array.isArray(data.script.lines)) {
+    data.script.lines.forEach((line, i) => {
+      if (!isObject(line)) return;
+      check(line.id, `script.lines[${i}].id`);
+      check(line.characterId, `script.lines[${i}].characterId`);
+      check(line.minigameId, `script.lines[${i}].minigameId`);
+    });
+  }
+  if (Array.isArray(data.minigames)) {
+    data.minigames.forEach((mg, i) => {
+      if (isObject(mg)) check(mg.gameId, `minigames[${i}].gameId`);
+    });
+  }
+  if (Array.isArray(data.truthBullets)) {
+    data.truthBullets.forEach((b, i) => {
+      if (isObject(b)) check(b.bulletId, `truthBullets[${i}].bulletId`);
+    });
+  }
+  return bad;
+}
 
 // ok=false only for a NEWER major. A missing or unparseable version still
 // passes, with a warning, so legacy files stay openable.
@@ -161,5 +211,6 @@ export function validateTrialData(data) {
   } else if (!isString(data.metadata.version) || !VERSION_PATTERN.test(data.metadata.version)) {
     issues.push('metadata.version is missing or not in "<major>.<minor>" form.');
   }
+  issues.push(...findUnsafeIds(data));
   return issues;
 }

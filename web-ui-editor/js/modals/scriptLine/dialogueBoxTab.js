@@ -1,5 +1,6 @@
 // Box Style tab: per-line dialogue box shape, border, and opacity.
 import { COLOR_REGEX, refreshTabBody, sl } from './state.js';
+import { escapeHtml } from '../../utils.js';
 import { renderScriptLineModal } from '../scriptLineModal.js';
 
 const BOX_STYLES = [
@@ -53,10 +54,10 @@ export function renderDialogueBoxTab() {
           <label>Border Color:</label>
           <div style="display: flex; gap: 0.5rem; align-items: center;">
             <input type="color"
-                   value="${box.borderColor}"
+                   value="${escapeHtml(box.borderColor)}"
                    onchange="updateDialogueBoxStyle('borderColor', this.value)"
                    style="width: 50px; height: 35px;">
-            <span style="font-size: 0.875rem; color: var(--text-tertiary);">${box.borderColor}</span>
+            <span style="font-size: 0.875rem; color: var(--text-tertiary);">${escapeHtml(box.borderColor)}</span>
           </div>
         </div>
         <div class="dr-fg-field">

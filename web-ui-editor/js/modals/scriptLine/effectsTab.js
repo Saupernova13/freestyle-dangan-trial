@@ -1,5 +1,6 @@
 // Effects tab: toggle screen/transition effects that fire on this line.
 import { refreshTabBody, sl } from './state.js';
+import { escapeHtml } from '../../utils.js';
 
 // `icon` is an icon-set name (see js/ui/icons.js), rendered via window.icon().
 const AVAILABLE_EFFECTS = [
@@ -33,11 +34,11 @@ export function renderSpecialEffectsTab() {
       <div class="effect-active-item">
         <span class="effect-icon">${window.icon(effectDef ? effectDef.icon : 'sparkles', { size: 18 })}</span>
         <div class="effect-details">
-          <strong>${effectDef ? effectDef.label : effect.type}</strong>
+          <strong>${effectDef ? effectDef.label : escapeHtml(effect.type)}</strong>
           <div class="effect-params">
-            ${effect.intensity !== undefined ? `Intensity: ${effect.intensity}` : ''}
-            ${effect.color !== undefined ? `Color: ${effect.color}` : ''}
-            ${effect.duration ? `Duration: ${effect.duration}s` : ''}
+            ${effect.intensity !== undefined ? `Intensity: ${escapeHtml(effect.intensity)}` : ''}
+            ${effect.color !== undefined ? `Color: ${escapeHtml(effect.color)}` : ''}
+            ${effect.duration ? `Duration: ${escapeHtml(effect.duration)}s` : ''}
           </div>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="removeEffect(${idx})">

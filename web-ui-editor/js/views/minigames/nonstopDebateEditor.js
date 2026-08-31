@@ -225,7 +225,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
             <div class="audio-preview">
               <div class="audio-info">
                 <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
-                <span class="audio-filename">${line.voiceLineFile}</span>
+                <span class="audio-filename">${escapeHtml(line.voiceLineFile)}</span>
               </div>
 
               <div class="audio-seek-container">

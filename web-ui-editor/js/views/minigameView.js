@@ -70,11 +70,11 @@ export function renderMinigameCard(mg, index) {
         <div class="minigame-info">
           <div class="minigame-name">${escapeHtml(mg.name || 'Unnamed Minigame')}</div>
           <div class="minigame-meta">
-            <span class="minigame-type">${MINIGAME_TYPE_LABELS[mg.gameType] || mg.gameType}</span>
-            <span class="minigame-difficulty" style="color: ${difficultyColors[mg.difficulty]}">
-              ${mg.difficulty}
+            <span class="minigame-type">${escapeHtml(MINIGAME_TYPE_LABELS[mg.gameType] || mg.gameType)}</span>
+            <span class="minigame-difficulty" style="color: ${difficultyColors[mg.difficulty] || 'inherit'}">
+              ${escapeHtml(mg.difficulty)}
             </span>
-            <span class="minigame-time">${window.icon('timer', { size: 14 })} ${mg.timeLimit}s</span>
+            <span class="minigame-time">${window.icon('timer', { size: 14 })} ${escapeHtml(mg.timeLimit)}s</span>
           </div>
         </div>
 

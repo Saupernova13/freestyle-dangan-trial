@@ -91,7 +91,7 @@ auto-complete (placeholders for future mechanics):
 - **Gauges** — influence (damage) and concentrate (slow-time) meters, with
   scene-bound UI
 - **Truth bullets** — the selector HUD and bullet-match checking the debate
-  minigames use
+  minigames use, including the lie-mode toggle negative bullets need
 - **Audio** — runtime decoding of MP3/OGG/WAV voice lines with a small cache
 - **Settings, game-over, seeded RNG** — persisted preferences, retry/return
   flow, and reproducible sessions via `GameRandom` (`DANGAN_SEED` env var)
@@ -99,8 +99,6 @@ auto-complete (placeholders for future mechanics):
 ### Not yet implemented
 - Character animation — sprites are static (no idle/react/walk)
 - Background music — audio is voice-only
-- Lie/negative truth bullets — the editor authors `useNegativeBullet`, but the
-  player-side toggle isn't bound to input yet
 - White-noise debate lines — the field exists but panel placement is disabled
   pending a rework
 - `characterSpotlight` — reserved for a lighting effect that doesn't exist yet
@@ -161,15 +159,17 @@ progress screen and begins.
 |-------|--------|
 | Space / Enter | Advance dialogue (or skip the typewriter) |
 | Ctrl (hold) | Fast-forward / auto-skip |
-| Esc | Open settings |
+| Esc | Open or close settings |
 | Arrow keys | Navigate between benches |
 | Left-click drag | Free-look (springs back on release) |
 | Left-click | Shoot truth bullet / select |
 | Right-click (hold) / F | Focus (aim) mode |
 | Q / E or scroll wheel | Cycle truth bullets |
+| R / middle-click | Toggle lie mode (negative truth bullets) |
 
-On touch devices a mobile HUD provides settings, bullet cycling, focus, and
-slow-time buttons; tapping the left/right screen thirds navigates benches.
+On touch devices a mobile HUD provides settings, bullet cycling, lie mode,
+focus, and slow-time buttons; tapping the left/right screen thirds navigates
+benches.
 
 ---
 

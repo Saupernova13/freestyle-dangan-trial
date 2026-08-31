@@ -13,6 +13,10 @@ signal focus_ended
 # Bullet selector
 signal bullet_next
 signal bullet_prev
+# R / middle-click / MobileHud's button. Weak points authored with
+# useNegativeBullet can only be answered with lie mode on, so without a binding
+# the editor could author content no player could ever clear.
+signal lie_mode_toggle_requested
 
 # Dialogue / script flow
 signal advance_pressed                # SPACE / ENTER / center-tap on dialogue
@@ -68,6 +72,8 @@ func _handle_keyboard(event: InputEvent) -> void:
 			bullet_prev.emit()
 		KEY_E:
 			bullet_next.emit()
+		KEY_R:
+			lie_mode_toggle_requested.emit()
 		KEY_F:
 			_toggle_focus()
 
@@ -81,6 +87,8 @@ func _handle_mouse_buttons(event: InputEvent) -> void:
 				shoot_pressed.emit(event.position)
 			MOUSE_BUTTON_RIGHT:
 				_set_focus(true)
+			MOUSE_BUTTON_MIDDLE:
+				lie_mode_toggle_requested.emit()
 			MOUSE_BUTTON_WHEEL_UP:
 				bullet_prev.emit()
 			MOUSE_BUTTON_WHEEL_DOWN:

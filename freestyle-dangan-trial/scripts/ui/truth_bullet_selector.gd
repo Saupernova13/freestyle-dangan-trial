@@ -14,6 +14,7 @@ func _ready():
 	TruthBulletManager.lie_mode_changed.connect(_on_lie_mode_changed)
 	InputManager.bullet_next.connect(TruthBulletManager.cycle_next)
 	InputManager.bullet_prev.connect(TruthBulletManager.cycle_prev)
+	InputManager.lie_mode_toggle_requested.connect(TruthBulletManager.toggle_lie_mode)
 	# Tapping the selector cycles too, as a backup to MobileHud's buttons.
 	%Anchor.gui_input.connect(_on_gui_input)
 	visible = false
@@ -23,6 +24,8 @@ func _exit_tree():
 		InputManager.bullet_next.disconnect(TruthBulletManager.cycle_next)
 	if InputManager.bullet_prev.is_connected(TruthBulletManager.cycle_prev):
 		InputManager.bullet_prev.disconnect(TruthBulletManager.cycle_prev)
+	if InputManager.lie_mode_toggle_requested.is_connected(TruthBulletManager.toggle_lie_mode):
+		InputManager.lie_mode_toggle_requested.disconnect(TruthBulletManager.toggle_lie_mode)
 
 func _on_gui_input(event: InputEvent) -> void:
 	var is_tap: bool = (event is InputEventScreenTouch and event.pressed) \

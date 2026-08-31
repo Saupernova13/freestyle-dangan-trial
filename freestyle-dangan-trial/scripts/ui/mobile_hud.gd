@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## Touch HUD for the otherwise keyboard/mouse-only actions: settings, bullet
-## prev/next, focus toggle, and slow-time hold. Spawned by MinigameBase on
-## mobile builds.
+## prev/next, lie-mode toggle, focus toggle, and slow-time hold. Spawned by
+## MinigameBase on mobile builds.
 ##
 ## Layout is scene-owned; setup() shows only the buttons a minigame asked for.
 ## Each button fires the same InputManager signal its keyboard equivalent does,
@@ -24,6 +24,10 @@ func _ready():
 	_slow_btn.button_up.connect(func(): _set_slow_held(false))
 	(%BulletPrev as Button).pressed.connect(func(): InputManager.bullet_prev.emit())
 	(%BulletNext as Button).pressed.connect(func(): InputManager.bullet_next.emit())
+	# Not a toggle button: TruthBulletManager owns the mode, and the selector's
+	# red bullet name is what shows it. A latching button would desync the
+	# moment the player pressed R instead.
+	(%LieButton as Button).pressed.connect(func(): InputManager.lie_mode_toggle_requested.emit())
 
 func setup(opts: Dictionary) -> void:
 	_settings_btn.visible = opts.get("settings", true)

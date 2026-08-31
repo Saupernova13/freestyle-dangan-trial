@@ -95,7 +95,7 @@ anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
 offset_top = -88.0
-offset_right = 160.0
+offset_right = 232.0
 offset_bottom = -16.0
 grow_vertical = 0
 theme_override_constants/separation = 8
@@ -121,3 +121,14 @@ theme_override_styles/hover = SubResource("Btn_Pressed")
 theme_override_styles/pressed = SubResource("Btn_Pressed")
 text = "▶"
 tooltip_text = "Next"
+
+[node name="LieButton" type="Button" parent="BulletRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 72)
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("Btn_Normal")
+theme_override_styles/hover = SubResource("Btn_Pressed")
+theme_override_styles/pressed = SubResource("Btn_Pressed")
+text = "⇄"
+tooltip_text = "Lie bullet"

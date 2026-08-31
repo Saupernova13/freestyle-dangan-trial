@@ -327,7 +327,9 @@ func _on_correct_hit(panel: DebateTextPanel):
 	_show_wrong_label()
 	await get_tree().create_timer(MinigameConfig.TIMING["wrong_to_screen_shatter"]).timeout
 
-	# The whole sequence is the break_sequence animation in break_shatter.tscn.
+	# play_break screenshots the viewport, so the WRONG label has to be stopped
+	# and hidden first or it freezes mid-animation into the shattering frame.
+	# The sequence itself is the break_sequence animation in break_shatter.tscn.
 	_overlay_anim.stop()
 	_wrong_label.visible = false
 	var impact_uv = panel_center / get_viewport().get_visible_rect().size

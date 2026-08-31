@@ -100,6 +100,11 @@ var _squash_amp: float = 0.0
 var _squash_freq: float = 0.0
 var _squash_phase: float = 0.0
 
+## Callable before or after the node enters the tree: the data is held until
+## _ready() if it is not there yet. Both callers deliberately call this BEFORE
+## add_child(), because _ready() computes _total_time from _move_speed, which
+## _apply_setup() assigns - call it after and the crossing time is banked at
+## the 150.0 default and voice sync silently drifts.
 func setup(data: Dictionary, speed_multiplier: float = 1.0, audio_duration: float = -1.0):
 	_pending_setup_data = data
 	_pending_speed_multiplier = speed_multiplier

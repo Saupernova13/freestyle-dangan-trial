@@ -41,3 +41,53 @@ func test_load_trial_builds_typed_manifest() -> void:
 
 	var character := TrialLoader.load_character("FC_20000101_FIXTUR")
 	assert_str(character.get("name", "")).is_equal("Fixture")
+
+
+func test_async_load_publishes_one_coherent_manifest() -> void:
+	var path := ProjectSettings.globalize_path(ZIP_PATH)
+	# Monitoring must start before the load: the worker hands off with
+	# call_deferred, so the signal can land on the very next frame. auto_free
+	# stays off - TrialLoader is an autoload and must outlive the test.
+	monitor_signals(TrialLoader, false)
+	TrialLoader.load_trial_async(path)
+	# The second call lands while the first is in flight and must be ignored
+	# outright rather than resetting state the worker is still writing.
+	TrialLoader.load_trial_async(path)
+	await assert_signal(TrialLoader).is_emitted("loading_complete")
+
+	assert_bool(TrialLoader.is_loading()).is_false()
+	assert_bool(TrialLoader.loaded_async).is_true()
+	var manifest: TrialManifest = TrialLoader.manifest
+	assert_object(manifest).is_not_null()
+	assert_str(manifest.trial_name).is_equal("Fixture Trial")
+	assert_int(TrialLoader.get_script_lines().size()).is_equal(4)
+	assert_str(TrialLoader.current_trial_path).is_equal(path)
+
+
+func test_async_load_of_a_missing_file_fails_without_completing() -> void:
+	# assert_signal().is_emitted(name) matches only an emission carrying no
+	# arguments, and loading_failed carries the message, so the outcome is
+	# captured directly rather than pinning the test to that exact string.
+	var failures: Array[String] = []
+	var completions: Array[int] = [0]
+	var on_failed := func(message: String) -> void: failures.append(message)
+	var on_complete := func() -> void: completions[0] += 1
+	TrialLoader.loading_failed.connect(on_failed)
+	TrialLoader.loading_complete.connect(on_complete)
+
+	TrialLoader.load_trial_async("user://gdunit_no_such_trial.drtrial")
+	# The worker hands off with call_deferred, so this lands within a frame or
+	# two. The bound makes a regression fail rather than hang.
+	for _i in range(60):
+		await get_tree().process_frame
+		if not failures.is_empty():
+			break
+	TrialLoader.loading_failed.disconnect(on_failed)
+	TrialLoader.loading_complete.disconnect(on_complete)
+
+	assert_array(failures).is_not_empty()
+	assert_int(completions[0]).is_equal(0)
+	assert_bool(TrialLoader.is_loading()).is_false()
+	assert_bool(TrialLoader.loaded_async).is_false()
+	assert_str(TrialLoader.last_load_error).is_not_empty()
+	assert_object(TrialLoader.manifest).is_null()

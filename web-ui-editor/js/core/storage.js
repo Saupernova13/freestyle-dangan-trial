@@ -93,7 +93,22 @@ async function loadTrialIntoState() {
     state.trialName = data.trialName || '';
     document.getElementById('trialNameInput').value = state.trialName;
 
-    await loadCharactersFromIds(data.characters || []);
+    const unresolvedCharacters = await loadCharactersFromIds(data.characters || []);
+    if (unresolvedCharacters.length > 0) {
+      // Silent until now: the slot simply appeared empty, and one keystroke
+      // made it permanent.
+      await alertDialog({
+        title: 'Some characters could not be loaded',
+        type: 'warning',
+        message:
+          'These cast members are listed in trial.json but their character.json ' +
+          'could not be read:\n\n' +
+          unresolvedCharacters.map((id) => '- ' + id).join('\n') +
+          '\n\nTheir slots are kept so saving cannot drop them, but they will ' +
+          'show as incomplete. Repair or restore the folders under Characters/ ' +
+          'before editing those slots.',
+      });
+    }
     state.scriptLines = data.script && data.script.lines ? data.script.lines : [];
 
     if (Array.isArray(data.minigames)) {
@@ -386,34 +401,58 @@ export async function loadRemainingSprites(charIndex) {
   }
 }
 
+// Returns the ids listed in trial.json that no readable folder provided.
+// buildTrialJson writes `cast.map(c => c ? c.id : null)`, so a slot left null
+// here loses that id on the very next keystroke - the character disappears
+// from trial.json while their folder is still sitting on disk, and the
+// speaking lines that reference them render with a blank speaker.
 export async function loadCharactersFromIds(characterIds) {
   state.cast = Array(BLOCK_COUNT).fill(null);
 
   let charsDir = await state.dirHandle
     .getDirectoryHandle('Characters', { create: false })
     .catch(() => null);
-  if (!charsDir) return;
 
-  // One pass over Characters/, indexed by id, not a walk per cast slot.
+  // One pass over Characters/, indexed by id, not a walk per cast slot. A
+  // missing or unreadable Characters/ falls through with an empty map rather
+  // than returning early, so every listed id still gets its slot held.
   const charactersById = new Map();
-  for await (const [, folderHandle] of charsDir.entries()) {
+  for await (const [folderName, folderHandle] of charsDir ? charsDir.entries() : []) {
     if (folderHandle.kind !== 'directory') continue;
+    let charFile;
     try {
-      const charFile = await folderHandle.getFileHandle('character.json');
+      charFile = await folderHandle.getFileHandle('character.json');
+    } catch {
+      // No character.json at all: an ordinary non-character folder, not a
+      // failure. Separated from the parse below, which the old single catch
+      // conflated with it.
+      continue;
+    }
+    try {
       const charData = JSON.parse(await (await charFile.getFile()).text());
       if (charData && charData.id) {
         // Kept for lazy-loading the remaining sprites.
         charData._folderHandle = folderHandle;
         charactersById.set(charData.id, charData);
       }
-    } catch {
-      continue; // not a character folder, or unreadable
+    } catch (err) {
+      console.warn(`Could not read Characters/${folderName}/character.json:`, err);
     }
   }
 
+  const unresolved = [];
   for (let i = 0; i < characterIds.length; i++) {
-    const charData = characterIds[i] ? charactersById.get(characterIds[i]) : null;
-    if (!charData) continue;
+    const id = characterIds[i];
+    if (!id) continue;
+    const charData = charactersById.get(id);
+    if (!charData) {
+      // A placeholder, not null: it keeps the id in the slot so autosave
+      // cannot erase it, and shows in the cast grid as an incomplete slot
+      // rather than an empty one.
+      state.cast[i] = { id, _loadFailed: true };
+      unresolved.push(id);
+      continue;
+    }
 
     // Only the first sprite; the rest load via loadRemainingSprites.
     charData.sprites = [];
@@ -428,6 +467,7 @@ export async function loadCharactersFromIds(characterIds) {
 
     state.cast[i] = charData;
   }
+  return unresolved;
 }
 
 export async function loadTruthBulletImages() {

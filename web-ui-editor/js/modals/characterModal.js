@@ -62,6 +62,15 @@ export async function openCharModal(idx) {
     return;
   }
 
+  // Editing a slot whose character.json could not be read would save the empty
+  // form over a file that may still be recoverable.
+  if (state.cast[idx] && state.cast[idx]._loadFailed) {
+    showToast('This character could not be read from disk. Repair the folder first.', {
+      type: 'warning',
+    });
+    return;
+  }
+
   activeIdx = idx;
   modalTab = 'details';
   modalErr = '';

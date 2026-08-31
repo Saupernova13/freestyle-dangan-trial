@@ -1,6 +1,7 @@
 // Create/edit modal for a state.cast member.
 import { state } from '../core/state.js';
 import { uniqueDirectoryName } from '../core/opfs.js';
+import { detachCharacter } from '../core/references.js';
 import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import {
   getCharacterType,
@@ -422,7 +423,8 @@ export async function trySaveChar() {
   }
 }
 
-// Also detaches the character from any speaking line that referenced it.
+// Also detaches the character from every speaking line and minigame that
+// referenced it.
 export async function removeCharacter() {
   const existing = state.cast[activeIdx];
   if (!existing) {
@@ -445,20 +447,26 @@ export async function removeCharacter() {
     const charsDir = await state.dirHandle
       .getDirectoryHandle('Characters', { create: false })
       .catch(() => null);
-    const folderName =
-      existing._folderHandle?.name ||
-      (existing.name + '_' + existing.surname).replace(/[^a-zA-Z0-9_\- ]/g, '_');
+    // By the handle the character was loaded with, never by a name rebuilt
+    // from the current fields: renaming someone since creation would aim
+    // removeEntry at the wrong folder, or silently miss.
+    const folderName = existing._folderHandle?.name;
     if (charsDir && folderName) {
       try {
         await charsDir.removeEntry(folderName, { recursive: true });
       } catch (e) {
         console.warn('Could not remove character folder:', e);
       }
+    } else if (!folderName) {
+      console.warn(`No folder handle for character ${existing.id}; leaving files in place.`);
     }
 
     state.scriptLines.forEach((l) => {
       if (l.type === 'speaking' && l.characterId === existing.id) l.characterId = '';
     });
+    // The minigames too: speaker slots, nonstop dialogue lines and scrum
+    // arguments all carry character ids, and none of them were cleared.
+    detachCharacter(state.minigames, existing.id);
 
     state.cast[activeIdx] = null;
     await autoSaveTrial();

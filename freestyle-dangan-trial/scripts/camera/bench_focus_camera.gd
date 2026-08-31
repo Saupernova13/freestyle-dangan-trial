@@ -72,14 +72,20 @@ func _ready():
 	Log.info("BenchFocusCamera", "Initialized with %d markers" % bench_markers.size())
 	focus_on_bench(0, false)
 
+## PAUSED counts: _input() takes ui_left/ui_right and marks them handled before
+## GUI input runs, so with the settings menu open the arrow keys spun the trial
+## camera instead of moving the focused slider - and on_bench_focused()
+## overwrote the speaker name and portrait behind the menu.
 func _is_nav_blocked() -> bool:
 	var s = ScriptDirector.current_state
 	return s == ScriptDirector.State.DIALOGUE \
 		or s == ScriptDirector.State.WAITING_FOR_ADVANCE \
-		or s == ScriptDirector.State.MINIGAME_ACTIVE
+		or s == ScriptDirector.State.MINIGAME_ACTIVE \
+		or s == ScriptDirector.State.PAUSED
 
 func _is_free_look_blocked() -> bool:
-	return ScriptDirector.current_state == ScriptDirector.State.MINIGAME_ACTIVE
+	var s = ScriptDirector.current_state
+	return s == ScriptDirector.State.MINIGAME_ACTIVE or s == ScriptDirector.State.PAUSED
 
 func _process(delta):
 	if not is_transitioning and not _is_nav_blocked():

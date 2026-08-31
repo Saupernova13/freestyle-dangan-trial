@@ -32,6 +32,8 @@ var _active_minigame: Node = null
 var _settings_menu: Node = null
 var _auto_advance_timer: float = 0.0
 var _pre_pause_state: State = State.IDLE
+# Number of outstanding pause_trial() calls; see pause_trial().
+var _pause_depth: int = 0
 var _skip_held: bool = false
 var _skip_timer: float = 0.0
 
@@ -169,14 +171,40 @@ func _on_skip_held_changed(held: bool) -> void:
 # ---------------------------------------------------------------------------
 # Pause / settings
 # ---------------------------------------------------------------------------
+## Counted, because the two things that pause can overlap: the settings menu
+## can be opened on top of the game-over screen, which has already paused.
+## Without the count the inner pause would record PAUSED as the state to return
+## to, losing the real one, and closing the menu would unpause a trial that is
+## meant to stay stopped.
 func pause_trial():
+	_pause_depth += 1
+	if _pause_depth > 1:
+		return
 	if current_state != State.IDLE and current_state != State.TRIAL_COMPLETE:
 		_pre_pause_state = current_state
 		_transition_to(State.PAUSED)
+	_set_minigame_paused(true)
 
 func resume_trial():
+	if _pause_depth == 0:
+		return
+	_pause_depth -= 1
+	if _pause_depth > 0:
+		return
 	if current_state == State.PAUSED:
 		_transition_to(_pre_pause_state)
+	_set_minigame_paused(false)
+
+## The whole point of pausing. Without this a 60s Nonstop Debate keeps
+## spawning panels and counting down behind the settings menu, and can fail
+## while the menu is still open.
+func _set_minigame_paused(paused: bool) -> void:
+	if not is_instance_valid(_active_minigame):
+		return
+	if paused:
+		_active_minigame.pause()
+	else:
+		_active_minigame.resume()
 
 func get_current_line() -> ScriptLine:
 	if current_line_index >= 0 and current_line_index < script_lines.size():
@@ -214,15 +242,12 @@ func _toggle_settings_menu():
 		_settings_menu.close()
 		return
 
-	_pre_pause_state = current_state
-	if current_state != State.IDLE and current_state != State.TRIAL_COMPLETE:
-		_transition_to(State.PAUSED)
+	pause_trial()
 
 	_settings_menu = ResourceRegistry.instantiate("settings_menu")
 	add_child(_settings_menu)
 	_settings_menu.open()
 	_settings_menu.closed.connect(func():
 		_settings_menu = null
-		if current_state == State.PAUSED:
-			_transition_to(_pre_pause_state)
+		resume_trial()
 	)

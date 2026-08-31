@@ -200,7 +200,13 @@ func _apply_sizing():
 
 	# Identical glyph metrics on every layer, or the copies stop registering.
 	for lbl in _all_labels():
-		for size_key in ["normal_font_size", "bold_font_size", "italic_font_size", "bold_italic_font_size"]:
+		for size_key in [
+			"normal_font_size",
+			"bold_font_size",
+			"italics_font_size",
+			"bold_italics_font_size",
+			"mono_font_size",
+		]:
 			lbl.add_theme_font_size_override(size_key, font_size)
 
 	# No panel sits behind the text, so the front face carries its own outline.

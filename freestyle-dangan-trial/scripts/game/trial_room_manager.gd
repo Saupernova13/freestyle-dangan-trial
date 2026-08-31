@@ -4,12 +4,18 @@ extends Node3D
 ## MinigameRunner. Owns speaker presentation and the game-over hand-off.
 
 @onready var trial_posts = $Trial_Posts/Trial_Benches
-@onready var name_label = get_node("../UI/Conversation_UI/Control_Center_Name_Label/Label_Center_Name")
-@onready var portrait_rect = get_node(
-	"../UI/Conversation_UI/Panel_Top_Left/Control_Top_Left/TextureRect_Speaker_Portrait"
-)
-@onready var dialogue_label = get_node("../UI/Conversation_UI/RichTextLabel_Bottom_Speech")
 @onready var camera = get_node_or_null("../Camera3D")
+
+## Conversation_UI is an instanced scene, so its children register their unique
+## names against it rather than against this scene's root - %Label_Center_Name
+## resolves from here only through this anchor. Reaching it is the one path
+## left; everything inside it is re-nestable in the editor without touching
+## this file.
+@onready var conversation_ui: Node = get_node_or_null("../UI/Conversation_UI")
+
+var name_label: Label
+var portrait_rect: TextureRect
+var dialogue_label: RichTextLabel
 
 var trial_file_path: String = "user://trial.drtrial"
 
@@ -20,6 +26,7 @@ var _minigame_runner: MinigameRunner
 func _ready():
 	await get_tree().process_frame
 
+	_resolve_conversation_ui()
 	_stage = CharacterStage.new(trial_posts)
 
 	_dialogue_box = preload("res://scripts/ui/dialogue_box.gd").new()
@@ -35,7 +42,7 @@ func _ready():
 	_minigame_runner = MinigameRunner.new()
 	add_child(_minigame_runner)
 	_minigame_runner.setup(
-		get_node_or_null("../UI/Conversation_UI"),
+		conversation_ui,
 		get_node_or_null("../Path2D_RoamingText"),
 		dialogue_label)
 
@@ -101,6 +108,23 @@ func _set_portrait(bench_index: int, sprite_index: int = 1) -> void:
 		texture = TrialLoader.get_sprite_texture(character_id, 1)
 	if texture:
 		portrait_rect.texture = texture
+
+## Named lookups, so re-nesting or renaming a container inside conversation_ui
+## cannot break these. A missing node warns instead of erroring, which a
+## hard-coded path could not do.
+func _resolve_conversation_ui() -> void:
+	if conversation_ui == null:
+		push_warning("TrialRoomManager: Conversation_UI not found; dialogue will not display.")
+		return
+	name_label = _require_ui_node("%Label_Center_Name") as Label
+	portrait_rect = _require_ui_node("%TextureRect_Speaker_Portrait") as TextureRect
+	dialogue_label = _require_ui_node("%RichTextLabel_Bottom_Speech") as RichTextLabel
+
+func _require_ui_node(unique_name: String) -> Node:
+	var node := conversation_ui.get_node_or_null(unique_name)
+	if node == null:
+		push_warning("TrialRoomManager: %s not found in conversation_ui.tscn" % unique_name)
+	return node
 
 func _on_line_started(line: ScriptLine):
 	if line.type == ScriptLine.TYPE_SPEAKING:

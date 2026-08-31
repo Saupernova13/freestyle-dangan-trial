@@ -2,7 +2,7 @@ extends Node
 ## Centralized input detection, emitting semantic signals for the rest of the
 ## game. Anything the whole game reacts to belongs here as a signal rather than
 ## as another _input() handler; input scoped to one screen or minigame stays
-## local (see settings_menu.gd and mass_panic_debate.gd).
+## local (see mass_panic_debate.gd).
 
 # Aim / shoot / focus (minigame inputs)
 signal shoot_pressed(position: Vector2)

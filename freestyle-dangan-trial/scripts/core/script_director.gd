@@ -207,6 +207,11 @@ func _process(delta):
 
 func _toggle_settings_menu():
 	if _settings_menu:
+		# Actually toggle. _on_settings_toggle_requested marks the event handled
+		# whatever happens here, so returning early left the menu with no
+		# keyboard exit at all - and the mobile HUD's settings button, which
+		# routes through the same signal, equally inert on a second tap.
+		_settings_menu.close()
 		return
 
 	_pre_pause_state = current_state

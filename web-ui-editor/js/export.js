@@ -1,7 +1,7 @@
 // Packages a trial folder into a playable .drtrial (a ZIP).
 import JSZip from 'jszip';
 import { state } from './core/state.js';
-import { FORMAT_VERSION, MINIGAME_TYPE_LABELS } from './core/constants.js';
+import { MINIGAME_TYPE_LABELS } from './core/constants.js';
 import { validateTrialData } from './core/trialSchema.js';
 import { buildTrialJson } from './core/trialSerialize.js';
 import { isCharacterComplete, missingCharacterFields } from './models/characterModel.js';
@@ -137,32 +137,17 @@ export async function exportToPlayableFile() {
     totalFiles = await countFilesInDirectory(state.dirHandle);
     console.log(`Preparing to package ${totalFiles} files...`);
 
-    try {
-      const trialJsonHandle = await state.dirHandle.getFileHandle('trial.json');
-      const trialJsonFile = await trialJsonHandle.getFile();
-      const trialJsonContent = await trialJsonFile.text();
-      zip.file('trial.json', sanitizeTrialJson(trialJsonContent));
-      filesAdded++;
-      console.log(`Added trial.json (${filesAdded}/${totalFiles})`);
-    } catch {
-      console.warn('trial.json not found, creating minimal version');
-      const minimalTrial = {
-        trialName: state.trialName,
-        characters: state.cast.map((c) => (c ? c.id : null)),
-        truthBullets: state.truthBullets || [],
-        minigames: state.minigames || [],
-        script: { lines: state.scriptLines || [] },
-        metadata: {
-          version: FORMAT_VERSION,
-          lastModified: new Date().toISOString(),
-          scriptLineCount: (state.scriptLines || []).length,
-          minigameCount: (state.minigames || []).length,
-          truthBulletCount: (state.truthBullets || []).length,
-        },
-      };
-      zip.file('trial.json', JSON.stringify(minimalTrial, null, 2));
-      filesAdded++;
-    }
+    // Built from state rather than read back from disk, so the object the
+    // pre-flight validated and the bytes that ship are the same one. Reading
+    // the file meant an export could pass its own check on content it did not
+    // contain - and someone exporting to rescue work after a failed save got a
+    // zip missing exactly that work, reported as a success.
+    //
+    // This also retires the "minimal version" fallback, which was a second,
+    // divergent copy of buildTrialJson kept alive only for a missing file.
+    zip.file('trial.json', sanitizeTrialJson(JSON.stringify(buildTrialJson(state), null, 2)));
+    filesAdded++;
+    console.log(`Added trial.json (${filesAdded}/${totalFiles})`);
 
     await addDirectoryToZip(zip, state.dirHandle, '', (current) => {
       filesAdded = current;

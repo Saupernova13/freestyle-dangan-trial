@@ -7,7 +7,7 @@ import JSZip from 'jszip';
 import { BLOCK_COUNT } from './constants.js';
 import { recordChange, resetHistory } from './history.js';
 import { state } from './state.js';
-import { checkFormatVersion, validateTrialData } from './trialSchema.js';
+import { checkFormatVersion, findUnsafeIds, validateTrialData } from './trialSchema.js';
 import { buildTrialJson } from './trialSerialize.js';
 import {
   createOpfsTrial,
@@ -60,6 +60,22 @@ async function loadTrialIntoState() {
             'Back the trial up first.',
       });
     }
+    // A gate, not a warning. Ids reach inline event handlers, so rendering a
+    // trial with a malformed one executes whatever it contains - refusing to
+    // open is the only safe answer, and the author can repair trial.json in a
+    // text editor.
+    const unsafeIds = findUnsafeIds(data);
+    if (unsafeIds.length > 0) {
+      resetEmptyTrial();
+      state.dirHandle = null;
+      await alertDialog({
+        title: 'Trial refused',
+        type: 'error',
+        message: describeUnsafeIds(unsafeIds),
+      });
+      return;
+    }
+
     const schemaIssues = validateTrialData(data);
     if (schemaIssues.length > 0) {
       const shown = schemaIssues.slice(0, 8);
@@ -229,6 +245,20 @@ export async function deleteOpfsTrialAndRefresh(folder) {
   openTrialHub();
 }
 
+// Shown by both gates. findUnsafeIds has already quoted and clipped the
+// offending values, and alertDialog renders text, so they cannot execute here.
+function describeUnsafeIds(unsafeIds) {
+  const shown = unsafeIds.slice(0, 8);
+  const extra = unsafeIds.length - shown.length;
+  return (
+    'This trial contains ids that are not safe to display:\n\n' +
+    shown.map((m) => '- ' + m).join('\n') +
+    (extra > 0 ? '\n- ...and ' + extra + ' more' : '') +
+    '\n\nIds may contain only letters, digits, underscores and hyphens. ' +
+    'Only open trials from a source you trust.'
+  );
+}
+
 // A .drtrial is a ZIP; it lands in a new browser-storage trial.
 export async function importTrialFromFile(file) {
   if (!(await opfsCanWrite())) {
@@ -252,6 +282,28 @@ export async function importTrialFromFile(file) {
         if (j.trialName) trialName = j.trialName;
       } catch {
         /* keep the filename-derived name */
+      }
+    }
+
+    // Checked before anything is written, so a hostile archive never reaches
+    // the library at all - the open-time gate is the backstop for trials that
+    // arrive some other way.
+    if (trialJsonEntry) {
+      let parsed = null;
+      try {
+        parsed = JSON.parse(await trialJsonEntry.async('string'));
+      } catch {
+        /* an unparseable trial.json is reported on open */
+      }
+      const unsafeIds = parsed ? findUnsafeIds(parsed) : [];
+      if (unsafeIds.length > 0) {
+        showLoader(false);
+        await alertDialog({
+          title: 'Import refused',
+          type: 'error',
+          message: describeUnsafeIds(unsafeIds),
+        });
+        return;
       }
     }
 

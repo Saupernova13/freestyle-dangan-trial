@@ -145,7 +145,7 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
                 ? `
               <div class="audio-preview-mini">
                 <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
-                <span class="audio-filename">${arg.oppositionAudioFile}</span>
+                <span class="audio-filename">${escapeHtml(arg.oppositionAudioFile)}</span>
                 <button class="btn btn-secondary btn-sm"
                         id="scrum-play-btn-${arg.argumentId}-opposition"
                         onclick="playDebateScrumAudio('${gameId}', '${arg.argumentId}', 'opposition')">
@@ -201,7 +201,7 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
                 ? `
               <div class="audio-preview-mini">
                 <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
-                <span class="audio-filename">${arg.defenseAudioFile}</span>
+                <span class="audio-filename">${escapeHtml(arg.defenseAudioFile)}</span>
                 <button class="btn btn-secondary btn-sm"
                         id="scrum-play-btn-${arg.argumentId}-defense"
                         onclick="playDebateScrumAudio('${gameId}', '${arg.argumentId}', 'defense')">

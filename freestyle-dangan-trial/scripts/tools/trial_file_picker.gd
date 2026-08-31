@@ -44,14 +44,9 @@ func _open_desktop_picker():
 	_file_dialog.size = Vector2(800, 500)
 	_file_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_MAIN_WINDOW_SCREEN
 
-	# Prefer the scripter output directory when present, as a dev convenience.
-	var scripter_output = OS.get_user_data_dir().path_join("../../../scripter/output")
-	if DirAccess.dir_exists_absolute(scripter_output):
-		_file_dialog.current_dir = scripter_output
-	else:
-		var desktop_path = OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
-		if not desktop_path.is_empty():
-			_file_dialog.current_dir = desktop_path
+	var desktop_path = OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
+	if not desktop_path.is_empty():
+		_file_dialog.current_dir = desktop_path
 
 	_file_dialog.file_selected.connect(_on_file_chosen)
 	_file_dialog.canceled.connect(_on_cancelled)
@@ -60,7 +55,9 @@ func _open_desktop_picker():
 	_file_dialog.popup_centered()
 
 func _open_mobile_picker():
-	# On Android this routes through SAF, so it needs no storage permission.
+	# On Android this routes through SAF, which grants access to the picked file
+	# itself. open_picker() still asks for storage permission first: some
+	# versions and providers need it to read what SAF hands back.
 	if DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):
 		var filters = PackedStringArray(["*.drtrial,*.json ; Trial Files"])
 		var err = DisplayServer.file_dialog_show(
@@ -105,8 +102,9 @@ func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, _
 func _copy_to_user_dir(source_path: String) -> String:
 	_last_copy_error_detail = ""
 
-	# get_file_as_bytes() handles Android content URIs; the chunked read covers
-	# older drivers and providers that return empty.
+	# get_file_as_bytes() handles Android content URIs. It returns empty on some
+	# older drivers and providers, so the fallback reopens the file and reads it
+	# through FileAccess instead.
 	var data := FileAccess.get_file_as_bytes(source_path)
 	var err := FileAccess.get_open_error()
 	if data.is_empty():

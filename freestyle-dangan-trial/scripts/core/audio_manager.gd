@@ -1,7 +1,6 @@
 extends Node
-##
-## Voice line playback. Volume is owned by Settings, which writes
-## voice_player.volume_db directly.
+## Voice line playback and the decoded-stream cache. Settings drives the volume
+## through set_voice_volume_linear(); this file is the only writer of volume_db.
 
 var voice_player: AudioStreamPlayer
 

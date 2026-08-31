@@ -57,8 +57,9 @@ func _build_overlay():
 	]
 	_focus_indicator = _overlay.get_node("%FocusIndicator")
 	_overlay_anim = _overlay.get_node("%AnimationPlayer")
-	# Each row becomes its own touch target. A bare Container ignores input,
-	# hence mouse_filter STOP plus a per-row _gui_input.
+	# Each row becomes its own touch target. The scene authors the rows as
+	# Controls with mouse_filter IGNORE so they do not eat taps meant for the
+	# panels, so this overrides to STOP and adds a per-row gui_input handler.
 	for i in range(_row_containers.size()):
 		var row: Control = _row_containers[i]
 		if row == null:

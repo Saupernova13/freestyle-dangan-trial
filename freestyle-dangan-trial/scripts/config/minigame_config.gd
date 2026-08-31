@@ -1,8 +1,9 @@
 class_name MinigameConfig
 extends RefCounted
-##
-## Every minigame's tuning constant, in one place. Look values up here rather
-## than hardcoding them in a minigame script.
+## Tuning shared across minigames: spawn rates, difficulty scaling, break-
+## sequence beats. Constants used by a single minigame stay in that minigame -
+## debate_text_panel.gd holds its own, for instance - so this is the place for
+## a value two scripts must agree on, not a registry of every number.
 
 # Seconds between spawns, per difficulty.
 const SPAWN_INTERVALS := {
@@ -11,7 +12,8 @@ const SPAWN_INTERVALS := {
 	"mass_panic_debate": {"easy": 3.5, "medium": 3.0, "hard": 2.0},
 }
 
-# Secondary spawns, such as white noise lines.
+# Secondary spawns, such as white noise lines. Unused while white noise is
+# disabled in nonstop_debate.gd pending a positioning rework.
 const NOISE_SPAWN_INTERVAL: float = 1.2
 
 # Applied to panel scroll speed, damage, and similar.
@@ -36,7 +38,9 @@ const SCREEN_LAYOUT := {
 	"mass_panic_row_y": [100, 250, 400],
 }
 
-# Gaps between break-sequence beats; the beats themselves are scene animations.
+# Gaps between beats; the beats themselves are scene animations. Everything
+# here is a break-sequence step except result_pause, which debate_scrum and
+# logic_dive use as the pause after a round's answer.
 const TIMING := {
 	"impact_frame": 0.05,
 	"shatter_to_wrong": 0.1,

@@ -216,7 +216,9 @@ func play_filter(filter_name: String, intensity: float, duration: float):
 
 func impact_frame(duration: float):
 	_flash_rect.color = Color(1, 1, 1, _flash_rect.color.a)
-	Engine.time_scale = 0.1
+	TimeScale.request(&"impact_frame", 0.1)
 	await get_tree().create_timer(duration * 0.1).timeout
-	Engine.time_scale = 1.0
+	# Releasing rather than assigning 1.0: focus mode or slow-time may be held
+	# through the impact, and that request has to survive it.
+	TimeScale.release(&"impact_frame")
 	_play_for(_flash_anim, "flash", 0.2)

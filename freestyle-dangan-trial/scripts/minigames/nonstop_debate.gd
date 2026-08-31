@@ -240,7 +240,7 @@ func _on_shoot(click_pos: Vector2):
 	match hit_zone:
 		"white_noise":
 			_on_white_noise_hit(hit_panel, click_pos)
-		"prefix", "suffix":
+		"prefix", "suffix", "inert":
 			_on_prefix_suffix_hit(click_pos)
 		"weakpoint":
 			_fire_bullet_at_panel(hit_panel, click_pos)

@@ -44,6 +44,9 @@ func _handle_motion(event: InputEvent) -> void:
 func _handle_keyboard(event: InputEvent) -> void:
 	if not (event is InputEventKey):
 		return
+	# Auto-repeat would advance the script once per repeat while a key is held.
+	if event.is_echo():
+		return
 	# CTRL is fast-forward / skip.
 	if event.keycode == KEY_CTRL:
 		var pressed: bool = event.pressed
@@ -121,3 +124,18 @@ func _set_focus(active: bool) -> void:
 
 func is_desktop() -> bool:
 	return _is_desktop
+
+## The OS delivers no key-up or button-up once the window loses focus, so held
+## state would survive an alt-tab: CTRL would leave the trial fast-forwarding
+## with no way to stop it short of pressing and releasing CTRL again.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_release_held_state()
+
+## Only CTRL is released here. Focus is also reachable from the F toggle and
+## MobileHud, where staying on across an alt-tab is the correct behaviour, and
+## the flag does not record which of the two set it.
+func _release_held_state() -> void:
+	if _skip_held:
+		_skip_held = false
+		skip_held_changed.emit(false)

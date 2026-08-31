@@ -6,7 +6,10 @@ extends Node
 signal minigame_completed(success: bool, result_data: Dictionary)
 signal state_changed(new_state: State)
 
-enum State { IDLE, LOADING, ACTIVE, PAUSED, COMPLETE }
+## LOADING was declared but no code could ever produce it, which is a false
+## promise to anyone reading the lifecycle. MinigameRunner builds an instance
+## and calls start() in the same frame; there is no loading step to represent.
+enum State { IDLE, ACTIVE, PAUSED, COMPLETE }
 
 # Standard HUD components requestable via setup_standard_ui().
 enum HudComponent {
@@ -67,11 +70,16 @@ func start():
 	if time_limit > 0:
 		_start_timer()
 
+## Freezes the whole subtree, not just this node: the overlay, its panels and
+## the HUD are all children, so `is_active` alone would stop the spawn loop
+## while panels carried on scrolling behind the settings menu.
 func pause():
 	_transition_to(State.PAUSED)
 	_set_clock_paused(true)
+	process_mode = Node.PROCESS_MODE_DISABLED
 
 func resume():
+	process_mode = Node.PROCESS_MODE_INHERIT
 	_transition_to(State.ACTIVE)
 	_set_clock_paused(false)
 

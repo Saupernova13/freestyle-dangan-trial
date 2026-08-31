@@ -82,13 +82,14 @@ var _pending_speed_multiplier: float = 1.0
 var _pending_audio_duration: float = -1.0
 var _setup_pending: bool = false
 
-# Per-panel variation, rolled from one GameRandom stream so a seed reproduces it.
+# Traversal state, derived in _ready() from the viewport and _move_speed.
 var _elapsed: float = 0.0
 var _start_pos: Vector2 = Vector2.ZERO
 var _end_x: float = 0.0
 var _travel_distance: float = 0.0
 var _total_time: float = 0.0
 
+# Per-panel variation, rolled from one GameRandom stream so a seed reproduces it.
 var _size_scale: float = 1.0
 var _slant_rad: float = 0.0
 var _depth: float = 1.0
@@ -165,7 +166,7 @@ func _apply_setup():
 func _roll_variance():
 	var rng := GameRandom.stream("debate_panel")
 
-	# Fixed for the whole run, unlike the per-panel rolls above.
+	# Fixed for the whole run, unlike the per-panel rolls below.
 	var session := GameRandom.session_stream("debate_chances")
 	var ramp_chance := session.randf_range(RAMP_CHANCE_FLOOR, RAMP_CHANCE_CEIL)
 	var squash_chance := session.randf_range(SQUASH_CHANCE_FLOOR, SQUASH_CHANCE_CEIL)

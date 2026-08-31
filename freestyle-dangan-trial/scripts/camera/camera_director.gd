@@ -6,9 +6,7 @@ var _original_fov: float = 30.0
 var _original_position: Vector3
 var _is_executing: bool = false
 
-## The web editor's camera tab. Handlers all take
-## (bench_index, duration, ease_type, trans_type), with variants pre-bound.
-## A new motion only needs an entry here.
+## The web editor's camera tab -> handlers, filled by _register_motions().
 var _motions: Dictionary = {}
 
 signal motion_completed
@@ -24,6 +22,9 @@ func _ready():
 		if _camera.has_method("jump_to_bench"):
 			_bench_camera = _camera
 
+## Editor motion names -> handlers taking
+## (bench_index, duration, ease_type, trans_type), with variants pre-bound.
+## A new motion only needs an entry here.
 func _register_motions() -> void:
 	_motions = {
 		"none": _finish_immediately,

@@ -65,10 +65,28 @@ func test_async_load_publishes_one_coherent_manifest() -> void:
 
 
 func test_async_load_of_a_missing_file_fails_without_completing() -> void:
-	monitor_signals(TrialLoader, false)
-	TrialLoader.load_trial_async("user://gdunit_no_such_trial.drtrial")
-	await assert_signal(TrialLoader).is_emitted("loading_failed")
+	# assert_signal().is_emitted(name) matches only an emission carrying no
+	# arguments, and loading_failed carries the message, so the outcome is
+	# captured directly rather than pinning the test to that exact string.
+	var failures: Array[String] = []
+	var completions: Array[int] = [0]
+	var on_failed := func(message: String) -> void: failures.append(message)
+	var on_complete := func() -> void: completions[0] += 1
+	TrialLoader.loading_failed.connect(on_failed)
+	TrialLoader.loading_complete.connect(on_complete)
 
+	TrialLoader.load_trial_async("user://gdunit_no_such_trial.drtrial")
+	# The worker hands off with call_deferred, so this lands within a frame or
+	# two. The bound makes a regression fail rather than hang.
+	for _i in range(60):
+		await get_tree().process_frame
+		if not failures.is_empty():
+			break
+	TrialLoader.loading_failed.disconnect(on_failed)
+	TrialLoader.loading_complete.disconnect(on_complete)
+
+	assert_array(failures).is_not_empty()
+	assert_int(completions[0]).is_equal(0)
 	assert_bool(TrialLoader.is_loading()).is_false()
 	assert_bool(TrialLoader.loaded_async).is_false()
 	assert_str(TrialLoader.last_load_error).is_not_empty()

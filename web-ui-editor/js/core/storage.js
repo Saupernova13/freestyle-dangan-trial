@@ -127,6 +127,9 @@ async function loadTrialIntoState() {
 }
 
 export async function openTrialFromHandle(dirHandle) {
+  // Same hole as openTrialHub: replacing the handle abandons whatever the
+  // debounce is still holding for the trial being left.
+  await flushAutoSave();
   try {
     showLoader(true, 'Loading trial…');
     state.dirHandle = dirHandle;
@@ -173,8 +176,11 @@ export async function chooseTrialDir() {
   await openTrialFromHandle(dH);
 }
 
-// Safe to leave without saving: work is already auto-saved.
-export function openTrialHub() {
+// Flushes first. "Already auto-saved" was false for the whole 600 ms debounce
+// window: clearing state.dirHandle turned the pending timer into a no-op, so
+// the last edit was silently dropped while the trial bar still read "Saving...".
+export async function openTrialHub() {
+  await flushAutoSave();
   state.dirHandle = null;
   renderDirDisplay(null);
   updateExportButtonState();
@@ -242,7 +248,7 @@ export async function deleteOpfsTrialAndRefresh(folder) {
     resetEmptyTrial();
   }
   showToast('Trial deleted', { type: 'success' });
-  openTrialHub();
+  await openTrialHub();
 }
 
 // Shown by both gates. findUnsafeIds has already quoted and clipped the
@@ -523,23 +529,53 @@ export async function loadMinigameAudio() {
 
 let autoSaveTimer = null;
 let autoSaveFailureNotified = false;
+// True from the moment an edit is scheduled until a write for it succeeds, so
+// "nothing outstanding" is distinguishable from "a write never happened".
+let hasUnsavedChanges = false;
 
 // Debounced save for keystroke-frequency callers, and the undo choke point:
 // every mutation reaches this or autoSaveTrial.
 export function scheduleAutoSave(delayMs = 600) {
+  hasUnsavedChanges = true;
   if (state.dirHandle) setSaveStatus('saving');
   recordChange(delayMs);
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(() => autoSaveTrial({ skipHistory: true }), delayMs);
 }
 
+// True while an edit is still inside the debounce window, or the last save
+// failed. Either way there is work that is not on disk.
+export function hasPendingWrites() {
+  return autoSaveTimer !== null || hasUnsavedChanges;
+}
+
+// Writes whatever the debounce is still holding, so a caller about to change
+// or drop state.dirHandle does not strand it.
+export async function flushAutoSave() {
+  if (autoSaveTimer === null) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = null;
+  await autoSaveTrial({ skipHistory: true });
+}
+
 export async function autoSaveTrial(opts = {}) {
-  if (!state.dirHandle) return;
+  if (!state.dirHandle) {
+    // Not "nothing to do". A scheduled write whose folder has since gone is an
+    // edit that will never reach disk, and this used to return as though the
+    // save had been unnecessary.
+    if (hasUnsavedChanges) {
+      hasUnsavedChanges = false;
+      console.error('Auto-save dropped: no trial folder is open.');
+      setSaveStatus('error');
+    }
+    return;
+  }
   if (!opts.skipHistory) recordChange(0);
   setSaveStatus('saving');
   try {
     await writeTrialJson();
     autoSaveFailureNotified = false;
+    hasUnsavedChanges = false;
     setSaveStatus('saved');
   } catch (err) {
     // Alert once, not on every subsequent keystroke, until a save succeeds.

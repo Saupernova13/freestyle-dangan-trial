@@ -6,7 +6,7 @@ import { initSpriteMagnifier } from './components/spriteMagnifier.js';
 import { initHistory, redo, undo } from './core/history.js';
 import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
 import { state } from './core/state.js';
-import { autoSaveTrial, scheduleAutoSave } from './core/storage.js';
+import { autoSaveTrial, hasPendingWrites, scheduleAutoSave } from './core/storage.js';
 import { confirmDialog } from './ui/dialogs.js';
 import { initModalBehaviors } from './ui/modalBehaviors.js';
 import { initKeyboardActivation } from './ui/a11y.js';
@@ -20,6 +20,17 @@ import { MINIGAME_TYPE_LABELS } from './core/constants.js';
 import { setHtml } from './ui/dom.js';
 
 document.addEventListener('DOMContentLoaded', function () {
+  // The editor had no unload handler of any kind, so closing the tab inside
+  // the 600 ms debounce window - or at any point after a save started failing
+  // - threw the work away without a word. The browser decides what prompt to
+  // show; all a handler can do is ask for one. Registered here rather than at
+  // module scope so importing this module does not require a DOM.
+  window.addEventListener('beforeunload', (e) => {
+    if (!hasPendingWrites()) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+
   initializeTheme();
   loadSettings();
   initSpriteMagnifier();

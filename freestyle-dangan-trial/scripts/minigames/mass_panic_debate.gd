@@ -39,7 +39,6 @@ func start():
 		HudComponent.TIMER_DISPLAY,
 	])
 
-	InfluenceGauge.reset()
 	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
 	TruthBulletManager.load_bullets()
 	connect_managed(InputManager.shoot_pressed, _on_shoot)

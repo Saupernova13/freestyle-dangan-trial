@@ -29,7 +29,6 @@ func start():
 
 	_build_overlay()
 	setup_standard_ui([HudComponent.INFLUENCE_GAUGE, HudComponent.TIMER_DISPLAY])
-	InfluenceGauge.reset()
 	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
 	Log.info("DebateScrum", "%d arguments" % arguments.size())
 

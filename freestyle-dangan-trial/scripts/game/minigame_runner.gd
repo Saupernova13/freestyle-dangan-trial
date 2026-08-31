@@ -16,6 +16,12 @@ const MINIGAME_SCRIPTS := {
 	"closing_argument": "res://scripts/minigames/closing_argument.gd",
 }
 
+## Three of the eight minigames never damage the influence gauge, so for them a
+## round that cannot be won - a time limit shorter than the game takes, a stub
+## that always overruns - replays forever, and the settings menu has no quit.
+const MAX_ATTEMPTS := 5
+
+var _attempts: int = 0
 var _conversation_ui: CanvasItem
 var _roaming_text: CanvasItem
 var _dialogue_label: Node
@@ -38,6 +44,12 @@ func run(minigame: MinigameData) -> void:
 		_dialogue_label.text = ""
 	_hide_conversation_ui()
 
+	# Once per minigame line, never per attempt. Five minigames used to reset in
+	# their own start(), so every replay refilled the only thing that can end
+	# the loop and game-over was unreachable for six of the eight.
+	InfluenceGauge.reset()
+	_attempts = 0
+
 	# The title card plays once; every attempt gets its own result card.
 	var title_card = ResourceRegistry.instantiate("minigame_title_card")
 	add_child(title_card)
@@ -47,6 +59,7 @@ func run(minigame: MinigameData) -> void:
 	_start_attempt(minigame)
 
 func _start_attempt(minigame_data: MinigameData) -> void:
+	_attempts += 1
 	var minigame: MinigameBase = _instantiate(minigame_data.game_type)
 	if minigame == null:
 		_abort(minigame_data.game_type)
@@ -69,6 +82,8 @@ func _start_attempt(minigame_data: MinigameData) -> void:
 		if success:
 			_restore_conversation_ui()
 			ScriptDirector.on_minigame_finished(true)
+		elif _attempts >= MAX_ATTEMPTS:
+			_give_up(minigame_data.game_type)
 		else:
 			_start_attempt(minigame_data)
 	)
@@ -99,6 +114,17 @@ func _abort(game_type: String) -> void:
 		get_tree().root, "Minigame '%s' failed to load; skipping." % game_type, true, 5.0
 	)
 	ScriptDirector.on_minigame_finished(true)
+
+## Losing the trial is a worse outcome than being unable to leave it: the
+## game-over screen at least offers retry and return-to-menu, and an unwinnable
+## attempt otherwise leaves killing the process as the only way out. Emptying
+## the gauge routes through the same path a normal defeat takes.
+func _give_up(game_type: String) -> void:
+	Log.warn(
+		"MinigameRunner",
+		"'%s' failed %d times; ending the trial." % [game_type, _attempts]
+	)
+	InfluenceGauge.take_damage_raw(InfluenceGauge.current_influence)
 
 func _hide_conversation_ui() -> void:
 	# The roaming text belongs to the dialogue presentation, so it hides too.

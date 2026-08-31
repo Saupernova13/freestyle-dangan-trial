@@ -52,3 +52,33 @@ func test_extract_reports_progress() -> void:
 	assert_bool(ok).is_true()
 	assert_int(calls.size()).is_equal(2)
 	assert_array(calls[calls.size() - 1]).is_equal([2, 2])
+
+
+## A .drtrial arrives from a third party, so an entry name is untrusted input.
+func _pack_one(zip_path: String, entry: String) -> void:
+	var packer := ZIPPacker.new()
+	assert_int(packer.open(zip_path)).is_equal(OK)
+	packer.start_file(entry)
+	packer.write_file("escaped".to_utf8_buffer())
+	packer.close_file()
+	packer.close()
+
+
+func test_extract_rejects_a_traversal_entry_and_keeps_the_installed_trial() -> void:
+	assert_bool(TrialArchive.extract(ZIP_PATH, DEST_DIR)).is_true()
+
+	var evil := "user://gdunit_test_traversal.zip"
+	_pack_one(evil, "../../gdunit_escaped.txt")
+	# Reported, never partially applied: the previous trial must survive an
+	# archive that fails, so the check has to run before the destination is wiped.
+	assert_bool(TrialArchive.extract(evil, DEST_DIR)).is_false()
+	assert_bool(FileAccess.file_exists("user://gdunit_escaped.txt")).is_false()
+	assert_bool(FileAccess.file_exists(DEST_DIR + "trial.json")).is_true()
+	DirAccess.remove_absolute(evil)
+
+
+func test_extract_rejects_an_absolute_entry() -> void:
+	var evil := "user://gdunit_test_absolute.zip"
+	_pack_one(evil, "/gdunit_absolute.txt")
+	assert_bool(TrialArchive.extract(evil, DEST_DIR)).is_false()
+	DirAccess.remove_absolute(evil)

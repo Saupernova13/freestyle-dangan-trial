@@ -12,10 +12,19 @@ static func extract(zip_path: String, dest_dir: String, progress: Callable = Cal
 		push_error("Failed to open ZIP file: " + error_string(err))
 		return false
 
-	_clear_dir(dest_dir)
-
 	var entries: Array = Array(reader.get_files()).filter(
 		func(f: String) -> bool: return not f.ends_with("/"))
+
+	# Before _clear_dir: a tampered archive must be reported, never partially
+	# applied, and must not take the installed trial down with it.
+	for entry in entries:
+		var reason: String = _rejection_reason(entry, dest_dir)
+		if not reason.is_empty():
+			push_error("Refusing to extract %s: %s in entry '%s'" % [zip_path, reason, entry])
+			reader.close()
+			return false
+
+	_clear_dir(dest_dir)
 
 	for i in range(entries.size()):
 		var entry: String = entries[i]
@@ -39,6 +48,29 @@ static func extract(zip_path: String, dest_dir: String, progress: Callable = Cal
 
 	reader.close()
 	return true
+
+## Empty when the entry is safe to write, otherwise why it is not. A .drtrial
+## is a distribution format, so archives arrive from third parties by design and
+## every entry name is untrusted input: without this an entry can traverse out
+## of dest_dir and Godot passes the segments through to the OS.
+static func _rejection_reason(entry: String, dest_dir: String) -> String:
+	if entry.is_empty():
+		return "empty name"
+	# ZIP names are specified to use "/" only, but the Windows API also accepts
+	# "\\", so allowing it would leave traversal open through the back door.
+	if entry.contains("\\"):
+		return "backslash"
+	# Covers a drive letter and a "res://"-style prefix as well as a leading "/".
+	if entry.is_absolute_path() or entry.contains(":"):
+		return "absolute path"
+	if ".." in entry.split("/"):
+		return "'..' path segment"
+	# Belt and braces: whatever the segment checks missed, the joined path must
+	# still land inside dest_dir.
+	var root: String = dest_dir.simplify_path().rstrip("/") + "/"
+	if not (dest_dir + entry).simplify_path().begins_with(root):
+		return "resolves outside the destination"
+	return ""
 
 static func _clear_dir(path: String) -> void:
 	if DirAccess.dir_exists_absolute(path):

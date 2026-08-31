@@ -145,6 +145,5 @@ including why 9-slice sources must stay at design resolution, live in
   because its embedded meshes exceed GitHub's file size limit.
 - A few authored fields aren't wired up yet: `characterSpotlight` (reserved for
   an unimplemented lighting effect), white-noise debate lines (disabled pending
-  a layout rework), and the lie/negative-bullet toggle (`TruthBulletManager`
-  supports it but no input is bound). The camera motions, screen effects and
-  highlight ranges the editor authors *are* interpreted.
+  a layout rework). The camera motions, screen effects, highlight ranges and
+  the lie/negative-bullet toggle the editor authors *are* interpreted.

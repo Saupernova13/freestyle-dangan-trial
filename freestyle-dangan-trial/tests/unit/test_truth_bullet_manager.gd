@@ -47,3 +47,40 @@ func test_a_dangling_id_still_yields_the_placeholder_name() -> void:
 		TruthBulletManager.get_bullet_name("tb_deleted")
 	).is_equal(TruthBulletManager.UNKNOWN_BULLET_NAME)
 	assert_str(TruthBulletManager.get_bullet_name("tb_knife")).is_equal("Bloodied Knife")
+
+
+func test_a_negative_weak_point_is_answerable_only_in_lie_mode() -> void:
+	# The reported failure: lie_mode had no writer bound to any input, so this
+	# returned false for every bullet the player could select - silently, so
+	# each shot read as a miss and the attempt ended.
+	TruthBulletManager.lie_mode = false
+	assert_bool(TruthBulletManager.check_bullet_match("tb_knife", true)).is_false()
+
+	TruthBulletManager.toggle_lie_mode()
+	assert_bool(TruthBulletManager.check_bullet_match("tb_knife", true)).is_true()
+	# And the ordinary weak point stops matching, which is the mechanic.
+	assert_bool(TruthBulletManager.check_bullet_match("tb_knife", false)).is_false()
+	TruthBulletManager.lie_mode = false
+
+
+func test_the_selector_binds_the_toggle_to_input() -> void:
+	# truth_bullet_selector owns the wiring, the way it already owns bullet
+	# cycling, so the binding only exists while a minigame is showing evidence.
+	var selector: Node = auto_free(ResourceRegistry.instantiate("truth_bullet_selector"))
+	add_child(selector)
+	TruthBulletManager.lie_mode = false
+
+	InputManager.lie_mode_toggle_requested.emit()
+	assert_bool(TruthBulletManager.lie_mode).is_true()
+	InputManager.lie_mode_toggle_requested.emit()
+	assert_bool(TruthBulletManager.lie_mode).is_false()
+
+
+func test_the_selector_releases_the_binding_when_it_leaves() -> void:
+	var selector: Node = ResourceRegistry.instantiate("truth_bullet_selector")
+	add_child(selector)
+	remove_child(selector)
+	selector.free()
+	assert_bool(
+		InputManager.lie_mode_toggle_requested.is_connected(TruthBulletManager.toggle_lie_mode)
+	).is_false()

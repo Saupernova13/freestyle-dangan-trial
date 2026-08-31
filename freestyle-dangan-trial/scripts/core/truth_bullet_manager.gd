@@ -81,12 +81,18 @@ func get_current_display_name() -> String:
 		return bullet.get("inversedLieBulletName", bullet.get("name", ""))
 	return bullet.get("name", "")
 
-## Not yet bound to any input. The editor authors useNegativeBullet on weak
-## points, so lie mode is the missing player-side half of that contract.
+## Bound to R, middle-click and MobileHud's lie button, via
+## truth_bullet_selector. The selector recolours the bullet name and
+## get_current_display_name() switches to inversedLieBulletName, so the mode is
+## visible before the player commits to a shot.
 func toggle_lie_mode():
 	lie_mode = not lie_mode
 	lie_mode_changed.emit(lie_mode)
 
+## Both halves must agree. A weak point authored with useNegativeBullet is only
+## answerable with lie mode on, and until it was bound to an input this returned
+## false for every bullet the player could select - silently, so the shot read
+## as a miss and the attempt ended.
 func check_bullet_match(bullet_id: String, requires_lie: bool) -> bool:
 	var current = get_current_bullet()
 	if current.is_empty():

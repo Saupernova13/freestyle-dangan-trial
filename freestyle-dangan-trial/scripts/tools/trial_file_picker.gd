@@ -12,6 +12,9 @@ const IMPORTED_TRIAL_PATH := "user://imported_trial.drtrial"
 
 var _file_dialog: FileDialog
 var _is_mobile: bool = false
+## Top-level scan roots that could not be opened, so an unreadable folder is
+## not reported to the user as an empty one.
+var _scan_errors: Array[String] = []
 
 func _ready():
 	_is_mobile = OS.has_feature("mobile")
@@ -160,14 +163,23 @@ func _open_legacy_directory_scan():
 	]
 
 	var found_files: Array = []
+	_scan_errors.clear()
 	for dir_path in scan_dirs:
 		if dir_path.is_empty():
 			continue
 		_scan_directory(dir_path, found_files)
 
 	if found_files.is_empty():
-		push_warning("No .drtrial files found in Downloads/Documents and native picker unavailable")
-		load_failed.emit("No .drtrial files found in Downloads or Documents.")
+		if not _scan_errors.is_empty():
+			# Scoped storage denies these reads outright on Android 11+, and the
+			# recovery is to grant the permission - which "nothing found" hides.
+			push_warning("Could not read scan directories: %s" % ", ".join(_scan_errors))
+			load_failed.emit(
+				"Could not read Downloads or Documents - storage permission may be denied."
+			)
+		else:
+			push_warning("No .drtrial files found in Downloads/Documents and native picker unavailable")
+			load_failed.emit("No .drtrial files found in Downloads or Documents.")
 		cancelled.emit()
 		return
 
@@ -182,6 +194,11 @@ func _scan_directory(path: String, results: Array, depth: int = 0):
 		return
 	var dir = DirAccess.open(path)
 	if not dir:
+		push_warning("Cannot scan %s: %s" % [path, error_string(DirAccess.get_open_error())])
+		# Only a scan root counts: an unreadable subfolder deep inside Downloads
+		# is ordinary and must not turn a genuine empty result into a warning.
+		if depth == 0:
+			_scan_errors.append(path)
 		return
 	dir.list_dir_begin()
 	var entry_name = dir.get_next()

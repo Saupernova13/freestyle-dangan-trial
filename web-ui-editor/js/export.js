@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { state } from './core/state.js';
 import { MINIGAME_TYPE_LABELS } from './core/constants.js';
 import { validateTrialData } from './core/trialSchema.js';
+import { findDanglingBulletReferences } from './core/references.js';
 import { buildTrialJson } from './core/trialSerialize.js';
 import { isCharacterComplete, missingCharacterFields } from './models/characterModel.js';
 import { alertDialog, confirmDialog, showToast } from './ui/dialogs.js';
@@ -71,6 +72,10 @@ export function validateTrialForExport() {
   state.truthBullets.forEach((b, i) => {
     if (!b.name || !b.name.trim()) issues.push(`Truth bullet ${i + 1} has no name.`);
   });
+
+  // Dangling minigameId was already checked; this is the reference that makes
+  // a debate unwinnable rather than merely untidy.
+  issues.push(...findDanglingBulletReferences(state.minigames, state.truthBullets));
 
   return issues;
 }

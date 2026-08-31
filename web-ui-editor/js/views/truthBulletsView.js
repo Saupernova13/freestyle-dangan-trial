@@ -1,5 +1,6 @@
 // Truth bullets, as a split pane: list on the left, detail on the right.
 import { updateFloatingAddButton } from '../components/floatingAddButton.js';
+import { detachTruthBullet } from '../core/references.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { openTruthBulletModal } from '../modals/truthBulletModal.js';
@@ -171,14 +172,11 @@ export async function deleteTruthBullet(bulletId) {
 
   state.truthBullets = state.truthBullets.filter((b) => b.bulletId !== bulletId);
 
-  // A deleted bullet must not linger in any debate that referenced it.
-  state.minigames.forEach((mg) => {
-    if (mg.typeSpecific && mg.typeSpecific.selectedBullets) {
-      mg.typeSpecific.selectedBullets = mg.typeSpecific.selectedBullets.filter(
-        (id) => id !== bulletId
-      );
-    }
-  });
+  // Every reference, not just selectedBullets. answerBulletId IS the correct
+  // answer, and leaving it dangling left a weak point that stayed visible and
+  // could never be shot - so the minigame could not be completed, which is
+  // precisely what the confirm dialog above promises will not happen.
+  detachTruthBullet(state.minigames, bulletId);
 
   // Land on the next bullet, or the previous one if the last was deleted.
   if (state.selectedTruthBulletId === bulletId) {

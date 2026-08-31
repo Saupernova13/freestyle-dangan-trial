@@ -92,3 +92,12 @@ func test_async_load_of_a_missing_file_fails_without_completing() -> void:
 	assert_bool(TrialLoader.loaded_async).is_false()
 	assert_str(TrialLoader.last_load_error).is_not_empty()
 	assert_object(TrialLoader.manifest).is_null()
+
+
+func test_loading_a_trial_clears_the_audio_cache() -> void:
+	# Every trial extracts to the same directory, so the cache is keyed on paths
+	# two trials share: without this, trial B plays trial A's line_001.mp3 even
+	# though extraction overwrote the file on disk.
+	AudioManager._audio_cache["user://gdunit_stale_voice.wav"] = AudioStreamWAV.new()
+	assert_bool(TrialLoader.load_trial(ProjectSettings.globalize_path(ZIP_PATH))).is_true()
+	assert_int(AudioManager._audio_cache.size()).is_equal(0)

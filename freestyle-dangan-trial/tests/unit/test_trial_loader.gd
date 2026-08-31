@@ -45,6 +45,10 @@ func test_load_trial_builds_typed_manifest() -> void:
 
 func test_async_load_publishes_one_coherent_manifest() -> void:
 	var path := ProjectSettings.globalize_path(ZIP_PATH)
+	# Monitoring must start before the load: the worker hands off with
+	# call_deferred, so the signal can land on the very next frame. auto_free
+	# stays off - TrialLoader is an autoload and must outlive the test.
+	monitor_signals(TrialLoader, false)
 	TrialLoader.load_trial_async(path)
 	# The second call lands while the first is in flight and must be ignored
 	# outright rather than resetting state the worker is still writing.
@@ -61,6 +65,7 @@ func test_async_load_publishes_one_coherent_manifest() -> void:
 
 
 func test_async_load_of_a_missing_file_fails_without_completing() -> void:
+	monitor_signals(TrialLoader, false)
 	TrialLoader.load_trial_async("user://gdunit_no_such_trial.drtrial")
 	await assert_signal(TrialLoader).is_emitted("loading_failed")
 

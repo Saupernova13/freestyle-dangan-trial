@@ -111,6 +111,7 @@ theme_override_font_sizes/font_size = 48
 text = "Trial 1"
 
 [node name="RichTextLabel_Bottom_Speech" type="RichTextLabel" parent="."]
+unique_name_in_owner = true
 z_index = 5
 anchors_preset = 12
 anchor_top = 1.0
@@ -150,6 +151,7 @@ texture = ExtResource("4_g20o5")
 expand_mode = 1
 
 [node name="TextureRect_Speaker_Portrait" type="TextureRect" parent="Panel_Top_Left/Control_Top_Left"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
@@ -208,6 +210,7 @@ offset_right = 1920.0
 grow_vertical = 0
 
 [node name="Label_Center_Name" type="Label" parent="Control_Center_Name_Label"]
+unique_name_in_owner = true
 z_index = 2
 layout_mode = 1
 offset_left = 16.0

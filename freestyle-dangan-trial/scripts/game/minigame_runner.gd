@@ -48,6 +48,9 @@ func run(minigame: MinigameData) -> void:
 
 func _start_attempt(minigame_data: MinigameData) -> void:
 	var minigame: MinigameBase = _instantiate(minigame_data.game_type)
+	if minigame == null:
+		_abort(minigame_data.game_type)
+		return
 	add_child(minigame)
 	minigame.initialize(minigame_data)
 	minigame.minigame_completed.connect(func(success, data):
@@ -72,11 +75,30 @@ func _start_attempt(minigame_data: MinigameData) -> void:
 	ScriptDirector.on_minigame_started(minigame)
 	minigame.start()
 
+## Returns null on any of the three ways this can fail; each one logs which.
 func _instantiate(game_type: String) -> MinigameBase:
 	if not MINIGAME_SCRIPTS.has(game_type):
+		Log.error("MinigameRunner", "No script registered for minigame type: %s" % game_type)
 		return null
-	var script: GDScript = load(MINIGAME_SCRIPTS[game_type])
-	return script.new() as MinigameBase
+	var path: String = MINIGAME_SCRIPTS[game_type]
+	var script: GDScript = load(path)
+	if script == null:
+		Log.error("MinigameRunner", "Failed to load minigame script: %s" % path)
+		return null
+	var instance := script.new() as MinigameBase
+	if instance == null:
+		Log.error("MinigameRunner", "%s does not extend MinigameBase" % path)
+	return instance
+
+## The UI is already hidden and ScriptDirector is parked in MINIGAME_LOADING by
+## this point, so bailing out silently freezes the trial with no way back. Put
+## the UI back and report a pass so the script moves on past the broken line.
+func _abort(game_type: String) -> void:
+	_restore_conversation_ui()
+	MobileToast.show_message(
+		get_tree().root, "Minigame '%s' failed to load; skipping." % game_type, true, 5.0
+	)
+	ScriptDirector.on_minigame_finished(true)
 
 func _hide_conversation_ui() -> void:
 	# The roaming text belongs to the dialogue presentation, so it hides too.

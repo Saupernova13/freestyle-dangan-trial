@@ -96,7 +96,9 @@ sprite-texture cache. `TrialRoomManager` is a composition root that wires
    base class provides lifecycle, timers, managed signal connections, and
    standard HUD setup via `ResourceRegistry`. Success advances the script;
    failure replays the minigame; a depleted influence gauge ends in the
-   game-over screen.
+   game-over screen. The gauge is reset once per minigame *line*, so damage
+   carries across replays of the same line, and `MinigameRunner.MAX_ATTEMPTS`
+   caps the loop for the three minigames that never damage it.
 
 ### Adding a minigame
 

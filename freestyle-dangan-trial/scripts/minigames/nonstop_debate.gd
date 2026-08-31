@@ -61,7 +61,6 @@ func start():
 		HudComponent.TIMER_DISPLAY,
 	])
 
-	InfluenceGauge.reset()
 	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
 	ConcentrateGauge.reset()
 

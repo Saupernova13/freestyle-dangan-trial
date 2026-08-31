@@ -17,6 +17,11 @@ func _ready():
 	InfluenceGauge.influence_changed.connect(_on_influence_changed)
 	InfluenceGauge.damage_taken.connect(_on_damage_taken)
 	visible = false
+	# A fresh gauge is built for every minigame attempt, and influence now
+	# carries across attempts, so the bar has to open on the real value rather
+	# than the scene's full-width default. Snapped, not tweened: nothing has
+	# changed yet, so there is nothing to animate.
+	_apply(InfluenceGauge.current_influence, InfluenceGauge.max_influence, false)
 
 func show_gauge():
 	visible = true
@@ -25,12 +30,18 @@ func hide_gauge():
 	visible = false
 
 func _on_influence_changed(current: float, maximum: float):
+	_apply(current, maximum, true)
+
+func _apply(current: float, maximum: float, animate: bool):
 	var pct = current / maximum if maximum > 0 else 0.0
 	var target_width = bar_max_width * pct
-	# The one animation that can't be scene-owned: AnimationPlayer clips have
-	# fixed end values, and the fill target is dynamic.
-	var tween = create_tween()
-	tween.tween_property(bar_fill, "size:x", target_width, 0.3).set_ease(Tween.EASE_OUT)
+	if animate:
+		# The one animation that can't be scene-owned: AnimationPlayer clips
+		# have fixed end values, and the fill target is dynamic.
+		var tween = create_tween()
+		tween.tween_property(bar_fill, "size:x", target_width, 0.3).set_ease(Tween.EASE_OUT)
+	else:
+		bar_fill.size.x = target_width
 
 	if pct < 0.25:
 		bar_fill.color = color_low

@@ -112,6 +112,9 @@ func _ensure_black_backplane(mesh_instance: MeshInstance3D) -> void:
 		return
 	var back := MeshInstance3D.new()
 	back.name = "BackPlane"
+	# Shared by reference on purpose: _fit_quad_to_texture mutates quad.size in
+	# place on every emotion swap, so the backplane tracks the resize. Adding a
+	# defensive .duplicate() here freezes it at the first sprite's dimensions.
 	back.mesh = mesh_instance.mesh
 	back.rotation_degrees.y = 180.0
 	var black_mat := StandardMaterial3D.new()

@@ -1,6 +1,5 @@
 class_name CrosshairDrawer
 extends Control
-
 ## Pure-draw control for the crosshair reticle.
 ## Attached to a Control node in scenes/ui/crosshair.tscn.
 

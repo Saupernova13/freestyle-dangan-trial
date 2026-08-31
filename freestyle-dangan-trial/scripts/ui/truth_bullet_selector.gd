@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## Spinning truth-bullet HUD, bottom-left during minigames. Look and the looping
 ## idle rotation are editor-owned; this script wires signals, updates text and
 ## applies lie-mode coloring.

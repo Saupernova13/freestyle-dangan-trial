@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## Countdown timer HUD; position and styling live in the scene. This handles
 ## the countdown, the threshold colors, and the low-time pulse.
 

@@ -1,5 +1,9 @@
 shader_type canvas_item;
 
+// Start-menu background glitch, reached indirectly: the shader is wrapped by
+// resources/materials/glitch.tres, which scenes/start_menu.tscn assigns to
+// Panel_Center/Background. Grepping the scenes for this filename finds nothing.
+
 uniform float speed : hint_range(0.0, 2.0, 0.01) = 1.0;
 uniform float intensity : hint_range(0.0, 1.0, 0.01) = 0.2;
 

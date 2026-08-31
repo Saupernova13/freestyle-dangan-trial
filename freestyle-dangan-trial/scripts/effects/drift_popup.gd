@@ -1,5 +1,4 @@
 extends Control
-
 ## Small "+10" / "-10" popup that drifts up and fades. Drift distance, timing
 ## and font are scene-owned; the caller supplies position, text and tint.
 

@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## Influence (HP) gauge HUD; the node tree lives in
 ## scenes/ui/influence_gauge.tscn. This script wires signals, tweens the fill,
 ## and triggers the damage-flash animation.

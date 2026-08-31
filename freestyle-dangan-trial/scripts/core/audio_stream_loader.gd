@@ -20,7 +20,8 @@ static func from_bytes(bytes: PackedByteArray, extension: String) -> AudioStream
 	return null
 
 ## Godot ships no runtime WAV loader to match the mp3/ogg buffer constructors,
-## so channel count, sample rate and bit depth are read from the header here.
+## so channel count, sample rate and bit depth are read from the header here,
+## and the data chunk is located by scanning for its tag.
 static func _parse_wav(bytes: PackedByteArray) -> AudioStreamWAV:
 	if bytes.size() < 44:
 		return null
@@ -30,8 +31,12 @@ static func _parse_wav(bytes: PackedByteArray) -> AudioStreamWAV:
 	wav.stereo = bytes.decode_u16(22) == 2
 	wav.format = AudioStreamWAV.FORMAT_8_BITS if bytes.decode_u16(34) == 8 else AudioStreamWAV.FORMAT_16_BITS
 
+	# 44 is the offset in a canonical header; a file carrying extra chunks
+	# before "data" needs the scan. 200 bytes is well past any realistic
+	# preamble, and stopping there keeps a non-WAV payload from being walked.
 	var data_offset := 44
 	for i in range(12, min(bytes.size() - 8, 200)):
+		# 0x64 0x61 0x74 0x61 spells "data"; the chunk size follows it.
 		if bytes[i] == 0x64 and bytes[i + 1] == 0x61 and bytes[i + 2] == 0x74 and bytes[i + 3] == 0x61:
 			data_offset = i + 8
 			break

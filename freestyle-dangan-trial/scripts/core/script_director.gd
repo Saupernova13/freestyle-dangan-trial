@@ -1,5 +1,4 @@
 extends Node
-##
 ## Drives the trial script: walks the lines, tracks high-level state, and
 ## coordinates pause, settings and auto-skip. Reacts to InputManager's signals
 ## rather than running its own _input().

@@ -22,7 +22,7 @@ static func show_message(
 	host: Node, message: String, is_error: bool = false, duration: float = _DEFAULT_DURATION
 ) -> CanvasLayer:
 	if host == null or not is_instance_valid(host):
-		push_warning("MobileToast.show: invalid host, message was: " + message)
+		push_warning("MobileToast.show_message: invalid host, message was: " + message)
 		return null
 	var toast: MobileToast = ResourceRegistry.instantiate("mobile_toast")
 	if toast == null:

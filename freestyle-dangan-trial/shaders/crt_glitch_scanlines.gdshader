@@ -1,5 +1,9 @@
 shader_type canvas_item;
 
+// CRT scanlines and glitch tearing on the start menu's background
+// (scenes/start_menu.tscn). Every uniform is set there as a material
+// parameter; nothing drives them from script.
+
 uniform float scanline_intensity : hint_range(0.0, 1.0, 0.01) = 0.3;
 uniform float scanline_frequency : hint_range(1.0, 500.0, 1.0) = 200.0;
 uniform float glitch_intensity : hint_range(0.0, 1.0, 0.01) = 0.2;

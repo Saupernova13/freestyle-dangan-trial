@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## Shown while TrialLoader.load_trial_async works on a worker thread.
 ##
 ## Layout is scene-owned; animations live in

@@ -1,6 +1,5 @@
 class_name BulletProjectile
 extends Control
-
 ## Truth bullet fired at a debate panel; the look is scene-owned in
 ## scenes/minigames/bullet_projectile.tscn. This script does flight, the
 ## trail, and hit detection.

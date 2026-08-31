@@ -263,7 +263,11 @@ func focus_on_bench(index: int, animate: bool):
 	if trial_manager and trial_manager.has_method("on_bench_focused"):
 		trial_manager.on_bench_focused(index)
 
-## `index` is 0-based; 16 is Monokuma.
+## `index` is 0-based and indexes bench_markers, which _ready() builds by
+## appending only the markers it finds - a missing bench compacts the array and
+## shifts everything after it, so 16 is Monokuma only when all 17 loaded.
+## CharacterStage._mesh_for_bench resolves by marker name and is unaffected,
+## so the two disagree silently when a marker is absent.
 func jump_to_bench(index: int, animate: bool = true):
 	if index >= 0 and index < bench_markers.size():
 		current_index = index

@@ -1,6 +1,5 @@
 class_name BulletDrawer
 extends Control
-
 ## Pure-draw control for the truth bullet projectile.
 ## Attached to a Control node in scenes/minigames/bullet_projectile.tscn.
 

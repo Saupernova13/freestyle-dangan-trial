@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## BREAK! sequence: freezes the viewport, cracks and shatters it over black,
 ## then zooms the BREAK! text past the camera. One break_sequence timeline in
 ## scenes/minigames/break_shatter.tscn; this script captures the screenshot and

@@ -1,5 +1,4 @@
 extends GPUParticles2D
-
 ## A debate panel breaking into shards. Shard look, speed and lifetime are on
 ## the process material in scenes/effects/panel_shatter.tscn; the caller
 ## supplies only the panel rect and tint.

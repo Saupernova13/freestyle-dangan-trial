@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## Game over overlay. Button styles, layout, title text and the show/dismiss
 ## animations are all editable in scenes/ui/game_over_screen.tscn.
 

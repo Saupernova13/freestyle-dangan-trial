@@ -1,6 +1,5 @@
 class_name FloatingLetter
 extends Control
-
 ## A drifting letter in Hangman's Gambit. Circle styles, font and the three
 ## destroy animations are scene-owned. Only the drift is procedural: velocity
 ## and spawn point come from the difficulty settings.

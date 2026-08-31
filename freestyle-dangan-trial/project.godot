@@ -11,6 +11,8 @@ config_version=5
 [application]
 
 config/name="freestyle-dangan-trial"
+; Overwritten from the tag by .github/scripts/stamp-version.sh on a release.
+config/version="0.0.0"
 run/main_scene="uid://cf6h777ockpp2"
 config/features=PackedStringArray("4.7", "Mobile")
 run/max_fps=1000

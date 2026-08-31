@@ -34,6 +34,10 @@ jobs:
           unzip -q templates.tpz
           mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           mv templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+      - name: Stamp version from tag
+        # Android orders updates by versionCode, and both it and versionName
+        # were left at their defaults - every release looked like version 1.
+        run: .github/scripts/stamp-version.sh
       - name: Import project
         # Cold first import can exit nonzero while resources settle; the second
         # pass is a cheap no-op when the first already succeeded.
@@ -99,6 +103,10 @@ jobs:
             echo 'export/android/debug_keystore_user = "androiddebugkey"'
             echo 'export/android/debug_keystore_pass = "android"'
           } > "$HOME/.config/godot/editor_settings-4.tres"
+      - name: Stamp version from tag
+        # Android orders updates by versionCode, and both it and versionName
+        # were left at their defaults - every release looked like version 1.
+        run: .github/scripts/stamp-version.sh
       - name: Import project
         run: |
           godot --headless --path freestyle-dangan-trial --import || \

@@ -7,6 +7,9 @@ extends RefCounted
 const TYPE_SPEAKING := "speaking"
 const TYPE_NARRATOR := "narrator"
 const TYPE_MINIGAME := "minigame"
+## Every line type, in one place. Dispatch and validation are built from this,
+## so renaming a constant cannot leave a stale literal behind somewhere else.
+const TYPES := [TYPE_SPEAKING, TYPE_NARRATOR, TYPE_MINIGAME]
 
 var id: String = ""
 var order: int = 0

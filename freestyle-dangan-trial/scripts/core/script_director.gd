@@ -41,9 +41,9 @@ var _line_handlers: Dictionary = {}
 
 func _ready():
 	_line_handlers = {
-		"speaking": _handle_speaking_line,
-		"narrator": _handle_narrator_line,
-		"minigame": _handle_minigame_line,
+		ScriptLine.TYPE_SPEAKING: _handle_speaking_line,
+		ScriptLine.TYPE_NARRATOR: _handle_narrator_line,
+		ScriptLine.TYPE_MINIGAME: _handle_minigame_line,
 	}
 	InputManager.advance_pressed.connect(_on_advance_input)
 	InputManager.settings_toggle_requested.connect(_on_settings_toggle_requested)

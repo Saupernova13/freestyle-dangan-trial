@@ -67,3 +67,22 @@ func test_unknown_line_type_warns_but_passes() -> void:
 	var data := _load_fixture()
 	data["script"]["lines"].append({"id": "line_future", "type": "hologram"})
 	assert_array(TrialValidator.validate(data)).is_empty()
+
+
+## The line-type strings used to be spelled out independently in ScriptLine,
+## ScriptDirector's dispatch table and here. These pin all three to one source,
+## so a renamed constant fails CI instead of silently unhooking the dispatch.
+func test_validator_line_types_come_from_script_line() -> void:
+	assert_array(TrialValidator.LINE_TYPES).is_equal(ScriptLine.TYPES)
+
+
+func test_script_line_types_list_is_complete() -> void:
+	assert_array(ScriptLine.TYPES).contains_exactly_in_any_order(
+		[ScriptLine.TYPE_SPEAKING, ScriptLine.TYPE_NARRATOR, ScriptLine.TYPE_MINIGAME]
+	)
+
+
+func test_director_dispatch_is_keyed_on_the_constants() -> void:
+	var director := get_node("/root/ScriptDirector")
+	assert_object(director).is_not_null()
+	assert_array(director._line_handlers.keys()).contains_exactly_in_any_order(ScriptLine.TYPES)

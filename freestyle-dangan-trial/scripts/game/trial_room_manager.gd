@@ -217,13 +217,15 @@ func _on_game_over():
 	add_child(game_over_screen)
 	game_over_screen.show_game_over()
 
+	# The nodes holding time-scale requests are about to be freed with the
+	# scene, so their releases will never run.
 	game_over_screen.retry_requested.connect(func():
-		Engine.time_scale = 1.0
+		TimeScale.release_all()
 		InfluenceGauge.reset()
 		get_tree().reload_current_scene()
 	)
 	game_over_screen.return_to_menu.connect(func():
-		Engine.time_scale = 1.0
+		TimeScale.release_all()
 		InfluenceGauge.reset()
 		get_tree().change_scene_to_file("res://scenes/start_menu.tscn")
 	)

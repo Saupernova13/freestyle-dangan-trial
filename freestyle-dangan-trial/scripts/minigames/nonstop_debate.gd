@@ -1,5 +1,9 @@
 extends MinigameBase
 
+## This node is freed with the minigame while the slow-time key may still
+## be held, so cleanup() releases it by name rather than by state.
+const SLOW_TIME_KEY := &"nonstop_debate_slow_time"
+
 var dialogue_lines: Array = []
 var selected_bullets: Array = []
 
@@ -148,7 +152,7 @@ func _process(delta):
 
 func _activate_slow_time():
 	_is_slow_time = true
-	Engine.time_scale = MinigameConfig.SLOW_TIME_SCALE
+	TimeScale.request(SLOW_TIME_KEY, MinigameConfig.SLOW_TIME_SCALE)
 	AudioManager.set_voice_pitch(MinigameConfig.SLOW_TIME_SCALE)
 
 	if not _slow_vignette:
@@ -158,7 +162,7 @@ func _activate_slow_time():
 
 func _deactivate_slow_time():
 	_is_slow_time = false
-	Engine.time_scale = 1.0
+	TimeScale.release(SLOW_TIME_KEY)
 	AudioManager.set_voice_pitch(1.0)
 
 	if _slow_vignette:
@@ -411,6 +415,7 @@ func _on_time_expired():
 func cleanup():
 	if _is_slow_time:
 		_deactivate_slow_time()
+	TimeScale.release(SLOW_TIME_KEY)
 	ConcentrateGauge.reset()
 	_dismiss_ambience()
 

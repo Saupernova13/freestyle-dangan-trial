@@ -7,6 +7,8 @@ extends CanvasLayer
 @export var focus_follow_speed: float = 8.0
 @export var focus_time_scale: float = 0.3
 
+const TIME_SCALE_KEY := &"crosshair_focus"
+
 @onready var _crosshair_node: Control = %CrosshairNode
 @onready var _anim: AnimationPlayer = %AnimationPlayer
 
@@ -40,19 +42,29 @@ func show_crosshair():
 func hide_crosshair():
 	visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	# The only method MinigameBase calls on teardown, and focus may still be
+	# held: the reticle is gone, so the slow-down must go with it.
+	_is_focus_mode = false
+	TimeScale.release(TIME_SCALE_KEY)
 
 func _on_aim_moved(pos: Vector2):
 	_target_pos = pos
 
+## This node is freed with the minigame, so focus_ended can arrive after it is
+## gone - a player holding right-mouse as the game ends would never release the
+## request. Teardown is unconditional; release() ignores a key nobody holds.
+func _exit_tree() -> void:
+	TimeScale.release(TIME_SCALE_KEY)
+
 func _on_focus_started():
 	_is_focus_mode = true
-	Engine.time_scale = focus_time_scale
+	TimeScale.request(TIME_SCALE_KEY, focus_time_scale)
 	if _anim and _anim.has_animation("focus_pulse"):
 		_anim.play("focus_pulse")
 
 func _on_focus_ended():
 	_is_focus_mode = false
-	Engine.time_scale = 1.0
+	TimeScale.release(TIME_SCALE_KEY)
 	if _anim and _anim.is_playing():
 		_anim.stop()
 		_crosshair_node.scale = Vector2.ONE

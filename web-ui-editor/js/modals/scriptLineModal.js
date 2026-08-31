@@ -206,16 +206,18 @@ export async function saveScriptLineAdvanced() {
   try {
     showLoader(true, 'Saving…');
 
+    // Cloned on the way out as well as in, so the buffer never aliases the
+    // line in either direction and a later tab edit cannot reach a saved line.
     if (line.type === 'speaking') {
       line.spriteIndex = sl.fields.spriteIndex;
-      line.cameraMotion = sl.fields.cameraMotion;
+      line.cameraMotion = structuredClone(sl.fields.cameraMotion);
     }
 
     // Normalized against the line's current text, so no stale or overlapping
     // range reaches trial.json.
     line.highlights = normalizeHighlights(sl.fields.highlights, dialogue.length);
-    line.specialEffects = sl.fields.specialEffects;
-    line.dialogueBoxStyle = sl.fields.dialogueBoxStyle;
+    line.specialEffects = structuredClone(sl.fields.specialEffects);
+    line.dialogueBoxStyle = structuredClone(sl.fields.dialogueBoxStyle);
 
     if (sl.fields.audioBlob) {
       if (!state.dirHandle) {

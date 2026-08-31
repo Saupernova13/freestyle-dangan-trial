@@ -38,15 +38,21 @@ export const sl = {
 };
 
 // Loads the edit buffers from a freshly opened line.
+//
+// Deep copies, without exception. Three of these used to be plain aliases and
+// `highlights` a shallow copy that still shared its entries, so the tabs -
+// which assign straight into sl.fields.* - were writing into the live line.
+// Cancel then left those edits already applied, and the next unrelated
+// keystroke autosaved them to disk.
 export function resetFields(line) {
   sl.fields = {
     spriteIndex: line.spriteIndex ?? null,
     audioFile: line.audioFile || null,
     audioBlob: null,
-    highlights: line.highlights ? [...line.highlights] : [],
-    cameraMotion: line.cameraMotion || { ...DEFAULT_CAMERA_MOTION },
-    specialEffects: line.specialEffects || { effects: [] },
-    dialogueBoxStyle: line.dialogueBoxStyle || { ...DEFAULT_DIALOGUE_BOX_STYLE },
+    highlights: structuredClone(line.highlights ?? []),
+    cameraMotion: structuredClone(line.cameraMotion ?? DEFAULT_CAMERA_MOTION),
+    specialEffects: structuredClone(line.specialEffects ?? { effects: [] }),
+    dialogueBoxStyle: structuredClone(line.dialogueBoxStyle ?? DEFAULT_DIALOGUE_BOX_STYLE),
   };
   sl.highlighting = { startChar: 0, endChar: 0, currentColor: DEFAULT_HIGHLIGHT_COLOR };
 }

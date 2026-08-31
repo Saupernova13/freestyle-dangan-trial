@@ -60,3 +60,22 @@ func test_minigames_without_required_data_validate_clean() -> void:
 		assert_array(errors).override_failure_message(
 			"%s reported %s" % [game_type, errors]
 		).is_empty()
+
+
+func test_a_debate_whose_evidence_does_not_resolve_is_rejected() -> void:
+	# Not the same as an empty selection, which means "all bullets": here the
+	# author named ids that no longer exist, so every weak-point shot is a miss
+	# and the attempt ends on the player's first correct-looking one.
+	var errors: Array[String] = _probe("nonstop_debate", {
+		"dialogueLines": [{"text": "It was you."}],
+		"selectedBullets": ["tb_deleted_by_the_author"],
+	}).validate_data()
+	assert_array(errors).is_not_empty()
+
+
+func test_an_empty_bullet_selection_is_accepted() -> void:
+	var errors: Array[String] = _probe("nonstop_debate", {
+		"dialogueLines": [{"text": "It was you."}],
+		"selectedBullets": [],
+	}).validate_data()
+	assert_array(errors).is_empty()

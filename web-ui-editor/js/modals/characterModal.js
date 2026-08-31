@@ -1,5 +1,6 @@
 // Create/edit modal for a state.cast member.
 import { state } from '../core/state.js';
+import { uniqueDirectoryName } from '../core/opfs.js';
 import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import {
   getCharacterType,
@@ -332,8 +333,18 @@ export async function trySaveChar() {
     const nameBased = (charFields.name + '_' + charFields.surname)
       .replace(/[^a-zA-Z0-9_\- ]/g, '_')
       .replace(/^[_\s]+|[_\s]+$/g, '');
-    const charDirname = existingChar?._folderHandle?.name || nameBased || characterId;
     let charsDir = await state.dirHandle.getDirectoryHandle('Characters', { create: true });
+
+    // An existing character keeps the folder it already owns. A new one has to
+    // be given a free name: identity is the character id, but the directory is
+    // keyed on the display name, so a second "John Smith" - twins, or a typo -
+    // used to land in the first one's folder and overwrite their
+    // character.json and every sprite. trial.json still listed both ids, so on
+    // reopen the first slot came back empty with its sprites gone, and nothing
+    // warned at any point.
+    const charDirname =
+      existingChar?._folderHandle?.name ||
+      (await uniqueDirectoryName(charsDir, nameBased || characterId));
     let charDir = await charsDir.getDirectoryHandle(charDirname, { create: true });
 
     let charJson = {

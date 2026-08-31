@@ -17,7 +17,7 @@ signal closed
 var _is_closing: bool = false
 
 func _ready():
-	_close_btn.pressed.connect(_close)
+	_close_btn.pressed.connect(close)
 
 	_text_speed_value.text = Settings.get_text_speed_name()
 	(%TextSpeedDown as Button).pressed.connect(_step_text_speed.bind(-1))
@@ -60,7 +60,9 @@ func _step_text_speed(direction: int) -> void:
 	Settings.text_speed = Settings.text_speed + direction
 	_text_speed_value.text = Settings.get_text_speed_name()
 
-func _close():
+## Public because ScriptDirector owns the toggle: ESC is consumed during the
+## _input stage, so this menu could never see it in _unhandled_input.
+func close():
 	if _is_closing:
 		return
 	_is_closing = true
@@ -69,8 +71,3 @@ func _close():
 		await _anim.animation_finished
 	closed.emit()
 	queue_free()
-
-func _unhandled_input(event: InputEvent):
-	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		_close()
-		get_viewport().set_input_as_handled()

@@ -8,7 +8,7 @@ extends RefCounted
 ## imperfect files stay playable and per-line problems warn instead of failing.
 
 const SUPPORTED_FORMAT_MAJOR := 4
-const LINE_TYPES := ["speaking", "narrator", "minigame"]
+const LINE_TYPES := ScriptLine.TYPES
 
 
 ## "" when acceptable; an error message when the file needs a newer engine.
@@ -59,7 +59,7 @@ static func validate(data: Dictionary) -> Array[String]:
 					"script line %d has unknown type '%s' (will be skipped)"
 					% [i + 1, str(line.get("type"))]
 				)
-			elif line["type"] == "minigame" and not line.get("minigameId") is String:
+			elif line["type"] == ScriptLine.TYPE_MINIGAME and not line.get("minigameId") is String:
 				errors.append("script line %d: minigame line has no minigameId" % (i + 1))
 
 	if data.has("minigames") and not data.get("minigames") is Array:

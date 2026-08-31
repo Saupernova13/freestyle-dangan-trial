@@ -1,6 +1,5 @@
 class_name ResourceRegistry
 extends RefCounted
-##
 ## Scene paths with lazy load caching. Every "res://" lives here, so a rename
 ## touches one file.
 

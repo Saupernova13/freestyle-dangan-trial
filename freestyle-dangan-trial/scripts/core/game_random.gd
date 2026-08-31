@@ -1,5 +1,4 @@
 extends Node
-##
 ## Global seeded randomness: one seed per launch drives every minigame's
 ## procedural variation, so a whole session replays from it.
 ## Set DANGAN_SEED to force a specific seed.

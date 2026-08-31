@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## Cinematic minigame title card: flies in from the left, holds, exits right.
 ## Layout and the `fly` animation are editor-owned in
 ## scenes/ui/minigame_title_card.tscn; `fly` keys the Slider's proportional

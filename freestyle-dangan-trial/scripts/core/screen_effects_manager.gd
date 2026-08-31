@@ -34,7 +34,8 @@ const FILTER_MODES := {
 var _effects: Dictionary = {}
 
 func _ready():
-	# The scene orders FilterRect below Flash/Fade/Label deliberately.
+	# The scene orders FilterRect below Flash/Fade/Label deliberately, so a
+	# filter stays under the flash and fade layers rather than tinting them.
 	var overlay := ResourceRegistry.instantiate("screen_effects_overlay")
 	add_child(overlay)
 	_flash_rect = overlay.get_node("%FlashRect")

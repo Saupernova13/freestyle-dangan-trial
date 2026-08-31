@@ -1,5 +1,4 @@
 extends PathFollow2D
-
 ## One character of the roaming background text. Look and the looping `orbit`
 ## curve are editor-owned; the caller supplies the character, its phase along
 ## the path, the lap duration and the direction.

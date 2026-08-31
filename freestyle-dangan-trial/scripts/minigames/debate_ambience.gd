@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## Nonstop-debate ambience overlay: darkens the scene and applies the red
 ## filter. The grade lives on the TintRect material and the fade timing in the
 ## show/dismiss clips, both in scenes/minigames/debate_ambience.tscn.

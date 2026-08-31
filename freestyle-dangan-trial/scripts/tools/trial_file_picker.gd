@@ -1,5 +1,4 @@
 extends Node
-
 ## File picker for .drtrial files: Godot's FileDialog on desktop, the native
 ## SAF picker on Android. A custom file-list browser is the last resort, used
 ## only when the native dialog is unavailable.

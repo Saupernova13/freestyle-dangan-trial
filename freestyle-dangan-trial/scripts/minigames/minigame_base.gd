@@ -1,6 +1,5 @@
 class_name MinigameBase
 extends Node
-##
 ## Base class for all minigames: lifecycle, shared HUD setup, managed signal
 ## connections, and the standard influence/timer/concentrate result paths.
 

@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## Placeholder overlay for the unimplemented minigames: RebuttalShowdown,
 ## PsycheTaxi, ClosingArgument. Each sets its own title and color, then
 ## auto-completes.

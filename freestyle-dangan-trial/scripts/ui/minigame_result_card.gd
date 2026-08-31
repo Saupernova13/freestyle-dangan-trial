@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## The "ALL RIGHT! / WRONG!" flash after each minigame attempt, with an optional
 ## failure message. Layout and the show / show_message animations are
 ## editor-owned in scenes/ui/minigame_result_card.tscn.

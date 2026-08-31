@@ -1,6 +1,5 @@
 class_name DebateTextPanel
 extends Control
-
 ## A scrolling debate-statement panel. The scene supplies the labels; this
 ## script configures and animates them per instance.
 

@@ -1,6 +1,5 @@
 class_name RoadEffect
 extends Control
-
 ## Scrolling road decoration behind the LogicDive minigame, attached in
 ## scenes/minigames/logic_dive_overlay.tscn.
 ##

@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## FOCUS / Concentrate gauge HUD; position and style live in
 ## scenes/ui/concentrate_gauge.tscn. This tweens the fill, whose target is
 ## dynamic, and triggers the color-shift animations.

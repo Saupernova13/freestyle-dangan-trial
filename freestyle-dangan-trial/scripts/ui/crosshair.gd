@@ -1,5 +1,4 @@
 extends CanvasLayer
-
 ## Crosshair HUD. CrosshairDrawer on %CrosshairNode/Drawer paints the reticle;
 ## this handles aim smoothing, the focus-mode time scale, and the pulse.
 

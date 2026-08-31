@@ -8,6 +8,7 @@ signal typewriter_finished
 var _rich_label: RichTextLabel
 var _name_label: Label
 var _portrait_rect: TextureRect
+var _style_panel: Control
 
 var _typewriter_speed: float = 30.0
 var _is_typing: bool = false
@@ -25,6 +26,11 @@ func setup(rich_label: RichTextLabel, name_label: Label = null, portrait_rect: T
 		_typewriter_anim = _rich_label.get_parent().get_node_or_null("%TypewriterAnimator")
 		if _typewriter_anim:
 			_typewriter_anim.animation_finished.connect(_on_typewriter_finished)
+		# The label is a sibling of its backdrop, not a child, so box styling
+		# targets the backdrop by unique name rather than by walking up.
+		_style_panel = _rich_label.get_parent().get_node_or_null("%Panel_Text_BG") as Control
+		if _style_panel == null:
+			push_warning("DialogueBox: %Panel_Text_BG not found; dialogueBoxStyle is inert.")
 
 ## Highlights emit [b]...[/b], which RichTextLabel resolves through separate
 ## theme entries; unset ones fall back to a tiny default. Mirror the normal
@@ -152,8 +158,8 @@ func _apply_highlights(text: String, highlights: Array) -> String:
 var _default_panel_style: StyleBoxFlat = null
 
 func _apply_box_style(style: Dictionary):
-	var panel = _rich_label.get_parent()
-	if not panel or not panel is PanelContainer:
+	var panel := _style_panel
+	if panel == null:
 		return
 
 	# Cached pristine, so each line styles a fresh duplicate.

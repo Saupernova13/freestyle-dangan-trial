@@ -42,16 +42,24 @@ export async function getOpfsTrial(folder, { create = false } = {}) {
   return root.getDirectoryHandle(folder, { create });
 }
 
-// Suffixes the slug (_2, _3, ...) until it is unique.
+// Suffixes `preferred` (_2, _3, ...) until no subdirectory of `parent` has
+// that name. Any directory keyed on a display name needs this: two entities
+// can share a name, and the second one taking the first one's folder silently
+// overwrites its contents.
+export async function uniqueDirectoryName(parent, preferred) {
+  const existing = [];
+  for await (const [name, handle] of parent.entries()) {
+    if (handle.kind === 'directory') existing.push(name);
+  }
+  if (!existing.includes(preferred)) return preferred;
+  let i = 2;
+  while (existing.includes(`${preferred}_${i}`)) i++;
+  return `${preferred}_${i}`;
+}
+
 export async function createOpfsTrial(name) {
   const root = await opfsTrialsRoot();
-  const existing = await listOpfsTrialFolders();
-  let folder = slugify(name);
-  if (existing.includes(folder)) {
-    let i = 2;
-    while (existing.includes(`${folder}_${i}`)) i++;
-    folder = `${folder}_${i}`;
-  }
+  const folder = await uniqueDirectoryName(root, slugify(name));
   return root.getDirectoryHandle(folder, { create: true });
 }
 

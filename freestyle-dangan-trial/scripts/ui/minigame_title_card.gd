@@ -50,11 +50,17 @@ func show_title(game_type: String, game_name: String = "") -> void:
 	var color: Color = title_colors.get(game_type, Color(0.8, 0.8, 0.8))
 	var display_name: String = game_name if not game_name.is_empty() else title_names.get(game_type, game_type.to_upper())
 
-	# Orange trim for nonstop debate, blue for everything else.
+	# Orange trim for nonstop debate, blue for everything else. The stylebox is
+	# a plain sub-resource, so it is shared by every instance of the cached
+	# PackedScene: writing through it recoloured the frame of every later card
+	# in the session, under its own title colour. Override with a copy, as
+	# mobile_toast, dialogue_box and hangman_slot all do.
 	if game_type == "nonstop_debate":
 		var style := _frame.get_theme_stylebox("panel") as StyleBoxTexture
 		if style:
-			style.texture = load(FRAME_ORANGE)
+			var local: StyleBoxTexture = style.duplicate()
+			local.texture = load(FRAME_ORANGE)
+			_frame.add_theme_stylebox_override("panel", local)
 		_bullet.texture = load(BULLET_ORANGE)
 
 	_title_label.text = display_name

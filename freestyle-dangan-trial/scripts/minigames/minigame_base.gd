@@ -30,13 +30,15 @@ const _HUD_SPECS := {
 var minigame_data: MinigameData = null
 var difficulty: String = "medium"
 var time_limit: float = 60.0
-var time_remaining: float = 60.0
 var state: State = State.IDLE
 
 # Keyed by HudComponent; populated by setup_standard_ui().
 var hud: Dictionary = {}
 
+# Backs the deadline only for minigames that show no TimerDisplay; see
+# get_time_remaining().
 var _timer_node: Timer
+var _time_remaining: float = 60.0
 var _has_finished: bool = false
 # (signal, callable) pairs from connect_managed(), disconnected in cleanup().
 var _managed_signal_connections: Array = []
@@ -50,7 +52,7 @@ func initialize(data: MinigameData):
 	minigame_data = data
 	difficulty = data.difficulty
 	time_limit = data.time_limit
-	time_remaining = time_limit
+	_time_remaining = time_limit
 
 ## Authoring errors that make this minigame unplayable, empty when it is fine.
 ## Called by MinigameRunner on an initialised instance before the title card:
@@ -67,22 +69,25 @@ func start():
 
 func pause():
 	_transition_to(State.PAUSED)
-	if _timer_node:
-		_timer_node.paused = true
+	_set_clock_paused(true)
 
 func resume():
 	_transition_to(State.ACTIVE)
+	_set_clock_paused(false)
+
+## Whichever clock owns the deadline has to be the one that pauses.
+func _set_clock_paused(paused: bool) -> void:
 	if _timer_node:
-		_timer_node.paused = false
+		_timer_node.paused = paused
+	var display: Node = hud.get(HudComponent.TIMER_DISPLAY)
+	if is_instance_valid(display):
+		display.set_paused(paused)
 
 func cleanup():
 	_transition_to(State.COMPLETE)
 	_disconnect_managed_signals()
 	_teardown_standard_ui()
-	if _timer_node:
-		_timer_node.stop()
-		_timer_node.queue_free()
-		_timer_node = null
+	_stop_internal_timer()
 
 # ---------------------------------------------------------------------------
 # Standard HUD setup
@@ -100,6 +105,12 @@ func setup_standard_ui(components: Array) -> Dictionary:
 			connect_managed(node.time_expired, _on_time_expired)
 			if time_limit > 0:
 				node.start_timer(time_limit)
+				# One deadline only. The internal Timer counted down from the
+				# same time_limit but nothing could adjust it, so add_time()'s
+				# bonuses and penalties were cosmetic - the round ended on the
+				# original schedule whatever the HUD showed. Safe here because
+				# every minigame calls super.start() before setup_standard_ui().
+				_stop_internal_timer()
 	_maybe_spawn_mobile_hud(components)
 	return hud
 
@@ -178,10 +189,25 @@ func _start_timer():
 func _on_timer_tick():
 	if state != State.ACTIVE:
 		return
-	time_remaining -= 0.1
-	if time_remaining <= 0:
-		time_remaining = 0
+	_time_remaining -= 0.1
+	if _time_remaining <= 0:
+		_time_remaining = 0
 		_on_time_expired()
+
+## The one deadline. TimerDisplay owns it whenever the minigame asked for one:
+## it is the clock the player sees and the only one add_time() can move. The
+## internal Timer covers the minigames that show no timer at all.
+func get_time_remaining() -> float:
+	var display: Node = hud.get(HudComponent.TIMER_DISPLAY)
+	if is_instance_valid(display):
+		return display.get_remaining()
+	return _time_remaining
+
+func _stop_internal_timer() -> void:
+	if _timer_node:
+		_timer_node.stop()
+		_timer_node.queue_free()
+		_timer_node = null
 
 func _on_time_expired():
 	_finish(false, {"reason": "time_expired"})

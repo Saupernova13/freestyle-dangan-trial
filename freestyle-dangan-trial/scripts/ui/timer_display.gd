@@ -54,6 +54,11 @@ func start_timer(seconds: float):
 		_anim.stop()
 	_update_display()
 
+## Halts the countdown without losing the remaining time; start_timer() would
+## reset it to the full limit.
+func set_paused(paused: bool) -> void:
+	_is_running = not paused and _time_remaining > 0.0
+
 func stop_timer():
 	_is_running = false
 	if _anim and _anim.is_playing():

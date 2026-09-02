@@ -29,6 +29,31 @@ let draggedDialogueLineId = null;
 // lineId -> { textStyling, characterDisplay, feedback }
 const expandedSections = {};
 
+// The shape a nonstop debate line actually has. Exported so the shared test
+// fixture can be checked against it: the fixture used to certify field names
+// (text, isWeakPoint, correctBulletId) that no code ever wrote or read, and
+// neither validator constrains typeSpecific enough to notice.
+export function createDialogueLine(lineId, order) {
+  return {
+    lineId,
+    order,
+    sentenceBeginning: '',
+    target: '',
+    sentenceEnd: '',
+    isShootable: false,
+    answerBulletId: null,
+    useNegativeBullet: false,
+    textEffect: 'normal',
+    textMovementDirection: 'left_to_right',
+    userFailedComment: '',
+    userWrongAnswerComment: '',
+    textFont: 'default',
+    characterSpotlight: false,
+    characterId: '',
+    voiceLineFile: null,
+  };
+}
+
 export function toggleSection(lineId, sectionName) {
   if (!expandedSections[lineId]) {
     expandedSections[lineId] = {};
@@ -412,26 +437,9 @@ export function addDialogueLine(gameId) {
     mg.typeSpecific.dialogueLines = [];
   }
 
-  const newLine = {
-    lineId: generateId('dl'),
-    order: mg.typeSpecific.dialogueLines.length,
-    sentenceBeginning: '',
-    target: '',
-    sentenceEnd: '',
-    isShootable: false,
-    answerBulletId: null,
-    useNegativeBullet: false,
-    textEffect: 'normal',
-    textMovementDirection: 'left_to_right',
-    userFailedComment: '',
-    userWrongAnswerComment: '',
-    textFont: 'default',
-    characterSpotlight: false,
-    characterId: '',
-    voiceLineFile: null,
-  };
-
-  mg.typeSpecific.dialogueLines.push(newLine);
+  mg.typeSpecific.dialogueLines.push(
+    createDialogueLine(generateId('dl'), mg.typeSpecific.dialogueLines.length)
+  );
   renderMinigameDetails();
   autoSaveTrial();
 }

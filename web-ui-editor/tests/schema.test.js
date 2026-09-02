@@ -2,6 +2,11 @@
 // contract. Two things must track it: js/core/trialSchema.js and the engine's
 // trial_validator.gd. Comparing ajv's verdicts against the editor validator
 // across the corpus is what stops silent drift.
+//
+// In the envelope. Neither side constrains typeSpecific, so no case here can
+// catch a minigame payload whose shape nothing produces or consumes (#59) -
+// the fixture's dialogueLines are kept honest by hand, against
+// nonstopDebateEditor's createDialogueLine and debate_text_panel.gd's reads.
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

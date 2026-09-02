@@ -36,16 +36,31 @@
       "difficulty": "easy",
       "timeLimit": 30,
       "typeSpecific": {
+        "selectedBullets": [
+          "tb_fixture_1"
+        ],
         "dialogueLines": [
           {
             "lineId": "ndl_fixture_1",
+            "order": 0,
+            "sentenceBeginning": "The fixture is ",
+            "target": "obviously guilty",
+            "sentenceEnd": "!",
+            "isShootable": true,
+            "answerBulletId": "tb_fixture_1",
+            "useNegativeBullet": false,
+            "textEffect": "normal",
+            "textMovementDirection": "left_to_right",
+            "userFailedComment": "",
+            "userWrongAnswerComment": "",
+            "textFont": "default",
+            "characterSpotlight": false,
             "characterId": "FC_20000101_FIXTUR",
-            "text": "The fixture is obviously guilty!",
-            "isWeakPoint": true,
-            "correctBulletId": "tb_fixture_1"
+            "voiceLineFile": null
           }
         ]
-      }
+      },
+      "failComment": "Not quite - look at the evidence again."
     }
   ],
   "script": {

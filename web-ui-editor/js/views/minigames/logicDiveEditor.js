@@ -2,6 +2,7 @@
 
 // Drag state for questions
 import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
+import { confirmDialog } from '../../ui/dialogs.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
@@ -196,7 +197,17 @@ export function addLogicDiveQuestion(gameId) {
   autoSaveTrial();
 }
 
-export function deleteLogicDiveQuestion(gameId, questionId) {
+export async function deleteLogicDiveQuestion(gameId, questionId) {
+  // The button sits beside the reorder arrows, and a question carries up to
+  // five answers with it.
+  const confirmed = await confirmDialog({
+    title: 'Delete question',
+    message: 'Delete this question? Its answers go with it.',
+    confirmLabel: 'Delete',
+    danger: true,
+  });
+  if (!confirmed) return;
+
   const mg = findMinigame(gameId);
   if (!mg) return;
 
@@ -238,12 +249,26 @@ export function addLogicDiveAnswer(gameId, questionId) {
   autoSaveTrial();
 }
 
-export function deleteLogicDiveAnswer(gameId, questionId, answerId) {
+export async function deleteLogicDiveAnswer(gameId, questionId, answerId) {
   const mg = findMinigame(gameId);
   if (!mg) return;
 
   const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
   if (!question || question.answers.length <= 2) return; // Minimum 2 answers
+
+  // Removing the correct answer silently promotes the first one, so this
+  // deletes more than the text the author clicked next to.
+  const answer = question.answers.find((a) => a.answerId === answerId);
+  const confirmed = await confirmDialog({
+    title: 'Delete answer',
+    message:
+      answer && answer.isCorrect
+        ? 'Delete this answer? It is the correct one, so the first remaining answer becomes correct.'
+        : 'Delete this answer?',
+    confirmLabel: 'Delete',
+    danger: true,
+  });
+  if (!confirmed) return;
 
   question.answers = question.answers.filter((a) => a.answerId !== answerId);
 

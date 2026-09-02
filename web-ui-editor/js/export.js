@@ -158,10 +158,43 @@ export async function exportToPlayableFile() {
     filesAdded++;
     console.log(`Added trial.json (${filesAdded}/${totalFiles})`);
 
-    await addDirectoryToZip(zip, state.dirHandle, '', (current) => {
-      filesAdded = current;
-      showLoader(true, `Packaging… ${current}/${totalFiles} files`);
-    });
+    const packaging = { count: 1, total: totalFiles, failed: [] };
+    await addDirectoryToZip(
+      zip,
+      state.dirHandle,
+      '',
+      (current) => {
+        filesAdded = current;
+        showLoader(true, `Packaging… ${current}/${totalFiles} files`);
+      },
+      packaging
+    );
+
+    // countFilesInDirectory already computed the true total; the two were
+    // never compared, so a truncated export reported plain success.
+    if (filesAdded !== totalFiles && packaging.failed.length === 0) {
+      packaging.failed.push(
+        `${totalFiles - filesAdded} file(s) went missing between counting and packaging`
+      );
+    }
+    if (packaging.failed.length > 0) {
+      showLoader(false);
+      const shown = packaging.failed.slice(0, 8);
+      const extra = packaging.failed.length - shown.length;
+      const proceed = await confirmDialog({
+        title: `${packaging.failed.length} item${packaging.failed.length === 1 ? '' : 's'} could not be packaged`,
+        message:
+          shown.map((p) => `• ${p}`).join('\n') +
+          (extra > 0 ? `\n• …and ${extra} more` : '') +
+          '\n\nThe exported trial will be missing them, and the engine will fail to ' +
+          'load whatever referenced them.\n\nDownload it anyway?',
+        confirmLabel: 'Download anyway',
+        cancelLabel: 'Cancel export',
+        danger: true,
+      });
+      if (!proceed) return;
+      showLoader(true, 'Packaging trial…');
+    }
 
     const blob = await zip.generateAsync(
       {
@@ -193,10 +226,13 @@ export async function exportToPlayableFile() {
     showLoader(false);
 
     const fileSizeMB = (blob.size / (1024 * 1024)).toFixed(2);
-    showToast(`Exported ${filename} (${fileSizeMB} MB, ${filesAdded} files)`, {
-      type: 'success',
-      duration: 5000,
-    });
+    const missing = packaging.failed.length;
+    showToast(
+      `Exported ${filename} (${fileSizeMB} MB, ${filesAdded} files` +
+        (missing > 0 ? `, ${missing} missing` : '') +
+        ')',
+      { type: missing > 0 ? 'warning' : 'success', duration: 5000 }
+    );
   } catch (error) {
     console.error('Export failed:', error);
     showLoader(false);
@@ -212,6 +248,12 @@ export async function addDirectoryToZip(
   progressCallback,
   progress = { count: 1, total: 0 }
 ) {
+  // Anything that could not be packaged, so the caller can refuse to claim
+  // success. A swallowed failure here ships a trial missing sprites or voice
+  // lines, and the author finds out when the engine renders a character with
+  // no sprite - one tool away from the cause.
+  if (!progress.failed) progress.failed = [];
+
   // trial.json is sanitized and added by the caller.
   if (zipPath === 'trial.json') {
     return;
@@ -237,9 +279,19 @@ export async function addDirectoryToZip(
         }
       } catch (error) {
         console.warn(`Failed to add file ${entryPath}:`, error);
+        progress.failed.push(entryPath);
       }
     } else if (entry.kind === 'directory') {
-      const subDirHandle = await dir.getDirectoryHandle(entry.name);
+      let subDirHandle;
+      try {
+        subDirHandle = await dir.getDirectoryHandle(entry.name);
+      } catch (error) {
+        // A per-folder NotAllowedError would otherwise abort the whole export
+        // from inside the recursion, with no indication of which folder.
+        console.warn(`Failed to open folder ${entryPath}:`, error);
+        progress.failed.push(`${entryPath}/`);
+        continue;
+      }
       await addDirectoryToZip(zip, subDirHandle, entryPath, progressCallback, progress);
     }
   }

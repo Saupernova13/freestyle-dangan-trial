@@ -246,7 +246,10 @@
           ]
         },
         "timeLimit": {
-          "type": "number"
+          "description": "Seconds. 0 means no time limit - the engine treats it as the absence of a timer. Negative values are refused; the engine falls back to 60.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600
         },
         "failComment": {
           "description": "Shown on the result card when the player fails this minigame.",

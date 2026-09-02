@@ -67,6 +67,8 @@ func validate_data() -> Array[String]:
 
 func start():
 	_transition_to(State.ACTIVE)
+	# 0 means no time limit; MinigameData refuses a negative one, so this
+	# gate is a choice the author made rather than a value that slipped in.
 	if time_limit > 0:
 		_start_timer()
 

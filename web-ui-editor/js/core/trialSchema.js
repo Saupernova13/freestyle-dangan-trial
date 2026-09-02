@@ -166,8 +166,10 @@ function validateMinigame(mg, n, issues) {
     issues.push(
       `Minigame ${n}: difficulty "${mg.difficulty}" is not one of ${DIFFICULTIES.join(', ')}.`
     );
-  if ('timeLimit' in mg && !isNumber(mg.timeLimit))
-    issues.push(`Minigame ${n}: timeLimit is not a number.`);
+  // 0 means no time limit; a negative one failed both of the engine's timer
+  // gates, so the minigame had no time-out fail path at all.
+  if ('timeLimit' in mg && (!isNumber(mg.timeLimit) || mg.timeLimit < 0 || mg.timeLimit > 3600))
+    issues.push(`Minigame ${n}: timeLimit is not a number of seconds from 0 to 3600.`);
   if ('failComment' in mg && !isString(mg.failComment))
     issues.push(`Minigame ${n}: failComment is not a string.`);
   if ('typeSpecific' in mg && !isObject(mg.typeSpecific))

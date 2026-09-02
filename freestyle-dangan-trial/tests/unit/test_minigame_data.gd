@@ -78,3 +78,33 @@ func test_every_difficulty_keys_every_tuning_table() -> void:
 		assert_bool(MinigameConfig.FLOATING_LETTER_SPEEDS.has(difficulty)).override_failure_message(
 			"FLOATING_LETTER_SPEEDS has no '%s'" % difficulty
 		).is_true()
+
+
+func test_a_negative_time_limit_falls_back_rather_than_disabling_the_timer() -> void:
+	# -5 reached time_limit as -5.0 and failed both of MinigameBase's
+	# `time_limit > 0` gates: no timer started, and TimerDisplay was
+	# instantiated invisible and dead. The minigame then had no time-out fail
+	# path at all, so any other authoring mistake trapped the player.
+	var mg := MinigameData.from_dict({"gameId": "mg_1", "timeLimit": -5})
+	assert_float(mg.time_limit).is_equal(MinigameData.DEFAULT_TIME_LIMIT)
+
+
+func test_zero_is_kept_because_it_means_no_time_limit() -> void:
+	# Deliberately distinct from a negative value: MinigameBase already treats
+	# 0 as the absence of a timer, so it is a choice rather than a mistake.
+	var mg := MinigameData.from_dict({"gameId": "mg_1", "timeLimit": 0})
+	assert_float(mg.time_limit).is_equal(0.0)
+
+
+func test_an_absurd_time_limit_is_capped() -> void:
+	var mg := MinigameData.from_dict({"gameId": "mg_1", "timeLimit": 999999})
+	assert_float(mg.time_limit).is_equal(MinigameData.MAX_TIME_LIMIT)
+
+
+func test_an_ordinary_time_limit_is_untouched() -> void:
+	assert_float(MinigameData.from_dict({"timeLimit": 45}).time_limit).is_equal(45.0)
+	assert_float(MinigameData.from_dict({"timeLimit": 12.5}).time_limit).is_equal(12.5)
+
+
+func test_an_absent_time_limit_uses_the_default_quietly() -> void:
+	assert_float(MinigameData.from_dict({}).time_limit).is_equal(MinigameData.DEFAULT_TIME_LIMIT)

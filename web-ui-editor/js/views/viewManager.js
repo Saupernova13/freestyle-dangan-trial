@@ -115,15 +115,33 @@ function renderWelcomeHub(mainGrid) {
   if (hasOpfs) populateHubTrials();
 }
 
-async function populateHubTrials() {
+export async function populateHubTrials() {
   const container = document.getElementById('hubTrials');
   if (!container) return;
 
-  let folders = [];
+  let folders;
   try {
     folders = await listOpfsTrialFolders();
-  } catch {
-    /* leave empty */
+  } catch (err) {
+    // "Zero trials" and "I could not read the trial directory" used to render
+    // identically - nothing at all. Every trial the user had ever made looked
+    // gone, and the obvious responses (make a new one, clear site data to "fix"
+    // it) are the two that actually destroy the work. The data was untouched;
+    // one enumeration call failed.
+    console.error('Could not list saved trials:', err);
+    setHtml(
+      container,
+      `
+      <h3 class="hub-trials-title">Saved in this browser</h3>
+      <p class="hub-trials-error">
+        ${window.icon('alert', { size: 16 })}
+        Could not read browser storage${err && err.name ? ` (${escapeHtml(err.name)})` : ''}.
+        Your saved trials are probably still there - reload the page before
+        creating or importing anything.
+      </p>
+    `
+    );
+    return;
   }
   if (folders.length === 0) {
     setHtml(container, '');

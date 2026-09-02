@@ -66,6 +66,9 @@ func close():
 	if _is_closing:
 		return
 	_is_closing = true
+	# The write is debounced, so closing while a drag's timer is still pending
+	# would leave the change on the timer rather than on disk.
+	Settings.flush_pending_save()
 	if _anim and _anim.has_animation("close"):
 		_anim.play("close")
 		await _anim.animation_finished

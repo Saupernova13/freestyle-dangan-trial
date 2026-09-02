@@ -79,6 +79,7 @@
           "type": "string"
         },
         "order": {
+          "description": "Playback position. The engine sorts on it only when every line in the script has one; ties keep file order.",
           "type": "number"
         },
         "type": {

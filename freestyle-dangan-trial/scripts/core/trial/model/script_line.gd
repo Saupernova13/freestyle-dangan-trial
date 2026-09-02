@@ -26,6 +26,10 @@ var audio_file: String = ""
 var minigame_id: String = ""
 ## 1-based. Clamped here, so no consumer needs its own coercion.
 var sprite_index: int = 1
+## Whether the file actually carried an "order". A missing one coerces to 0
+## like any other absent number, and TrialManifest has to tell "line 0" from
+## "no order at all" before it can sort on the field.
+var has_explicit_order: bool = false
 var camera_motion: Dictionary = {}  # consumed by CameraDirector as-is
 var special_effects: Dictionary = {}  # {"effects": [...]}, consumed by ScreenEffects
 var highlights: Array = []
@@ -35,7 +39,9 @@ var dialogue_box_style: Dictionary = {}
 static func from_dict(d: Dictionary) -> ScriptLine:
 	var line := ScriptLine.new()
 	line.id = JsonRead.str_of(d.get("id"))
-	line.order = JsonRead.int_of(d.get("order"), 0)
+	var raw_order: Variant = d.get("order")
+	line.has_explicit_order = raw_order is int or raw_order is float
+	line.order = JsonRead.int_of(raw_order, 0)
 	line.type = JsonRead.str_of(d.get("type"))
 	line.character_id = JsonRead.str_of(d.get("characterId"))
 	line.dialogue = JsonRead.str_of(d.get("dialogue"))

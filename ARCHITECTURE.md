@@ -80,6 +80,7 @@ sprite-texture cache. `TrialRoomManager` is a composition root that wires
 
 | Autoload | Role |
 | --- | --- |
+| `Log` | Leveled logging (`debug`/`info`/`warn`/`error`), the first autoload registered. Everything below the threshold is dropped: `DEBUG` in a debug build, `WARN` in a release build, overridable with `DANGAN_LOG_LEVEL` (`DANGAN_VERBOSE=1` still means `debug`). Contributors log through this, not `print()`. |
 | `TrialLoader` | Extracts `.drtrial`, parses `trial.json`, caches character data and sprite textures. Sync path for direct scene launch, threaded async path behind the loading screen. |
 | `ScriptDirector` | State machine that walks script lines (speaking / narrator / minigame) and emits signals the trial room reacts to. |
 | `AudioManager` | Voice line playback. |

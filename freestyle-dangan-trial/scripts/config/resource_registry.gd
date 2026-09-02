@@ -1,7 +1,27 @@
 class_name ResourceRegistry
 extends RefCounted
-## Scene paths with lazy load caching. Every "res://" lives here, so a rename
-## touches one file.
+## Scene paths with lazy load caching, for scenes the game instantiates at
+## runtime: UI, minigame overlays, effects and per-item pieces.
+##
+## It used to claim that every "res://" lives here. Twenty did not, across
+## eight files, and stating an invariant falsely is worse than not stating it -
+## it is the reason a reviewer would skip grepping for stray paths after a
+## rename. The real scope, and what deliberately sits outside it:
+##
+## - **Scene transitions** (`change_scene_to_file`) name their target inline.
+##   They are control flow, not instantiation, and nothing caches them.
+## - **Script preloads** - `MinigameRunner.MINIGAME_SCRIPTS`,
+##   `trial_file_picker.gd`, `dialogue_box.gd`. MINIGAME_SCRIPTS especially is
+##   normative on purpose: `TrialValidator` checks gameType against it and
+##   test_trial_manifest pins it to the schema's enum, so it has to stay one
+##   table keyed by gameType rather than becoming scene keys here.
+## - **Data and shaders** - `data/*.json`, `shaders/*.gdshader`.
+## - **Two title-card textures**, loaded on demand for the one hardcoded
+##   orange-frame case (`minigame_title_card.gd`). These are the arguable ones;
+##   see #115, which covers that special case.
+##
+## So: a scene rename touches this file. Any other kind of rename does not, and
+## still wants a grep.
 
 const SCENES := {
 	# Minigame overlays

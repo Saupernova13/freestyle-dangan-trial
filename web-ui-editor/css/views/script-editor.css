@@ -417,15 +417,6 @@
   gap: 0.5rem;
 }
 
-.audio-empty {
-  background: var(--bg-tertiary);
-  padding: 2rem;
-  border-radius: var(--radius-md);
-  text-align: center;
-  color: var(--text-tertiary);
-  margin-bottom: 1rem;
-}
-
 /* Script Line Modal - Text Highlighting */
 .highlight-preview {
   background: var(--bg-tertiary);

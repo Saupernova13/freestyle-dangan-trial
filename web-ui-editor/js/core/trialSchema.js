@@ -8,7 +8,7 @@
 // ever written or read. See #59.
 //
 // Keep DOM-free: those tests run under node.
-import { FORMAT_VERSION, MINIGAME_TYPE_LABELS } from './constants.js';
+import { BLOCK_COUNT, FORMAT_VERSION, MINIGAME_TYPE_LABELS } from './constants.js';
 
 const LINE_TYPES = ['speaking', 'narrator', 'minigame'];
 const GAME_TYPES = Object.keys(MINIGAME_TYPE_LABELS);
@@ -347,6 +347,21 @@ export function validateTrialData(data) {
   } else {
     data.characters.forEach((c, i) => {
       if (!isStringOrNull(c)) issues.push(`characters[${i}] is neither a character id nor null.`);
+    });
+    // Both mirror schema/trial.schema.json. Entries past the bench count are
+    // never drawn and never reachable, so they would persist invisibly; a
+    // repeated id put one character object in two slots, so editing either
+    // edited both.
+    if (data.characters.length > BLOCK_COUNT) {
+      issues.push(
+        `characters has ${data.characters.length} slots; the bench holds ${BLOCK_COUNT}.`
+      );
+    }
+    const seenIds = new Set();
+    data.characters.forEach((c, i) => {
+      if (typeof c !== 'string' || c === '') return;
+      if (seenIds.has(c)) issues.push(`characters[${i}] repeats the id '${c}'.`);
+      seenIds.add(c);
     });
   }
   if (!isObject(data.script) || !Array.isArray(data.script.lines)) {

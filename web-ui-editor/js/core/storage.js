@@ -116,6 +116,32 @@ async function loadTrialIntoState() {
           '\n\nThe editor will still open this trial; fix these before exporting.',
       });
     }
+    if (characters.duplicated.length > 0) {
+      await alertDialog({
+        title: 'The cast lists a character more than once',
+        type: 'warning',
+        message:
+          'These ids appear more than once in trial.json:\n\n' +
+          [...new Set(characters.duplicated)].map((id) => '- ' + id).join('\n') +
+          '\n\nA character can only sit at one bench, so the first slot keeps ' +
+          'them and the others are now empty. Saving writes that back.',
+      });
+    }
+    if (characters.overflow.length > 0) {
+      await alertDialog({
+        title: 'The cast is longer than the bench',
+        type: 'warning',
+        message:
+          'trial.json lists ' +
+          (data.characters || []).length +
+          ' cast slots but there are only ' +
+          BLOCK_COUNT +
+          '. These were past the end and could never be seen or edited:\n\n' +
+          characters.overflow.map((id) => '- ' + id).join('\n') +
+          '\n\nThey have been dropped. Saving writes that back, so restore ' +
+          'trial.json from a backup first if you need them.',
+      });
+    }
     if (unresolvedCharacters.length > 0) {
       // Silent until now: the slot simply appeared empty, and one keystroke
       // made it permanent.
@@ -560,9 +586,24 @@ export async function loadCharactersFromIds(characterIds) {
   }
 
   const unresolved = [];
-  for (let i = 0; i < characterIds.length; i++) {
+  const duplicated = [];
+  // Slots beyond the bench count are not drawn by renderCastGrid and not
+  // reachable by any control, but buildTrialJson wrote every one of them back
+  // - so a file with 20 entries kept slots 18-20 permanently, invisibly and
+  // uneditably. Dropped here, and named in the report, rather than carried.
+  const overflow = characterIds.slice(BLOCK_COUNT).filter(Boolean);
+  const seen = new Set();
+  for (let i = 0; i < Math.min(characterIds.length, BLOCK_COUNT); i++) {
     const id = characterIds[i];
     if (!id) continue;
+    // A character sits at one bench. The same id twice put the SAME object in
+    // two slots, so editing one edited both with nothing to say they were
+    // linked. First occurrence keeps the slot; the rest are left empty.
+    if (seen.has(id)) {
+      duplicated.push(id);
+      continue;
+    }
+    seen.add(id);
     const charData = charactersById.get(id);
     if (!charData) {
       // A placeholder, not null: it keeps the id in the slot so autosave
@@ -586,7 +627,7 @@ export async function loadCharactersFromIds(characterIds) {
 
     state.cast[i] = charData;
   }
-  return { unresolved, problems: characterProblems };
+  return { unresolved, problems: characterProblems, duplicated, overflow };
 }
 
 export async function loadTruthBulletImages() {

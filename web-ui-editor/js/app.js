@@ -16,6 +16,7 @@ import { initializeTheme } from './ui/theme.js';
 import { generateId, escapeHtml } from './utils.js';
 import { renderActiveView } from './views/viewManager.js';
 import { MINIGAME_TYPE_LABELS } from './core/constants.js';
+import { hasCameraMotion, hasCustomBoxStyle, hasSpecialEffects } from './core/scriptLineFields.js';
 
 import { setHtml } from './ui/dom.js';
 
@@ -409,10 +410,10 @@ export async function changeScriptLineType(lineId, newType) {
     line.minigameId ||
     line.audioFile ||
     line.spriteIndex != null ||
-    line.cameraMotion ||
+    hasCameraMotion(line) ||
     (line.highlights && line.highlights.length) ||
-    (line.specialEffects && line.specialEffects.length) ||
-    line.dialogueBoxStyle
+    hasSpecialEffects(line) ||
+    hasCustomBoxStyle(line)
   );
   if (hasData) {
     const proceed = await confirmDialog({
@@ -536,10 +537,10 @@ export function renderScriptLineBar(line, index) {
     badgeDefs.push(['sprite', 'Sprite selected']);
   if (line.audioFile) badgeDefs.push(['volume', 'Voice audio']);
   if (line.highlights && line.highlights.length) badgeDefs.push(['highlight', 'Highlighted text']);
-  if (line.type === 'speaking' && line.cameraMotion) badgeDefs.push(['camera', 'Camera motion']);
-  if (line.specialEffects && line.specialEffects.length)
-    badgeDefs.push(['sparkles', 'Special effects']);
-  if (line.dialogueBoxStyle) badgeDefs.push(['message', 'Custom box style']);
+  if (line.type === 'speaking' && hasCameraMotion(line))
+    badgeDefs.push(['camera', 'Camera motion']);
+  if (hasSpecialEffects(line)) badgeDefs.push(['sparkles', 'Special effects']);
+  if (hasCustomBoxStyle(line)) badgeDefs.push(['message', 'Custom box style']);
   const badgesHtml = badgeDefs.length
     ? `<div class="script-line-badges">${badgeDefs
         .map(

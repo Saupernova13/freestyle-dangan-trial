@@ -301,6 +301,45 @@ const corpus = [
     },
     false,
   ],
+  [
+    // No corpus line carried effects, so nothing exercised the shape the
+    // editor actually writes - and both consumers of it tested `.length` on
+    // the object, which is always undefined.
+    'populated specialEffects',
+    () => {
+      const t = minimalTrial();
+      t.script.lines = [
+        speakingLine({
+          specialEffects: { effects: [{ type: 'shake', intensity: 0.5, duration: 0.4 }] },
+        }),
+      ];
+      return t;
+    },
+    true,
+  ],
+  [
+    'line carrying every advanced field the modal can write',
+    () => {
+      const t = minimalTrial();
+      t.script.lines = [
+        speakingLine({
+          spriteIndex: 2,
+          audioFile: 'line_1.mp3',
+          highlights: [{ startChar: 0, endChar: 5, color: '#FFFF00' }],
+          cameraMotion: { type: 'zoom_in', duration: 1.5, easing: 'ease-in-out' },
+          specialEffects: { effects: [{ type: 'flash' }] },
+          dialogueBoxStyle: {
+            style: 'slant_left',
+            borderColor: '#FF0000',
+            bgOpacity: 0.5,
+            borderThickness: 4,
+          },
+        }),
+      ];
+      return t;
+    },
+    true,
+  ],
 ];
 
 describe('trial.schema.json and trialSchema.js agree', () => {

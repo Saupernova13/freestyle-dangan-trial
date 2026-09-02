@@ -1,5 +1,9 @@
 extends MinigameBase
 
+## Three rows, three speakers per group, three speaker ids. The literal was
+## spelled out at each of those sites.
+const ROW_COUNT := 3
+
 var line_groups: Array[Dictionary] = []
 var speaker_ids: Array[String] = []
 var current_group_index: int = 0
@@ -47,6 +51,7 @@ func start():
 	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
 	TruthBulletManager.load_bullets()
 	connect_managed(InputManager.shoot_pressed, _on_shoot)
+	connect_managed(InputManager.focus_step_requested, _on_focus_step)
 
 	Log.info("MassPanicDebate", "%d groups, 3 speakers" % line_groups.size())
 
@@ -80,18 +85,15 @@ func _on_row_tapped(event: InputEvent, row_index: int) -> void:
 	if is_tap and row_index != focused_row:
 		_switch_focus(row_index)
 
-func _input(event):
+func _on_focus_step(direction: int) -> void:
 	if not is_active or _solved:
 		return
+	_switch_focus(_next_row(direction))
 
-	if event is InputEventKey and event.pressed:
-		match event.keycode:
-			KEY_UP:
-				_switch_focus((focused_row - 1 + 3) % 3)
-				get_viewport().set_input_as_handled()
-			KEY_DOWN:
-				_switch_focus((focused_row + 1) % 3)
-				get_viewport().set_input_as_handled()
+
+func _next_row(direction: int) -> int:
+	return posmod(focused_row + direction, ROW_COUNT)
+
 
 func _switch_focus(new_row: int):
 	focused_row = new_row
@@ -125,7 +127,7 @@ func _spawn_group():
 	current_group_index += 1
 
 	var speaker_keys = ["speaker1", "speaker2", "speaker3"]
-	for i in range(3):
+	for i in range(ROW_COUNT):
 		var speaker_data := JsonRead.dict_of(group.get(speaker_keys[i]))
 		if speaker_data.is_empty():
 			continue

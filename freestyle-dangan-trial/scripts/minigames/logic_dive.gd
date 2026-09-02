@@ -20,7 +20,38 @@ func initialize(data: MinigameData):
 func validate_data() -> Array[String]:
 	if questions.is_empty():
 		return ["questions is empty"]
-	return []
+
+	# The same unwinnable shape as a Debate Scrum round with no defense
+	# keywords: a question no answer can satisfy replays identically forever,
+	# and _show_question filters out blank answers, so a question of nothing
+	# but blanks leaves zero buttons on screen.
+	var errors: Array[String] = []
+	for i in range(questions.size()):
+		var question = questions[i]
+		if not question is Dictionary:
+			errors.append("question %d is not an object" % (i + 1))
+			continue
+		var answers = question.get("answers", [])
+		if not answers is Array:
+			errors.append("question %d: answers is not a list" % (i + 1))
+			continue
+
+		var answerable := 0
+		var correct := 0
+		for answer in answers:
+			if not answer is Dictionary:
+				continue
+			if str(answer.get("answerText", "")).strip_edges().is_empty():
+				continue
+			answerable += 1
+			if answer.get("isCorrect", false):
+				correct += 1
+
+		if answerable == 0:
+			errors.append("question %d has no answers with any text" % (i + 1))
+		elif correct == 0:
+			errors.append("question %d has no correct answer, so it cannot be won" % (i + 1))
+	return errors
 
 func start():
 	super.start()

@@ -34,8 +34,19 @@ func test_empty_data_is_rejected_for_every_minigame_that_spins_on_it() -> void:
 func test_populated_data_is_accepted() -> void:
 	var valid_cases := {
 		"nonstop_debate": {"dialogueLines": [{"text": "It was you."}]},
-		"logic_dive": {"questions": [{"question": "Who?"}]},
-		"mass_panic_debate": {"lineGroups": [{"lines": []}]},
+		"logic_dive": {
+			"questions": [
+				{
+					"questionId": "q1",
+					"questionText": "Who?",
+					"answers": [
+						{"answerId": "a1", "answerText": "You", "isCorrect": true},
+						{"answerId": "a2", "answerText": "Me", "isCorrect": false},
+					],
+				}
+			]
+		},
+		"mass_panic_debate": {"lineGroups": [{"groupId": "g1"}]},
 		"hangmans_gambit": {"answerKey": "KNIFE"},
 	}
 	for game_type in valid_cases:
@@ -79,3 +90,116 @@ func test_an_empty_bullet_selection_is_accepted() -> void:
 		"selectedBullets": [],
 	}).validate_data()
 	assert_array(errors).is_empty()
+
+
+func test_a_scrum_round_with_no_defense_keywords_is_rejected() -> void:
+	# Every button is marked wrong, so the round can never be won - and
+	# _finish(false) then replays it, identically, forever.
+	var errors: Array[String] = _probe("debate_scrum", {
+		"arguments": [
+			{"argumentId": "a1", "defenseKeywords": ["knife"], "oppositionKeywords": []},
+			{"argumentId": "a2", "defenseKeywords": [], "oppositionKeywords": ["rope"]},
+		],
+	}).validate_data()
+	assert_array(errors).has_size(1)
+	assert_str(errors[0]).contains("argument 2")
+
+
+func test_a_scrum_round_with_defense_keywords_is_accepted() -> void:
+	var errors: Array[String] = _probe("debate_scrum", {
+		"arguments": [{"argumentId": "a1", "defenseKeywords": ["knife"]}],
+	}).validate_data()
+	assert_array(errors).is_empty()
+
+
+func test_a_logic_dive_question_with_no_correct_answer_is_rejected() -> void:
+	var errors: Array[String] = _probe("logic_dive", {
+		"questions": [
+			{
+				"questionId": "q1",
+				"answers": [
+					{"answerId": "a1", "answerText": "One", "isCorrect": false},
+					{"answerId": "a2", "answerText": "Two", "isCorrect": false},
+				],
+			}
+		],
+	}).validate_data()
+	assert_array(errors).has_size(1)
+	assert_str(errors[0]).contains("no correct answer")
+
+
+func test_a_logic_dive_question_of_nothing_but_blanks_is_rejected() -> void:
+	# _show_question filters out blank answerText, so this leaves zero buttons.
+	var errors: Array[String] = _probe("logic_dive", {
+		"questions": [
+			{
+				"questionId": "q1",
+				"answers": [
+					{"answerId": "a1", "answerText": "   ", "isCorrect": true},
+					{"answerId": "a2", "answerText": "", "isCorrect": false},
+				],
+			}
+		],
+	}).validate_data()
+	assert_array(errors).has_size(1)
+	assert_str(errors[0]).contains("no answers with any text")
+
+
+func test_a_well_formed_logic_dive_question_is_accepted() -> void:
+	var errors: Array[String] = _probe("logic_dive", {
+		"questions": [
+			{
+				"questionId": "q1",
+				"answers": [
+					{"answerId": "a1", "answerText": "One", "isCorrect": true},
+					{"answerId": "a2", "answerText": "Two", "isCorrect": false},
+				],
+			}
+		],
+	}).validate_data()
+	assert_array(errors).is_empty()
+
+
+func test_a_scrum_round_seats_every_correct_answer_before_any_decoy() -> void:
+	# Concatenating both lists, shuffling, then taking the first five discarded
+	# entries at random - and any of them could be a correct one. Three defense
+	# and four opposition keywords is seven candidates for five buttons, and
+	# some shuffles hid every correct answer.
+	var scrum: MinigameBase = _probe("debate_scrum", {})
+	scrum._defense_buttons.resize(5)
+
+	var defense := ["d1", "d2", "d3"]
+	var opposition := ["o1", "o2", "o3", "o4"]
+	for _attempt in range(50):
+		var dealt: Array = scrum._deal_keywords(defense, opposition)
+		assert_int(dealt.size()).is_equal(5)
+		for correct in defense:
+			assert_bool(dealt.has(correct)).override_failure_message(
+				"deal dropped the correct answer '%s': %s" % [correct, dealt]
+			).is_true()
+
+
+func test_a_scrum_round_fills_the_remaining_buttons_with_decoys() -> void:
+	var scrum: MinigameBase = _probe("debate_scrum", {})
+	scrum._defense_buttons.resize(5)
+
+	var dealt: Array = scrum._deal_keywords(["d1"], ["o1", "o2", "o3", "o4", "o5", "o6"])
+	assert_int(dealt.size()).is_equal(5)
+	assert_bool(dealt.has("d1")).is_true()
+
+
+func test_a_scrum_round_with_few_keywords_deals_only_what_it_has() -> void:
+	var scrum: MinigameBase = _probe("debate_scrum", {})
+	scrum._defense_buttons.resize(5)
+
+	var dealt: Array = scrum._deal_keywords(["d1"], ["o1"])
+	assert_array(dealt).contains_exactly_in_any_order(["d1", "o1"])
+
+
+func test_a_scrum_round_does_not_deal_a_keyword_twice() -> void:
+	# A keyword on both lists is one button, and it is a correct one.
+	var scrum: MinigameBase = _probe("debate_scrum", {})
+	scrum._defense_buttons.resize(5)
+
+	var dealt: Array = scrum._deal_keywords(["shared"], ["shared", "o1"])
+	assert_array(dealt).contains_exactly_in_any_order(["shared", "o1"])

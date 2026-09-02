@@ -68,6 +68,3 @@ static func instantiate(key: String) -> Node:
 	if scene == null:
 		return null
 	return scene.instantiate()
-
-static func clear_cache():
-	_cache.clear()

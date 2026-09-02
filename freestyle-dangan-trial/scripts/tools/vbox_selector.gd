@@ -44,6 +44,3 @@ func _pulse_material() -> ShaderMaterial:
 	material.shader = pulse_shader
 	return material
 
-
-func _on_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/thh_trial_room_1.tscn")

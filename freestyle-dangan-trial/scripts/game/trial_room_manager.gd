@@ -19,6 +19,9 @@ var dialogue_label: RichTextLabel
 
 var trial_file_path: String = "user://trial.drtrial"
 
+# Keys of warnings already emitted; see _warn_once.
+var _warned: Dictionary = {}
+
 var _stage: CharacterStage
 var _dialogue_box: Node
 var _minigame_runner: MinigameRunner
@@ -95,19 +98,43 @@ func _set_name(character_name: String) -> void:
 	if name_label:
 		name_label.text = character_name
 
+## Two silent fallbacks used to stack here: a missing sprite_index fell back to
+## sprite 1 unlogged, and a missing sprite 1 left portrait_rect untouched - so
+## the new speaker's name appeared over the previous speaker's face and nothing
+## anywhere said so.
 func _set_portrait(bench_index: int, sprite_index: int = 1) -> void:
 	if not portrait_rect:
 		return
 	var char_data := _stage.character_at_bench(bench_index)
 	var character_id = char_data.get("id", "")
 	if character_id.is_empty():
+		portrait_rect.texture = null
 		return
-	# Fall back to the first sprite when the requested index doesn't exist.
+
 	var texture := TrialLoader.get_sprite_texture(character_id, sprite_index)
-	if not texture:
+	if not texture and sprite_index != 1:
+		# Once per pair, not per line: an author who mistypes spriteIndex never
+		# learns why the emotion never changes, but a per-line warning would be
+		# one per frame of dialogue.
+		_warn_once("sprite", "%s has no sprite %d; using sprite 1" % [character_id, sprite_index])
 		texture = TrialLoader.get_sprite_texture(character_id, 1)
+
 	if texture:
 		portrait_rect.texture = texture
+		return
+
+	# Cleared, not left stale. A blank portrait is honest; the last speaker's
+	# face under this speaker's name is not.
+	_warn_once("sprite", "%s has no usable sprite; clearing the portrait" % character_id)
+	portrait_rect.texture = null
+
+## Keyed so a per-line problem is reported once rather than once per frame.
+func _warn_once(category: String, message: String) -> void:
+	var key := "%s:%s" % [category, message]
+	if _warned.has(key):
+		return
+	_warned[key] = true
+	Log.warn("TrialRoomManager", message)
 
 ## Named lookups, so re-nesting or renaming a container inside conversation_ui
 ## cannot break these. A missing node warns instead of erroring, which a
@@ -165,6 +192,16 @@ func _present_speaking_line(line: ScriptLine) -> void:
 
 		_stage.update_sprite(bench_index, character_id, sprite_index)
 		_set_portrait(bench_index, sprite_index)
+	else:
+		# Present in character.json but not seated. The bench sprite and camera
+		# have nothing to act on, and leaving the portrait alone would show the
+		# previous speaker's face under this one's name.
+		_warn_once(
+			"bench",
+			"%s speaks but is not in the cast list; no portrait" % character_id
+		)
+		if portrait_rect:
+			portrait_rect.texture = null
 
 func _on_dialogue_displayed(_character_id: String, _text: String):
 	if _dialogue_box:

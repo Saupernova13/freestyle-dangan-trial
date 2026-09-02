@@ -9,6 +9,7 @@ import {
   isHeadmaster,
   missingCharacterFields,
 } from '../models/characterModel.js';
+import { CHARACTER_FORMAT_VERSION } from '../core/constants.js';
 import { appSettings } from '../settings.js';
 import { confirmDialog, showToast } from '../ui/dialogs.js';
 import { focusFirstField } from '../ui/modalBehaviors.js';
@@ -350,6 +351,9 @@ export async function trySaveChar() {
     let charDir = await charsDir.getDirectoryHandle(charDirname, { create: true });
 
     let charJson = {
+      // Written from now on, so a reader can tell which shape it is looking at.
+      // Absent in older files, which are treated as the current major.
+      formatVersion: CHARACTER_FORMAT_VERSION,
       id: characterId,
       name: charFields.name,
       surname: charFields.surname,

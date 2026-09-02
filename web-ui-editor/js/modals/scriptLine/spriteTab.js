@@ -1,6 +1,6 @@
 // Sprite tab: pick which character sprite shows during a speaking line.
 import { sl } from './state.js';
-import { renderScriptLineModal } from '../scriptLineModal.js';
+import { renderScriptLineModal, failField } from '../scriptLineModal.js';
 
 export function renderSpriteSelectionTab(character) {
   if (!character.sprites || character.sprites.length === 0) {
@@ -53,8 +53,7 @@ export function selectSprite(index) {
   const spriteIndex = parseInt(index, 10);
 
   if (!Number.isFinite(spriteIndex) || spriteIndex < 1) {
-    sl.err = 'Invalid sprite selection';
-    renderScriptLineModal();
+    failField('Invalid sprite selection');
     return;
   }
 

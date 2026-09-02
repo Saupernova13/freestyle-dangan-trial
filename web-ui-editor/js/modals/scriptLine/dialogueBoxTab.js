@@ -1,7 +1,7 @@
 // Box Style tab: per-line dialogue box shape, border, and opacity.
 import { COLOR_REGEX, refreshTabBody, sl } from './state.js';
 import { escapeHtml } from '../../utils.js';
-import { renderScriptLineModal } from '../scriptLineModal.js';
+import { failField } from '../scriptLineModal.js';
 
 const BOX_STYLES = [
   { value: 'default', label: 'Default', desc: 'Standard rectangular box' },
@@ -90,16 +90,14 @@ export function renderDialogueBoxTab() {
 
 export function updateDialogueBoxStyle(field, value) {
   if (field === 'borderColor' && !COLOR_REGEX.test(value)) {
-    sl.err = 'Border color must be a valid hex color (e.g., #FFFFFF)';
-    renderScriptLineModal();
+    failField('Border color must be a valid hex color (e.g., #FFFFFF)');
     return;
   }
 
   if (field === 'bgOpacity') {
     const opacity = parseFloat(value);
     if (isNaN(opacity) || opacity < 0 || opacity > 1) {
-      sl.err = 'Opacity must be between 0 and 1';
-      renderScriptLineModal();
+      failField('Opacity must be between 0 and 1');
       return;
     }
   }
@@ -107,8 +105,7 @@ export function updateDialogueBoxStyle(field, value) {
   if (field === 'borderThickness') {
     const thickness = parseInt(value, 10);
     if (isNaN(thickness) || thickness < 0 || thickness > 10) {
-      sl.err = 'Border thickness must be between 0 and 10 pixels';
-      renderScriptLineModal();
+      failField('Border thickness must be between 0 and 10 pixels');
       return;
     }
   }

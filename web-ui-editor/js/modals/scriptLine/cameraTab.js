@@ -1,6 +1,6 @@
 // Camera tab: per-line camera motion (speaking lines only).
 import { refreshTabBody, sl } from './state.js';
-import { renderScriptLineModal } from '../scriptLineModal.js';
+import { failField } from '../scriptLineModal.js';
 
 const CAMERA_TYPES = [
   { value: 'none', label: 'None', desc: 'No camera movement' },
@@ -114,8 +114,7 @@ export function updateCameraMotion(field, value) {
   if (field === 'duration') {
     const duration = parseFloat(value);
     if (isNaN(duration) || duration < 0.1 || duration > 10) {
-      sl.err = 'Duration must be between 0.1 and 10 seconds';
-      renderScriptLineModal();
+      failField('Duration must be between 0.1 and 10 seconds');
       return;
     }
   }

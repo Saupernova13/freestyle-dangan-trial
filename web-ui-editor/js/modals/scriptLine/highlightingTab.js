@@ -1,7 +1,7 @@
 // Highlighting tab: drag across the dialogue to paint colored runs onto it.
 import { escapeHtml, normalizeHighlights } from '../../utils.js';
 import { COLOR_REGEX, activeLine, sl } from './state.js';
-import { renderScriptLineModal } from '../scriptLineModal.js';
+import { renderScriptLineModal, failField } from '../scriptLineModal.js';
 
 import { setHtml } from '../../ui/dom.js';
 export function renderHighlightingTab(line) {
@@ -279,8 +279,7 @@ export function clearHighlightSelection() {
 
 export function selectHighlightColor(color) {
   if (!COLOR_REGEX.test(color)) {
-    sl.err = 'Invalid color. Please use a valid hex color (e.g., #FF0000)';
-    renderScriptLineModal();
+    failField('Invalid color. Please use a valid hex color (e.g., #FF0000)');
     return;
   }
 
@@ -339,8 +338,7 @@ export function addHighlightFromSelection() {
   const dialogue = line.dialogue || '';
 
   if (sl.highlighting.startChar >= sl.highlighting.endChar) {
-    sl.err = 'Please select text to highlight.';
-    renderScriptLineModal();
+    failField('Please select text to highlight.');
     return;
   }
 
@@ -350,14 +348,12 @@ export function addHighlightFromSelection() {
     sl.highlighting.startChar < 0 ||
     sl.highlighting.endChar > dialogue.length
   ) {
-    sl.err = 'Invalid selection range. Please select within the dialogue text.';
-    renderScriptLineModal();
+    failField('Invalid selection range. Please select within the dialogue text.');
     return;
   }
 
   if (!COLOR_REGEX.test(sl.highlighting.currentColor)) {
-    sl.err = 'Invalid highlight color.';
-    renderScriptLineModal();
+    failField('Invalid highlight color.');
     return;
   }
 

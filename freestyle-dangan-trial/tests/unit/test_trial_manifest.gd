@@ -99,6 +99,11 @@ func test_find_minigame() -> void:
 	assert_object(manifest.find_minigame("mg_nope")).is_null()
 
 
+## Defence in depth, not a production path: TrialValidator.validate errors on
+## a non-object script line and trial_loader refuses to load when validation
+## returns errors, so nothing reaches from_dict with this input today. Kept
+## because from_dict is also the entry point for tests and for any future
+## caller that skips validation - but it is not a promise the format makes.
 func test_non_dictionary_lines_are_skipped() -> void:
 	var manifest := TrialManifest.from_dict({
 		"trialName": "T",

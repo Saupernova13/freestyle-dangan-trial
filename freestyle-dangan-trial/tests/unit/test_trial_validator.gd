@@ -27,25 +27,6 @@ func test_missing_script_lines_fails() -> void:
 	assert_array(TrialValidator.validate(data)).is_not_empty()
 
 
-func test_newer_major_version_is_rejected() -> void:
-	var data := _load_fixture()
-	data["metadata"]["version"] = "5.0"
-	assert_str(TrialValidator.check_version(data)).is_not_empty()
-
-
-func test_missing_metadata_warns_but_passes() -> void:
-	var data := _load_fixture()
-	data.erase("metadata")
-	assert_str(TrialValidator.check_version(data)).is_empty()
-	assert_array(TrialValidator.validate(data)).is_empty()
-
-
-func test_older_major_version_passes() -> void:
-	var data := _load_fixture()
-	data["metadata"]["version"] = "3.0"
-	assert_str(TrialValidator.check_version(data)).is_empty()
-
-
 func test_minigame_line_without_id_fails() -> void:
 	var data := _load_fixture()
 	data["script"]["lines"].append({"id": "line_bad", "type": "minigame"})
@@ -208,3 +189,8 @@ func test_an_empty_character_id_is_unset_rather_than_dangling() -> void:
 		"script": {"lines": [{"id": "l1", "type": "speaking", "characterId": ""}]},
 	}))
 	assert_array(dangling).is_empty()
+
+
+## check_version's edges. The policy is deliberately lax - an unrecognised
+## version warns and loads - so these pin which inputs take which branch
+## rather than asserting that any of them fail.

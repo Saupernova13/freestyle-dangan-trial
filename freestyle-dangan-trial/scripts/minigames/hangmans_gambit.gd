@@ -98,6 +98,7 @@ func _spawn_letter():
 		randf_range(-20, 20)
 	)
 	floating.clicked.connect(_on_letter_clicked)
+	floating.exited_screen.connect(_on_letter_exited)
 	_letters_container.add_child(floating)
 	_floating_letters.append(floating)
 
@@ -147,6 +148,12 @@ func _check_letter_collisions():
 				_floating_letters.erase(a)
 				_floating_letters.erase(b)
 				return
+
+## Most letters are never clicked, so without this the list grew for the whole
+## round - a 90s hard round spawns about 90 letters and the pair scan walked
+## every freed one, roughly 4,000 checks a frame that all miss.
+func _on_letter_exited(floating: FloatingLetter):
+	_floating_letters.erase(floating)
 
 func _on_influence_depleted():
 	_finish(false, {"reason": "influence_depleted"})

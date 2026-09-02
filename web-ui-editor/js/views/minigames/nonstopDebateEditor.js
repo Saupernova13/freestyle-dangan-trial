@@ -31,6 +31,9 @@ const MAX_DIALOGUE_LINES = 30;
 let draggedDialogueLineId = null;
 
 // lineId -> { textStyling, characterDisplay, feedback }
+// Per-line collapse state, keyed by lineId. Pruned in deleteDialogueLine:
+// it lives for the life of the page, so without that it grows by one entry
+// per deleted line and never shrinks.
 const expandedSections = {};
 
 // The shape a nonstop debate line actually has. Exported so the shared test
@@ -495,6 +498,7 @@ export async function deleteDialogueLine(gameId, lineId) {
   if (line) await deleteMinigameAudioFile(gameId, line.voiceLineFile);
 
   mg.typeSpecific.dialogueLines = mg.typeSpecific.dialogueLines.filter((l) => l.lineId !== lineId);
+  delete expandedSections[lineId];
   reindexOrder(mg.typeSpecific.dialogueLines);
 
   renderMinigameDetails();

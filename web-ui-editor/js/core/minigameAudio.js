@@ -1,5 +1,6 @@
 // Audio storage for minigame voice lines. Owns the
 // Audio/Minigames/<gameId>/ layout so no editor re-implements the walk.
+import { markFileDeleted } from './history.js';
 import { state } from './state.js';
 import { showToast } from '../ui/dialogs.js';
 
@@ -27,6 +28,8 @@ export async function deleteMinigameAudioFile(gameId, fileName) {
   } catch (e) {
     console.warn('Could not remove audio file:', e);
   }
+  // Undo cannot bring the bytes back, so it must not step past this.
+  markFileDeleted();
 }
 
 // File, or null if it can't be read.

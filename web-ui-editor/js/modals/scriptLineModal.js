@@ -5,6 +5,7 @@
 // main.js's single `import * as scriptLineModal` still bridges every handler.
 import { stopAudioPreview } from '../components/audioPreview.js';
 import { renderScriptEditor } from '../app.js';
+import { markFileDeleted } from '../core/history.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import { appSettings } from '../settings.js';
@@ -258,6 +259,8 @@ export async function saveScriptLineAdvanced() {
       } catch (e) {
         console.warn('Could not remove audio file:', e);
       }
+      // Undo cannot bring the bytes back, so it must not step past this.
+      markFileDeleted();
       line.audioFile = null;
     }
 

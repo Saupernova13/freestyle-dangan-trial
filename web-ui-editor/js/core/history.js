@@ -15,6 +15,8 @@ let future = [];
 let recordTimer = null;
 let restoring = false;
 let onRestore = null;
+// Set by an operation that deleted a file; consumed by the next flush.
+let barrierPending = false;
 
 // Deep-copies arrays and plain objects; primitives, Blobs and Files go by
 // reference. Blobs are immutable, so sharing keeps snapshots cheap and
@@ -44,9 +46,30 @@ export function initHistory(restoreCallback) {
 export function resetHistory() {
   clearTimeout(recordTimer);
   recordTimer = null;
+  barrierPending = false;
   past = [];
   future = [];
   present = takeSnapshot();
+}
+
+// Records that something was deleted from disk, not just from state.
+//
+// A snapshot holds trial data only, and cloneValue passes Blobs by reference,
+// so undoing past a deletion repainted a cast member whose folder was gone or
+// a line whose audio file was gone. Everything looked right - the sprites
+// still rendered from memory - and the export packaged nothing for them, so
+// the trial shipped broken with no indication anywhere.
+//
+// Restoring the bytes instead would mean a redo-safe write path at every
+// delete site, and a half-written restore is a worse failure than a shortened
+// undo stack. So undo does not cross a deletion: the past is dropped at the
+// barrier, and everything after it stays undoable.
+//
+// Deferred to the next flush rather than applied immediately, so the caller
+// can delete, mutate state and save in any order without the barrier landing
+// mid-sequence.
+export function markFileDeleted() {
+  barrierPending = true;
 }
 
 // Trailing-debounced, so a keystroke storm yields one settled snapshot.
@@ -59,6 +82,13 @@ export function recordChange(delayMs = 500) {
 function flushRecord() {
   clearTimeout(recordTimer);
   recordTimer = null;
+  if (barrierPending) {
+    barrierPending = false;
+    past = [];
+    future = [];
+    present = takeSnapshot();
+    return;
+  }
   past.push(present);
   if (past.length > MAX_SNAPSHOTS) past.shift();
   present = takeSnapshot();
@@ -66,15 +96,21 @@ function flushRecord() {
 }
 
 export function canUndo() {
+  // A pending barrier will empty the past on the next flush, so there is
+  // nothing reachable behind it.
+  if (barrierPending) return false;
   return recordTimer !== null || past.length > 0;
 }
 
 export function canRedo() {
-  return future.length > 0;
+  return !barrierPending && future.length > 0;
 }
 
 export function undo() {
-  if (recordTimer) flushRecord();
+  // A pending barrier is applied here too, not only on the next save: the
+  // keyboard shortcut calls this directly, so Ctrl+Z between a deletion and
+  // the save that follows it would otherwise still cross the barrier.
+  if (recordTimer || barrierPending) flushRecord();
   if (past.length === 0 || present === null) return false;
   future.push(present);
   present = past.pop();
@@ -83,7 +119,7 @@ export function undo() {
 }
 
 export function redo() {
-  if (recordTimer) flushRecord();
+  if (recordTimer || barrierPending) flushRecord();
   if (future.length === 0 || present === null) return false;
   past.push(present);
   present = future.pop();

@@ -1,6 +1,7 @@
 // Create/edit modal for a state.cast member.
 import { state } from '../core/state.js';
 import { uniqueDirectoryName } from '../core/opfs.js';
+import { markFileDeleted } from '../core/history.js';
 import { detachCharacter } from '../core/references.js';
 import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import {
@@ -435,7 +436,9 @@ export async function removeCharacter() {
   const fullName = `${existing.name || ''} ${existing.surname || ''}`.trim() || 'this character';
   const confirmed = await confirmDialog({
     title: 'Remove character',
-    message: `Remove ${fullName}? This deletes their files and clears any script lines that use them.`,
+    message:
+      `Remove ${fullName}? This deletes their files - which cannot be undone - ` +
+      'and clears every script line and minigame that uses them.',
     confirmLabel: 'Remove',
     danger: true,
   });
@@ -460,6 +463,8 @@ export async function removeCharacter() {
     } else if (!folderName) {
       console.warn(`No folder handle for character ${existing.id}; leaving files in place.`);
     }
+    // Undo cannot bring the folder back, so it must not step past this.
+    if (charsDir && folderName) markFileDeleted();
 
     state.scriptLines.forEach((l) => {
       if (l.type === 'speaking' && l.characterId === existing.id) l.characterId = '';

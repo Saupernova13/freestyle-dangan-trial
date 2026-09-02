@@ -3,7 +3,7 @@
 import { initCharacterSearchDropdown } from './components/characterSearchDropdown.js';
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
 import { initSpriteMagnifier } from './components/spriteMagnifier.js';
-import { initHistory, redo, undo } from './core/history.js';
+import { initHistory, markFileDeleted, redo, undo } from './core/history.js';
 import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
 import { state } from './core/state.js';
 import { autoSaveTrial, hasPendingWrites, scheduleAutoSave } from './core/storage.js';
@@ -359,7 +359,9 @@ export async function deleteScriptLine(lineId) {
   const label = line.dialogue || line.text || 'this line';
   const confirmed = await confirmDialog({
     title: 'Delete script line',
-    message: `Delete script line "${label}"? This also removes its voice audio.`,
+    message:
+      `Delete script line "${label}"? This also removes its voice audio, ` +
+      'which cannot be undone.',
     confirmLabel: 'Delete',
     danger: true,
   });
@@ -382,6 +384,8 @@ async function removeLineAudioFile(line) {
   } catch (e) {
     console.warn('Could not remove audio file:', e);
   }
+  // Undo cannot bring the bytes back, so it must not step past this.
+  markFileDeleted();
   line.audioFile = null;
 }
 

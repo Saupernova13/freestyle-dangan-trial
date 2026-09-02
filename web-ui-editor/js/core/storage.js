@@ -16,6 +16,7 @@ import {
   opfsCanWrite,
   supportsFsPicker,
 } from './opfs.js';
+import { safeZipPathParts, zipRootPrefix } from './zipPaths.js';
 import { updateExportButtonState } from '../export.js';
 import { appSettings } from '../settings.js';
 import { alertDialog, confirmDialog, promptDialog, showToast } from '../ui/dialogs.js';
@@ -290,56 +291,89 @@ export async function importTrialFromFile(file) {
     });
     return;
   }
+  // Named so the catch can remove a half-written import.
+  let partialFolder = null;
   try {
     showLoader(true, 'Importing trial…');
     const zip = await JSZip.loadAsync(await file.arrayBuffer());
 
-    // Prefer the name inside trial.json; fall back to the file name.
-    let trialName = file.name.replace(/\.(drtrial|zip)$/i, '');
-    const trialJsonEntry = zip.file('trial.json');
-    if (trialJsonEntry) {
-      try {
-        const j = JSON.parse(await trialJsonEntry.async('string'));
-        if (j.trialName) trialName = j.trialName;
-      } catch {
-        /* keep the filename-derived name */
-      }
-    }
+    const entries = Object.values(zip.files).filter((e) => !e.dir);
+    const prefix = zipRootPrefix(entries.map((e) => e.name));
+    const trialJsonEntry = zip.file(prefix + 'trial.json');
 
-    // Checked before anything is written, so a hostile archive never reaches
-    // the library at all - the open-time gate is the backstop for trials that
-    // arrive some other way.
+    // Parsed once: the display name and the id gate below both need it.
+    let parsed = null;
     if (trialJsonEntry) {
-      let parsed = null;
       try {
         parsed = JSON.parse(await trialJsonEntry.async('string'));
       } catch {
         /* an unparseable trial.json is reported on open */
       }
-      const unsafeIds = parsed ? findUnsafeIds(parsed) : [];
-      if (unsafeIds.length > 0) {
+    }
+
+    // Prefer the name inside trial.json; fall back to the file name.
+    let trialName = file.name.replace(/\.(drtrial|zip)$/i, '');
+    if (parsed && parsed.trialName) trialName = parsed.trialName;
+
+    // Checked before anything is written, so a hostile archive never reaches
+    // the library at all - the open-time gate is the backstop for trials that
+    // arrive some other way.
+    const unsafeIds = parsed ? findUnsafeIds(parsed) : [];
+    if (unsafeIds.length > 0) {
+      showLoader(false);
+      await alertDialog({
+        title: 'Import refused',
+        type: 'error',
+        message: describeUnsafeIds(unsafeIds),
+      });
+      return;
+    }
+
+    // Every path resolved and vetted up front, for the same reason: refusing
+    // after the first few files have landed would leave the partial folder
+    // this function is otherwise trying to avoid.
+    const planned = [];
+    for (const entry of entries) {
+      if (!entry.name.startsWith(prefix)) continue;
+      const parts = safeZipPathParts(entry.name.slice(prefix.length));
+      if (parts === null) {
         showLoader(false);
         await alertDialog({
           title: 'Import refused',
           type: 'error',
-          message: describeUnsafeIds(unsafeIds),
+          message:
+            'This archive contains a file path that is not safe to write:\n\n' +
+            JSON.stringify(entry.name).slice(0, 120) +
+            '\n\nOnly import trials from a source you trust.',
         });
         return;
       }
+      if (parts.length > 0) planned.push({ entry, parts });
     }
 
     const dir = await createOpfsTrial(trialName);
-    const entries = Object.values(zip.files).filter((e) => !e.dir);
-    for (const entry of entries) {
-      const blob = await entry.async('blob');
-      await writeFileToDir(dir, entry.name, blob);
+    partialFolder = dir.name;
+    for (const { entry, parts } of planned) {
+      await writeFileToDir(dir, parts, await entry.async('blob'));
     }
+    partialFolder = null;
 
     showLoader(false);
     await openOpfsTrialByName(dir.name);
     showToast(`Imported "${trialName}"`, { type: 'success' });
   } catch (err) {
     showLoader(false);
+    // Quota exhaustion is the common failure here - importing is exactly when
+    // storage fills - and the folder would otherwise sit in the hub looking
+    // like a normal trial, open with half its assets missing, and be saved
+    // over by the next edit.
+    if (partialFolder) {
+      try {
+        await deleteOpfsTrial(partialFolder);
+      } catch (e) {
+        console.warn('Could not remove the partial import:', e);
+      }
+    }
     console.error('Import failed:', err);
     await alertDialog({ title: 'Import failed', type: 'error', message: err.message });
   }
@@ -356,12 +390,14 @@ export function triggerImportTrial() {
   inp.click();
 }
 
-// Creates intermediate subdirectories for a nested zip path.
-async function writeFileToDir(dir, path, blob) {
-  const parts = path.split('/').filter(Boolean);
-  const fileName = parts.pop();
+// Creates intermediate subdirectories for a nested zip path. `parts` comes
+// from safeZipPathParts, so it carries no "..", no separator and no empty
+// component.
+async function writeFileToDir(dir, parts, blob) {
+  const dirParts = parts.slice(0, -1);
+  const fileName = parts[parts.length - 1];
   let cur = dir;
-  for (const p of parts) cur = await cur.getDirectoryHandle(p, { create: true });
+  for (const p of dirParts) cur = await cur.getDirectoryHandle(p, { create: true });
   const fh = await cur.getFileHandle(fileName, { create: true });
   const w = await fh.createWritable();
   await w.write(blob);

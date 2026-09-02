@@ -116,3 +116,95 @@ func test_a_known_game_type_is_one_the_runner_can_actually_run() -> void:
 		assert_array(errors).override_failure_message(
 			"%s was rejected: %s" % [game_type, errors]
 		).is_empty()
+
+
+func _trial(overrides: Dictionary) -> Dictionary:
+	var base := {"trialName": "T", "characters": [], "script": {"lines": []}}
+	base.merge(overrides, true)
+	return base
+
+
+func test_every_malformed_minigame_is_reported_not_just_the_first() -> void:
+	# The old `break` meant an author with five bad entries fixed them one
+	# reload at a time, and the message named neither index nor gameId.
+	var errors := TrialValidator.validate(_trial({
+		"minigames": [
+			{"gameId": "mg_1", "gameType": "nonstop_debate"},
+			{"gameType": "nonstop_debate"},
+			{"gameId": "mg_3"},
+			"not an object",
+		],
+	}))
+	assert_array(errors).has_size(3)
+
+
+func test_a_malformed_minigame_message_names_which_one() -> void:
+	var errors := TrialValidator.validate(_trial({
+		"minigames": [{"gameId": "mg_1", "gameType": "nonstop_debate"}, {"gameId": "mg_2"}],
+	}))
+	assert_str(errors[0]).contains("mg_2")
+
+
+func test_a_dangling_reference_warns_rather_than_rejecting_the_trial() -> void:
+	# Any error rejects the whole file, and a dangling reference degrades one
+	# line rather than making the trial unplayable - so failing on it would
+	# lock the author out of the editor's own broken output.
+	var errors := TrialValidator.validate(_trial({
+		"script": {"lines": [{"id": "l1", "type": "minigame", "minigameId": "mg_gone"}]},
+		"minigames": [],
+	}))
+	assert_array(errors).is_empty()
+
+
+func test_dangling_references_are_all_found_in_one_pass() -> void:
+	var dangling := TrialValidator._dangling_references(_trial({
+		"characters": ["CH_1"],
+		"truthBullets": [{"bulletId": "tb_1"}],
+		"script": {
+			"lines": [
+				{"id": "l1", "type": "minigame", "minigameId": "mg_gone"},
+				{"id": "l2", "type": "speaking", "characterId": "CH_GONE", "dialogue": "x"},
+				{"id": "l3", "type": "speaking", "characterId": "CH_1", "dialogue": "y"},
+			]
+		},
+		"minigames": [
+			{
+				"gameId": "mg_1",
+				"gameType": "nonstop_debate",
+				"typeSpecific": {
+					"selectedBullets": ["tb_1", "tb_gone"],
+					"dialogueLines": [{"lineId": "dl1", "answerBulletId": "tb_also_gone"}],
+				},
+			}
+		],
+	}))
+	# A missing minigame, a missing character, a missing selected bullet and a
+	# missing answer bullet.
+	assert_array(dangling).has_size(4)
+
+
+func test_a_coherent_trial_has_no_dangling_references() -> void:
+	var dangling := TrialValidator._dangling_references(_trial({
+		"characters": ["CH_1"],
+		"truthBullets": [{"bulletId": "tb_1"}],
+		"script": {"lines": [{"id": "l1", "type": "speaking", "characterId": "CH_1"}]},
+		"minigames": [
+			{
+				"gameId": "mg_1",
+				"gameType": "nonstop_debate",
+				"typeSpecific": {
+					"selectedBullets": ["tb_1"],
+					"dialogueLines": [{"lineId": "dl1", "answerBulletId": "tb_1"}],
+				},
+			}
+		],
+	}))
+	assert_array(dangling).is_empty()
+
+
+func test_an_empty_character_id_is_unset_rather_than_dangling() -> void:
+	# The editor writes "" for a speaking line with no character chosen.
+	var dangling := TrialValidator._dangling_references(_trial({
+		"script": {"lines": [{"id": "l1", "type": "speaking", "characterId": ""}]},
+	}))
+	assert_array(dangling).is_empty()

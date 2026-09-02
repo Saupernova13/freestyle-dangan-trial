@@ -2,7 +2,7 @@
 // own module under views/minigames/.
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
-import { confirmDialog } from '../ui/dialogs.js';
+import { confirmDialog, showToast } from '../ui/dialogs.js';
 import { generateId, escapeHtml } from '../utils.js';
 import { renderDebateScrumEditor } from './minigames/debateScrumEditor.js';
 import { renderHangmansGambitEditor } from './minigames/hangmansGambitEditor.js';
@@ -177,8 +177,8 @@ export function renderMinigameEditor(mg) {
           <input type="number"
                  class="form-input"
                  value="${mg.timeLimit || 60}"
-                 onchange="updateMinigameField('${mg.gameId}', 'timeLimit', parseInt(this.value))"
-                 min="10" max="300">
+                 onchange="updateMinigameTimeLimit('${mg.gameId}', this.value)"
+                 min="0" max="3600">
         </div>
       </div>
 
@@ -222,6 +222,33 @@ export async function updateMinigameField(gameId, field, value) {
   mg[field] = value;
   renderMinigameDetails();
   autoSaveTrial(); // deliberately not awaited; the UI is already updated
+}
+
+// parseInt('') is NaN, and JSON.stringify writes NaN as null - which the
+// schema rejects and writeTrialJson only console.warns about. Both ends then
+// substituted 60 silently: the engine falls back at parse time, and the field
+// re-renders as `mg.timeLimit || 60`. So clearing the box intending to retype
+// a number left an invalid trial.json that looked like it said 60.
+//
+// Rejected rather than defaulted, so the author sees the box snap back to the
+// value that is actually stored instead of watching it become something they
+// did not type. Same shape as dialogueBoxTab's borderThickness guard.
+export function updateMinigameTimeLimit(gameId, raw) {
+  const mg = findMinigame(gameId);
+  if (!mg) return;
+
+  const seconds = parseInt(raw, 10);
+  if (isNaN(seconds) || seconds < 0 || seconds > 3600) {
+    showToast('Time limit must be a whole number of seconds from 0 to 3600.', {
+      type: 'warning',
+    });
+    renderMinigameDetails();
+    return;
+  }
+
+  mg.timeLimit = seconds;
+  renderMinigameDetails();
+  autoSaveTrial();
 }
 
 // A gameType change replaces typeSpecific, so switching a nonstop debate to

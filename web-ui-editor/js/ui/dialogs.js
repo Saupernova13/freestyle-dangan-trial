@@ -143,11 +143,12 @@ export function confirmDialog(opts = {}) {
     message,
     icon: danger ? 'warning' : 'alert',
     // On a danger dialog Cancel takes the focus and the Enter binding. Enter is
-    // caught by a capturing keydown listener that beats every other handler on
-    // the page, so an Enter meant for something else - committing a <select>
-    // whose change event opened this very dialog, for instance - would
-    // otherwise land on the destructive button. Destroying data should need a
-    // deliberate click or an explicit Tab.
+    // caught by a keydown listener registered on document in the capture
+    // phase, so it runs ahead of the bubble-phase handlers the rest of the app
+    // uses. An Enter meant for something else - committing a <select> whose
+    // change event opened this very dialog, for instance - would otherwise
+    // land on the destructive button. Destroying data should need a deliberate
+    // click or an explicit Tab.
     buttons: [
       {
         label: cancelLabel,

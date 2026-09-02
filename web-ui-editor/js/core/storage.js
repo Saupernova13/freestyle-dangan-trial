@@ -715,14 +715,17 @@ export async function autoSaveTrial(opts = {}) {
     }
     return;
   }
-  // A direct call is itself an edit - minigameView and the modals save this
-  // way rather than through the debounce - so it has to register as pending
-  // work. Without this, beforeunload stayed silent while a direct save was in
-  // flight, and hasPendingWrites() reported nothing outstanding after one
-  // failed.
+  // Every call has something to write, so every call is pending work until it
+  // lands. Gating this on !skipHistory left undo's restore invisible: it saves
+  // with skipHistory and no preceding scheduleAutoSave, so beforeunload stayed
+  // silent while its write was in flight and after one failed.
+  hasUnsavedChanges = true;
+
+  // The sequence, though, only moves for a genuine edit. Bumping it for a
+  // write-only call would make an in-flight write refuse to report "saved" for
+  // work that had reached disk.
   if (!opts.skipHistory) {
     recordChange(0);
-    hasUnsavedChanges = true;
     changeSeq++;
   }
   setSaveStatus('saving');

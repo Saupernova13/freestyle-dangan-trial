@@ -171,6 +171,16 @@ describe('the save status', () => {
 });
 
 describe('a direct autoSaveTrial call', () => {
+  it('counts as pending work even when it skips history', async () => {
+    // Undo's restore saves this way, with no preceding scheduleAutoSave, so
+    // gating the dirty flag on !skipHistory left beforeunload silent for it.
+    writeDelayMs = 5;
+    const inFlight = autoSaveTrial({ skipHistory: true });
+    expect(hasPendingWrites()).toBe(true);
+    await inFlight;
+    expect(hasPendingWrites()).toBe(false);
+  });
+
   it('counts as pending work while it is in flight', async () => {
     writeDelayMs = 5;
     // minigameView and the modals save this way rather than through the
@@ -190,5 +200,12 @@ describe('a direct autoSaveTrial call', () => {
     };
     await autoSaveTrial();
     expect(hasPendingWrites()).toBe(true);
+
+    // storage.js keeps the dirty flag at module scope and vitest reuses the
+    // module across files in a worker, so leaving it set here would make a
+    // later file fail depending on run order.
+    state.dirHandle = instrumentedDirHandle();
+    await autoSaveTrial();
+    expect(hasPendingWrites()).toBe(false);
   });
 });

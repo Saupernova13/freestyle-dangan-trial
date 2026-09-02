@@ -10,6 +10,10 @@ var _answer_display: HBoxContainer
 var _answer_slots: Array = []
 var _spawn_timer: float = 0.0
 var _spawn_interval: float = 1.5
+## One stream for the whole attempt, taken in start(): every spawn decision
+## comes off it in order, so DANGAN_SEED replays the round letter for letter.
+## A fresh stream() per attempt keeps repeated plays different.
+var _rng: RandomNumberGenerator = null
 
 func initialize(data: MinigameData):
 	super.initialize(data)
@@ -32,6 +36,7 @@ func validate_data() -> Array[String]:
 
 func start():
 	super.start()
+	_rng = GameRandom.stream("hangmans_gambit")
 	_build_overlay()
 	setup_standard_ui([HudComponent.INFLUENCE_GAUGE, HudComponent.TIMER_DISPLAY])
 	connect_managed(InfluenceGauge.influence_depleted, _on_influence_depleted)
@@ -67,18 +72,18 @@ func _spawn_letter():
 
 	var letter: String
 	var is_correct: bool
-	if randf() < 0.4:
+	if _rng.randf() < 0.4:
 		var unrevealed = []
 		for i in range(answer_key.length()):
 			if not _revealed_letters[i]:
 				unrevealed.append(answer_key[i])
 		if unrevealed.is_empty():
 			return
-		letter = unrevealed[randi() % unrevealed.size()]
+		letter = unrevealed[_rng.randi() % unrevealed.size()]
 		is_correct = true
 	else:
 		var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		letter = alphabet[randi() % alphabet.length()]
+		letter = alphabet[_rng.randi() % alphabet.length()]
 		is_correct = letter in answer_key and not _all_instances_revealed(letter)
 
 	var speeds = MinigameConfig.get_floating_letter_speed(difficulty)
@@ -88,13 +93,16 @@ func _spawn_letter():
 	var floating: FloatingLetter = ResourceRegistry.instantiate("floating_letter")
 	floating.letter = letter
 	floating.is_answer_letter = is_correct
-	floating.position = Vector2(
-		randf_range(-50, -30) if randf() < 0.5 else randf_range(viewport_size.x + 30, viewport_size.x + 50),
-		randf_range(120, viewport_size.y - 200)
+	var from_left := _rng.randf() < 0.5
+	var spawn_x := (
+		_rng.randf_range(-50, -30)
+		if from_left
+		else _rng.randf_range(viewport_size.x + 30, viewport_size.x + 50)
 	)
+	floating.position = Vector2(spawn_x, _rng.randf_range(120, viewport_size.y - 200))
 	floating.velocity = Vector2(
-		randf_range(speed_base, speed_base + speed_range) * (1 if floating.position.x < 0 else -1),
-		randf_range(-20, 20)
+		_rng.randf_range(speed_base, speed_base + speed_range) * (1 if from_left else -1),
+		_rng.randf_range(-20, 20)
 	)
 	floating.clicked.connect(_on_letter_clicked)
 	floating.exited_screen.connect(_on_letter_exited)

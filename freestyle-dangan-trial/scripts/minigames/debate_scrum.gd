@@ -14,6 +14,10 @@ var _turn_timer_label: Label
 
 var _turn_timer: float = 0.0
 var _turn_active: bool = false
+## One stream for the whole attempt, taken in start(). Array.shuffle() reads
+## the global RNG, which the session seed does not drive, so the deal diverged
+## from the seed every run - see GameRandom.shuffle_with.
+var _rng: RandomNumberGenerator = null
 
 func initialize(data: MinigameData):
 	super.initialize(data)
@@ -30,6 +34,7 @@ func validate_data() -> Array[String]:
 
 func start():
 	super.start()
+	_rng = GameRandom.stream("debate_scrum")
 	if arguments.is_empty():
 		push_warning("DebateScrum: No arguments provided, auto-completing")
 		_on_correct_answer({"rounds": 0})
@@ -156,21 +161,29 @@ func _deal_keywords(def_keywords: Array[String], opp_keywords: Array[String]) ->
 				% [chosen.size(), button_count, chosen.size() - button_count]
 			)
 		)
-		chosen.shuffle()
+		GameRandom.shuffle_with(chosen, _deal_rng())
 		chosen.resize(button_count)
 
 	var decoys: Array[String] = []
 	for kw in opp_keywords:
 		if not chosen.has(kw) and not decoys.has(kw):
 			decoys.append(kw)
-	decoys.shuffle()
+	GameRandom.shuffle_with(decoys, _deal_rng())
 	for kw in decoys:
 		if chosen.size() >= button_count:
 			break
 		chosen.append(kw)
 
-	chosen.shuffle()
+	GameRandom.shuffle_with(chosen, _deal_rng())
 	return chosen
+
+
+## start() is not called in the unit tests that exercise _deal_keywords
+## directly, so the stream is taken on demand rather than assumed.
+func _deal_rng() -> RandomNumberGenerator:
+	if _rng == null:
+		_rng = GameRandom.stream("debate_scrum")
+	return _rng
 
 func _format_character_line(text: String, char_id: String) -> String:
 	if char_id.is_empty():

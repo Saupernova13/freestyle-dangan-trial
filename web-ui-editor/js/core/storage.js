@@ -573,10 +573,27 @@ let autoSaveFailureNotified = false;
 // "nothing outstanding" is distinguishable from "a write never happened".
 let hasUnsavedChanges = false;
 
+// Bumped by every entry point that represents a new edit. A write captures it
+// alongside its snapshot, so a write that completes cannot report "saved" for
+// an edit made after that snapshot was taken.
+let changeSeq = 0;
+
+// Serializes writes to trial.json. Two overlapping
+// FileSystemWritableFileStreams on one handle each buffer to their own swap
+// file and the last close() wins, which is not necessarily the newest state -
+// and Chromium holds an exclusive lock while a writable is open, so the second
+// write can reject outright.
+let writeChain = Promise.resolve();
+// The link that has been queued but has not started. A later caller has
+// nothing to add to it: the snapshot is taken when the write runs, not when it
+// was queued, so it already carries whatever that caller wanted saved.
+let pendingWrite = null;
+
 // Debounced save for keystroke-frequency callers, and the undo choke point:
 // every mutation reaches this or autoSaveTrial.
 export function scheduleAutoSave(delayMs = 600) {
   hasUnsavedChanges = true;
+  changeSeq++;
   if (state.dirHandle) setSaveStatus('saving');
   recordChange(delayMs);
   clearTimeout(autoSaveTimer);
@@ -611,12 +628,18 @@ export async function autoSaveTrial(opts = {}) {
     return;
   }
   if (!opts.skipHistory) recordChange(0);
+  changeSeq++;
   setSaveStatus('saving');
   try {
-    await writeTrialJson();
+    const writtenSeq = await enqueueTrialJsonWrite();
     autoSaveFailureNotified = false;
-    hasUnsavedChanges = false;
-    setSaveStatus('saved');
+    // Only when nothing was edited after this write took its snapshot.
+    // Otherwise the pill would read "All changes saved" over an edit that is
+    // still only in memory, and the queued write behind us will report it.
+    if (writtenSeq === changeSeq) {
+      hasUnsavedChanges = false;
+      setSaveStatus('saved');
+    }
   } catch (err) {
     // Alert once, not on every subsequent keystroke, until a save succeeds.
     console.error('Auto-save failed:', err);
@@ -635,7 +658,27 @@ export async function autoSaveTrial(opts = {}) {
   }
 }
 
+// One writer at a time, in order. Callers await their own link, so completion
+// order matches queue order and a stale write can no longer land last.
+function enqueueTrialJsonWrite() {
+  if (pendingWrite) return pendingWrite;
+  const start = () => {
+    // Cleared before the write begins, not after: a caller arriving mid-write
+    // may have state newer than the snapshot just taken, so it needs its own
+    // link rather than this one's result.
+    pendingWrite = null;
+    return writeTrialJson();
+  };
+  // Both arms, so one failed write does not wedge the chain forever.
+  const run = writeChain.then(start, start);
+  pendingWrite = run;
+  writeChain = run.catch(() => {});
+  return run;
+}
+
+// Returns the change sequence its snapshot was taken at.
 async function writeTrialJson() {
+  const seq = changeSeq;
   const trialJs = buildTrialJson(state);
 
   // Warn only: blocking auto-save over a validation bug would lose work.
@@ -648,4 +691,5 @@ async function writeTrialJson() {
   let wr = await fHandle.createWritable();
   await wr.write(JSON.stringify(trialJs, null, 2));
   await wr.close();
+  return seq;
 }

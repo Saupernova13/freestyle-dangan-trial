@@ -31,8 +31,12 @@ export function buildTrialJson(s) {
     metadata: {
       version: FORMAT_VERSION,
       lastModified: new Date().toISOString(),
-      studentCount: blockTypes.filter((t) => !t).length,
-      headmasterCount: blockTypes.filter((t) => t).length,
+      // From the cast, not from blockTypes. Counting the constant made these
+      // always 16 and 1 whatever the trial actually held - fields written
+      // into metadata as though they described it. blockTypes still says
+      // WHICH slot is the headmaster's; the cast says whether anyone is in it.
+      studentCount: s.cast.filter((c, i) => c && !blockTypes[i]).length,
+      headmasterCount: s.cast.filter((c, i) => c && blockTypes[i]).length,
       totalCharacters: characterIds.filter((id) => id !== null).length,
       scriptLineCount: s.scriptLines.length,
       minigameCount: s.minigames.length,

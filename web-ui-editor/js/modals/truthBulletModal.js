@@ -9,6 +9,13 @@ import { renderTruthBulletsView } from '../views/truthBulletsView.js';
 
 import { setHtml } from '../ui/dom.js';
 let activeBulletId = null;
+// True while editing a bullet that addTruthBullet created for this modal.
+// Cancelling one of those has to take the bullet with it: it was pushed into
+// state before the modal opened, so it survived Cancel, got persisted by the
+// next autosave, appeared in every minigame's bullet picker, and tripped
+// validateTrialForExport with "Truth bullet N has no name" - with no obvious
+// cause, since the author believes they cancelled.
+let activeBulletIsNew = false;
 let bulletModalErr = '';
 let bulletModalMsg = '';
 // The edit buffer. imageDataURL is in it for the same reason the rest are:
@@ -28,13 +35,14 @@ let bulletFields = {
   inversedLieBulletName: '',
 };
 
-export function openTruthBulletModal(bulletId) {
+export function openTruthBulletModal(bulletId, opts = {}) {
   if (!state.dirHandle) {
     showToast('Choose a trial folder first.', { type: 'warning' });
     return;
   }
 
   activeBulletId = bulletId;
+  activeBulletIsNew = opts.isNew === true;
   bulletModalErr = '';
   bulletModalMsg = '';
 
@@ -192,7 +200,25 @@ export function clearBulletImage() {
 
 export function closeTruthBulletModal() {
   setHtml(document.getElementById('modalroot'), '');
+
+  // Only a bullet this modal created, and only while it is still blank: an
+  // author who cancelled out of Add Bullet never had one, and one they had
+  // already named and saved is theirs to keep.
+  if (activeBulletIsNew) {
+    const bullet = state.truthBullets.find((b) => b.bulletId === activeBulletId);
+    if (bullet && !(bullet.name || '').trim()) {
+      state.truthBullets = state.truthBullets.filter((b) => b.bulletId !== activeBulletId);
+      if (state.selectedTruthBulletId === activeBulletId) {
+        state.selectedTruthBulletId = state.truthBullets.length
+          ? state.truthBullets[state.truthBullets.length - 1].bulletId
+          : null;
+      }
+      renderTruthBulletsView();
+    }
+  }
+
   activeBulletId = null;
+  activeBulletIsNew = false;
 }
 
 export async function saveTruthBullet() {
@@ -236,6 +262,7 @@ export async function saveTruthBullet() {
       bullet.imageDataURL = null;
     }
 
+    activeBulletIsNew = false;
     bullet.name = bulletFields.name;
     bullet.description = bulletFields.description;
     bullet.inversedLieBulletName = bulletFields.inversedLieBulletName;

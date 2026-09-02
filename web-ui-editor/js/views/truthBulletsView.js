@@ -157,7 +157,8 @@ export function addTruthBullet() {
   state.selectedTruthBulletId = newBullet.bulletId;
 
   renderTruthBulletsView();
-  openTruthBulletModal(newBullet.bulletId);
+  // Flagged so cancelling out of the modal takes the placeholder with it.
+  openTruthBulletModal(newBullet.bulletId, { isNew: true });
 }
 
 export async function deleteTruthBullet(bulletId) {

@@ -48,6 +48,12 @@ var ui_scale: float = DEFAULT_UI_SCALE:
 
 var _suppress_save: bool = false
 
+## Long enough to collapse a slider drag, short enough that a player who quits
+## straight after a change almost never outruns it - and flush_pending_save
+## covers the case where they do.
+const SAVE_DEBOUNCE_SECONDS := 0.5
+var _save_timer: Timer = null
+
 func _ready():
 	_load_settings()
 	# Cleared here rather than at the end of _load_settings(). A runtime type
@@ -130,12 +136,39 @@ func _save_settings():
 	if err != OK:
 		Log.warn("Settings", "Could not write %s: %s" % [SAVE_PATH, error_string(err)])
 
+## Applying is immediate so the UI stays responsive; only the write is
+## debounced. settings_menu wires slider.value_changed straight to these
+## setters, so one drag of the volume slider used to write user://settings.cfg
+## dozens of times a second - real flash wear on Android, and avoidable frame
+## cost during an interaction that should be smooth.
 func _apply_and_save():
 	if _suppress_save:
 		return
 	_apply_all()
-	_save_settings()
 	settings_changed.emit()
+	_schedule_save()
+
+func _schedule_save() -> void:
+	if _save_timer == null:
+		_save_timer = Timer.new()
+		_save_timer.one_shot = true
+		# Settings changes must land even while the tree is paused: the menu is
+		# open, which is exactly when the trial is paused.
+		_save_timer.process_mode = Node.PROCESS_MODE_ALWAYS
+		_save_timer.timeout.connect(_save_settings)
+		add_child(_save_timer)
+	_save_timer.start(SAVE_DEBOUNCE_SECONDS)
+
+## Writes anything the debounce is still holding. Quitting mid-drag would
+## otherwise lose the change the player just made.
+func flush_pending_save() -> void:
+	if _save_timer and not _save_timer.is_stopped():
+		_save_timer.stop()
+		_save_settings()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
+		flush_pending_save()
 
 func _apply_all():
 	if AudioManager:

@@ -87,3 +87,39 @@ func test_a_genuinely_absent_character_is_still_reported_absent() -> void:
 	var library := CharacterLibrary.new(DIR)
 
 	assert_dict(library.get_character("makoto")).is_empty()
+
+
+func test_a_missing_character_is_only_scanned_for_once() -> void:
+	# Misses were not cached, so a dangling id reopened Characters/ and
+	# reparsed every character.json on every lookup - O(lines x cast) file
+	# reads for one bad reference, and a warning per lookup flooding the log.
+	_write_character("Kyoko", '{"id": "kyoko", "name": "Kyoko", "surname": "K"}')
+	var library := CharacterLibrary.new(DIR)
+
+	assert_dict(library.get_character("makoto")).is_empty()
+	assert_bool(library._missing_ids.has("makoto")).is_true()
+
+	# The second lookup must not rescan: removing the folder underneath it
+	# would change the answer if it did.
+	DirAccess.remove_absolute(DIR + "Kyoko/character.json")
+	DirAccess.remove_absolute(DIR + "Kyoko")
+	assert_dict(library.get_character("makoto")).is_empty()
+
+
+func test_a_found_character_is_not_recorded_as_missing() -> void:
+	_write_character("Kyoko", '{"id": "kyoko", "name": "Kyoko", "surname": "K"}')
+	var library := CharacterLibrary.new(DIR)
+
+	assert_str(library.get_character("kyoko").get("name", "")).is_equal("Kyoko")
+	assert_bool(library._missing_ids.has("kyoko")).is_false()
+
+
+func test_clearing_forgets_the_misses_too() -> void:
+	# A new trial has a different cast; the previous trial's absences say
+	# nothing about it.
+	var library := CharacterLibrary.new(DIR)
+	library.get_character("makoto")
+	assert_bool(library._missing_ids.has("makoto")).is_true()
+
+	library.clear()
+	assert_bool(library._missing_ids.has("makoto")).is_false()

@@ -167,10 +167,10 @@ func _present_speaking_line(line: ScriptLine) -> void:
 	# By id, never bench index: a sparse cast would redirect the lookup.
 	# Benchless speakers fall back to the character file, then "???" — never to
 	# the previous speaker's name.
-	var char_data: Dictionary = _stage.character_at_bench(_stage.find_bench(character_id))
+	var bench_index: int = _stage.find_bench(character_id)
+	var char_data: Dictionary = _stage.character_at_bench(bench_index)
 	if char_data.is_empty():
 		char_data = TrialLoader.load_character(character_id)
-	var bench_index: int = int(char_data.get("_bench_index", -1))
 
 	if char_data.is_empty():
 		push_warning("Speaking line references unknown character: ", character_id)

@@ -14,6 +14,9 @@ var _trial_posts: Node3D
 # sparse, so a dense Array indexed by bench drifts out of step with load order.
 var _by_id: Dictionary = {}
 var _by_bench: Dictionary = {}
+# character id -> bench index. CharacterStage's own data, kept in
+# CharacterStage rather than stamped onto the shared character record.
+var _bench_of: Dictionary = {}
 
 func _init(trial_posts: Node3D) -> void:
 	_trial_posts = trial_posts
@@ -43,7 +46,13 @@ func _populate_bench(bench_index: int, character_id: String) -> void:
 		push_warning("Character data not found for ID: ", character_id)
 		return
 
-	char_data["_bench_index"] = bench_index
+	# Not written into char_data. That dictionary is CharacterLibrary's cached
+	# record - Godot dictionaries are reference types - so stamping a key on it
+	# mutated the in-memory copy of the author's character.json with
+	# stage-local presentation state, invisibly from the library's side. A
+	# future defensive copy in get_character() would then have broken bench
+	# lookups silently instead of loudly.
+	_bench_of[character_id] = bench_index
 	_by_id[character_id] = char_data
 	_by_bench[bench_index] = char_data
 
@@ -80,8 +89,9 @@ func update_sprite(bench_index: int, character_id: String, sprite_index: int) ->
 	_fit_quad_to_texture(mesh_instance, texture)
 	_ensure_black_backplane(mesh_instance)
 
+## -1 when the character is not seated. The only place the bench index lives.
 func find_bench(character_id: String) -> int:
-	return int(_by_id.get(character_id, {}).get("_bench_index", -1))
+	return int(_bench_of.get(character_id, -1))
 
 func character_at_bench(bench_index: int) -> Dictionary:
 	return _by_bench.get(bench_index, {})

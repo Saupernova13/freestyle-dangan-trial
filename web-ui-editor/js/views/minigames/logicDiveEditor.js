@@ -75,7 +75,26 @@ export function renderLogicDiveQuestions(gameId, questions) {
   return html;
 }
 
+// Read-only, for the render path. ensureTypeSpecific normalizes `answers` at
+// load and on every gameType change, but a throw inside a render function
+// propagates out to openTrialFromHandle's catch and takes the whole trial
+// down - un-openable behind "Could not open trial", naming no minigame - so
+// this is the one place a missing list must not be assumed. Not mutating,
+// for the same reason the seeding was moved out of the render in the first
+// place: an autosave would persist a change undo never saw.
+function answersOf(question) {
+  return Array.isArray(question.answers) ? question.answers : [];
+}
+
+// The mutating form, for the handlers that are about to write to the list
+// anyway and autosave straight after.
+function ensureAnswers(question) {
+  if (!Array.isArray(question.answers)) question.answers = [];
+  return question.answers;
+}
+
 export function renderLogicDiveQuestionEditor(gameId, question, index) {
+  const answers = answersOf(question);
   return `
     <div class="logic-dive-question-card">
       <div class="question-header">
@@ -103,9 +122,9 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
 
         <div class="answers-section">
           <div class="answers-header">
-            <h4>Answers (${question.answers.length}/5)</h4>
+            <h4>Answers (${answers.length}/5)</h4>
             ${
-              question.answers.length < 5
+              answers.length < 5
                 ? `
               <button class="btn btn-secondary btn-sm"
                       onclick="addLogicDiveAnswer('${gameId}', '${question.questionId}')">
@@ -117,7 +136,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
           </div>
 
           <div class="answers-list">
-            ${question.answers
+            ${answers
               .map(
                 (answer, ansIndex) => `
               <div class="answer-item ${answer.isCorrect ? 'correct-answer' : ''}">
@@ -134,7 +153,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
                        value="${escapeHtml(answer.answerText || '')}"
                        onchange="updateLogicDiveAnswer('${gameId}', '${question.questionId}', '${answer.answerId}', 'answerText', this.value)">
                 ${
-                  question.answers.length > 2
+                  answers.length > 2
                     ? `
                   <button class="btn-icon btn-icon-danger"
                           onclick="deleteLogicDiveAnswer('${gameId}', '${question.questionId}', '${answer.answerId}')"
@@ -149,7 +168,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
           </div>
 
           ${
-            question.answers.length < 2
+            answers.length < 2
               ? `
             <p class="validation-warning">${window.icon('warning', { size: 15 })} Add at least 2 answers</p>
           `
@@ -231,7 +250,9 @@ export function addLogicDiveAnswer(gameId, questionId) {
   if (!mg) return;
 
   const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
-  if (!question || question.answers.length >= 5) return;
+  if (!question) return;
+  ensureAnswers(question);
+  if (question.answers.length >= 5) return;
 
   const newAnswer = {
     answerId: generateId('a'),
@@ -249,7 +270,9 @@ export async function deleteLogicDiveAnswer(gameId, questionId, answerId) {
   if (!mg) return;
 
   const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
-  if (!question || question.answers.length <= 2) return; // Minimum 2 answers
+  if (!question) return;
+  ensureAnswers(question);
+  if (question.answers.length <= 2) return; // Minimum 2 answers
 
   // Removing the correct answer silently promotes the first one, so this
   // deletes more than the text the author clicked next to.

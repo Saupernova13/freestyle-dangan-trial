@@ -40,7 +40,26 @@ export function ensureTypeSpecific(mg) {
     }
   }
   normalizeOrder(mg);
+  normalizeNestedLists(mg);
   return mg;
+}
+
+// Lists nested one level inside an ordered list. logic_dive is the only type
+// with one, and it is the only one whose editor reads `.length` on it
+// unguarded - a question with no `answers` array threw inside
+// renderMinigameDetails, which propagates out to openTrialFromHandle's catch
+// and makes the whole trial un-openable behind "Could not open trial", naming
+// no minigame. Normalized here rather than defended at each read site, so a
+// new read site cannot reintroduce it.
+export function normalizeNestedLists(mg) {
+  if (!mg || mg.gameType !== 'logic_dive') return;
+  const questions = mg.typeSpecific && mg.typeSpecific.questions;
+  if (!Array.isArray(questions)) return;
+  questions.forEach((question) => {
+    if (question && typeof question === 'object' && !Array.isArray(question.answers)) {
+      question.answers = [];
+    }
+  });
 }
 
 // `a.order - b.order` is NaN for an item with no order, which makes the
@@ -53,7 +72,10 @@ export function normalizeOrder(mg) {
   const list = mg.typeSpecific && mg.typeSpecific[listKey];
   if (!Array.isArray(list)) return;
   list.forEach((item, i) => {
-    if (item && typeof item.order !== 'number') item.order = i;
+    // Objects only. A string entry - the same hand-edit that motivates
+    // normalizeNestedLists - threw "Cannot create property 'order' on string"
+    // here, which is the same un-openable-trial failure one step earlier.
+    if (item && typeof item === 'object' && typeof item.order !== 'number') item.order = i;
   });
 }
 

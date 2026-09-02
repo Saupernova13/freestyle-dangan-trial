@@ -245,6 +245,10 @@ func find_character_position(character_id: String) -> int:
 	return _stage.find_bench(character_id)
 
 func _on_game_over():
+	# Before the screen is shown, not in the exit handlers. Dying while
+	# slow-time was active used to play the whole game-over sequence in slow
+	# motion, because the scale was only restored on the way out.
+	TimeScale.release_all()
 	ScriptDirector.pause_trial()
 	if dialogue_label:
 		dialogue_label.text = ""
@@ -254,15 +258,19 @@ func _on_game_over():
 	add_child(game_over_screen)
 	game_over_screen.show_game_over()
 
-	# The nodes holding time-scale requests are about to be freed with the
-	# scene, so their releases will never run.
+	# Both gauges, not just influence: retrying with an empty concentrate gauge
+	# meant no slow-time for the retry, with nothing said. The autoloads outlive
+	# the scene change, so anything not reset here carries into the next run -
+	# ScriptDirector.reset() runs from start_trial() on the way in.
 	game_over_screen.retry_requested.connect(func():
 		TimeScale.release_all()
 		InfluenceGauge.reset()
+		ConcentrateGauge.reset()
 		get_tree().reload_current_scene()
 	)
 	game_over_screen.return_to_menu.connect(func():
 		TimeScale.release_all()
 		InfluenceGauge.reset()
+		ConcentrateGauge.reset()
 		get_tree().change_scene_to_file("res://scenes/start_menu.tscn")
 	)

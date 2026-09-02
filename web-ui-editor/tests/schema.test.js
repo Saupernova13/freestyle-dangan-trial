@@ -306,6 +306,166 @@ const corpus = [
     },
     false,
   ],
+  // typeSpecific used to be unconstrained on both sides, so the half of the
+  // format carrying the gameplay content was the unguarded half. ajv and the
+  // hand validator must now agree on these too.
+  [
+    'nonstop debate payload the editor writes',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [
+        {
+          gameId: 'mg_1',
+          gameType: 'nonstop_debate',
+          typeSpecific: {
+            selectedBullets: ['tb_1'],
+            dialogueLines: [
+              {
+                lineId: 'dl_1',
+                order: 0,
+                sentenceBeginning: 'It was ',
+                target: 'you',
+                sentenceEnd: '!',
+                isShootable: true,
+                answerBulletId: 'tb_1',
+                useNegativeBullet: false,
+                textEffect: 'shake',
+                textFont: 'bold',
+                textMovementDirection: 'left_to_right',
+                userFailedComment: '',
+                userWrongAnswerComment: '',
+                characterSpotlight: false,
+                characterId: 'CH_1',
+                voiceLineFile: null,
+              },
+            ],
+          },
+        },
+      ];
+      return t;
+    },
+    true,
+  ],
+  [
+    'nonstop debate line with a renamed key',
+    () => {
+      const t = minimalTrial();
+      // The exact shape the shared fixture used to carry.
+      t.minigames = [
+        {
+          gameId: 'mg_1',
+          gameType: 'nonstop_debate',
+          typeSpecific: { dialogueLines: [{ text: 'x', isWeakPoint: true }] },
+        },
+      ];
+      return t;
+    },
+    false,
+  ],
+  [
+    'nonstop debate line whose isShootable is a string',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [
+        {
+          gameId: 'mg_1',
+          gameType: 'nonstop_debate',
+          typeSpecific: { dialogueLines: [{ lineId: 'dl_1', isShootable: 'yes' }] },
+        },
+      ];
+      return t;
+    },
+    false,
+  ],
+  [
+    'nonstop debate line carrying a field neither side knows',
+    () => {
+      const t = minimalTrial();
+      // Allowed on purpose: a newer editor's field must not make an older one
+      // reject the file.
+      t.minigames = [
+        {
+          gameId: 'mg_1',
+          gameType: 'nonstop_debate',
+          typeSpecific: { dialogueLines: [{ lineId: 'dl_1', somethingNew: 42 }] },
+        },
+      ];
+      return t;
+    },
+    true,
+  ],
+  [
+    'mass panic group with a mistyped speaker line',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [
+        {
+          gameId: 'mg_1',
+          gameType: 'mass_panic_debate',
+          typeSpecific: {
+            speaker1CharacterId: 'CH_1',
+            lineGroups: [{ groupId: 'g1', speaker1: { isLoudAssertion: 'loud' } }],
+          },
+        },
+      ];
+      return t;
+    },
+    false,
+  ],
+  [
+    'logic dive question whose answers are not an array',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [
+        {
+          gameId: 'mg_1',
+          gameType: 'logic_dive',
+          typeSpecific: { questions: [{ questionId: 'q1', answers: 'three' }] },
+        },
+      ];
+      return t;
+    },
+    false,
+  ],
+  [
+    "hangman's gambit whose answerKey is a number",
+    () => {
+      const t = minimalTrial();
+      t.minigames = [
+        { gameId: 'mg_1', gameType: 'hangmans_gambit', typeSpecific: { answerKey: 42 } },
+      ];
+      return t;
+    },
+    false,
+  ],
+  [
+    'debate scrum argument with mistyped keywords',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [
+        {
+          gameId: 'mg_1',
+          gameType: 'debate_scrum',
+          typeSpecific: { arguments: [{ argumentId: 'a1', oppositionKeywords: 'knife' }] },
+        },
+      ];
+      return t;
+    },
+    false,
+  ],
+  [
+    'a type with no editor keeps an unconstrained payload',
+    () => {
+      const t = minimalTrial();
+      // These three carry no authored payload yet, so nothing here would be
+      // true of them.
+      t.minigames = [
+        { gameId: 'mg_1', gameType: 'psyche_taxi', typeSpecific: { whatever: [1, 2, 3] } },
+      ];
+      return t;
+    },
+    true,
+  ],
   [
     // failComment is written by the editor, typed and used by the engine, and
     // tested by the engine - and was absent from the normative schema, so the

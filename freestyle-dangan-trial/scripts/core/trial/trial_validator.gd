@@ -40,7 +40,10 @@ static func check_version(data: Dictionary) -> String:
 	return ""
 
 
-## Essentials only — typeSpecific shapes are each minigame's concern.
+## Essentials only. typeSpecific shapes are constrained by the schema and the
+## editor's mirror of it, and each minigame's validate_data() reports a payload
+## it cannot play - checking them a third time here would be a third copy to
+## keep in step.
 ## Returns human-readable errors; empty means loadable.
 static func validate(data: Dictionary) -> Array[String]:
 	var errors: Array[String] = []

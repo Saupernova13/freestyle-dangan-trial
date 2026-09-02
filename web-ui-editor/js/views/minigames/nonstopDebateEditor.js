@@ -474,6 +474,12 @@ export async function deleteDialogueLine(gameId, lineId) {
   const mg = findMinigame(gameId);
   if (!mg || !mg.typeSpecific || !mg.typeSpecific.dialogueLines) return;
 
+  // Awaited, so a failed delete surfaces instead of being fired and forgotten
+  // - and so the file goes with the line. addDirectoryToZip walks the real
+  // directory, so an orphan ships in every .drtrial from here on.
+  const line = mg.typeSpecific.dialogueLines.find((l) => l.lineId === lineId);
+  if (line) await deleteMinigameAudioFile(gameId, line.voiceLineFile);
+
   mg.typeSpecific.dialogueLines = mg.typeSpecific.dialogueLines.filter((l) => l.lineId !== lineId);
   reindexOrder(mg.typeSpecific.dialogueLines);
 

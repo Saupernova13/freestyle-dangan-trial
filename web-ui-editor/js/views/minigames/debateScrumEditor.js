@@ -271,6 +271,13 @@ export async function deleteDebateScrumArgument(gameId, argumentId) {
   const mg = findMinigame(gameId);
   if (!mg) return;
 
+  // Two files per argument, and the confirmation above promises both go.
+  const argument = (mg.typeSpecific.arguments || []).find((a) => a.argumentId === argumentId);
+  if (argument) {
+    await deleteMinigameAudioFile(gameId, argument.oppositionAudioFile);
+    await deleteMinigameAudioFile(gameId, argument.defenseAudioFile);
+  }
+
   mg.typeSpecific.arguments = mg.typeSpecific.arguments.filter((a) => a.argumentId !== argumentId);
   reindexOrder(mg.typeSpecific.arguments);
 

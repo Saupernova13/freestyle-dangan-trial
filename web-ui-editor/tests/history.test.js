@@ -6,6 +6,7 @@ import {
   canUndo,
   initHistory,
   isRestoring,
+  markFileDeleted,
   recordChange,
   redo,
   resetHistory,
@@ -182,5 +183,102 @@ describe('undo/redo', () => {
     undo();
     vi.advanceTimersByTime(1000);
     expect(canRedo()).toBe(true); // a recorded change would have cleared it
+  });
+});
+
+// A snapshot holds trial data only, and cloneValue passes Blobs by reference,
+// so undoing past a deletion repainted a cast member whose folder was gone.
+// The sprites still rendered from memory, buildTrialJson wrote the id back,
+// and the export packaged nothing for them - a trial that shipped broken with
+// no indication anywhere.
+describe('the file-deletion barrier', () => {
+  it('drops the past so undo cannot reach a state whose files are gone', () => {
+    edit(() => {
+      state.trialName = 'Before delete';
+    });
+    expect(canUndo()).toBe(true);
+
+    markFileDeleted();
+    edit(() => {
+      state.trialName = 'After delete';
+    });
+
+    expect(canUndo()).toBe(false);
+    expect(undo()).toBe(false);
+    expect(state.trialName).toBe('After delete');
+  });
+
+  it('refuses to undo while the barrier is still pending', () => {
+    edit(() => {
+      state.trialName = 'Before delete';
+    });
+    markFileDeleted();
+
+    // The delete has happened; the save that flushes it has not landed yet.
+    expect(canUndo()).toBe(false);
+    expect(canRedo()).toBe(false);
+    expect(undo()).toBe(false);
+  });
+
+  it('leaves everything after the barrier undoable', () => {
+    markFileDeleted();
+    edit(() => {
+      state.trialName = 'At barrier';
+    });
+    edit(() => {
+      state.trialName = 'Later edit';
+    });
+
+    expect(canUndo()).toBe(true);
+    expect(undo()).toBe(true);
+    expect(state.trialName).toBe('At barrier');
+  });
+
+  it('drops a pending redo too, since it also predates the deletion', () => {
+    edit(() => {
+      state.trialName = 'One';
+    });
+    edit(() => {
+      state.trialName = 'Two';
+    });
+    undo();
+    expect(canRedo()).toBe(true);
+
+    markFileDeleted();
+    edit(() => {
+      state.trialName = 'After delete';
+    });
+
+    expect(canRedo()).toBe(false);
+    expect(redo()).toBe(false);
+  });
+
+  it('is cleared by resetHistory, so it cannot cross into another trial', () => {
+    markFileDeleted();
+    resetHistory();
+    edit(() => {
+      state.trialName = 'Fresh trial edit';
+    });
+
+    expect(canUndo()).toBe(true);
+  });
+
+  it('consumes itself, so only the first flush after it is a barrier', () => {
+    markFileDeleted();
+    edit(() => {
+      state.trialName = 'At barrier';
+    });
+    edit(() => {
+      state.trialName = 'One';
+    });
+    edit(() => {
+      state.trialName = 'Two';
+    });
+
+    expect(undo()).toBe(true);
+    expect(state.trialName).toBe('One');
+    expect(undo()).toBe(true);
+    expect(state.trialName).toBe('At barrier');
+    expect(undo()).toBe(false);
   });
 });

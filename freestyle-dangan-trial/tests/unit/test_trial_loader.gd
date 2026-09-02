@@ -101,3 +101,44 @@ func test_loading_a_trial_clears_the_audio_cache() -> void:
 	AudioManager._audio_cache["user://gdunit_stale_voice.wav"] = AudioStreamWAV.new()
 	assert_bool(TrialLoader.load_trial(ProjectSettings.globalize_path(ZIP_PATH))).is_true()
 	assert_int(AudioManager._audio_cache.size()).is_equal(0)
+
+
+func test_a_missing_file_sets_a_load_error_naming_the_path() -> void:
+	# last_load_error is what the picker and the loading screen show. Nothing
+	# asserted it, so a change that emptied it would surface as a silent
+	# failure in the UI rather than a red test.
+	var missing := ProjectSettings.globalize_path("user://gdunit_no_such_trial.drtrial")
+	assert_bool(TrialLoader.load_trial(missing)).is_false()
+	assert_str(TrialLoader.last_load_error).contains("not found")
+	assert_str(TrialLoader.last_load_error).contains(missing)
+
+
+func test_unparseable_trial_json_sets_a_parse_error_and_surfaces_it() -> void:
+	var packer := ZIPPacker.new()
+	var broken := "user://gdunit_broken_fixture.drtrial"
+	assert_int(packer.open(broken)).is_equal(OK)
+	packer.start_file("trial.json")
+	packer.write_file("{ not json".to_utf8_buffer())
+	packer.close_file()
+	packer.close()
+
+	assert_bool(TrialLoader.load_trial(ProjectSettings.globalize_path(broken))).is_false()
+	assert_str(TrialLoader.last_parse_error).contains("not valid JSON")
+	# The load error carries the parse error rather than a generic message,
+	# which is the difference between "this trial is broken" and "why".
+	assert_str(TrialLoader.last_load_error).is_equal(TrialLoader.last_parse_error)
+	DirAccess.remove_absolute(broken)
+
+
+func test_a_trial_json_that_is_not_an_object_is_reported_as_such() -> void:
+	var packer := ZIPPacker.new()
+	var broken := "user://gdunit_array_fixture.drtrial"
+	assert_int(packer.open(broken)).is_equal(OK)
+	packer.start_file("trial.json")
+	packer.write_file("[1, 2, 3]".to_utf8_buffer())
+	packer.close_file()
+	packer.close()
+
+	assert_bool(TrialLoader.load_trial(ProjectSettings.globalize_path(broken))).is_false()
+	assert_str(TrialLoader.last_parse_error).contains("not an object")
+	DirAccess.remove_absolute(broken)

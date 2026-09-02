@@ -58,7 +58,7 @@ nav {
   width: 5px;
   height: 62%;
   background: var(--primary-light);
-  box-shadow: 0 0 8px rgba(var(--primary-rgb), 0.5); /* unslop-ignore: deliberate sparing neon accent, Class Trial theme */
+  box-shadow: 0 0 8px rgba(var(--primary-rgb), 0.5); /* Class Trial neon accent; used sparingly, on the accent bar only */
 }
 
 .nav-item .icon {

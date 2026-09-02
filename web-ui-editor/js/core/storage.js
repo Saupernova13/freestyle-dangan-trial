@@ -20,6 +20,7 @@ import {
 } from './opfs.js';
 import { checkCharacterFormatVersion, validateCharacterData } from './characterSchema.js';
 import { ensureAllTypeSpecific } from './minigameDefaults.js';
+import { reindexOrder } from './listOps.js';
 import { safeZipPathParts, zipRootPrefix } from './zipPaths.js';
 import { updateExportButtonState } from '../export.js';
 import { appSettings } from '../settings.js';
@@ -131,6 +132,12 @@ async function loadTrialIntoState() {
       });
     }
     state.scriptLines = data.script && data.script.lines ? data.script.lines : [];
+    // Numbered here, once, for the same reason the minigame lists are. The
+    // engine plays lines in `order` only when every line has one, so a legacy
+    // trial loaded and saved unchanged would otherwise keep a partial order
+    // the engine has to ignore. The editor already renumbers on every
+    // reorder; this covers what it loads.
+    reindexOrder(state.scriptLines);
 
     if (Array.isArray(data.minigames)) {
       // Seeded once, here, rather than by whichever editor happened to render

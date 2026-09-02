@@ -71,7 +71,6 @@ header h1::before {
   color: var(--error);
 }
 
-.theme-toggle,
 .settings-toggle {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-secondary);
@@ -87,7 +86,6 @@ header h1::before {
   height: 2.25rem;
 }
 
-.theme-toggle:hover,
 .settings-toggle:hover {
   background: var(--primary);
   border-color: var(--primary);

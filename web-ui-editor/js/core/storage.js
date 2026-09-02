@@ -49,10 +49,25 @@ async function loadTrialIntoState() {
     return;
   }
 
+  // Only the read and the parse. The try used to span sixty lines - the asset
+  // loaders, two alertDialog awaits and DOM writes - and its catch reported
+  // "trial.json could not be read" for every one of them, then reset the
+  // editor to empty while leaving dirHandle set and pointing at a
+  // fully-populated file. A NotAllowedError from the Characters/ scan, a
+  // TypeError from a loader bug, a missing #trialNameInput: all of them
+  // accused a trial.json that had parsed perfectly, one keystroke from an
+  // autosave overwriting it.
+  let data;
   try {
     const file = await state.dirHandle.getFileHandle('trial.json').then((fh) => fh.getFile());
-    const data = JSON.parse(await file.text());
+    data = JSON.parse(await file.text());
+  } catch (error) {
+    await reportUnreadableTrialJson(error);
+    resetEmptyTrial();
+    return;
+  }
 
+  try {
     // Warn but never block: the author needs the editor to fix a broken trial.
     const versionCheck = checkFormatVersion(data);
     if (versionCheck.message) {
@@ -182,20 +197,64 @@ async function loadTrialIntoState() {
       state.truthBullets = [];
     }
   } catch (error) {
-    console.error('Failed to parse trial.json:', error);
-    // Warn first: auto-saving over an empty editor would destroy the file.
+    // trial.json parsed, so the trial is not empty and must not be reset.
+    // Whatever failed here cost its own assets - character sprites, minigame
+    // audio, bullet images - and the trial opens without them.
+    console.error('Failed while loading trial assets:', error);
     await alertDialog({
-      title: 'Could not read trial.json',
+      title: 'Some of this trial could not be loaded',
       type: 'warning',
       message:
-        'trial.json could not be read (' +
+        'trial.json was read successfully, but loading its assets failed (' +
         error.message +
         ').\n\n' +
-        'The editor will open empty. If this trial matters to you, back it up ' +
-        'before making changes, since saving will overwrite trial.json.',
+        'The trial is open and your script is intact. Sprites, audio or bullet ' +
+        'images may be missing until the cause is fixed.',
     });
-    resetEmptyTrial();
   }
+}
+
+// A timestamped copy of the bytes that would not parse, written beside the
+// original. resetEmptyTrial leaves dirHandle set, so the next keystroke
+// autosaves an empty trial over the file - the warning said so, but a warning
+// is not a backup. Returns the filename written, or null.
+async function backUpUnreadableTrialJson() {
+  try {
+    const original = await (await state.dirHandle.getFileHandle('trial.json')).getFile();
+    const bytes = await original.arrayBuffer();
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const name = 'trial.json.corrupt-' + stamp;
+    const handle = await state.dirHandle.getFileHandle(name, { create: true });
+    const writable = await handle.createWritable();
+    await writable.write(bytes);
+    await writable.close();
+    return name;
+  } catch (err) {
+    // A read-only folder cannot take the backup - but it cannot take the
+    // autosave either, so nothing is at risk in that case.
+    console.warn('Could not back up the unreadable trial.json:', err);
+    return null;
+  }
+}
+
+async function reportUnreadableTrialJson(error) {
+  console.error('Failed to parse trial.json:', error);
+  const backup = await backUpUnreadableTrialJson();
+  await alertDialog({
+    title: 'Could not read trial.json',
+    type: 'warning',
+    message:
+      'trial.json could not be read (' +
+      error.message +
+      ').\n\n' +
+      (backup
+        ? 'The original bytes were copied to ' +
+          backup +
+          ' so nothing is lost.\n\n'
+        : 'The original could NOT be backed up, so back it up yourself before ' +
+          'making changes.\n\n') +
+      'The editor will open empty, and saving will overwrite trial.json.',
+  });
 }
 
 export async function openTrialFromHandle(dirHandle) {

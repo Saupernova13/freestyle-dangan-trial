@@ -3,6 +3,11 @@ extends RefCounted
 ## One trial.json script line, parsed once at load into typed fields. Every
 ## key access and default lives here, so consumers never touch raw
 ## Dictionaries. The JSON shape is schema/trial.schema.json.
+##
+## Every field is read through JsonRead, because a `"key": null` arrives as a
+## Variant null and str(null) gives "<null>". typeSpecific and the debate
+## panels read the same way, so a null or wrong-typed value degrades to the
+## same default wherever it appears.
 
 const TYPE_SPEAKING := "speaking"
 const TYPE_NARRATOR := "narrator"
@@ -27,34 +32,21 @@ var highlights: Array = []
 var dialogue_box_style: Dictionary = {}
 
 
-## A `"key": null` arrives as a Variant null, and str(null) gives "<null>".
-static func _s(v: Variant) -> String:
-	return v if v is String else ""
-
-
-static func _d(v: Variant) -> Dictionary:
-	return v if v is Dictionary else {}
-
-
-static func _i(v: Variant, fallback: int) -> int:
-	return int(v) if (v is int or v is float) else fallback
-
-
 static func from_dict(d: Dictionary) -> ScriptLine:
 	var line := ScriptLine.new()
-	line.id = _s(d.get("id"))
-	line.order = _i(d.get("order"), 0)
-	line.type = _s(d.get("type"))
-	line.character_id = _s(d.get("characterId"))
-	line.dialogue = _s(d.get("dialogue"))
-	line.text = _s(d.get("text"))
-	line.audio_file = _s(d.get("audioFile"))
-	line.minigame_id = _s(d.get("minigameId"))
-	line.sprite_index = maxi(_i(d.get("spriteIndex"), 1), 1)
-	line.camera_motion = _d(d.get("cameraMotion"))
-	line.special_effects = _d(d.get("specialEffects"))
-	line.highlights = d.get("highlights") if d.get("highlights") is Array else []
-	line.dialogue_box_style = _d(d.get("dialogueBoxStyle"))
+	line.id = JsonRead.str_of(d.get("id"))
+	line.order = JsonRead.int_of(d.get("order"), 0)
+	line.type = JsonRead.str_of(d.get("type"))
+	line.character_id = JsonRead.str_of(d.get("characterId"))
+	line.dialogue = JsonRead.str_of(d.get("dialogue"))
+	line.text = JsonRead.str_of(d.get("text"))
+	line.audio_file = JsonRead.str_of(d.get("audioFile"))
+	line.minigame_id = JsonRead.str_of(d.get("minigameId"))
+	line.sprite_index = maxi(JsonRead.int_of(d.get("spriteIndex"), 1), 1)
+	line.camera_motion = JsonRead.dict_of(d.get("cameraMotion"))
+	line.special_effects = JsonRead.dict_of(d.get("specialEffects"))
+	line.highlights = JsonRead.array_of(d.get("highlights"))
+	line.dialogue_box_style = JsonRead.dict_of(d.get("dialogueBoxStyle"))
 	return line
 
 

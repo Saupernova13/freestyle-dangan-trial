@@ -136,15 +136,19 @@ func _apply_setup():
 	line_data = data
 	# Defaults to false to match the editor, which sets isShootable exactly when
 	# a line is given an answerBulletId and always writes the field.
-	is_shootable = data.get("isShootable", false)
-	var raw_bullet_id = data.get("answerBulletId", "")
-	answer_bullet_id = raw_bullet_id if raw_bullet_id != null else ""
-	use_negative_bullet = data.get("useNegativeBullet", false)
-	movement_direction = data.get("textMovementDirection", "left_to_right")
-	character_id = data.get("characterId", "")
-	text_effect = data.get("textEffect", "normal")
-	text_font = data.get("textFont", "default")
-	is_white_noise = data.get("isWhiteNoise", false)
+	#
+	# Every field is coerced: a number where a String belongs used to pass the
+	# `!= null` guard and then fail the typed assignment, aborting _apply_setup()
+	# partway. The panel still scrolled and still answered check_hit(), so a
+	# shot at a blank panel was scored against a bullet id that was never set.
+	is_shootable = JsonRead.bool_of(data.get("isShootable"))
+	answer_bullet_id = JsonRead.str_of(data.get("answerBulletId"))
+	use_negative_bullet = JsonRead.bool_of(data.get("useNegativeBullet"))
+	movement_direction = JsonRead.str_of(data.get("textMovementDirection"), "left_to_right")
+	character_id = JsonRead.str_of(data.get("characterId"))
+	text_effect = JsonRead.str_of(data.get("textEffect"), "normal")
+	text_font = JsonRead.str_of(data.get("textFont"), "default")
+	is_white_noise = JsonRead.bool_of(data.get("isWhiteNoise"))
 
 	_roll_variance()
 
@@ -265,12 +269,9 @@ func _rebuild_text():
 		return
 	_gather_shadows()
 
-	var raw_begin = line_data.get("sentenceBeginning", "")
-	var sentence_begin: String = raw_begin if raw_begin != null else ""
-	var raw_target = line_data.get("target", "")
-	var target: String = raw_target if raw_target != null else ""
-	var raw_end = line_data.get("sentenceEnd", "")
-	var sentence_end: String = raw_end if raw_end != null else ""
+	var sentence_begin := JsonRead.str_of(line_data.get("sentenceBeginning"))
+	var target := JsonRead.str_of(line_data.get("target"))
+	var sentence_end := JsonRead.str_of(line_data.get("sentenceEnd"))
 
 	var has_weak = not target.is_empty()
 

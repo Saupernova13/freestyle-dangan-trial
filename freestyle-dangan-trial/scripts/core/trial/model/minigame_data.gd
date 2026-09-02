@@ -35,8 +35,45 @@ static func from_dict(d: Dictionary) -> MinigameData:
 	mg.difficulty = _parse_difficulty(d.get("difficulty"), mg.game_id)
 	mg.time_limit = _parse_time_limit(d.get("timeLimit"), mg.game_id)
 	mg.fail_comment = d.get("failComment") if d.get("failComment") is String else ""
-	mg.type_specific = d.get("typeSpecific") if d.get("typeSpecific") is Dictionary else {}
+	mg.type_specific = JsonRead.dict_of(d.get("typeSpecific"))
 	return mg
+
+
+# ---------------------------------------------------------------------------
+# typeSpecific accessors
+#
+# The shape belongs to each minigame, so it is not parsed here - but it is
+# still author-written JSON, and reading it raw was the one place the model
+# layer's coercion discipline stopped. `type_specific.get("answerKey", "")`
+# returns the default only when the key is ABSENT; a present `"answerKey":
+# null` returns null and `.to_upper()` on it aborts initialize() partway,
+# leaving MinigameRunner to call start() on a half-built minigame.
+#
+# Read every field through these instead. Warnings name the minigame, so an
+# author who sees one knows which entry to fix.
+# ---------------------------------------------------------------------------
+
+
+func ts_string(key: String, fallback: String = "") -> String:
+	return JsonRead.str_of(type_specific.get(key), fallback)
+
+
+func ts_bool(key: String, fallback: bool = false) -> bool:
+	return JsonRead.bool_of(type_specific.get(key), fallback)
+
+
+## Non-object entries are dropped with a warning rather than carried into a
+## `.get()` that a String cannot answer.
+func ts_dicts(key: String) -> Array[Dictionary]:
+	return JsonRead.dicts_of(type_specific.get(key), _field(key))
+
+
+func ts_strings(key: String) -> Array[String]:
+	return JsonRead.strings_of(type_specific.get(key), _field(key))
+
+
+func _field(key: String) -> String:
+	return "minigame %s: %s" % [game_id if not game_id.is_empty() else "?", key]
 
 
 ## Type-checked and range-checked. A negative limit failed both of

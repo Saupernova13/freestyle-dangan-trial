@@ -4,11 +4,11 @@ extends MinigameBase
 ## be held, so cleanup() releases it by name rather than by state.
 const SLOW_TIME_KEY := &"nonstop_debate_slow_time"
 
-var dialogue_lines: Array = []
-var selected_bullets: Array = []
+var dialogue_lines: Array[Dictionary] = []
+var selected_bullets: Array[String] = []
 
-var _main_lines: Array = []
-var _white_noise_lines: Array = []
+var _main_lines: Array[Dictionary] = []
+var _white_noise_lines: Array[Dictionary] = []
 var _main_line_index: int = 0
 var _current_main_panel: DebateTextPanel = null
 
@@ -31,9 +31,8 @@ var _ambience: CanvasLayer = null
 
 func initialize(data: MinigameData):
 	super.initialize(data)
-	var type_specific := data.type_specific
-	dialogue_lines = type_specific.get("dialogueLines", [])
-	selected_bullets = type_specific.get("selectedBullets", [])
+	dialogue_lines = data.ts_dicts("dialogueLines")
+	selected_bullets = data.ts_strings("selectedBullets")
 
 	_main_spawn_interval = MinigameConfig.get_spawn_interval("nonstop_debate", difficulty)
 	_split_dialogue_lines()
@@ -196,15 +195,15 @@ func _spawn_main_line():
 	if _main_line_index >= _main_lines.size():
 		_main_line_index = 0
 
-	var line_data = _main_lines[_main_line_index]
+	var line_data := _main_lines[_main_line_index]
 	_main_line_index += 1
 
 	if _turn_label:
 		_turn_label.text = "TURN %d" % _main_line_index
 
-	var voice_file = line_data.get("voiceLineFile", "")
+	var voice_file := JsonRead.str_of(line_data.get("voiceLineFile"))
 	var audio_duration := -1.0
-	if voice_file is String and not voice_file.is_empty():
+	if not voice_file.is_empty():
 		audio_duration = AudioManager.get_voice_line_duration(voice_file)
 	if audio_duration < 0.0:
 		audio_duration = randf_range(4.0, 6.0)
@@ -222,7 +221,7 @@ func _spawn_main_line():
 	if not panel.character_id.is_empty():
 		focus_camera_on_character(panel.character_id)
 
-	if voice_file is String and not voice_file.is_empty():
+	if not voice_file.is_empty():
 		AudioManager.play_voice_line(voice_file)
 
 func _spawn_noise_line():
@@ -230,7 +229,7 @@ func _spawn_noise_line():
 		return
 
 	var idx = randi() % _white_noise_lines.size()
-	var line_data = _white_noise_lines[idx]
+	var line_data := _white_noise_lines[idx]
 
 	var panel: DebateTextPanel = ResourceRegistry.instantiate("debate_text_panel")
 	panel.setup(line_data, get_difficulty_multiplier())
@@ -391,10 +390,9 @@ func _on_wrong_hit(panel: DebateTextPanel):
 	InfluenceGauge.take_damage(difficulty)
 
 	# TrialRoomManager shows the wrong-answer dialog and replays the minigame.
-	var wrong_comment = panel.line_data.get("userWrongAnswerComment", "")
 	_finish(false, {
 		"reason": "wrong_answer",
-		"failComment": wrong_comment if wrong_comment is String else "",
+		"failComment": JsonRead.str_of(panel.line_data.get("userWrongAnswerComment")),
 	})
 
 func _on_panel_exited(panel: DebateTextPanel):
@@ -415,9 +413,7 @@ func _on_time_expired():
 	var fail_comment := ""
 	for panel in _panels_on_screen:
 		if is_instance_valid(panel) and panel.is_shootable:
-			var comment = panel.line_data.get("userFailedComment", "")
-			if comment is String:
-				fail_comment = comment
+			fail_comment = JsonRead.str_of(panel.line_data.get("userFailedComment"))
 			break
 	_finish(false, {"reason": "time_expired", "failComment": fail_comment})
 

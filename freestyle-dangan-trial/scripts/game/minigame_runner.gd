@@ -89,7 +89,7 @@ func _start_attempt(minigame_data: MinigameData) -> void:
 
 		if success:
 			_restore_conversation_ui()
-			ScriptDirector.on_minigame_finished(true)
+			ScriptDirector.on_minigame_finished()
 		elif _attempts >= MAX_ATTEMPTS:
 			_give_up(minigame_data.game_type)
 		else:
@@ -127,7 +127,7 @@ func _skip_unplayable(minigame_data: MinigameData, errors: Array[String]) -> voi
 		true,
 		6.0
 	)
-	ScriptDirector.on_minigame_finished(true)
+	ScriptDirector.on_minigame_finished()
 
 ## Returns null on any of the three ways this can fail; each one logs which.
 func _instantiate(game_type: String) -> MinigameBase:
@@ -152,7 +152,7 @@ func _abort(game_type: String) -> void:
 	MobileToast.show_message(
 		get_tree().root, "Minigame '%s' failed to load; skipping." % game_type, true, 5.0
 	)
-	ScriptDirector.on_minigame_finished(true)
+	ScriptDirector.on_minigame_finished()
 
 ## Losing the trial is a worse outcome than being unable to leave it: the
 ## game-over screen at least offers retry and return-to-menu, and an unwinnable
@@ -166,7 +166,7 @@ func _give_up(game_type: String) -> void:
 	InfluenceGauge.take_damage_raw(InfluenceGauge.current_influence)
 
 ## Told to the player, not only to the log. This used to pause for a second and
-## call on_minigame_finished(true), so the trial advanced as though the player
+## call on_minigame_finished(), so the trial advanced as though the player
 ## had won - and Log.warn goes to push_warning, which a player on Android never
 ## sees. The three stub minigames already announce themselves through this
 ## overlay; a type this build cannot play deserves the same honesty.
@@ -192,7 +192,7 @@ func _skip_unsupported_type(minigame: MinigameData) -> void:
 		)
 		await get_tree().create_timer(UNSUPPORTED_NOTICE_SECONDS).timeout
 		overlay.queue_free()
-	ScriptDirector.on_minigame_finished(true)
+	ScriptDirector.on_minigame_finished()
 
 func _hide_conversation_ui() -> void:
 	# The roaming text belongs to the dialogue presentation, so it hides too.

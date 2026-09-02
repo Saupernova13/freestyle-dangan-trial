@@ -4,12 +4,12 @@ extends CanvasLayer
 ## scenes/minigames/break_shatter.tscn; this script captures the screenshot and
 ## starts the animation.
 
-signal sequence_finished
-
 @onready var _frozen: TextureRect = %FrozenFrame
 @onready var _anim: AnimationPlayer = %AnimationPlayer
 
 ## impact_uv is the refuted panel's screen UV; cracks radiate from it.
+## Awaitable: it returns when the sequence has played, which is how
+## nonstop_debate sequences the evidence card after it.
 func play_break(impact_uv: Vector2 = Vector2(0.5, 0.5)):
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
@@ -21,5 +21,4 @@ func play_break(impact_uv: Vector2 = Vector2(0.5, 0.5)):
 	if _anim and _anim.has_animation("break_sequence"):
 		_anim.play("break_sequence")
 		await _anim.animation_finished
-	sequence_finished.emit()
 	queue_free()

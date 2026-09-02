@@ -304,18 +304,21 @@ func _fire_bullet_at_panel(panel: DebateTextPanel, click_pos: Vector2):
 
 	# A WeakRef, because cleanup() can free the panel before the shot lands.
 	var panel_ref = weakref(panel)
-	if is_correct:
-		projectile.hit_target.connect(func():
-			var p = panel_ref.get_ref()
-			if p and is_instance_valid(p):
-				_on_correct_hit(p)
-		)
-	else:
-		projectile.hit_target.connect(func():
-			var p = panel_ref.get_ref()
-			if p and is_instance_valid(p):
-				_on_wrong_hit(p)
-		)
+	var resolve := func() -> void:
+		var p = panel_ref.get_ref()
+		if not (p and is_instance_valid(p)):
+			return
+		if is_correct:
+			_on_correct_hit(p)
+		else:
+			_on_wrong_hit(p)
+
+	projectile.hit_target.connect(resolve)
+	# Panels scroll, so a shot fired at one near the edge can leave the screen
+	# before it arrives. Nothing listened to `missed`, so that shot resolved to
+	# nothing at all: a correct answer scored as neither right nor wrong, with
+	# the projectile freeing itself silently.
+	projectile.missed.connect(resolve)
 
 func _on_correct_hit(panel: DebateTextPanel):
 	_solved = true

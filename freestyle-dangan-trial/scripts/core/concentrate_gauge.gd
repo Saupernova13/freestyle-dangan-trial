@@ -1,6 +1,10 @@
 extends Node
 
 signal concentrate_changed(current: float, maximum: float)
+## No production listener: nonstop_debate reads drain()'s bool return instead.
+## Kept because test_gauges pins the one-shot emission - holding slow-time at
+## zero used to re-emit it every frame, and a future listener would inherit
+## that.
 signal concentrate_empty
 
 var max_concentrate: float = 100.0

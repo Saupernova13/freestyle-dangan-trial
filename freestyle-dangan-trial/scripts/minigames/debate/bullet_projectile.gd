@@ -4,6 +4,9 @@ extends Control
 ## scenes/minigames/bullet_projectile.tscn. This script does flight, the
 ## trail, and hit detection.
 
+## Both resolve the shot. The projectile decides nothing: the judgement was
+## made when the player pulled the trigger, so whichever of these fires, the
+## caller has to act on it.
 signal hit_target
 signal missed
 

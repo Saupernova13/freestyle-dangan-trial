@@ -1,8 +1,9 @@
 extends Node
 ## Centralized input detection, emitting semantic signals for the rest of the
-## game. Anything the whole game reacts to belongs here as a signal rather than
-## as another _input() handler; input scoped to one screen or minigame stays
-## local (see mass_panic_debate.gd).
+## game. A semantic action belongs here as a signal rather than as another
+## _input() handler, so its bindings live in one place and every device path
+## ends at the same call. Input that is not an action of its own - a scene's
+## own gui_input on a control it owns - stays local.
 
 # Aim / shoot / focus (minigame inputs)
 signal shoot_pressed(position: Vector2)
@@ -17,6 +18,14 @@ signal bullet_prev
 # useNegativeBullet can only be answered with lie mode on, so without a binding
 # the editor could author content no player could ever clear.
 signal lie_mode_toggle_requested
+
+# Row / list focus. -1 is up, +1 is down.
+#
+# Emitted from the ui_up/ui_down actions rather than from keycodes, so the
+# d-pad and stick bindings come with them. mass_panic_debate read KEY_UP and
+# KEY_DOWN in its own _input(), which left its touch path and its keyboard
+# path as two implementations of one action, neither reachable by a gamepad.
+signal focus_step_requested(direction: int)
 
 # Dialogue / script flow
 signal advance_pressed                # SPACE / ENTER / center-tap on dialogue
@@ -34,6 +43,7 @@ func _ready():
 
 func _input(event):
 	_handle_motion(event)
+	_handle_navigation(event)
 	_handle_keyboard(event)
 	_handle_mouse_buttons(event)
 	_handle_touch(event)
@@ -45,6 +55,15 @@ func _handle_motion(event: InputEvent) -> void:
 	if event is InputEventMouseMotion or event is InputEventScreenDrag:
 		cursor_position = event.position
 		aim_moved.emit(cursor_position)
+
+## The event is not consumed: on a screen with focusable controls, ui_up and
+## ui_down still have to reach the GUI stage and move focus.
+func _handle_navigation(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up"):
+		focus_step_requested.emit(-1)
+	elif event.is_action_pressed("ui_down"):
+		focus_step_requested.emit(1)
+
 
 func _handle_keyboard(event: InputEvent) -> void:
 	if not (event is InputEventKey):

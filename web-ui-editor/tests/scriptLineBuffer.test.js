@@ -11,7 +11,7 @@ function lineWithEverything() {
     type: 'speaking',
     dialogue: 'It was you.',
     spriteIndex: 2,
-    highlights: [{ start: 0, end: 2, color: '#FFFF00' }],
+    highlights: [{ startChar: 0, endChar: 2, color: '#FFFF00' }],
     cameraMotion: { type: 'zoom_in', duration: 1.5, easing: 'ease-in-out' },
     specialEffects: { effects: [{ type: 'shake', intensity: 0.5 }] },
     dialogueBoxStyle: { style: 'slant_left', borderColor: '#FF0000', bgOpacity: 0.9 },

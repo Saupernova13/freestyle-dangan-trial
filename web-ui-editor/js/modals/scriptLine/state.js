@@ -2,18 +2,15 @@
 //
 // Only one line is edited at a time, so a single `sl` object serves every tab.
 // scriptLineModal.js resets it on open and close; the tabs mutate it directly.
+import { DEFAULT_CAMERA_MOTION, DEFAULT_DIALOGUE_BOX_STYLE } from '../../core/scriptLineFields.js';
 import { state } from '../../core/state.js';
 
 import { setHtml } from '../../ui/dom.js';
 export const AUDIO_PREVIEW_KEY = 'script-line-modal';
 export const DEFAULT_HIGHLIGHT_COLOR = '#FFFF00';
-export const DEFAULT_CAMERA_MOTION = { type: 'none', duration: 1.0, easing: 'ease-in-out' };
-export const DEFAULT_DIALOGUE_BOX_STYLE = {
-  style: 'default',
-  borderColor: '#FFFFFF',
-  bgOpacity: 0.9,
-  borderThickness: 2,
-};
+// Re-exported so the tabs keep importing them from here; they live in core so
+// the badge predicates that share them stay DOM-free.
+export { DEFAULT_CAMERA_MOTION, DEFAULT_DIALOGUE_BOX_STYLE };
 export const COLOR_REGEX = /^#[0-9a-fA-F]{6}$/i;
 
 export const sl = {

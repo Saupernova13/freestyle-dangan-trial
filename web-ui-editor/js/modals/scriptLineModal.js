@@ -10,6 +10,7 @@ import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import { appSettings } from '../settings.js';
 import { showToast } from '../ui/dialogs.js';
 import { focusFirstField } from '../ui/modalBehaviors.js';
+import { hasCameraMotion, hasCustomBoxStyle } from '../core/scriptLineFields.js';
 import { normalizeHighlights, showLoader } from '../utils.js';
 import { closeModal } from './modalCoordinator.js';
 import { AUDIO_PREVIEW_KEY, COLOR_REGEX, activeLine, resetFields, sl } from './scriptLine/state.js';
@@ -208,16 +209,25 @@ export async function saveScriptLineAdvanced() {
 
     // Cloned on the way out as well as in, so the buffer never aliases the
     // line in either direction and a later tab edit cannot reach a saved line.
+    //
+    // Defaults are dropped rather than written: assigning unconditionally made
+    // opening the modal and pressing Save enough to paint a "Camera motion"
+    // badge on a line whose camera type is 'none', and put the same dead
+    // object into trial.json.
     if (line.type === 'speaking') {
       line.spriteIndex = sl.fields.spriteIndex;
-      line.cameraMotion = structuredClone(sl.fields.cameraMotion);
+      const motion = structuredClone(sl.fields.cameraMotion);
+      if (hasCameraMotion({ cameraMotion: motion })) line.cameraMotion = motion;
+      else delete line.cameraMotion;
     }
 
     // Normalized against the line's current text, so no stale or overlapping
     // range reaches trial.json.
     line.highlights = normalizeHighlights(sl.fields.highlights, dialogue.length);
     line.specialEffects = structuredClone(sl.fields.specialEffects);
-    line.dialogueBoxStyle = structuredClone(sl.fields.dialogueBoxStyle);
+    const boxStyle = structuredClone(sl.fields.dialogueBoxStyle);
+    if (hasCustomBoxStyle({ dialogueBoxStyle: boxStyle })) line.dialogueBoxStyle = boxStyle;
+    else delete line.dialogueBoxStyle;
 
     if (sl.fields.audioBlob) {
       if (!state.dirHandle) {

@@ -35,7 +35,7 @@ header h1::before {
   height: 1.4rem;
   background: var(--primary);
   transform: skewX(-12deg);
-  box-shadow: 0 0 8px rgba(var(--primary-rgb), 0.45); /* unslop-ignore: deliberate sparing neon accent, Class Trial theme */
+  box-shadow: 0 0 8px rgba(var(--primary-rgb), 0.45); /* Class Trial neon accent; used sparingly, on the accent bar only */
 }
 
 .header-actions {

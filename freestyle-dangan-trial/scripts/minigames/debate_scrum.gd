@@ -20,6 +20,20 @@ func initialize(data: MinigameData):
 	var type_specific := data.type_specific
 	arguments = type_specific.get("arguments", [])
 
+func validate_data() -> Array[String]:
+	# A round with no defenseKeywords marks every button wrong, so it can never
+	# be won - _finish(false) then replays it, identically, forever.
+	var errors: Array[String] = []
+	for i in range(arguments.size()):
+		var arg = arguments[i]
+		if not arg is Dictionary:
+			errors.append("argument %d is not an object" % (i + 1))
+			continue
+		var def_keywords = arg.get("defenseKeywords", [])
+		if not def_keywords is Array or def_keywords.is_empty():
+			errors.append("argument %d has no defenseKeywords, so it cannot be won" % (i + 1))
+	return errors
+
 func start():
 	super.start()
 	if arguments.is_empty():
@@ -92,14 +106,8 @@ func _show_argument(index: int):
 	if opp_audio:
 		AudioManager.play_voice_line(opp_audio)
 
-	var opp_keywords = arg.get("oppositionKeywords", [])
 	var def_keywords = arg.get("defenseKeywords", [])
-	var all_keywords = def_keywords.duplicate()
-
-	for kw in opp_keywords:
-		if kw not in all_keywords:
-			all_keywords.append(kw)
-	all_keywords.shuffle()
+	var all_keywords = _deal_keywords(def_keywords, arg.get("oppositionKeywords", []))
 
 	for i in range(_defense_buttons.size()):
 		var btn = _defense_buttons[i]
@@ -117,6 +125,48 @@ func _show_argument(index: int):
 			btn.visible = false
 
 	_update_score_display()
+
+## The buttons to show, correct answers first-class.
+##
+## The old version concatenated both lists, shuffled, then took the first five
+## - so with more than five candidates the slice discarded entries at random,
+## and any of them could be a correct one. Three defense and four opposition
+## keywords is seven candidates for five buttons, and some shuffles hid every
+## correct answer, forcing the player to click a wrong one. shuffle() re-rolls
+## each attempt, so it read as unexplained repeated failure at a round they had
+## answered as well as they could.
+##
+## Every defense keyword is seated first; the remainder is filled from the
+## opposition list, and only then is the chosen set shuffled.
+func _deal_keywords(def_keywords: Array, opp_keywords: Array) -> Array:
+	var button_count := _defense_buttons.size()
+	var chosen: Array = []
+	for kw in def_keywords:
+		if not chosen.has(kw):
+			chosen.append(kw)
+	if chosen.size() > button_count:
+		Log.warn(
+			"DebateScrum",
+			(
+				"Round has %d defense keywords but only %d buttons; %d cannot be shown"
+				% [chosen.size(), button_count, chosen.size() - button_count]
+			)
+		)
+		chosen.shuffle()
+		chosen.resize(button_count)
+
+	var decoys: Array = []
+	for kw in opp_keywords:
+		if not chosen.has(kw) and not decoys.has(kw):
+			decoys.append(kw)
+	decoys.shuffle()
+	for kw in decoys:
+		if chosen.size() >= button_count:
+			break
+		chosen.append(kw)
+
+	chosen.shuffle()
+	return chosen
 
 func _format_character_line(text: String, char_id: String) -> String:
 	if char_id.is_empty():

@@ -77,7 +77,7 @@ func _load_audio_from_file(file_path: String) -> AudioStream:
 		return null
 
 	var bytes = FileAccess.get_file_as_bytes(file_path)
-	var stream := AudioStreamLoader.from_bytes(bytes, file_path.get_extension())
+	var stream := AudioStreamLoader.from_bytes(bytes, file_path.get_extension(), file_path)
 
 	if stream:
 		if _audio_cache.size() >= _MAX_AUDIO_CACHE_SIZE:

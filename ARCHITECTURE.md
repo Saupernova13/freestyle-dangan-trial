@@ -111,12 +111,34 @@ sprite-texture cache. `TrialRoomManager` is a composition root that wires
 
 ### Adding a minigame
 
-1. Create `scripts/minigames/my_game.gd` extending `MinigameBase`
-   (implement `start()`, call `_finish(success, data)`).
-2. Register its script path in `MinigameRunner.MINIGAME_SCRIPTS` and any
-   scenes it needs in `ResourceRegistry.SCENES`.
-3. Add the matching editor UI in `web-ui-editor/js/views/minigames/` so the
-   game type can be authored (see the web UI README).
+A new `gameType` string is registered in seven places. None of them validates
+against another except the first two, so work down the list in order.
+
+1. **`schema/trial.schema.json`** — add it to the `gameType` enum. That enum is
+   a closed list, so a trial using an unlisted type fails schema validation
+   before anything else gets a chance to run. This is the "To change the
+   format" workflow above, and it comes first for the same reason.
+2. **`MinigameRunner.MINIGAME_SCRIPTS`** — the script path, keyed by
+   `gameType`. This table is normative: `TrialValidator` warns about a type
+   that is not in it, and `test_trial_manifest.gd` asserts it matches the
+   schema enum exactly, so step 1 without this one fails CI.
+3. **`scripts/minigames/my_game.gd`** — the `MinigameBase` subclass. Implement
+   `start()`, call `_finish(success, data)`, and override `validate_data()` if
+   empty or malformed authoring can make it unwinnable — `MinigameRunner`
+   skips a minigame that reports errors rather than replaying it to the
+   attempt cap.
+4. **`ResourceRegistry.SCENES`** — any scene it instantiates. A missing entry
+   is a `push_error` and then `add_child(null)`.
+5. **`web-ui-editor/js/views/minigames/`** and the label in
+   `js/core/constants.js` — the authoring UI (see the web UI README).
+
+Then the polish, none of which breaks anything if skipped:
+
+6. **`minigame_title_card.gd`** — `title_names` (without an entry the card
+   reads `REBUTTAL_SHOWDOWN`, since `to_upper()` keeps the underscores) and
+   `title_colors` (without one it falls back to grey).
+7. **`MinigameConfig.SPAWN_INTERVALS`** — only if the minigame spawns on a
+   timer; the fallback is 2.0s.
 
 ## Scene-owned UI
 

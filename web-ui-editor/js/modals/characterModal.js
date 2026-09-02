@@ -148,6 +148,17 @@ export function renderCharacterModal() {
 }
 
 export function closeCharModal() {
+  // Revoke only what the cast did not take. trySaveChar puts the very same
+  // sprite objects into state.cast, so after a save every blob: URL is still
+  // being rendered by the cast grid; after a cancel none of them are.
+  const kept = new Set(
+    (activeIdx !== null && state.cast[activeIdx] && state.cast[activeIdx].sprites) || []
+  );
+  charSprites.forEach((sprite) => {
+    if (!kept.has(sprite)) releaseSpriteUrl(sprite);
+  });
+  charSprites = [];
+
   setHtml(document.getElementById('modalroot'), '');
   activeIdx = null;
 }
@@ -275,10 +286,24 @@ export function renderCharSpritesTab() {
   `;
 }
 
+// Object URLs pin the whole file in memory until they are revoked. Sprite
+// uploads created one per file and never revoked any, so a bulk-import session
+// - 17 characters times up to 25 slots, re-imported a few times - held every
+// image the author had ever selected for the life of the page.
+//
+// Only URLs this modal created: a sprite loaded from disk carries a data: URL
+// from fileToDataUrl, which owns no resource.
+function releaseSpriteUrl(sprite) {
+  if (sprite && typeof sprite.dataURL === 'string' && sprite.dataURL.startsWith('blob:')) {
+    URL.revokeObjectURL(sprite.dataURL);
+  }
+}
+
 export function spriteUpload(e, idx) {
   const file = e.target.files[0];
   if (!file) return;
 
+  releaseSpriteUrl(charSprites[idx]);
   const url = URL.createObjectURL(file);
   charSprites[idx] = { dataURL: url, fname: file.name, blob: file };
   renderCharacterModal();
@@ -302,6 +327,7 @@ export function bulkImportSprites() {
     const slots = Math.max(charSprites.length, appSettings.maxSprites);
     const usable = files.slice(0, slots);
     usable.forEach((f, idx) => {
+      releaseSpriteUrl(charSprites[idx]);
       const url = URL.createObjectURL(f);
       charSprites[idx] = { dataURL: url, fname: f.name, blob: f };
     });

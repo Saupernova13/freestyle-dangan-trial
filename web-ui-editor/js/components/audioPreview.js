@@ -7,6 +7,14 @@ import { formatAudioTime } from '../utils.js';
 import { setHtml } from '../ui/dom.js';
 const players = {};
 
+// Safe to call twice: revoking clears the src, so the next call is a no-op.
+function releaseSrc(audio) {
+  if (audio.src) {
+    URL.revokeObjectURL(audio.src);
+    audio.removeAttribute('src');
+  }
+}
+
 function setPlayButton(entry, isPlaying) {
   const btn = entry.opts.buttonId && document.getElementById(entry.opts.buttonId);
   if (btn)
@@ -40,6 +48,11 @@ export async function toggleAudioPreview(key, opts) {
   if (existing && !existing.audio.paused) {
     existing.audio.pause();
     existing.audio.currentTime = 0;
+    // Revoked here too. Only onended and stopAudioPreview did it, so
+    // play -> pause -> play leaked the previous clip - and stopAudioPreview is
+    // called only by closeScriptLineModal, so the minigame editors' entries
+    // lived for the whole session.
+    releaseSrc(existing.audio);
     setPlayButton(existing, false);
     return;
   }
@@ -62,11 +75,15 @@ export async function toggleAudioPreview(key, opts) {
     entry = players[key] = { audio, opts };
     audio.onended = () => {
       setPlayButton(entry, false);
-      URL.revokeObjectURL(audio.src);
+      releaseSrc(audio);
     };
     audio.onerror = () => {
       setPlayButton(entry, false);
-      (entry.opts.onError || alert)('Audio playback error');
+      // A themed toast like every other failure here. The old fallback was a
+      // bare, unbound `alert` - blocking, unstyled, and `this`-less.
+      const message = 'Audio playback error';
+      if (entry.opts.onError) entry.opts.onError(message);
+      else showToast(message, { type: 'error' });
     };
     audio.ontimeupdate = () => updateSeekDisplay(entry);
     audio.onloadedmetadata = () => updateSeekDisplay(entry);
@@ -75,6 +92,8 @@ export async function toggleAudioPreview(key, opts) {
   }
 
   try {
+    // Replacing src without revoking leaks the clip it points at.
+    releaseSrc(entry.audio);
     entry.audio.src = URL.createObjectURL(blob);
     await entry.audio.play();
     setPlayButton(entry, true);
@@ -102,6 +121,6 @@ export function stopAudioPreview(key) {
   const entry = players[key];
   if (!entry) return;
   entry.audio.pause();
-  if (entry.audio.src) URL.revokeObjectURL(entry.audio.src);
+  releaseSrc(entry.audio);
   delete players[key];
 }

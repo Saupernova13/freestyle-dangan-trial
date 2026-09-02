@@ -1,7 +1,5 @@
 extends Node
 
-signal settings_changed
-
 const SAVE_PATH = "user://settings.cfg"
 
 # Bounds the UI Scale option, so it can't go off-screen or illegibly small.
@@ -145,7 +143,6 @@ func _apply_and_save():
 	if _suppress_save:
 		return
 	_apply_all()
-	settings_changed.emit()
 	_schedule_save()
 
 func _schedule_save() -> void:

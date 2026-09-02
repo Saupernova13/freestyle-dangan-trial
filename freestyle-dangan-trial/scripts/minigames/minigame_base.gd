@@ -4,7 +4,6 @@ extends Node
 ## connections, and the standard influence/timer/concentrate result paths.
 
 signal minigame_completed(success: bool, result_data: Dictionary)
-signal state_changed(new_state: State)
 
 ## LOADING was declared but no code could ever produce it, which is a false
 ## promise to anyone reading the lifecycle. MinigameRunner builds an instance
@@ -245,7 +244,6 @@ func _transition_to(new_state: State) -> void:
 	if state == new_state:
 		return
 	state = new_state
-	state_changed.emit(new_state)
 
 func get_difficulty_multiplier() -> float:
 	return MinigameConfig.get_difficulty_multiplier(difficulty)

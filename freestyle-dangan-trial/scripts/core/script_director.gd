@@ -18,9 +18,7 @@ signal line_started(line: ScriptLine)
 signal dialogue_displayed(character_id: String, text: String)
 signal narrator_displayed(text: String)
 signal minigame_requested(minigame: MinigameData)
-signal minigame_completed(success: bool)
 signal trial_ended
-signal state_changed(new_state: State)
 signal typewriter_skip_requested
 
 var current_state: State = State.IDLE
@@ -83,7 +81,6 @@ func start_trial():
 
 func _transition_to(new_state: State):
 	current_state = new_state
-	state_changed.emit(new_state)
 
 ## Skipping is iterative, not recursive. A skipped line used to advance by
 ## calling this from inside itself, so a run of unplayable lines recursed once
@@ -166,10 +163,12 @@ func on_minigame_started(minigame_node: Node):
 	_active_minigame = minigame_node
 	_transition_to(State.MINIGAME_ACTIVE)
 
-func on_minigame_finished(success: bool):
+## Takes no result. The director does not branch on success - MinigameRunner
+## owns the retry and skip paths - and it used to accept a `success` only to
+## re-emit it on a signal nothing listened to. Every caller passed `true`.
+func on_minigame_finished():
 	_active_minigame = null
 	_transition_to(State.MINIGAME_RESULT)
-	minigame_completed.emit(success)
 	# Long enough for the result card to be read.
 	await get_tree().create_timer(MinigameConfig.MINIGAME_RESULT_PAUSE).timeout
 	_transition_to(State.DIALOGUE)

@@ -9,6 +9,8 @@ var _is_executing: bool = false
 ## The web editor's camera tab -> handlers, filled by _register_motions().
 var _motions: Dictionary = {}
 
+## No production listener - motions are fire-and-forget - but it is the only
+## way to observe that one finished, and test_camera_director depends on it.
 signal motion_completed
 
 func _ready():

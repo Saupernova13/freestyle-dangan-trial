@@ -198,6 +198,10 @@
         "timeLimit": {
           "type": "number"
         },
+        "failComment": {
+          "description": "Shown on the result card when the player fails this minigame.",
+          "type": "string"
+        },
         "typeSpecific": {
           "description": "Per-gameType payload. Shapes are owned by each minigame implementation and its editor view; deliberately not constrained here.",
           "type": "object"

@@ -157,6 +157,8 @@ function validateMinigame(mg, n, issues) {
     issues.push(`Minigame ${n}: difficulty is not a string.`);
   if ('timeLimit' in mg && !isNumber(mg.timeLimit))
     issues.push(`Minigame ${n}: timeLimit is not a number.`);
+  if ('failComment' in mg && !isString(mg.failComment))
+    issues.push(`Minigame ${n}: failComment is not a string.`);
   if ('typeSpecific' in mg && !isObject(mg.typeSpecific))
     issues.push(`Minigame ${n}: typeSpecific is not an object.`);
 }

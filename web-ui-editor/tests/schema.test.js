@@ -302,6 +302,33 @@ const corpus = [
     false,
   ],
   [
+    // failComment is written by the editor, typed and used by the engine, and
+    // tested by the engine - and was absent from the normative schema, so the
+    // drift was permanently invisible to this cross-check.
+    'minigame with a failComment',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [
+        {
+          gameId: 'mg_1',
+          gameType: 'nonstop_debate',
+          failComment: 'Not quite. Look again at the timeline.',
+        },
+      ];
+      return t;
+    },
+    true,
+  ],
+  [
+    'minigame whose failComment is not a string',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [{ gameId: 'mg_1', gameType: 'nonstop_debate', failComment: 42 }];
+      return t;
+    },
+    false,
+  ],
+  [
     // No corpus line carried effects, so nothing exercised the shape the
     // editor actually writes - and both consumers of it tested `.length` on
     // the object, which is always undefined.

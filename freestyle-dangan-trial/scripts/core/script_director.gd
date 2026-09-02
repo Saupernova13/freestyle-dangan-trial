@@ -3,6 +3,13 @@ extends Node
 ## coordinates pause, settings and auto-skip. Reacts to InputManager's signals
 ## rather than running its own _input().
 
+## MINIGAME_LOADING and MINIGAME_RESULT are assigned and never compared
+## against, which reads like dead weight - but their job is to make the
+## WAITING_FOR_ADVANCE guards false. While the director sits in either one,
+## _on_advance_input returns early and _process skips both the hold-to-skip
+## and the auto-advance timer, so player input cannot step the script out from
+## under a minigame or its result card. A state can earn its place by not
+## matching.
 enum State {
 	IDLE,
 	DIALOGUE,

@@ -4,7 +4,6 @@ var _camera: Camera3D
 var _bench_camera: Node
 var _original_fov: float = 30.0
 var _original_position: Vector3
-var _is_executing: bool = false
 
 ## The web editor's camera tab -> handlers, filled by _register_motions().
 var _motions: Dictionary = {}
@@ -84,8 +83,6 @@ func execute_motion(motion_data: Dictionary, target_bench_index: int = -1):
 	var motion_type = motion_data.get("type", "none")
 	var duration = float(motion_data.get("duration", 1.0))
 	var easing_str = motion_data.get("easing", "ease-in-out")
-
-	_is_executing = true
 
 	var handler: Callable = _motions.get(motion_type, _finish_immediately)
 	handler.call(target_bench_index, duration, _parse_ease(easing_str), _parse_trans(easing_str))
@@ -260,7 +257,6 @@ func _execute_reset(_bench_index: int, duration: float, ease_type: Tween.EaseTyp
 	tween.finished.connect(_finish_motion)
 
 func _finish_motion():
-	_is_executing = false
 	motion_completed.emit()
 
 func _parse_ease(easing_str: String) -> Tween.EaseType:
@@ -281,5 +277,3 @@ func _parse_trans(easing_str: String) -> Tween.TransitionType:
 		return Tween.TRANS_LINEAR
 	return Tween.TRANS_CUBIC
 
-func is_executing() -> bool:
-	return _is_executing

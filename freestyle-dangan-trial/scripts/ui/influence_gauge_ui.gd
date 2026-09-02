@@ -8,7 +8,6 @@ extends CanvasLayer
 @export var color_mid: Color = Color(1.0, 0.4, 0.3, 1.0)
 @export var color_low: Color = Color(1.0, 0.1, 0.1, 1.0)
 
-@onready var bar_bg: ColorRect = %BarBG
 @onready var bar_fill: ColorRect = %BarFill
 @onready var bar_damage_flash: ColorRect = %BarDamageFlash
 @onready var _anim: AnimationPlayer = %AnimationPlayer

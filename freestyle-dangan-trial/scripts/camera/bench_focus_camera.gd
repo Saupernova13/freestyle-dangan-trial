@@ -34,8 +34,6 @@ var target_rotation: Quaternion = Quaternion.IDENTITY
 
 var mouse_button_pressed: bool = false
 var active_touch_index: int = -1
-var touch_start_time: float = 0.0
-var touch_moved: bool = false
 
 var hold_direction: int = 0  # -1 = left/next, 1 = right/previous, 0 = none
 var hold_start_time: float = 0.0
@@ -177,8 +175,6 @@ func _input(event):
 			if event.pressed and active_touch_index == -1:
 				active_touch_index = event.index
 				drag_start_position = event.position
-				touch_start_time = Time.get_ticks_msec() / 1000.0
-				touch_moved = false
 				is_dragging = true
 
 				# The outer thirds are the navigation zones.
@@ -208,7 +204,6 @@ func _input(event):
 			and not is_transitioning
 			and not _is_free_look_blocked()
 		):
-			touch_moved = true
 			# A real drag cancels the hold-to-repeat a nav-zone tap started.
 			if is_holding_touch and event.relative.length() > 10.0:
 				is_holding_touch = false

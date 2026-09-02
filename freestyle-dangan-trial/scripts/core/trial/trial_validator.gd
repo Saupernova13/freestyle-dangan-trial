@@ -72,14 +72,119 @@ static func validate(data: Dictionary) -> Array[String]:
 	if data.has("minigames") and not data.get("minigames") is Array:
 		errors.append("minigames is not an array")
 	elif data.get("minigames") is Array:
-		for mg in data["minigames"]:
-			if not mg is Dictionary or not mg.get("gameId") is String or not mg.get("gameType") is String:
-				errors.append("a minigame entry is missing gameId/gameType")
-				break
+		# Every bad entry, not the first. The old `break` meant an author with
+		# five malformed minigames fixed them one reload at a time, and the
+		# message named neither the index nor the gameId.
+		for i in range(data["minigames"].size()):
+			var mg = data["minigames"][i]
+			if not mg is Dictionary:
+				errors.append("minigame %d is not an object" % (i + 1))
+				continue
+			if not mg.get("gameId") is String:
+				errors.append("minigame %d has no gameId" % (i + 1))
+			if not mg.get("gameType") is String:
+				errors.append(
+					"minigame %d (%s) has no gameType" % [i + 1, str(mg.get("gameId", "?"))]
+				)
 		_warn_unknown_game_types(data["minigames"])
 
 	if data.has("truthBullets") and not data.get("truthBullets") is Array:
 		errors.append("truthBullets is not an array")
+	elif data.get("truthBullets") is Array:
+		# Element shape was unchecked, so an array of strings passed here,
+		# passed TrialManifest.from_dict, and reached
+		# TruthBulletManager.load_bullets - which emits it into a
+		# Dictionary-typed signal. Godot checks that per listener at dispatch,
+		# so the emitter survives and the listener silently never runs: the
+		# player sees a stale or blank bullet name, with no crash and nothing
+		# pointing at the trial file.
+		for i in range(data["truthBullets"].size()):
+			var bullet = data["truthBullets"][i]
+			if not bullet is Dictionary:
+				push_warning("truth bullet %d is not an object; it will not be selectable" % (i + 1))
+			elif not bullet.get("bulletId") is String:
+				push_warning("truth bullet %d has no bulletId; it cannot be matched" % (i + 1))
+
+	# Warned, never fatal. Any error here rejects the whole trial
+	# (trial_loader.gd:199), and a dangling reference degrades one line or one
+	# minigame rather than making the file unplayable - so failing on it would
+	# lock the author out of the editor's own broken output.
+	for message in _dangling_references(data):
+		push_warning(message)
+	return errors
+
+## Ids that name something the trial does not contain. Every dangling
+## reference used to degrade silently at runtime instead - a minigame line
+## warned and skipped, a bad character id gave a bench with no sprite and a
+## portrait from the previous speaker, and a bad bullet id made the minigame
+## unwinnable.
+##
+## Collected rather than stopping at the first, so an author sees the whole
+## list in one pass instead of one reload at a time.
+static func _dangling_references(data: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+
+	var minigame_ids := {}
+	for mg in data.get("minigames", []):
+		if mg is Dictionary and mg.get("gameId") is String:
+			minigame_ids[mg["gameId"]] = true
+
+	var bullet_ids := {}
+	for bullet in data.get("truthBullets", []):
+		if bullet is Dictionary and bullet.get("bulletId") is String:
+			bullet_ids[bullet["bulletId"]] = true
+
+	var character_ids := {}
+	for character_id in data.get("characters", []):
+		if character_id is String:
+			character_ids[character_id] = true
+
+	var script = data.get("script")
+	if script is Dictionary and script.get("lines") is Array:
+		for i in range(script["lines"].size()):
+			var line = script["lines"][i]
+			if not line is Dictionary:
+				continue
+			var line_type = line.get("type")
+			if line_type == ScriptLine.TYPE_MINIGAME:
+				var minigame_id = line.get("minigameId")
+				if minigame_id is String and not minigame_ids.has(minigame_id):
+					errors.append(
+						"script line %d references minigame '%s', which does not exist"
+						% [i + 1, minigame_id]
+					)
+			elif line_type == ScriptLine.TYPE_SPEAKING:
+				var character_id = line.get("characterId")
+				if character_id is String and not character_id.is_empty():
+					if not character_ids.has(character_id):
+						errors.append(
+							"script line %d references character '%s', who is not in the cast"
+							% [i + 1, character_id]
+						)
+
+	for mg in data.get("minigames", []):
+		if not mg is Dictionary:
+			continue
+		var label = str(mg.get("gameId", "?"))
+		var type_specific = mg.get("typeSpecific")
+		if not type_specific is Dictionary:
+			continue
+		for bullet_id in type_specific.get("selectedBullets", []):
+			if bullet_id is String and not bullet_ids.has(bullet_id):
+				errors.append(
+					"minigame '%s' selects truth bullet '%s', which does not exist"
+					% [label, bullet_id]
+				)
+		for line in type_specific.get("dialogueLines", []):
+			if not line is Dictionary:
+				continue
+			var answer_id = line.get("answerBulletId")
+			if answer_id is String and not answer_id.is_empty() and not bullet_ids.has(answer_id):
+				errors.append(
+					"minigame '%s' answers with truth bullet '%s', which does not exist"
+					% [label, answer_id]
+				)
+
 	return errors
 
 ## A warning, not an error: an unknown type is skipped at runtime with a notice

@@ -10,10 +10,15 @@ const DRAIN_RATE: float = 30.0
 const REFILL_RATE: float = 5.0
 
 func drain(delta: float) -> bool:
+	var was_above_zero := current_concentrate > 0.0
 	current_concentrate -= DRAIN_RATE * delta
 	if current_concentrate <= 0.0:
 		current_concentrate = 0.0
-		concentrate_empty.emit()
+		# On the transition only, matching InfluenceGauge. Holding slow-time at
+		# zero re-emitted this every frame; harmless today because nothing
+		# listens, which is exactly why it would not stay harmless.
+		if was_above_zero:
+			concentrate_empty.emit()
 		concentrate_changed.emit(current_concentrate, max_concentrate)
 		return false
 	concentrate_changed.emit(current_concentrate, max_concentrate)

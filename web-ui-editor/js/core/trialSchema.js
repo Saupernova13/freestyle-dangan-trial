@@ -167,6 +167,149 @@ function validateMinigame(mg, n, issues) {
     issues.push(`Minigame ${n}: failComment is not a string.`);
   if ('typeSpecific' in mg && !isObject(mg.typeSpecific))
     issues.push(`Minigame ${n}: typeSpecific is not an object.`);
+  else if (isObject(mg.typeSpecific)) validateTypeSpecific(mg, n, issues);
+}
+
+// Field name -> the check it must pass. Absent fields are fine: every one of
+// these has a default on both sides. Unknown fields are fine too, so a newer
+// editor's addition does not make an older one reject the file - the point is
+// to catch a renamed or wrongly typed key, not to freeze the format.
+const STR = ['a string', isString];
+const STR_OR_NULL = ['a string or null', isStringOrNull];
+const NUM = ['a number', isNumber];
+const BOOL = ['a boolean', (v) => typeof v === 'boolean'];
+const STR_ARRAY = ['an array of strings', (v) => Array.isArray(v) && v.every(isString)];
+
+const DEBATE_LINE = {
+  lineId: STR,
+  order: NUM,
+  sentenceBeginning: STR,
+  target: STR,
+  sentenceEnd: STR,
+  isShootable: BOOL,
+  answerBulletId: STR_OR_NULL,
+  useNegativeBullet: BOOL,
+  isWhiteNoise: BOOL,
+  characterId: STR,
+  characterSpotlight: BOOL,
+  textEffect: STR,
+  textFont: STR,
+  textMovementDirection: STR,
+  userFailedComment: STR,
+  userWrongAnswerComment: STR,
+  voiceLineFile: STR_OR_NULL,
+};
+
+const PANIC_LINE = {
+  sentenceBeginning: STR,
+  target: STR,
+  sentenceEnd: STR,
+  isLoudAssertion: BOOL,
+  answerBulletId: STR_OR_NULL,
+  textEffect: STR,
+  textFont: STR,
+  textMovementDirection: STR,
+  voiceLineFile: STR_OR_NULL,
+};
+
+const LOGIC_DIVE_ANSWER = { answerId: STR, answerText: STR, isCorrect: BOOL };
+
+const SCRUM_ARGUMENT = {
+  argumentId: STR,
+  order: NUM,
+  oppositionStatement: STR,
+  oppositionCharacterId: STR,
+  oppositionAudioFile: STR_OR_NULL,
+  oppositionKeywords: STR_ARRAY,
+  defenseStatement: STR,
+  defenseCharacterId: STR,
+  defenseAudioFile: STR_OR_NULL,
+  defenseKeywords: STR_ARRAY,
+};
+
+// Checks the fields present against `fields`, and that `required` are there.
+function checkShape(value, fields, required, where, issues) {
+  if (!isObject(value)) {
+    issues.push(`${where} is not an object.`);
+    return;
+  }
+  for (const key of required || []) {
+    if (!isString(value[key])) issues.push(`${where}: ${key} is missing or not a string.`);
+  }
+  for (const [key, [label, test]] of Object.entries(fields)) {
+    if (!(key in value) || value[key] === undefined) continue;
+    if (!test(value[key])) issues.push(`${where}: ${key} is not ${label}.`);
+  }
+}
+
+function checkList(container, key, where, issues, check) {
+  if (!(key in container)) return;
+  if (!Array.isArray(container[key])) {
+    issues.push(`${where}: ${key} is not an array.`);
+    return;
+  }
+  container[key].forEach((item, i) => check(item, `${where} ${key}[${i}]`));
+}
+
+// gameType -> its payload check. The three types with no editor carry no
+// payload yet, so there is nothing about them that would be true.
+const TYPE_SPECIFIC_CHECKS = {
+  nonstop_debate(ts, where, issues) {
+    if ('selectedBullets' in ts && !STR_ARRAY[1](ts.selectedBullets)) {
+      issues.push(`${where}: selectedBullets is not ${STR_ARRAY[0]}.`);
+    }
+    checkList(ts, 'dialogueLines', where, issues, (line, at) =>
+      checkShape(line, DEBATE_LINE, ['lineId'], at, issues)
+    );
+  },
+  mass_panic_debate(ts, where, issues) {
+    for (const key of ['speaker1CharacterId', 'speaker2CharacterId', 'speaker3CharacterId']) {
+      if (key in ts && !isString(ts[key])) issues.push(`${where}: ${key} is not a string.`);
+    }
+    checkList(ts, 'lineGroups', where, issues, (group, at) => {
+      checkShape(group, { groupId: STR, order: NUM }, ['groupId'], at, issues);
+      if (!isObject(group)) return;
+      for (const speaker of ['speaker1', 'speaker2', 'speaker3']) {
+        if (speaker in group) {
+          checkShape(group[speaker], PANIC_LINE, [], `${at}.${speaker}`, issues);
+        }
+      }
+    });
+  },
+  logic_dive(ts, where, issues) {
+    checkList(ts, 'questions', where, issues, (question, at) => {
+      checkShape(
+        question,
+        { questionId: STR, order: NUM, questionText: STR },
+        ['questionId'],
+        at,
+        issues
+      );
+      if (!isObject(question)) return;
+      checkList(question, 'answers', at, issues, (answer, answerAt) =>
+        checkShape(answer, LOGIC_DIVE_ANSWER, ['answerId'], answerAt, issues)
+      );
+    });
+  },
+  hangmans_gambit(ts, where, issues) {
+    if ('answerKey' in ts && !isString(ts.answerKey)) {
+      issues.push(`${where}: answerKey is not a string.`);
+    }
+  },
+  debate_scrum(ts, where, issues) {
+    checkList(ts, 'arguments', where, issues, (arg, at) =>
+      checkShape(arg, SCRUM_ARGUMENT, ['argumentId'], at, issues)
+    );
+  },
+};
+
+// The half of the format that carries the actual gameplay content used to be
+// the unguarded half: every engine read is type_specific.get(key, default), so
+// a renamed key yielded an empty minigame with no error anywhere.
+function validateTypeSpecific(mg, n, issues) {
+  const check = TYPE_SPECIFIC_CHECKS[mg.gameType];
+  if (!check) return;
+  check(mg.typeSpecific, `Minigame ${n} typeSpecific`, issues);
 }
 
 function validateTruthBullet(b, n, issues) {

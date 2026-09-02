@@ -4,7 +4,12 @@
   "title": "Freestyle Dangan Trial manifest (trial.json)",
   "description": "The contract between the web editor (writer) and the Godot engine (reader). The editor's runtime validator (web-ui-editor/js/core/trialSchema.js) and the engine's trial_validator.gd mirror the structural requirements here; CI cross-checks all three against the shared fixture trial. Unknown extra properties are allowed everywhere so old readers tolerate new writers.",
   "type": "object",
-  "required": ["trialName", "characters", "script", "metadata"],
+  "required": [
+    "trialName",
+    "characters",
+    "script",
+    "metadata"
+  ],
   "properties": {
     "trialName": {
       "type": "string"
@@ -13,7 +18,10 @@
       "description": "Positional bench slots (16 students + 1 headmaster). Each entry is a character id whose data lives in Characters/<Name>/character.json inside the .drtrial, or null for an empty bench.",
       "type": "array",
       "items": {
-        "type": ["string", "null"]
+        "type": [
+          "string",
+          "null"
+        ]
       }
     },
     "truthBullets": {
@@ -30,7 +38,9 @@
     },
     "script": {
       "type": "object",
-      "required": ["lines"],
+      "required": [
+        "lines"
+      ],
       "properties": {
         "lines": {
           "type": "array",
@@ -45,7 +55,9 @@
     },
     "metadata": {
       "type": "object",
-      "required": ["version"],
+      "required": [
+        "version"
+      ],
       "properties": {
         "version": {
           "description": "Format version, '<major>.<minor>'. Readers reject files with a newer major than they support and warn on older majors.",
@@ -58,7 +70,10 @@
   "$defs": {
     "scriptLine": {
       "type": "object",
-      "required": ["id", "type"],
+      "required": [
+        "id",
+        "type"
+      ],
       "properties": {
         "id": {
           "type": "string"
@@ -67,7 +82,11 @@
           "type": "number"
         },
         "type": {
-          "enum": ["speaking", "narrator", "minigame"]
+          "enum": [
+            "speaking",
+            "narrator",
+            "minigame"
+          ]
         },
         "characterId": {
           "type": "string"
@@ -79,14 +98,20 @@
           "type": "string"
         },
         "audioFile": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "minigameId": {
           "type": "string"
         },
         "spriteIndex": {
           "description": "1-based sprite selector; readers clamp values below 1.",
-          "type": ["integer", "null"]
+          "type": [
+            "integer",
+            "null"
+          ]
         },
         "cameraMotion": {
           "type": "object"
@@ -118,10 +143,15 @@
                 "const": "speaking"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
-            "required": ["characterId", "dialogue"]
+            "required": [
+              "characterId",
+              "dialogue"
+            ]
           }
         },
         {
@@ -131,10 +161,14 @@
                 "const": "narrator"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
-            "required": ["text"]
+            "required": [
+              "text"
+            ]
           }
         },
         {
@@ -144,17 +178,25 @@
                 "const": "minigame"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
-            "required": ["minigameId"]
+            "required": [
+              "minigameId"
+            ]
           }
         }
       ]
     },
     "highlight": {
       "type": "object",
-      "required": ["startChar", "endChar", "color"],
+      "required": [
+        "startChar",
+        "endChar",
+        "color"
+      ],
       "properties": {
         "startChar": {
           "type": "integer",
@@ -172,7 +214,10 @@
     },
     "minigame": {
       "type": "object",
-      "required": ["gameId", "gameType"],
+      "required": [
+        "gameId",
+        "gameType"
+      ],
       "properties": {
         "gameId": {
           "type": "string"
@@ -203,14 +248,166 @@
           "type": "string"
         },
         "typeSpecific": {
-          "description": "Per-gameType payload. Shapes are owned by each minigame implementation and its editor view; deliberately not constrained here.",
+          "description": "Per-gameType payload. Constrained by the allOf below for the five types that have an editor; the three that do not carry no payload yet, so nothing here would be true of them. Unknown keys are allowed throughout, so a newer editor's field does not make an older one reject the file.",
           "type": "object"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "gameType": {
+                "const": "nonstop_debate"
+              }
+            },
+            "required": [
+              "gameType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "typeSpecific": {
+                "type": "object",
+                "properties": {
+                  "selectedBullets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "dialogueLines": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/debateLine"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "gameType": {
+                "const": "mass_panic_debate"
+              }
+            },
+            "required": [
+              "gameType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "typeSpecific": {
+                "type": "object",
+                "properties": {
+                  "speaker1CharacterId": {
+                    "type": "string"
+                  },
+                  "speaker2CharacterId": {
+                    "type": "string"
+                  },
+                  "speaker3CharacterId": {
+                    "type": "string"
+                  },
+                  "lineGroups": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/panicLineGroup"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "gameType": {
+                "const": "logic_dive"
+              }
+            },
+            "required": [
+              "gameType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "typeSpecific": {
+                "type": "object",
+                "properties": {
+                  "questions": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/logicDiveQuestion"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "gameType": {
+                "const": "hangmans_gambit"
+              }
+            },
+            "required": [
+              "gameType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "typeSpecific": {
+                "type": "object",
+                "properties": {
+                  "answerKey": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "gameType": {
+                "const": "debate_scrum"
+              }
+            },
+            "required": [
+              "gameType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "typeSpecific": {
+                "type": "object",
+                "properties": {
+                  "arguments": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/scrumArgument"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "truthBullet": {
       "type": "object",
-      "required": ["bulletId", "name"],
+      "required": [
+        "bulletId",
+        "name"
+      ],
       "properties": {
         "bulletId": {
           "type": "string"
@@ -222,10 +419,235 @@
           "type": "string"
         },
         "imageFile": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "inversedLieBulletName": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "debateLine": {
+      "description": "One statement in a Nonstop Debate. Only lineId is required; every other field has a default on both sides, and unknown keys are allowed so the format can still grow.",
+      "type": "object",
+      "required": [
+        "lineId"
+      ],
+      "properties": {
+        "lineId": {
+          "type": "string"
+        },
+        "order": {
+          "type": "number"
+        },
+        "sentenceBeginning": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "sentenceEnd": {
+          "type": "string"
+        },
+        "isShootable": {
+          "type": "boolean"
+        },
+        "answerBulletId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "useNegativeBullet": {
+          "type": "boolean"
+        },
+        "isWhiteNoise": {
+          "type": "boolean"
+        },
+        "characterId": {
+          "type": "string"
+        },
+        "characterSpotlight": {
+          "type": "boolean"
+        },
+        "textEffect": {
+          "type": "string"
+        },
+        "textFont": {
+          "type": "string"
+        },
+        "textMovementDirection": {
+          "type": "string"
+        },
+        "userFailedComment": {
+          "type": "string"
+        },
+        "userWrongAnswerComment": {
+          "type": "string"
+        },
+        "voiceLineFile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "panicLine": {
+      "description": "One speaker's line inside a Mass Panic Debate group.",
+      "type": "object",
+      "properties": {
+        "sentenceBeginning": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "sentenceEnd": {
+          "type": "string"
+        },
+        "isLoudAssertion": {
+          "type": "boolean"
+        },
+        "answerBulletId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "textEffect": {
+          "type": "string"
+        },
+        "textFont": {
+          "type": "string"
+        },
+        "textMovementDirection": {
+          "type": "string"
+        },
+        "voiceLineFile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "panicLineGroup": {
+      "description": "Three simultaneous speakers.",
+      "type": "object",
+      "required": [
+        "groupId"
+      ],
+      "properties": {
+        "groupId": {
+          "type": "string"
+        },
+        "order": {
+          "type": "number"
+        },
+        "speaker1": {
+          "$ref": "#/$defs/panicLine"
+        },
+        "speaker2": {
+          "$ref": "#/$defs/panicLine"
+        },
+        "speaker3": {
+          "$ref": "#/$defs/panicLine"
+        }
+      }
+    },
+    "logicDiveAnswer": {
+      "type": "object",
+      "required": [
+        "answerId"
+      ],
+      "properties": {
+        "answerId": {
+          "type": "string"
+        },
+        "answerText": {
+          "type": "string"
+        },
+        "isCorrect": {
+          "type": "boolean"
+        }
+      }
+    },
+    "logicDiveQuestion": {
+      "type": "object",
+      "required": [
+        "questionId"
+      ],
+      "properties": {
+        "questionId": {
+          "type": "string"
+        },
+        "order": {
+          "type": "number"
+        },
+        "questionText": {
+          "type": "string"
+        },
+        "answers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/logicDiveAnswer"
+          }
+        }
+      }
+    },
+    "scrumArgument": {
+      "type": "object",
+      "required": [
+        "argumentId"
+      ],
+      "properties": {
+        "argumentId": {
+          "type": "string"
+        },
+        "order": {
+          "type": "number"
+        },
+        "oppositionStatement": {
+          "type": "string"
+        },
+        "oppositionCharacterId": {
+          "type": "string"
+        },
+        "oppositionAudioFile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "oppositionKeywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "defenseStatement": {
+          "type": "string"
+        },
+        "defenseCharacterId": {
+          "type": "string"
+        },
+        "defenseAudioFile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "defenseKeywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

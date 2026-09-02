@@ -1,6 +1,19 @@
 /* Class Trial editor styles; each partial owns one section of the UI.
- * The @imports are inlined at build time, so this order is the cascade the
- * browser sees: tokens and reset, then layout, components, views.
+ *
+ * The @imports are inlined at build time, so this order IS the cascade the
+ * browser sees - which is why it is worth reading rather than tidying. It is
+ * not the tokens/layout/components/views grouping this comment used to claim:
+ * layout, components and views are interleaved, and a maintainer "restoring"
+ * the stated grouping would silently change override behaviour across the app.
+ *
+ * The one part that is load-bearing: layout/responsive.css comes LAST, so its
+ * media queries win over every rule they narrow. It used to sit eighth, ahead
+ * of every view partial, where an equal-specificity rule added later to a view
+ * would have beaten it. Nothing clashed - its selectors (.dr-modal, #mainGrid,
+ * .trialbar, nav, header) are all defined in partials that still come before
+ * it - so moving it changes nothing today and removes the trap.
+ *
+ * Everything else is ordered by when it was written and nothing depends on it.
  */
 @import './base/tokens.css';
 @import './base/reset.css';
@@ -9,7 +22,6 @@
 @import './layout/main-nav.css';
 @import './views/cast.css';
 @import './components/modal.css';
-@import './layout/responsive.css';
 @import './views/script-editor.css';
 @import './views/minigames/overview.css';
 @import './views/truth-bullets.css';
@@ -20,3 +32,4 @@
 @import './components/floating-buttons.css';
 @import './components/collapsible.css';
 @import './components/dialogs.css';
+@import './layout/responsive.css';

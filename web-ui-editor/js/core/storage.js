@@ -609,9 +609,14 @@ let autoSaveFailureNotified = false;
 // "nothing outstanding" is distinguishable from "a write never happened".
 let hasUnsavedChanges = false;
 
-// Bumped by every entry point that represents a new edit. A write captures it
-// alongside its snapshot, so a write that completes cannot report "saved" for
-// an edit made after that snapshot was taken.
+// Bumped only where a new edit enters: scheduleAutoSave, and a direct
+// autoSaveTrial call. The debounce timer and flushAutoSave pass skipHistory
+// because scheduleAutoSave already counted their edit, and bumping again for a
+// write-only call would make an in-flight write refuse to report "saved" for
+// work that had in fact reached disk.
+//
+// A write captures this alongside its snapshot, so completing cannot report
+// "saved" for an edit made after that snapshot was taken.
 let changeSeq = 0;
 
 // Serializes writes to trial.json. Two overlapping
@@ -663,8 +668,16 @@ export async function autoSaveTrial(opts = {}) {
     }
     return;
   }
-  if (!opts.skipHistory) recordChange(0);
-  changeSeq++;
+  // A direct call is itself an edit - minigameView and the modals save this
+  // way rather than through the debounce - so it has to register as pending
+  // work. Without this, beforeunload stayed silent while a direct save was in
+  // flight, and hasPendingWrites() reported nothing outstanding after one
+  // failed.
+  if (!opts.skipHistory) {
+    recordChange(0);
+    hasUnsavedChanges = true;
+    changeSeq++;
+  }
   setSaveStatus('saving');
   try {
     const writtenSeq = await enqueueTrialJsonWrite();

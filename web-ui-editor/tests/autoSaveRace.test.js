@@ -7,7 +7,12 @@
 // which carried the newer state.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { state } from '../js/core/state.js';
-import { autoSaveTrial, scheduleAutoSave } from '../js/core/storage.js';
+import {
+  autoSaveTrial,
+  flushAutoSave,
+  hasPendingWrites,
+  scheduleAutoSave,
+} from '../js/core/storage.js';
 
 let openWritables;
 let maxConcurrentWritables;
@@ -39,7 +44,16 @@ function instrumentedDirHandle() {
   };
 }
 
-beforeEach(() => {
+// setSaveStatus writes into #saveStatus and returns silently when it is
+// absent, so without this the status assertions below would pass no matter
+// what the code did.
+function mountSaveStatusPill() {
+  document.body.innerHTML = '<div id="saveStatus"></div>';
+  window.icon = () => '';
+  return document.getElementById('saveStatus');
+}
+
+beforeEach(async () => {
   openWritables = 0;
   maxConcurrentWritables = 0;
   closedContents = [];
@@ -50,6 +64,14 @@ beforeEach(() => {
   state.scriptLines = [];
   state.minigames = [];
   state.truthBullets = [];
+
+  // storage.js keeps its timer and dirty flag at module scope, so a debounce
+  // armed by one test would leave hasPendingWrites() true for every test after
+  // it. Drain it, then reset the counters the drain itself moved.
+  await flushAutoSave();
+  openWritables = 0;
+  maxConcurrentWritables = 0;
+  closedContents = [];
 });
 
 describe('concurrent autosaves', () => {
@@ -120,21 +142,53 @@ describe('concurrent autosaves', () => {
 });
 
 describe('the save status', () => {
+  it('reads clean once a write completes with nothing outstanding', async () => {
+    const pill = mountSaveStatusPill();
+    await autoSaveTrial({ skipHistory: true });
+    expect(pill.textContent).toContain('All changes saved');
+  });
+
   it('is not reported clean for an edit made after the write snapshotted', async () => {
+    const pill = mountSaveStatusPill();
     vi.useFakeTimers();
     try {
-      writeDelayMs = 0;
+      writeDelayMs = 20;
       const inFlight = autoSaveTrial({ skipHistory: true });
-      // An edit landing while that write is in flight.
-      scheduleAutoSave();
+      // Far enough in that the snapshot has been taken and the write is in
+      // its I/O. An edit landing before the snapshot is genuinely included by
+      // it, so only this window is a real "saved" over unsaved work.
+      await vi.advanceTimersByTimeAsync(5);
+      scheduleAutoSave(100000);
+      await vi.advanceTimersByTimeAsync(30);
       await inFlight;
-      // The pill would otherwise read "All changes saved" over work that is
-      // still only in memory.
-      const pill = document.getElementById('saveStatus');
-      expect(pill === null || pill.textContent !== 'All changes saved').toBe(true);
+
+      expect(pill.textContent).not.toContain('All changes saved');
     } finally {
       vi.clearAllTimers();
       vi.useRealTimers();
     }
+  });
+});
+
+describe('a direct autoSaveTrial call', () => {
+  it('counts as pending work while it is in flight', async () => {
+    writeDelayMs = 5;
+    // minigameView and the modals save this way rather than through the
+    // debounce, so beforeunload has to see them too.
+    const inFlight = autoSaveTrial();
+    expect(hasPendingWrites()).toBe(true);
+    await inFlight;
+    expect(hasPendingWrites()).toBe(false);
+  });
+
+  it('still counts as pending after it fails', async () => {
+    state.dirHandle = {
+      name: 'read-only',
+      getFileHandle: async () => {
+        throw new Error('permission denied');
+      },
+    };
+    await autoSaveTrial();
+    expect(hasPendingWrites()).toBe(true);
   });
 });

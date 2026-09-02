@@ -91,3 +91,24 @@ describe('dropAtGap', () => {
     expect(list.map((l) => l.lineId)).toEqual(['y', 'x']);
   });
 });
+
+describe('the change-detection delimiter', () => {
+  // Both joins used a literal 0x00 byte rather than the escape. That made the
+  // module `data` to file(1) and binary to grep - it dropped out of every
+  // content search across js/ - and any encoding round-trip that strips
+  // control characters would have turned the delimiter into '', so
+  // ["ab","c"] and ["a","bc"] would both join to "abc" and a genuine reorder
+  // would report "unchanged".
+  it('does not confuse two orderings that share their concatenation', () => {
+    const list = [{ id: 'ab' }, { id: 'c' }];
+    // Moving 'c' to the front is a real change, and "abc" === "cab" is not
+    // what distinguishes them - the separator is.
+    expect(dropAtGap(list, 'id', ['c'], 0)).toBe(true);
+    expect(list.map((i) => i.id)).toEqual(['c', 'ab']);
+  });
+
+  it('still reports no change when nothing moved', () => {
+    const list = [{ id: 'ab' }, { id: 'c' }];
+    expect(dropAtGap(list, 'id', ['ab'], 0)).toBe(false);
+  });
+});

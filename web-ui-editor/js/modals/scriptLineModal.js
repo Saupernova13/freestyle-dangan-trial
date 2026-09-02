@@ -12,7 +12,7 @@ import { appSettings } from '../settings.js';
 import { showToast } from '../ui/dialogs.js';
 import { focusFirstField } from '../ui/modalBehaviors.js';
 import { hasCameraMotion, hasCustomBoxStyle } from '../core/scriptLineFields.js';
-import { normalizeHighlights, showLoader } from '../utils.js';
+import { escapeHtml, normalizeHighlights, showLoader } from '../utils.js';
 import { closeModal } from './modalCoordinator.js';
 import { AUDIO_PREVIEW_KEY, COLOR_REGEX, activeLine, resetFields, sl } from './scriptLine/state.js';
 import { renderSpriteSelectionTab } from './scriptLine/spriteTab.js';
@@ -88,6 +88,16 @@ export async function openScriptLineModal(lineId) {
   focusFirstField();
 }
 
+// The `sl.err = '...'; renderScriptLineModal(); return;` idiom appears a
+// dozen times across the tab modules. Collapsed here so the message has one
+// place to be set - and, since sl.err reaches modal markup, one place to be
+// escaped. Lives in this module rather than scriptLine/state.js to avoid an
+// import cycle with the tabs.
+export function failField(message) {
+  sl.err = String(message == null ? '' : message);
+  renderScriptLineModal();
+}
+
 export function renderScriptLineModal() {
   const root = document.getElementById('modalroot');
   const line = activeLine();
@@ -152,7 +162,7 @@ export function renderScriptLineModal() {
           ${tabContent}
         </div>
 
-        ${sl.err ? `<div class="dr-err">${sl.err}</div>` : ''}
+        ${sl.err ? `<div class="dr-err">${escapeHtml(sl.err)}</div>` : ''}
         ${sl.msg ? `<div class="dr-success">${sl.msg}</div>` : ''}
 
         <div class="dr-btn-row">

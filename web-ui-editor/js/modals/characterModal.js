@@ -132,7 +132,7 @@ export function renderCharacterModal() {
         </div>
         <div class="dr-modal-content">
           <div id="dr-tab-content">${modalTab === 'details' ? renderCharDetailsTab() : renderCharSpritesTab()}</div>
-          ${modalErr ? `<div class="dr-err">${modalErr}</div>` : ''}
+          ${modalErr ? `<div class="dr-err">${escapeHtml(modalErr)}</div>` : ''}
           ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ''}
         </div>
         <div class="dr-btn-row">

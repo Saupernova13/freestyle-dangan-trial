@@ -7,7 +7,7 @@ import {
 import { state } from '../../core/state.js';
 import { escapeHtml } from '../../utils.js';
 import { AUDIO_PREVIEW_KEY, sl } from './state.js';
-import { renderScriptLineModal } from '../scriptLineModal.js';
+import { renderScriptLineModal, failField } from '../scriptLineModal.js';
 
 // Audio files larger than this are rejected before they reach the trial folder.
 const MAX_AUDIO_SIZE = 50 * 1024 * 1024;
@@ -74,14 +74,12 @@ export function handleAudioUpload(event) {
   if (!file) return;
 
   if (!file.type.startsWith('audio/')) {
-    sl.err = 'Please select a valid audio file (mp3, wav, ogg, etc.)';
-    renderScriptLineModal();
+    failField('Please select a valid audio file (mp3, wav, ogg, etc.)');
     return;
   }
 
   if (file.size > MAX_AUDIO_SIZE) {
-    sl.err = `Audio file is too large. Maximum size is ${MAX_AUDIO_SIZE / (1024 * 1024)}MB.`;
-    renderScriptLineModal();
+    failField(`Audio file is too large. Maximum size is ${MAX_AUDIO_SIZE / (1024 * 1024)}MB.`);
     return;
   }
 
@@ -116,8 +114,7 @@ export async function playAudioPreview() {
     timeCurrentId: 'audio-time-current',
     timeTotalId: 'audio-time-total',
     onError: (msg) => {
-      sl.err = msg;
-      renderScriptLineModal();
+      failField(msg);
     },
     getBlob: async () => {
       if (!sl.fields.audioBlob && sl.fields.audioFile) {

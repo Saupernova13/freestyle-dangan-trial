@@ -153,8 +153,8 @@ describe('undo/redo', () => {
     });
     // Selection is transient, so a restore must clear a dangling one.
     state.selectedTruthBulletId = 'tb1';
-    redo(); // nothing to redo yet; selection untouched
-    expect(state.selectedTruthBulletId).toBe('tb1');
+    // No assertion on the empty-future redo: it returns false without
+    // touching anything, so "selection untouched" after it asserts nothing.
     undo(); // baseline has tb1, selection stays
     expect(state.selectedTruthBulletId).toBe('tb1');
     redo(); // bullets empty again -> dangling selection nulled

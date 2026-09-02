@@ -3,10 +3,7 @@ import JSZip from 'jszip';
 import { state } from './core/state.js';
 import { MINIGAME_TYPE_LABELS } from './core/constants.js';
 import { validateTrialData } from './core/trialSchema.js';
-import {
-  findDanglingBulletReferences,
-  findDanglingCharacterReferences,
-} from './core/references.js';
+import { findIntegrityIssues } from './core/references.js';
 import { buildTrialJson } from './core/trialSerialize.js';
 import { isCharacterComplete, missingCharacterFields } from './models/characterModel.js';
 import { alertDialog, confirmDialog, showToast } from './ui/dialogs.js';
@@ -79,10 +76,9 @@ export function validateTrialForExport() {
     if (!b.name || !b.name.trim()) issues.push(`Truth bullet ${i + 1} has no name.`);
   });
 
-  // Dangling minigameId was already checked; this is the reference that makes
-  // a debate unwinnable rather than merely untidy.
-  issues.push(...findDanglingBulletReferences(state.minigames, state.truthBullets));
-  issues.push(...findDanglingCharacterReferences(state.minigames, state.cast, state.scriptLines));
+  // Dangling minigameId is checked above; every other cross-entity reference
+  // goes through one place, so a new invariant reaches this check for free.
+  issues.push(...findIntegrityIssues(state));
 
   return issues;
 }

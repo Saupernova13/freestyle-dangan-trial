@@ -8,6 +8,8 @@ import {
   detachTruthBullet,
   findDanglingBulletReferences,
   findDanglingCharacterReferences,
+  findIntegrityIssues,
+  findUnarmedAnswerBullets,
 } from '../js/core/references.js';
 
 const BULLET = 'tb_knife';
@@ -222,5 +224,103 @@ describe('findDanglingCharacterReferences', () => {
       { gameId: 'mg', gameType: 'mass_panic_debate', typeSpecific: { speaker1CharacterId: '' } },
     ];
     expect(findDanglingCharacterReferences(mgs, cast, [])).toEqual([]);
+  });
+});
+
+// The engine arms exactly selectedBullets (nonstop_debate.gd:69-70), so a weak
+// point whose answer is not among them can never be shot. Purely editor-side:
+// deselecting a bullet in the grid while a line still names it as its answer
+// produces a line that looks authored and cannot be cleared.
+describe('findUnarmedAnswerBullets', () => {
+  function debate(selectedBullets, answers) {
+    return [
+      {
+        gameId: 'mg_1',
+        name: 'Who held the knife?',
+        gameType: 'nonstop_debate',
+        typeSpecific: {
+          selectedBullets,
+          dialogueLines: answers.map((id, i) => ({ lineId: `l${i}`, answerBulletId: id })),
+        },
+      },
+    ];
+  }
+
+  it('reports an answer the minigame does not arm', () => {
+    const issues = findUnarmedAnswerBullets(debate(['tb_note'], ['tb_knife']));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toContain('never be shot');
+  });
+
+  it('says nothing when every answer is armed', () => {
+    expect(findUnarmedAnswerBullets(debate(['tb_knife', 'tb_note'], ['tb_knife']))).toEqual([]);
+  });
+
+  it('ignores lines with no answer', () => {
+    expect(findUnarmedAnswerBullets(debate(['tb_knife'], [null, '']))).toEqual([]);
+  });
+
+  it('stays quiet when nothing is selected at all', () => {
+    // The minigame arms nothing, which the empty-content check already
+    // reports; flagging every line as well would be noise.
+    expect(findUnarmedAnswerBullets(debate([], ['tb_knife']))).toEqual([]);
+  });
+
+  it('names the line so the author can find it', () => {
+    const issues = findUnarmedAnswerBullets(debate(['tb_note'], ['tb_note', 'tb_knife']));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toContain('line 2');
+  });
+});
+
+describe('findIntegrityIssues', () => {
+  it('gathers every invariant through one call', () => {
+    const issues = findIntegrityIssues({
+      cast: [{ id: 'SJ_OK' }],
+      scriptLines: [{ type: 'speaking', characterId: 'SJ_GONE', dialogue: 'x' }],
+      truthBullets: [{ bulletId: 'tb_note' }],
+      minigames: [
+        {
+          gameId: 'mg_1',
+          name: 'Debate',
+          gameType: 'nonstop_debate',
+          typeSpecific: {
+            selectedBullets: ['tb_note'],
+            dialogueLines: [
+              { lineId: 'l1', characterId: 'SJ_GONE' },
+              { lineId: 'l2', answerBulletId: 'tb_deleted' },
+            ],
+          },
+        },
+      ],
+    });
+
+    // A dangling speaking line, a dangling minigame character, a dangling
+    // answer bullet, and that same answer not being armed.
+    expect(issues).toHaveLength(4);
+  });
+
+  it('says nothing about a coherent trial', () => {
+    expect(
+      findIntegrityIssues({
+        cast: [{ id: 'SJ_OK' }],
+        scriptLines: [{ type: 'speaking', characterId: 'SJ_OK', dialogue: 'x' }],
+        truthBullets: [{ bulletId: 'tb_note' }],
+        minigames: [
+          {
+            gameId: 'mg_1',
+            gameType: 'nonstop_debate',
+            typeSpecific: {
+              selectedBullets: ['tb_note'],
+              dialogueLines: [{ lineId: 'l1', characterId: 'SJ_OK', answerBulletId: 'tb_note' }],
+            },
+          },
+        ],
+      })
+    ).toEqual([]);
+  });
+
+  it('tolerates an empty trial', () => {
+    expect(findIntegrityIssues({})).toEqual([]);
   });
 });

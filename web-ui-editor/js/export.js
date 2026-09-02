@@ -26,6 +26,9 @@ function minigameIsEmpty(mg) {
     case 'hangmans_gambit':
       return !ts.answerKey || String(ts.answerKey).trim() === '';
     default:
+      // rebuttal_showdown, psyche_taxi and closing_argument have no editor and
+      // no authored payload yet, so there is nothing here to judge empty.
+      // Reporting them as empty would flag every trial that uses one.
       return false;
   }
 }

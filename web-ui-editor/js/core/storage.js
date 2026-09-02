@@ -10,10 +10,12 @@ import { state } from './state.js';
 import { checkFormatVersion, findUnsafeIds, validateTrialData } from './trialSchema.js';
 import { buildTrialJson } from './trialSerialize.js';
 import {
+  OPFS_ERROR,
+  OPFS_QUOTA,
+  checkOpfsWritable,
   createOpfsTrial,
   deleteOpfsTrial,
   getOpfsTrial,
-  opfsCanWrite,
   supportsFsPicker,
 } from './opfs.js';
 import { safeZipPathParts, zipRootPrefix } from './zipPaths.js';
@@ -204,14 +206,7 @@ export async function openTrialHub() {
 }
 
 export async function newOpfsTrial() {
-  if (!(await opfsCanWrite())) {
-    await alertDialog({
-      title: 'Browser storage unavailable',
-      type: 'error',
-      message: OPFS_WRITE_MSG,
-    });
-    return;
-  }
+  if (await reportUnwritableStorage()) return;
   const name = await promptDialog({
     title: 'New trial',
     label: 'Trial name',
@@ -283,14 +278,7 @@ function describeUnsafeIds(unsafeIds) {
 
 // A .drtrial is a ZIP; it lands in a new browser-storage trial.
 export async function importTrialFromFile(file) {
-  if (!(await opfsCanWrite())) {
-    await alertDialog({
-      title: 'Browser storage unavailable',
-      type: 'error',
-      message: OPFS_WRITE_MSG,
-    });
-    return;
-  }
+  if (await reportUnwritableStorage()) return;
   // Named so the catch can remove a half-written import.
   let partialFolder = null;
   try {
@@ -408,6 +396,45 @@ const OPFS_WRITE_MSG =
   "This browser can't write to private storage. Update to a current version of " +
   'Firefox, Safari, or a Chromium browser, or use a Chromium browser to edit a ' +
   'folder on disk.';
+
+// The probe writes a real file, so a full disk failed it and the user was told
+// to update an already-current browser - never the one thing they could act on.
+async function reportUnwritableStorage() {
+  const check = await checkOpfsWritable();
+  if (check.ok) return false;
+
+  if (check.reason === OPFS_QUOTA) {
+    await alertDialog({
+      title: 'Browser storage is full',
+      type: 'error',
+      message:
+        'There is no room left in this browser’s private storage.\n\n' +
+        'Delete a trial you no longer need, or free up disk space, then try ' +
+        'again - no reload required.',
+    });
+    return true;
+  }
+
+  if (check.reason === OPFS_ERROR) {
+    await alertDialog({
+      title: 'Browser storage is not responding',
+      type: 'error',
+      message:
+        'Private storage could not be written to' +
+        (check.error && check.error.name ? ` (${check.error.name})` : '') +
+        '.\n\nYour saved trials should be unaffected. Try again, and reload the ' +
+        'page if it keeps happening.',
+    });
+    return true;
+  }
+
+  await alertDialog({
+    title: 'Browser storage unavailable',
+    type: 'error',
+    message: OPFS_WRITE_MSG,
+  });
+  return true;
+}
 
 // Fills in the sprites the cast grid skipped; called when the modal opens.
 export async function loadRemainingSprites(charIndex) {

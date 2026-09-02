@@ -63,7 +63,7 @@ GDScript, organized under `freestyle-dangan-trial/scripts/`:
 core/       Autoload singletons (see below) + trial/ loader helpers and AudioStreamLoader
 camera/     CameraDirector autoload + bench_focus_camera rig
 config/     MinigameConfig (tuning constants), ResourceRegistry (scene keys), UITheme
-effects/    EffectBuilders — shared visual effect construction
+effects/    Spawnable effect scenes' scripts (drift popup, panel shatter, shard burst)
 game/       TrialRoomManager (composition root), CharacterStage, MinigameRunner, roaming text
 minigames/  MinigameBase + one script per minigame type; debate/ for shared pieces
 tools/      Start-menu file picker, small editor/debug helpers
@@ -126,12 +126,25 @@ pieces (Hangman slots, Debate Scrum keyword buttons, Logic Dive lanes, the
 Nonstop Debate bullet preview and evidence card, the fallback file list). New UI
 belongs in a scene, instantiated via `ResourceRegistry`.
 
-What stays in code is procedural visual effects, not authorable screens:
-`EffectBuilders` (shatter/particle systems), the slow-time vignette, the camera
-cross-dissolve, and `roaming_text_path` (one label per character along a curve).
-Their tweens have data-driven durations/colors and per-frame or per-item counts,
-so they can't be fixed AnimationPlayer clips. The same reasoning keeps the
-`ScreenEffects` effect tweens and the gauge-fill / typewriter tweens in code.
+What stays in code is narrower than it used to be. Effects that were once
+built node by node are now scenes with their own AnimationPlayer clips: the
+shatter and particle systems are `scenes/effects/*.tscn` spawned through
+`ResourceRegistry`, the slow-time vignette plays `show`/`dismiss` clips from
+its scene, and `ScreenEffects.cross_dissolve` delegates to the overlay's
+`fade_pulse` clip. `EffectBuilders`, which this section used to name, was
+deleted in `41fe39f`.
+
+Three things genuinely stay in code, each for a reason the code states:
+
+- **Camera effects** — `screen_shake` and `fov_pulse`. They need runtime
+  `Camera3D` positions, which a clip cannot know
+  (`screen_effects_manager.gd:8-9`).
+- **The `roaming_text_path` curve** — it refits the live viewport, and the
+  character count is data-driven. The characters themselves are
+  `roaming_char.tscn` instances with a looping clip
+  (`roaming_text_path.gd:2-6`).
+- **Gauge fills and the typewriter** — per-frame values driven by data, not
+  fixed timelines.
 
 ## UI textures
 

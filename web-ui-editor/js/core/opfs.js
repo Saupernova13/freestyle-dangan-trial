@@ -79,29 +79,59 @@ export async function readOpfsFileText(folder, fileName) {
   }
 }
 
-// Does this browser's OPFS support createWritable()? Cached: it can't change
-// within a session.
+// Why a write probe failed. 'unsupported' is a capability gap and cannot
+// change within a session; 'quota' and 'error' can, and the user is usually
+// the one who can change them.
+export const OPFS_UNSUPPORTED = 'unsupported';
+export const OPFS_QUOTA = 'quota';
+export const OPFS_ERROR = 'error';
+
+// Only a genuine capability gap, or a success, is remembered. Caching a
+// rejection cost the user the whole session: a QuotaExceededError on the probe
+// is likely in an app that stores sprite PNGs and audio in OPFS, and "New
+// trial" and "Import" stayed blocked even after they deleted a trial to free
+// space.
 let writeProbe = null;
-export function opfsCanWrite() {
+
+// { ok, reason, error }. reason is meaningless when ok.
+export async function checkOpfsWritable() {
   if (writeProbe) return writeProbe;
-  writeProbe = (async () => {
-    if (!supportsOpfs()) return false;
+
+  const result = await (async () => {
+    if (!supportsOpfs()) return { ok: false, reason: OPFS_UNSUPPORTED };
+    let root;
     try {
-      const root = await navigator.storage.getDirectory();
+      root = await navigator.storage.getDirectory();
       const probeDir = await root.getDirectoryHandle('.write-probe', { create: true });
       const fh = await probeDir.getFileHandle('probe', { create: true });
       if (typeof fh.createWritable !== 'function') {
         await root.removeEntry('.write-probe', { recursive: true });
-        return false;
+        return { ok: false, reason: OPFS_UNSUPPORTED };
       }
       const w = await fh.createWritable();
       await w.write('ok');
       await w.close();
       await root.removeEntry('.write-probe', { recursive: true });
-      return true;
-    } catch {
-      return false;
+      return { ok: true, reason: '' };
+    } catch (error) {
+      // The probe writes a real file, so this is where a full disk shows up.
+      // Reporting it as an unsupported browser told the user to update an
+      // already-current one and never mentioned the thing they could fix.
+      const reason = error && error.name === 'QuotaExceededError' ? OPFS_QUOTA : OPFS_ERROR;
+      try {
+        if (root) await root.removeEntry('.write-probe', { recursive: true });
+      } catch {
+        /* the probe folder is disposable */
+      }
+      return { ok: false, reason, error };
     }
   })();
-  return writeProbe;
+
+  if (result.ok || result.reason === OPFS_UNSUPPORTED) writeProbe = Promise.resolve(result);
+  return result;
+}
+
+// Kept for callers that only need the verdict.
+export async function opfsCanWrite() {
+  return (await checkOpfsWritable()).ok;
 }

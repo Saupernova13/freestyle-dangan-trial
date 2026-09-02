@@ -27,6 +27,10 @@ func get_character(character_id: String) -> Dictionary:
 		push_warning("Characters directory not found")
 		return {}
 
+	# Folders whose character.json exists but could not be read, so a broken
+	# file is not reported as a missing character.
+	var unreadable: Array[String] = []
+
 	var dir = DirAccess.open(_characters_dir)
 	if dir:
 		dir.list_dir_begin()
@@ -36,7 +40,9 @@ func get_character(character_id: String) -> Dictionary:
 				var char_json_path = _characters_dir + folder_name + "/character.json"
 				if FileAccess.file_exists(char_json_path):
 					var char_data = _parse_json(char_json_path)
-					if char_data.get("id", "") == character_id:
+					if char_data.is_empty():
+						unreadable.append(folder_name)
+					elif char_data.get("id", "") == character_id:
 						char_data["folder_path"] = _characters_dir + folder_name
 						dir.list_dir_end()
 						_data_cache[character_id] = char_data
@@ -44,7 +50,18 @@ func get_character(character_id: String) -> Dictionary:
 			folder_name = dir.get_next()
 		dir.list_dir_end()
 
-	push_warning("Character not found: " + character_id)
+	# "Not found" sends the author hunting for a wrong id. If a file in the
+	# scan could not be read, that is the likelier explanation and the parser
+	# has already said why.
+	if unreadable.is_empty():
+		push_warning("Character not found: " + character_id)
+	else:
+		push_warning(
+			(
+				"Character not found: %s. These character files could not be read: %s"
+				% [character_id, ", ".join(unreadable)]
+			)
+		)
 	return {}
 
 ## "" when the sprite is missing.
@@ -80,11 +97,26 @@ func store_texture(character_id: String, sprite_index: int, texture: ImageTextur
 func _key(character_id: String, sprite_index: int) -> String:
 	return "%s:%d" % [character_id, sprite_index]
 
+## {} on any failure, each one logged with the path. Three distinct problems -
+## an unreadable file, malformed JSON, and a root that is not an object - used
+## to collapse into an empty dict with nothing said, and the caller then
+## reported "Character not found" for a file it had just read and failed to
+## parse. json.get_error_message() was available and discarded.
 func _parse_json(json_path: String) -> Dictionary:
 	var json_text = FileAccess.get_file_as_string(json_path)
 	if json_text.is_empty():
+		Log.error("CharacterLibrary", "%s is empty or unreadable" % json_path)
 		return {}
 	var json = JSON.new()
 	if json.parse(json_text) != OK:
+		Log.error(
+			"CharacterLibrary",
+			"%s is not valid JSON: %s (line %d)" % [json_path, json.get_error_message(), json.get_error_line()]
+		)
+		return {}
+	# trial_loader.gd guards this; character.json did not, so an array root
+	# raised a return-type error instead of being handled.
+	if not json.data is Dictionary:
+		Log.error("CharacterLibrary", "%s does not contain a JSON object" % json_path)
 		return {}
 	return json.data

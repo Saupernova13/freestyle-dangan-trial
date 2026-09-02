@@ -2,15 +2,20 @@ class_name TrialArchive
 extends RefCounted
 ## Extracts .drtrial (ZIP) archives into a destination directory.
 
-## Wipes `dest_dir` first, which matters: leftovers resolve by name, and on
-## Android trial B was seen picking up trial A's assets.
+## "" on success, otherwise why the extraction cannot be trusted. A bool could
+## not distinguish "nothing was written" from "most of it was", and the caller
+## needs to say which - a half-extracted trial plays with characters missing.
+##
+## Wipes `dest_dir`, which matters: leftovers resolve by name, and on Android
+## trial B was seen picking up trial A's assets. The wipe happens only after
+## the archive is known to be worth extracting.
 ## `progress` is called with (files_done, files_total) per entry.
-static func extract(zip_path: String, dest_dir: String, progress: Callable = Callable()) -> bool:
+static func extract(zip_path: String, dest_dir: String, progress: Callable = Callable()) -> String:
 	var reader = ZIPReader.new()
 	var err = reader.open(zip_path)
 	if err != OK:
 		push_error("Failed to open ZIP file: " + error_string(err))
-		return false
+		return "The trial file could not be opened (%s)." % error_string(err)
 
 	var entries: Array = Array(reader.get_files()).filter(
 		func(f: String) -> bool: return not f.ends_with("/"))
@@ -22,9 +27,18 @@ static func extract(zip_path: String, dest_dir: String, progress: Callable = Cal
 		if not reason.is_empty():
 			push_error("Refusing to extract %s: %s in entry '%s'" % [zip_path, reason, entry])
 			reader.close()
-			return false
+			return "This trial file contains an unsafe entry name (%s)." % reason
+
+	# Before the wipe, for the same reason as the entry check: a valid but
+	# empty archive would otherwise destroy the previously extracted trial and
+	# still report success.
+	if entries.is_empty():
+		reader.close()
+		return "This trial file is empty."
 
 	_clear_dir(dest_dir)
+
+	var failed: Array[String] = []
 
 	for i in range(entries.size()):
 		var entry: String = entries[i]
@@ -34,7 +48,11 @@ static func extract(zip_path: String, dest_dir: String, progress: Callable = Cal
 			continue
 
 		var output_path = dest_dir + entry
-		DirAccess.make_dir_recursive_absolute(output_path.get_base_dir())
+		var dir_err := DirAccess.make_dir_recursive_absolute(output_path.get_base_dir())
+		if dir_err != OK:
+			push_error("Failed to create %s: %s" % [output_path.get_base_dir(), error_string(dir_err)])
+			failed.append(entry)
+			continue
 		var file = FileAccess.open(output_path, FileAccess.WRITE)
 		if file:
 			file.store_buffer(data)
@@ -42,12 +60,21 @@ static func extract(zip_path: String, dest_dir: String, progress: Callable = Cal
 		else:
 			var write_err = FileAccess.get_open_error()
 			push_error("Failed to write file %s (err %d: %s)" % [output_path, write_err, error_string(write_err)])
+			# Counted, not just logged. A partial extraction used to report
+			# success, so the trial played with characters silently missing.
+			failed.append(entry)
 
 		if progress.is_valid():
 			progress.call(i + 1, entries.size())
 
 	reader.close()
-	return true
+	if not failed.is_empty():
+		return (
+			"Extraction incomplete: %d of %d files could not be written. "
+			% [failed.size(), entries.size()]
+			+ "You may be out of storage space, or lack permission to write here."
+		)
+	return ""
 
 ## Empty when the entry is safe to write, otherwise why it is not. A .drtrial
 ## is a distribution format, so archives arrive from third parties by design and

@@ -49,11 +49,9 @@ func load_trial(file_path: String) -> bool:
 		push_error(last_load_error)
 		return false
 
-	if not TrialArchive.extract(file_path, EXTRACT_DIR):
-		last_load_error = (
-			"Trial archive could not be extracted. The file may be corrupt, "
-			+ "unreadable, or you may lack storage permissions on this device."
-		)
+	var extract_error := TrialArchive.extract(file_path, EXTRACT_DIR)
+	if not extract_error.is_empty():
+		last_load_error = extract_error
 		push_error(last_load_error)
 		return false
 
@@ -213,15 +211,14 @@ func _load_in_thread(file_path: String) -> void:
 	# --- Phase 1: Extract archive (0 -> 60%) ---
 	call_deferred("_report_progress", 0.0, "Extracting archive...")
 
-	var extracted := TrialArchive.extract(file_path, EXTRACT_DIR,
+	var extract_error := TrialArchive.extract(file_path, EXTRACT_DIR,
 		func(done: int, total: int) -> void:
 			var frac := float(done) / float(max(total, 1)) * 0.6
 			call_deferred("_report_progress", frac,
 				"Extracting... %d / %d" % [done, total])
 	)
-	if not extracted:
-		call_deferred("_finish_with_error",
-			"Could not open trial archive. File may be corrupt.")
+	if not extract_error.is_empty():
+		call_deferred("_finish_with_error", extract_error)
 		return
 
 	# --- Phase 2: Parse JSON (60 -> 65%) ---

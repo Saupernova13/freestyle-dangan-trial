@@ -51,7 +51,26 @@ func _ready():
 	InputManager.settings_toggle_requested.connect(_on_settings_toggle_requested)
 	InputManager.skip_held_changed.connect(_on_skip_held_changed)
 
+## Everything transient this autoload carries. It survives
+## reload_current_scene() and change_scene_to_file(), so state left behind by
+## the previous run reaches the next one: a player who died mid-typewriter
+## retried with is_typewriter_active still true, and their first advance press
+## was eaten as a typewriter skip; one who died holding CTRL kept
+## fast-forwarding into the reloaded scene.
+func reset() -> void:
+	is_typewriter_active = false
+	_active_minigame = null
+	_settings_menu = null
+	_auto_advance_timer = 0.0
+	_skip_held = false
+	_skip_timer = 0.0
+	_pause_depth = 0
+	_pre_pause_state = State.IDLE
+	current_line_index = -1
+	_transition_to(State.IDLE)
+
 func start_trial():
+	reset()
 	script_lines = TrialLoader.get_script_lines()
 	if script_lines.is_empty():
 		Log.warn("ScriptDirector", "No script lines found")

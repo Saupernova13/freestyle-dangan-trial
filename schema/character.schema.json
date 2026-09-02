@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Saupernova13/customronpa-trial-engine/schema/character.schema.json",
+  "title": "character.json",
+  "description": "One cast member, stored at Characters/<folder>/character.json inside a trial. The engine reads id, name and surname; the rest is profile data the editor shows and the trial's bio screens use. Unknown properties are allowed, so a newer editor's field does not make an older one reject the file.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "surname"
+  ],
+  "properties": {
+    "formatVersion": {
+      "description": "\"<major>.<minor>\". Absent in files written before this field existed, which are treated as the current major.",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "id": {
+      "description": "Referenced by trial.json's characters list, by speaking lines, and by minigame payloads. Same shape rule as every other id, because it reaches inline event handlers in the editor.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,128}$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "surname": {
+      "type": "string"
+    },
+    "heightM": {
+      "type": "number"
+    },
+    "heightCM": {
+      "type": "number"
+    },
+    "weight": {
+      "type": "number"
+    },
+    "chest": {
+      "type": "number"
+    },
+    "blood": {
+      "type": "string"
+    },
+    "dob": {
+      "type": "string"
+    },
+    "likes": {
+      "type": "string"
+    },
+    "dislikes": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "isHeadmaster": {
+      "type": "boolean"
+    },
+    "position": {
+      "description": "Cast slot, 0-16. 16 is the headmaster bench.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16
+    },
+    "lastModified": {
+      "type": "string"
+    }
+  }
+}

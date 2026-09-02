@@ -36,6 +36,14 @@ trial in `freestyle-dangan-trial/tests/fixtures/minimal-trial/`:
   (`TrialValidator.SUPPORTED_FORMAT_MAJOR`). Both sides reject files from a
   newer major version and warn on older ones.
 
+`Characters/<Name>/character.json` has its own normative definition in
+[`schema/character.schema.json`](schema/character.schema.json), mirrored by
+`web-ui-editor/js/core/characterSchema.js` and cross-checked with ajv in
+`tests/characterSchema.test.js`. It carries its own `formatVersion`
+(`CHARACTER_FORMAT_VERSION`), tracked separately from the trial's: the two
+files change shape independently. The engine reads only `id`, `name` and
+`surname` from it, as an untyped Dictionary.
+
 To change the format: update the schema, then the editor validator/writer
 and its tests, then the engine validator/model and its tests, then the
 fixture. Bump the minor version for additive changes, the major for breaking

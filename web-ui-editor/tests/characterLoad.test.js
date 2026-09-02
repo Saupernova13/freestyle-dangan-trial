@@ -54,7 +54,7 @@ beforeEach(() => {
 describe('loadCharactersFromIds', () => {
   it('loads a readable character and reports nothing unresolved', async () => {
     state.dirHandle = dirHandleWith([characterFolder('Fixture_Chan', JSON.stringify(GOOD))]);
-    const unresolved = await loadCharactersFromIds(['FC_1']);
+    const { unresolved } = await loadCharactersFromIds(['FC_1']);
 
     expect(unresolved).toEqual([]);
     expect(state.cast[0].name).toBe('Fixture');
@@ -62,7 +62,7 @@ describe('loadCharactersFromIds', () => {
 
   it('keeps the id in the slot when character.json will not parse', async () => {
     state.dirHandle = dirHandleWith([characterFolder('Broken', '{"id": "FC_1"')]);
-    const unresolved = await loadCharactersFromIds(['FC_1']);
+    const { unresolved } = await loadCharactersFromIds(['FC_1']);
 
     expect(unresolved).toEqual(['FC_1']);
     expect(state.cast[0]).toMatchObject({ id: 'FC_1', _loadFailed: true });
@@ -81,7 +81,7 @@ describe('loadCharactersFromIds', () => {
       characterFolder('Notes', null, { missing: true }),
       characterFolder('Fixture_Chan', JSON.stringify(GOOD)),
     ]);
-    const unresolved = await loadCharactersFromIds(['FC_1']);
+    const { unresolved } = await loadCharactersFromIds(['FC_1']);
 
     expect(unresolved).toEqual([]);
     expect(state.cast[0].name).toBe('Fixture');
@@ -89,7 +89,7 @@ describe('loadCharactersFromIds', () => {
 
   it('reports an id that no folder provides at all', async () => {
     state.dirHandle = dirHandleWith([characterFolder('Fixture_Chan', JSON.stringify(GOOD))]);
-    const unresolved = await loadCharactersFromIds(['FC_1', 'FC_MISSING']);
+    const { unresolved } = await loadCharactersFromIds(['FC_1', 'FC_MISSING']);
 
     expect(unresolved).toEqual(['FC_MISSING']);
     expect(buildTrialJson(state).characters.slice(0, 2)).toEqual(['FC_1', 'FC_MISSING']);
@@ -97,7 +97,7 @@ describe('loadCharactersFromIds', () => {
 
   it('leaves genuinely empty slots empty', async () => {
     state.dirHandle = dirHandleWith([characterFolder('Fixture_Chan', JSON.stringify(GOOD))]);
-    const unresolved = await loadCharactersFromIds([null, 'FC_1']);
+    const { unresolved } = await loadCharactersFromIds([null, 'FC_1']);
 
     expect(unresolved).toEqual([]);
     expect(state.cast[0]).toBeNull();
@@ -110,7 +110,10 @@ describe('loadCharactersFromIds', () => {
         throw new Error('NotAllowedError');
       },
     };
-    expect(await loadCharactersFromIds(['FC_1', null, 'FC_2'])).toEqual(['FC_1', 'FC_2']);
+    expect((await loadCharactersFromIds(['FC_1', null, 'FC_2'])).unresolved).toEqual([
+      'FC_1',
+      'FC_2',
+    ]);
     // A per-folder permission error must not cost the whole cast either.
     expect(buildTrialJson(state).characters.slice(0, 3)).toEqual(['FC_1', null, 'FC_2']);
   });

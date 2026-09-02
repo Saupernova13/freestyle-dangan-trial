@@ -4,6 +4,11 @@
 // SUPPORTED_FORMAT_MAJOR must track this major. Minor = additive changes.
 export const FORMAT_VERSION = '4.0';
 
+// character.json's own version, tracked separately: the two files change shape
+// independently, and tying them would force a trial-format bump for a field
+// only the character profile cares about.
+export const CHARACTER_FORMAT_VERSION = '1.0';
+
 // 16 students + 1 headmaster.
 export const BLOCK_COUNT = 17;
 

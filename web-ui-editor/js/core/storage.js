@@ -18,6 +18,7 @@ import {
   getOpfsTrial,
   supportsFsPicker,
 } from './opfs.js';
+import { checkCharacterFormatVersion, validateCharacterData } from './characterSchema.js';
 import { ensureAllTypeSpecific } from './minigameDefaults.js';
 import { safeZipPathParts, zipRootPrefix } from './zipPaths.js';
 import { updateExportButtonState } from '../export.js';
@@ -97,7 +98,23 @@ async function loadTrialIntoState() {
     state.trialName = data.trialName || '';
     document.getElementById('trialNameInput').value = state.trialName;
 
-    const unresolvedCharacters = await loadCharactersFromIds(data.characters || []);
+    const characters = await loadCharactersFromIds(data.characters || []);
+    const unresolvedCharacters = characters.unresolved;
+    const characterProblems = characters.problems;
+    if (characterProblems.length > 0) {
+      // character.json had no schema and no validator at all until now, so
+      // these went unreported however wrong they were.
+      const shown = characterProblems.slice(0, 8);
+      const extra = characterProblems.length - shown.length;
+      await alertDialog({
+        title: 'Some character files have problems',
+        type: 'warning',
+        message:
+          shown.map((m) => '- ' + m).join('\n') +
+          (extra > 0 ? '\n- ...and ' + extra + ' more' : '') +
+          '\n\nThe editor will still open this trial; fix these before exporting.',
+      });
+    }
     if (unresolvedCharacters.length > 0) {
       // Silent until now: the slot simply appeared empty, and one keystroke
       // made it permanent.
@@ -484,7 +501,9 @@ export async function loadRemainingSprites(charIndex) {
   }
 }
 
-// Returns the ids listed in trial.json that no readable folder provided.
+// Returns { unresolved, problems }: the ids listed in trial.json that no
+// readable folder provided, and the character files that parse but do not
+// match schema/character.schema.json.
 // buildTrialJson writes `cast.map(c => c ? c.id : null)`, so a slot left null
 // here loses that id on the very next keystroke - the character disappears
 // from trial.json while their folder is still sitting on disk, and the
@@ -500,6 +519,8 @@ export async function loadCharactersFromIds(characterIds) {
   // missing or unreadable Characters/ falls through with an empty map rather
   // than returning early, so every listed id still gets its slot held.
   const charactersById = new Map();
+  // Files that parse but do not match schema/character.schema.json.
+  const characterProblems = [];
   for await (const [folderName, folderHandle] of charsDir ? charsDir.entries() : []) {
     if (folderHandle.kind !== 'directory') continue;
     let charFile;
@@ -513,6 +534,14 @@ export async function loadCharactersFromIds(characterIds) {
     }
     try {
       const charData = JSON.parse(await (await charFile.getFile()).text());
+      const problems = validateCharacterData(charData);
+      const versionCheck = checkCharacterFormatVersion(charData);
+      if (!versionCheck.ok) problems.push(versionCheck.message);
+      if (problems.length > 0) {
+        // Reported, not skipped: the folder is still the character's, and
+        // dropping it here is what erased them from trial.json before.
+        characterProblems.push(`Characters/${folderName}: ${problems.join(' ')}`);
+      }
       if (charData && charData.id) {
         // Kept for lazy-loading the remaining sprites.
         charData._folderHandle = folderHandle;
@@ -550,7 +579,7 @@ export async function loadCharactersFromIds(characterIds) {
 
     state.cast[i] = charData;
   }
-  return unresolved;
+  return { unresolved, problems: characterProblems };
 }
 
 export async function loadTruthBulletImages() {

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
-import { addDirectoryToZip, sanitizeTrialJson } from '../js/export.js';
+import { addDirectoryToZip, countFilesInDirectory, sanitizeTrialJson } from '../js/export.js';
 import { buildTrialJson } from '../js/core/trialSerialize.js';
 
 describe('sanitizeTrialJson', () => {
@@ -168,6 +168,15 @@ describe('addDirectoryToZip', () => {
 
     expect(progress.failed).toEqual([]);
     expect(progress.count).toBe(3);
+  });
+
+  it('counts what it can when a folder cannot be opened', async () => {
+    // countFilesInDirectory used to throw here, aborting the export before
+    // packaging started - the loud-but-total failure the walk avoids.
+    const dir = dirHandle([fileEntry('a.png'), { kind: 'directory', name: 'Characters' }], {
+      unopenable: ['Characters'],
+    });
+    await expect(countFilesInDirectory(dir)).resolves.toBe(1);
   });
 
   it('creates its own failure list when a caller does not pass one', async () => {

@@ -174,11 +174,13 @@ export async function exportToPlayableFile() {
     );
 
     // countFilesInDirectory already computed the true total; the two were
-    // never compared, so a truncated export reported plain success.
-    if (filesAdded !== totalFiles && packaging.failed.length === 0) {
-      packaging.failed.push(
-        `${totalFiles - filesAdded} file(s) went missing between counting and packaging`
-      );
+    // never compared, so a truncated export reported plain success. Reported
+    // alongside any named failures rather than instead of them, since files
+    // can be lost both ways in one run, and only when the shortfall exceeds
+    // what has already been named.
+    const unexplained = totalFiles - filesAdded - packaging.failed.length;
+    if (unexplained > 0) {
+      packaging.failed.push(`${unexplained} file(s) went missing between counting and packaging`);
     }
     if (packaging.failed.length > 0) {
       showLoader(false);
@@ -307,7 +309,17 @@ export async function countFilesInDirectory(dir) {
     if (entry.kind === 'file') {
       count++;
     } else if (entry.kind === 'directory') {
-      const subDirHandle = await dir.getDirectoryHandle(entry.name);
+      // A folder that cannot be opened is reported by addDirectoryToZip, which
+      // packages what it can. Throwing here instead would abort the export
+      // before packaging even started - the loud-but-total failure the walk
+      // was changed to avoid.
+      let subDirHandle;
+      try {
+        subDirHandle = await dir.getDirectoryHandle(entry.name);
+      } catch (error) {
+        console.warn(`Failed to count folder ${entry.name}:`, error);
+        continue;
+      }
       count += await countFilesInDirectory(subDirHandle);
     }
   }

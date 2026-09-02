@@ -129,6 +129,9 @@ func screen_shake(duration: float, intensity: float = 0.02):
 	if intensity <= 0.0:
 		return
 	var original_pos = camera.global_position
+	# Seeded like everything else the session replays: the global RNG this used
+	# is the one GameRandom does not drive.
+	var rng := GameRandom.stream("screen_shake")
 	var elapsed = 0.0
 	while elapsed < duration:
 		# A scene change mid-shake frees the camera under us, and the position
@@ -136,8 +139,8 @@ func screen_shake(duration: float, intensity: float = 0.02):
 		if not is_instance_valid(camera):
 			return
 		var offset = Vector3(
-			randf_range(-intensity, intensity),
-			randf_range(-intensity, intensity),
+			rng.randf_range(-intensity, intensity),
+			rng.randf_range(-intensity, intensity),
 			0.0
 		)
 		camera.global_position = original_pos + offset

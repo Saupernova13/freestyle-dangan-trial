@@ -18,6 +18,10 @@ var _noise_spawn_timer: float = 0.0
 var _main_spawn_interval: float = 2.0
 var _noise_spawn_interval: float = MinigameConfig.NOISE_SPAWN_INTERVAL
 var _solved: bool = false
+## One stream for the whole attempt, taken in start(). Lines without a voice
+## file get their crossing time from it, so a seeded replay keeps the same
+## spawn rhythm rather than diverging on the first unvoiced line.
+var _rng: RandomNumberGenerator = null
 
 var _overlay: CanvasLayer
 var _panels_container: Control
@@ -66,6 +70,7 @@ func _split_dialogue_lines():
 
 func start():
 	super.start()
+	_rng = GameRandom.stream("nonstop_debate")
 	_solved = false
 	_main_line_index = 0
 	_current_main_panel = null
@@ -206,7 +211,7 @@ func _spawn_main_line():
 	if not voice_file.is_empty():
 		audio_duration = AudioManager.get_voice_line_duration(voice_file)
 	if audio_duration < 0.0:
-		audio_duration = randf_range(4.0, 6.0)
+		audio_duration = _rng.randf_range(4.0, 6.0)
 
 	var panel: DebateTextPanel = ResourceRegistry.instantiate("debate_text_panel")
 	panel.setup(line_data, get_difficulty_multiplier(), audio_duration)
@@ -228,12 +233,12 @@ func _spawn_noise_line():
 	if _white_noise_lines.is_empty():
 		return
 
-	var idx = randi() % _white_noise_lines.size()
+	var idx = _rng.randi() % _white_noise_lines.size()
 	var line_data := _white_noise_lines[idx]
 
 	var panel: DebateTextPanel = ResourceRegistry.instantiate("debate_text_panel")
 	panel.setup(line_data, get_difficulty_multiplier())
-	panel.position.y = _row_y_for(randi())
+	panel.position.y = _row_y_for(_rng.randi())
 	panel.panel_exited_screen.connect(_on_panel_exited)
 	_panels_container.add_child(panel)
 	_panels_on_screen.append(panel)

@@ -7,7 +7,6 @@ var _overlay: CanvasLayer
 var _opposition_label: Label
 var _defense_label: Label
 var _defense_buttons: Array = []
-var _progress_bar: ColorRect
 var _progress_fill: ColorRect
 var _score_label: Label
 var _turn_timer_label: Label
@@ -52,7 +51,6 @@ func _build_overlay():
 	# Layout is scene-owned; see scenes/minigames/debate_scrum_overlay.tscn.
 	_overlay = ResourceRegistry.instantiate("debate_scrum_overlay")
 	add_child(_overlay)
-	_progress_bar = _overlay.get_node("%ProgressBar")
 	_progress_fill = _overlay.get_node("%ProgressFill")
 	_opposition_label = _overlay.get_node("%OppositionLabel")
 	_defense_label = _overlay.get_node("%DefenseLabel")

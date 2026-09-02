@@ -238,7 +238,12 @@
           ]
         },
         "difficulty": {
-          "type": "string"
+          "description": "Keys four independent tuning tables in the engine (spawn interval, difficulty multiplier, floating-letter speed, damage per wrong answer). An unlisted value falls back to medium in all four.",
+          "enum": [
+            "easy",
+            "medium",
+            "hard"
+          ]
         },
         "timeLimit": {
           "type": "number"

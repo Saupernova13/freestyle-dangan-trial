@@ -121,3 +121,45 @@ export function findDanglingCharacterReferences(minigames, cast, scriptLines) {
 
   return issues;
 }
+
+// Reference invariants nothing else expresses. validateTrialForExport checked
+// a dangling minigameId and nothing more - there was no cast-membership check
+// anywhere in export.js or trialSchema.js - so a trial could export clean and
+// break at runtime.
+//
+// One entry point rather than four call sites, so a new invariant is added in
+// one place and every caller gets it.
+export function findIntegrityIssues({ minigames, cast, scriptLines, truthBullets }) {
+  return [
+    ...findDanglingCharacterReferences(minigames, cast, scriptLines),
+    ...findDanglingBulletReferences(minigames, truthBullets),
+    ...findUnarmedAnswerBullets(minigames),
+  ];
+}
+
+// A nonstop debate arms exactly its selectedBullets (nonstop_debate.gd:69-70),
+// so a weak point whose answer is not among them can never be shot. Purely
+// editor-side: deselecting a bullet in the grid while a line still names it as
+// its answer produces a line that looks authored and cannot be cleared.
+export function findUnarmedAnswerBullets(minigames) {
+  const issues = [];
+  for (const mg of minigames || []) {
+    const ts = mg && mg.typeSpecific;
+    if (!ts || !Array.isArray(ts.selectedBullets) || !Array.isArray(ts.dialogueLines)) continue;
+    // An empty selection means the minigame arms nothing, which the empty-content
+    // check already reports; flagging every line as well would just be noise.
+    if (ts.selectedBullets.length === 0) continue;
+
+    const armed = new Set(ts.selectedBullets);
+    const name = mg.name && mg.name.trim() ? mg.name : mg.gameId;
+    ts.dialogueLines.forEach((line, i) => {
+      if (!line || !line.answerBulletId) return;
+      if (armed.has(line.answerBulletId)) return;
+      issues.push(
+        `Minigame "${name}": line ${i + 1}'s answer is not among its selected truth bullets, ` +
+          'so it can never be shot.'
+      );
+    });
+  }
+  return issues;
+}

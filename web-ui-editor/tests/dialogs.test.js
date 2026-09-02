@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 //
-// openDialog binds Enter with a CAPTURING keydown listener, which beats every
-// other handler on the page. With the destructive button holding both the
-// focus and the Enter binding, an Enter meant for something else landed on it
-// - arrowing through the script-line type <select> fires change, which opens
-// the "this clears the line's current content" confirm, and the Enter meant to
-// commit the select wiped the line.
+// openDialog binds Enter on document in the capture phase, so it runs ahead of
+// the bubble-phase handlers the rest of the app uses. With the destructive
+// button holding both the focus and that binding, an Enter meant for something
+// else landed on it: arrowing through the script-line type <select> fires
+// change, which opens the "this clears the line's current content" confirm,
+// and the Enter meant to commit the select wiped the line.
 import { beforeEach, describe, expect, it } from 'vitest';
 import { confirmDialog } from '../js/ui/dialogs.js';
 

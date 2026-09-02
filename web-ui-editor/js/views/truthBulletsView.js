@@ -1,5 +1,7 @@
 // Truth bullets, as a split pane: list on the left, detail on the right.
 import { updateFloatingAddButton } from '../components/floatingAddButton.js';
+import { removeEntry, reportFailedRemoval } from '../core/fileOps.js';
+import { markFileDeleted } from '../core/history.js';
 import { detachTruthBullet } from '../core/references.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
@@ -169,6 +171,19 @@ export async function deleteTruthBullet(bulletId) {
 
   // Captured before the removal, to pick the replacement selection below.
   const bulletIndex = state.truthBullets.findIndex((b) => b.bulletId === bulletId);
+  const bullet = state.truthBullets[bulletIndex];
+
+  // The image was never deleted at all - not swallowed, simply never
+  // attempted - so every deleted bullet left its picture in TruthBullets/ and
+  // in every export from then on.
+  if (bullet && bullet.imageFile && state.dirHandle) {
+    const bulletsDir = await state.dirHandle
+      .getDirectoryHandle('TruthBullets', { create: false })
+      .catch(() => null);
+    reportFailedRemoval(bullet.imageFile, await removeEntry(bulletsDir, bullet.imageFile));
+    // Undo cannot bring the bytes back, so it must not step past this.
+    markFileDeleted();
+  }
 
   state.truthBullets = state.truthBullets.filter((b) => b.bulletId !== bulletId);
 

@@ -4,6 +4,7 @@ import { initCharacterSearchDropdown } from './components/characterSearchDropdow
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
 import { initSpriteMagnifier } from './components/spriteMagnifier.js';
 import { initHistory, markFileDeleted, redo, undo } from './core/history.js';
+import { removeEntry, reportFailedRemoval } from './core/fileOps.js';
 import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
 import { state } from './core/state.js';
 import { autoSaveTrial, hasPendingWrites, scheduleAutoSave } from './core/storage.js';
@@ -378,14 +379,14 @@ export async function deleteScriptLine(lineId) {
 
 async function removeLineAudioFile(line) {
   if (!line.audioFile || !state.dirHandle) return;
-  try {
-    const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
-    await audioDir.removeEntry(line.audioFile);
-  } catch (e) {
-    console.warn('Could not remove audio file:', e);
-  }
+  const audioDir = await state.dirHandle
+    .getDirectoryHandle('Audio', { create: false })
+    .catch(() => null);
+  reportFailedRemoval(line.audioFile, await removeEntry(audioDir, line.audioFile));
   // Undo cannot bring the bytes back, so it must not step past this.
   markFileDeleted();
+  // Cleared either way: the line no longer plays it, and leaving the name
+  // behind would point at a file the author may have deleted by hand.
   line.audioFile = null;
 }
 

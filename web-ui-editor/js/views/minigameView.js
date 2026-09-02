@@ -10,6 +10,7 @@ import { renderLogicDiveEditor } from './minigames/logicDiveEditor.js';
 import { renderMassPanicDebateEditor } from './minigames/massPanicDebateEditor.js';
 import { renderNonstopDebateEditor } from './minigames/nonstopDebateEditor.js';
 import { MINIGAME_TYPE_LABELS } from '../core/constants.js';
+import { ensureTypeSpecific } from '../core/minigameDefaults.js';
 import { setHtml } from '../ui/dom.js';
 let expandedMinigameId = null;
 
@@ -238,6 +239,9 @@ export function updateMinigameField(gameId, field, value) {
           speaker3CharacterId: '',
         };
       }
+      // Whatever the branches above left, the new type's remaining keys are
+      // filled in here rather than by the editor's render function.
+      ensureTypeSpecific(mg);
     }
 
     renderMinigameDetails();

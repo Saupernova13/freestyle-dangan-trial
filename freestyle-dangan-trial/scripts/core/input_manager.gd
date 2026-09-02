@@ -35,11 +35,7 @@ signal skip_held_changed(held: bool)  # CTRL held → fast-forward mode
 var cursor_position: Vector2 = Vector2.ZERO
 var is_focus_active: bool = false
 
-var _is_desktop: bool = true
 var _skip_held: bool = false
-
-func _ready():
-	_is_desktop = not OS.has_feature("mobile")
 
 func _input(event):
 	_handle_motion(event)
@@ -149,9 +145,6 @@ func _toggle_focus() -> void:
 
 func _set_focus(active: bool) -> void:
 	set_focus(active)
-
-func is_desktop() -> bool:
-	return _is_desktop
 
 ## The OS delivers no key-up or button-up once the window loses focus, so held
 ## state would survive an alt-tab: CTRL would leave the trial fast-forwarding

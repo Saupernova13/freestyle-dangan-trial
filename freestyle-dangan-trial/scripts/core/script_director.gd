@@ -174,10 +174,6 @@ func on_minigame_finished():
 	_transition_to(State.DIALOGUE)
 	advance_to_next_line()
 
-func request_advance():
-	if current_state == State.WAITING_FOR_ADVANCE:
-		advance_to_next_line()
-
 func notify_typewriter_started():
 	is_typewriter_active = true
 
@@ -251,11 +247,6 @@ func get_current_line() -> ScriptLine:
 	if current_line_index >= 0 and current_line_index < script_lines.size():
 		return script_lines[current_line_index]
 	return null
-
-func get_progress() -> float:
-	if script_lines.is_empty():
-		return 0.0
-	return float(current_line_index + 1) / float(script_lines.size())
 
 func _process(delta):
 	if _skip_held and current_state == State.WAITING_FOR_ADVANCE:

@@ -224,8 +224,13 @@ func _on_time_expired():
 func _on_correct_answer(data: Dictionary = {}):
 	_finish(true, data)
 
-func _on_wrong_answer():
-	InfluenceGauge.take_damage(difficulty)
+## There is deliberately no _on_wrong_answer counterpart. One existed, took
+## damage and did NOT finish the minigame, and had no callers - so an
+## implementer who paired it with the above by name would have shipped a
+## minigame that damages the player and then hangs, never emitting
+## minigame_completed. Every failure path calls InfluenceGauge.take_damage
+## and then _finish(false, ...) explicitly, which is two lines and says what
+## it does.
 
 func _finish(success: bool, data: Dictionary = {}):
 	if _has_finished:

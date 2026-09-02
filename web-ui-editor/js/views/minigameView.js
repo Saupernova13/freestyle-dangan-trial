@@ -106,6 +106,39 @@ export function toggleMinigameExpand(gameId) {
   renderMinigameDetails();
 }
 
+// gameType -> its editor. The dropdown and the dispatch below are both built
+// from this, so a type can never be offered as authorable without an editor to
+// fill it in.
+const MINIGAME_EDITORS = {
+  nonstop_debate: renderNonstopDebateEditor,
+  mass_panic_debate: renderMassPanicDebateEditor,
+  logic_dive: renderLogicDiveEditor,
+  hangmans_gambit: renderHangmansGambitEditor,
+  debate_scrum: renderDebateScrumEditor,
+};
+
+// Every type MINIGAME_TYPE_LABELS declares, which is what trialSchema
+// validates gameType against. The list used to hardcode five of the eight, so
+// a minigame of one of the other three displayed "Nonstop Debate" as selected
+// while the data said otherwise - a control actively misreporting the model,
+// and editing anything else on that minigame could commit the wrong type.
+//
+// The three without an editor are shown and disabled rather than omitted: the
+// author can see what the trial holds, but cannot newly author a type the
+// editor cannot fill in.
+export function renderGameTypeOptions(selectedType) {
+  return Object.entries(MINIGAME_TYPE_LABELS)
+    .map(([type, label]) => {
+      const isSelected = selectedType === type;
+      const hasEditor = Boolean(MINIGAME_EDITORS[type]);
+      const attrs =
+        (isSelected ? ' selected' : '') + (!hasEditor && !isSelected ? ' disabled' : '');
+      const suffix = hasEditor ? '' : ' (no editor yet)';
+      return `<option value="${type}"${attrs}>${escapeHtml(label + suffix)}</option>`;
+    })
+    .join('');
+}
+
 export function renderMinigameEditor(mg) {
   // Common settings
   let editorHtml = `
@@ -125,11 +158,7 @@ export function renderMinigameEditor(mg) {
         <div class="form-group">
           <label>Game Type</label>
           <select class="form-input" onchange="updateMinigameField('${mg.gameId}', 'gameType', this.value)">
-            <option value="nonstop_debate" ${mg.gameType === 'nonstop_debate' ? 'selected' : ''}>Nonstop Debate</option>
-            <option value="mass_panic_debate" ${mg.gameType === 'mass_panic_debate' ? 'selected' : ''}>Mass Panic Debate</option>
-            <option value="logic_dive" ${mg.gameType === 'logic_dive' ? 'selected' : ''}>Logic Dive</option>
-            <option value="hangmans_gambit" ${mg.gameType === 'hangmans_gambit' ? 'selected' : ''}>Hangman's Gambit</option>
-            <option value="debate_scrum" ${mg.gameType === 'debate_scrum' ? 'selected' : ''}>Debate Scrum</option>
+            ${renderGameTypeOptions(mg.gameType)}
           </select>
         </div>
 
@@ -163,16 +192,9 @@ export function renderMinigameEditor(mg) {
     </div>
   `;
 
-  if (mg.gameType === 'nonstop_debate') {
-    editorHtml += renderNonstopDebateEditor(mg);
-  } else if (mg.gameType === 'mass_panic_debate') {
-    editorHtml += renderMassPanicDebateEditor(mg);
-  } else if (mg.gameType === 'logic_dive') {
-    editorHtml += renderLogicDiveEditor(mg);
-  } else if (mg.gameType === 'hangmans_gambit') {
-    editorHtml += renderHangmansGambitEditor(mg);
-  } else if (mg.gameType === 'debate_scrum') {
-    editorHtml += renderDebateScrumEditor(mg);
+  const renderTypeEditor = MINIGAME_EDITORS[mg.gameType];
+  if (renderTypeEditor) {
+    editorHtml += renderTypeEditor(mg);
   } else {
     // Placeholder for other types
     editorHtml += `

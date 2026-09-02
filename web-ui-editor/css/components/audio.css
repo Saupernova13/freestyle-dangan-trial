@@ -1,0 +1,29 @@
+/* The "no audio file uploaded" placeholder, shared by the script-line modal's
+ * audio tab, the mass panic editor and the nonstop debate editor - all three
+ * render the same markup.
+ *
+ * It used to be defined twice, in views/script-editor.css and
+ * views/minigames/mass-panic.css. mass-panic imports later, so it won
+ * everywhere: the script-line modal's audio tab rendered with mass-panic's
+ * compact padding and a dashed border it never asked for, and
+ * script-editor's own 2rem block was dead.
+ *
+ * The compact form is kept. It is what all three have rendered for as long as
+ * both rules have existed, it is the only one that styles the <p> every one of
+ * the three markup sites uses, and 2rem of padding reads as a full empty state
+ * rather than a one-line hint beside an upload button.
+ */
+.audio-empty {
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px dashed var(--border-primary);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.audio-empty p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}

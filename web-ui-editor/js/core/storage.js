@@ -787,7 +787,19 @@ export async function loadMinigameAudio() {
 }
 
 let autoSaveTimer = null;
-let autoSaveFailureNotified = false;
+// Consecutive failed writes since the last success. The old flag alerted once
+// and then never again until a save succeeded - so for a persistent cause,
+// which is the common one, an author deep in a script had a single dialog an
+// hour ago and a small pill since.
+let autoSaveFailureCount = 0;
+// Alert on the first failure, then every tenth. Often enough that "nothing
+// has been written for the last hour" cannot go unnoticed; rare enough not to
+// make the editor unusable while the author works out what is wrong.
+const AUTO_SAVE_ALERT_EVERY = 10;
+// True only while a reconnect's own retry is in flight. Without it a granted
+// permission that still cannot write loops forever: the retry fails, the
+// failure offers a reconnect, the reconnect retries.
+let reconnectInProgress = false;
 // True from the moment an edit is scheduled until a write for it succeeds, so
 // "nothing outstanding" is distinguishable from "a write never happened".
 let hasUnsavedChanges = false;
@@ -867,7 +879,7 @@ export async function autoSaveTrial(opts = {}) {
   setSaveStatus('saving');
   try {
     const writtenSeq = await enqueueTrialJsonWrite();
-    autoSaveFailureNotified = false;
+    autoSaveFailureCount = 0;
     // Only when nothing was edited after this write took its snapshot.
     // Otherwise the pill would read "All changes saved" over an edit that is
     // still only in memory, and the queued write behind us will report it.
@@ -876,20 +888,96 @@ export async function autoSaveTrial(opts = {}) {
       setSaveStatus('saved');
     }
   } catch (err) {
-    // Alert once, not on every subsequent keystroke, until a save succeeds.
     console.error('Auto-save failed:', err);
     setSaveStatus('error');
-    if (!autoSaveFailureNotified) {
-      autoSaveFailureNotified = true;
-      await alertDialog({
-        title: 'Auto-save failed',
-        type: 'error',
-        message:
-          `Auto-save failed: ${err.message}\n\n` +
-          'Your latest changes are NOT saved. Check folder permissions and ' +
-          'free disk space, then make another edit to retry.',
-      });
+    await reportAutoSaveFailure(err);
+  }
+}
+
+// Chrome drops a showDirectoryPicker grant on tab restore, browser restart and
+// session resume, and every write then throws NotAllowedError forever. The old
+// advice - "check folder permissions and free disk space, then make another
+// edit to retry" - is wrong for exactly that case: every retry fails, and the
+// author is never told the one thing that fixes it.
+async function reportAutoSaveFailure(err) {
+  autoSaveFailureCount++;
+  // The reconnect flow reports its own outcome.
+  if (reconnectInProgress) return;
+  if (autoSaveFailureCount % AUTO_SAVE_ALERT_EVERY !== 1) return;
+
+  if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
+    const reconnect = await confirmDialog({
+      title: 'The editor has lost write access to this folder',
+      message:
+        'Your latest changes are NOT saved, and every retry will fail until ' +
+        'access is restored. This usually happens after a browser restart or ' +
+        'a restored tab.',
+      confirmLabel: 'Reconnect folder',
+      cancelLabel: 'Not now',
+    });
+    if (reconnect) await reconnectDirHandle();
+    return;
+  }
+
+  const isQuota = err && err.name === 'QuotaExceededError';
+  await alertDialog({
+    title: 'Auto-save failed',
+    type: 'error',
+    message:
+      `Auto-save failed: ${err.message}\n\n` +
+      'Your latest changes are NOT saved. ' +
+      (isQuota
+        ? 'The disk is full, or the browser storage quota is. Free some space, ' +
+          'then make another edit to retry.'
+        : 'Check folder permissions and free disk space, then make another ' +
+          'edit to retry.'),
+  });
+}
+
+// Re-asks for the grant on the handle the editor already holds, so the author
+// keeps their folder rather than re-picking it. Called from the dialog's
+// button, because requestPermission needs a user gesture.
+async function reconnectDirHandle() {
+  let granted = 'denied';
+  try {
+    if (state.dirHandle && typeof state.dirHandle.requestPermission === 'function') {
+      granted = await state.dirHandle.requestPermission({ mode: 'readwrite' });
     }
+  } catch (err) {
+    console.warn('Could not re-request folder permission:', err);
+  }
+
+  if (granted !== 'granted') {
+    await alertDialog({
+      title: 'Still no access',
+      type: 'error',
+      message:
+        'The editor still cannot write to this folder. Open the trial again ' +
+        'from the hub to pick it, or export a copy to keep your work.',
+    });
+    return;
+  }
+
+  // Retry immediately: the author asked for this, and waiting for their next
+  // keystroke would leave the pill reading "Save failed" over a folder that
+  // now works.
+  autoSaveFailureCount = 0;
+  reconnectInProgress = true;
+  try {
+    await autoSaveTrial({ skipHistory: true });
+  } finally {
+    reconnectInProgress = false;
+  }
+
+  // A success clears the counter, so anything left means the retry failed too.
+  if (autoSaveFailureCount > 0) {
+    await alertDialog({
+      title: 'Still could not save',
+      type: 'error',
+      message:
+        'Access was restored, but the save still failed. Export a copy to keep ' +
+        'your work, then open the trial again from the hub.',
+    });
   }
 }
 

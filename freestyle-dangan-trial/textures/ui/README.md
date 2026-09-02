@@ -35,11 +35,19 @@ size:
 
 ## Window scaling / UI scale
 
-Stretch mode is deliberately **disabled** (`project.godot` has no
-`window/stretch/mode`): resizing the window never rescales the UI. The only
-thing that scales the canvas is the Settings "UI Scale" option
-(`Settings.ui_scale` -> `Window.content_scale_factor`, clamped to
-`UI_SCALE_MIN..UI_SCALE_MAX`).
+There are **two** scales, and neither is a reason to change a texture.
+
+`project.godot` sets `window/stretch/mode="canvas_items"` with
+`window/stretch/aspect="expand"` on a 1280x720 viewport, so resizing the
+window scales the entire canvas in real time instead of letterboxing it. On
+top of that, the Settings "UI Scale" option (`Settings.ui_scale` ->
+`Window.content_scale_factor`, clamped to `UI_SCALE_MIN..UI_SCALE_MAX`) is an
+optional extra zoom the player controls.
+
+Both multiply the canvas as a whole, so they move every node together and none
+of the sizing rules above changes. What they do mean is that a texture is
+drawn larger than its canvas rect on a large window, which is the reason for
+the authoring headroom in the first place.
 
 ## Imports
 

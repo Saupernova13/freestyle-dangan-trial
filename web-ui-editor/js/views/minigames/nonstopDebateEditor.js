@@ -13,6 +13,12 @@ import { confirmDialog, showToast } from '../../ui/dialogs.js';
 import { renderCharacterOptions } from '../../models/characterModel.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
+import {
+  TEXT_DIRECTIONS,
+  TEXT_EFFECTS,
+  TEXT_FONTS,
+  renderOptions,
+} from '../../core/debateTextOptions.js';
 import { orderedCopy } from '../../core/minigameDefaults.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
@@ -280,29 +286,21 @@ export function renderDialogueLineEditor(gameId, line, index) {
                 <div class="form-group">
                   <label>Text Effect</label>
                   <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textEffect', this.value)">
-                    <option value="normal" ${line.textEffect === 'normal' ? 'selected' : ''}>Normal</option>
-                    <option value="shake" ${line.textEffect === 'shake' ? 'selected' : ''}>Shake</option>
-                    <option value="fade" ${line.textEffect === 'fade' ? 'selected' : ''}>Fade</option>
-                    <option value="glow" ${line.textEffect === 'glow' ? 'selected' : ''}>Glow</option>
+                    ${renderOptions(TEXT_EFFECTS, line.textEffect)}
                   </select>
                 </div>
 
                 <div class="form-group">
                   <label>Text Font</label>
                   <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textFont', this.value)">
-                    <option value="default" ${line.textFont === 'default' ? 'selected' : ''}>Default</option>
-                    <option value="bold" ${line.textFont === 'bold' ? 'selected' : ''}>Bold</option>
-                    <option value="italic" ${line.textFont === 'italic' ? 'selected' : ''}>Italic</option>
-                    <option value="handwritten" ${line.textFont === 'handwritten' ? 'selected' : ''}>Handwritten</option>
-                    <option value="glitch" ${line.textFont === 'glitch' ? 'selected' : ''}>Glitch</option>
+                    ${renderOptions(TEXT_FONTS, line.textFont)}
                   </select>
                 </div>
 
                 <div class="form-group">
                   <label>Movement Direction</label>
                   <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textMovementDirection', this.value)">
-                    <option value="left_to_right" ${line.textMovementDirection === 'left_to_right' ? 'selected' : ''}>Left to Right</option>
-                    <option value="right_to_left" ${line.textMovementDirection === 'right_to_left' ? 'selected' : ''}>Right to Left</option>
+                    ${renderOptions(TEXT_DIRECTIONS, line.textMovementDirection)}
                   </select>
                 </div>
               </div>

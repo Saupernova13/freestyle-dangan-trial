@@ -60,13 +60,32 @@ func validate_data() -> Array[String]:
 func wants_mobile_slow_time() -> bool:
 	return true
 
+## THE WHITE-NOISE DECISION. Every back-reference below points here.
+##
+## White noise is disabled pending a positioning rework: isWhiteNoise is
+## ignored and every line spawns as a main line. Matches ARCHITECTURE.md and
+## README.md.
+##
+## The flag is stripped, not just ignored. Leaving it on a main panel handed
+## DebateTextPanel a line that took the small font, the far-depth parallax and
+## - the part that matters - a get_hit_zone() that returns "white_noise" for
+## the panel's entire body, so its weak point could never be exposed. A
+## statement authored as white noise was therefore unshootable. Reachable only
+## from a hand-edited or third-party trial.json today, because the editor never
+## writes isWhiteNoise, but it would go live the moment the feature came back.
+##
+## To re-enable: route isWhiteNoise lines into _white_noise_lines here instead
+## of stripping it, and _spawn_noise_line is waiting.
 func _split_dialogue_lines():
 	_main_lines.clear()
 	_white_noise_lines.clear()
-	# White noise is disabled pending a positioning rework: isWhiteNoise is
-	# ignored and every line spawns as a main line.
 	for line in dialogue_lines:
-		_main_lines.append(line)
+		if JsonRead.bool_of(line.get("isWhiteNoise")):
+			var main_line := line.duplicate()
+			main_line["isWhiteNoise"] = false
+			_main_lines.append(main_line)
+		else:
+			_main_lines.append(line)
 
 func start():
 	super.start()
@@ -229,6 +248,8 @@ func _spawn_main_line():
 	if not voice_file.is_empty():
 		AudioManager.play_voice_line(voice_file)
 
+## Parked with the white-noise feature; see _split_dialogue_lines. Nothing
+## fills _white_noise_lines, so this returns at its guard on every call.
 func _spawn_noise_line():
 	if _white_noise_lines.is_empty():
 		return

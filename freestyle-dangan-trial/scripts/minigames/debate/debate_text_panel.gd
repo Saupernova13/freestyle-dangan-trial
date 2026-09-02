@@ -148,6 +148,8 @@ func _apply_setup():
 	character_id = JsonRead.str_of(data.get("characterId"))
 	text_effect = JsonRead.str_of(data.get("textEffect"), "normal")
 	text_font = JsonRead.str_of(data.get("textFont"), "default")
+	# Always false in practice: nonstop_debate strips the flag while the
+	# white-noise feature is parked. See its _split_dialogue_lines.
 	is_white_noise = JsonRead.bool_of(data.get("isWhiteNoise"))
 
 	_roll_variance()

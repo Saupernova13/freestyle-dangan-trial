@@ -41,6 +41,7 @@ var _skip_timer: float = 0.0
 var _line_handlers: Dictionary = {}
 
 func _ready():
+	# Each handler returns whether it took the line; see advance_to_next_line.
 	_line_handlers = {
 		ScriptLine.TYPE_SPEAKING: _handle_speaking_line,
 		ScriptLine.TYPE_NARRATOR: _handle_narrator_line,
@@ -65,37 +66,60 @@ func _transition_to(new_state: State):
 	current_state = new_state
 	state_changed.emit(new_state)
 
+## Skipping is iterative, not recursive. A skipped line used to advance by
+## calling this from inside itself, so a run of unplayable lines recursed once
+## per line - and TrialValidator deliberately lets unknown line types through
+## with a warning, so a trial from a newer minor format could overflow the
+## stack instead of stepping over them.
 func advance_to_next_line():
-	current_line_index += 1
+	var skipped_types: Array[String] = []
+	while true:
+		current_line_index += 1
 
-	if current_line_index >= script_lines.size():
-		Log.info("ScriptDirector", "End of script reached")
-		_transition_to(State.TRIAL_COMPLETE)
-		trial_ended.emit()
+		if current_line_index >= script_lines.size():
+			_report_skipped_types(skipped_types)
+			Log.info("ScriptDirector", "End of script reached")
+			_transition_to(State.TRIAL_COMPLETE)
+			trial_ended.emit()
+			return
+
+		var line: ScriptLine = script_lines[current_line_index]
+		line_started.emit(line)
+
+		var handler: Callable = _line_handlers.get(line.type, Callable())
+		if not handler.is_valid():
+			if not skipped_types.has(line.type):
+				skipped_types.append(line.type)
+			continue
+		# Handlers return false when they could not play the line, and the loop
+		# moves on to the next one.
+		if handler.call(line):
+			_report_skipped_types(skipped_types)
+			return
+
+## One message per run of skipped lines rather than one per line. A block of
+## unknown types is a single authoring or version problem, and push_warning is
+## expensive enough that a thousand of them cost far more than the skipping.
+func _report_skipped_types(types: Array[String]) -> void:
+	if types.is_empty():
 		return
+	Log.warn("ScriptDirector", "Skipped lines with unknown types: %s" % ", ".join(types))
+	types.clear()
 
-	var line: ScriptLine = script_lines[current_line_index]
-	line_started.emit(line)
-
-	var handler: Callable = _line_handlers.get(line.type, Callable())
-	if handler.is_valid():
-		handler.call(line)
-	else:
-		Log.warn("ScriptDirector", "Unknown line type '%s', skipping" % line.type)
-		advance_to_next_line()
-
-func _handle_speaking_line(line: ScriptLine):
+func _handle_speaking_line(line: ScriptLine) -> bool:
 	_transition_to(State.DIALOGUE)
 	_play_line_audio(line)
 	dialogue_displayed.emit(line.character_id, line.dialogue)
 	_transition_to(State.WAITING_FOR_ADVANCE)
+	return true
 
-func _handle_narrator_line(line: ScriptLine):
+func _handle_narrator_line(line: ScriptLine) -> bool:
 	_transition_to(State.DIALOGUE)
 	# Narrator lines carry audio too, for SFX and narration VO.
 	_play_line_audio(line)
 	narrator_displayed.emit(line.display_text())
 	_transition_to(State.WAITING_FOR_ADVANCE)
+	return true
 
 func _play_line_audio(line: ScriptLine) -> void:
 	if not line.audio_file.is_empty():
@@ -103,22 +127,21 @@ func _play_line_audio(line: ScriptLine) -> void:
 			AudioManager.stop_voice()
 		AudioManager.play_voice_line(line.audio_file)
 
-func _handle_minigame_line(line: ScriptLine):
+func _handle_minigame_line(line: ScriptLine) -> bool:
 	if line.minigame_id.is_empty():
 		Log.warn("ScriptDirector", "Minigame line missing minigameId, skipping")
-		advance_to_next_line()
-		return
+		return false
 
 	var minigame: MinigameData = (
 		TrialLoader.manifest.find_minigame(line.minigame_id) if TrialLoader.manifest else null
 	)
 	if minigame == null:
 		Log.warn("ScriptDirector", "Minigame not found: %s, skipping" % line.minigame_id)
-		advance_to_next_line()
-		return
+		return false
 
 	_transition_to(State.MINIGAME_LOADING)
 	minigame_requested.emit(minigame)
+	return true
 
 func on_minigame_started(minigame_node: Node):
 	_active_minigame = minigame_node

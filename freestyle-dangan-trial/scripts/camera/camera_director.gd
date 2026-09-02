@@ -1,6 +1,21 @@
 extends Node
 
 var _camera: Camera3D
+## One motion owns the camera at a time.
+##
+## Nothing waited for the previous motion or cancelled it, so advancing the
+## script mid-pan left two tweens writing the same property - the camera
+## followed whichever wrote last that frame, and the first tween's `finished`
+## emitted motion_completed while the second was still running. Auto-advance
+## reached this with no player input at all, on any trial whose camera motion
+## outlasts the auto-advance delay.
+##
+## The newest line's camera direction is the one the author meant to see, so a
+## new motion supersedes the running one rather than queueing behind it.
+## Killing a Tween suppresses its `finished`, which covers the tweened
+## handlers; the generation covers the ones that finish off an await instead.
+var _active_tween: Tween = null
+var _motion_generation: int = 0
 var _bench_camera: Node
 var _original_fov: float = 30.0
 var _original_position: Vector3
@@ -80,6 +95,11 @@ func execute_motion(motion_data: Dictionary, target_bench_index: int = -1):
 		motion_completed.emit()
 		return
 
+	_motion_generation += 1
+	if _active_tween != null and _active_tween.is_valid():
+		_active_tween.kill()
+	_active_tween = null
+
 	var motion_type = motion_data.get("type", "none")
 	var duration = float(motion_data.get("duration", 1.0))
 	var easing_str = motion_data.get("easing", "ease-in-out")
@@ -90,18 +110,21 @@ func execute_motion(motion_data: Dictionary, target_bench_index: int = -1):
 func _finish_immediately(
 	_bench_index: int, _duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType
 ):
-	_finish_motion()
+	_finish_motion(_motion_generation)
 
 func _execute_cut(bench_index: int, _duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType):
 	if _bench_camera and bench_index >= 0:
 		_bench_camera.jump_to_bench(bench_index, false)
-	_finish_motion()
+	_finish_motion(_motion_generation)
 
 func _execute_pan(bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType):
 	if _bench_camera and bench_index >= 0:
 		_bench_camera.jump_to_bench(bench_index, true)
+	# Captured before the await: a motion started while this one is in
+	# flight supersedes it, and a superseded motion must not report.
+	var generation := _motion_generation
 	await get_tree().create_timer(duration).timeout
-	_finish_motion()
+	_finish_motion(generation)
 
 func _execute_zoom(
 	_bench_index: int,
@@ -110,11 +133,11 @@ func _execute_zoom(
 	trans_type: Tween.TransitionType,
 	target_fov: float
 ):
-	var tween = _camera.create_tween()
+	var tween = _new_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)
 	tween.tween_property(_camera, "fov", target_fov, duration)
-	tween.finished.connect(_finish_motion)
+	tween.finished.connect(_finish_motion.bind(_motion_generation))
 
 func _execute_shake(
 	_bench_index: int,
@@ -123,8 +146,11 @@ func _execute_shake(
 	_trans_type: Tween.TransitionType,
 	intensity: float = 0.02
 ):
+	# Captured before the await: a motion started while this one is in
+	# flight supersedes it, and a superseded motion must not report.
+	var generation := _motion_generation
 	await ScreenEffects.screen_shake(duration, intensity)
-	_finish_motion()
+	_finish_motion(generation)
 
 func _execute_dramatic_zoom(
 	bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType
@@ -132,7 +158,7 @@ func _execute_dramatic_zoom(
 	if _bench_camera and bench_index >= 0:
 		_bench_camera.jump_to_bench(bench_index, true)
 
-	var tween = _camera.create_tween()
+	var tween = _new_tween()
 	tween.tween_property(_camera, "fov", 20.0, duration * 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	tween.finished.connect(func():
 		_execute_shake(bench_index, duration * 0.4, Tween.EASE_IN_OUT, Tween.TRANS_CUBIC, 0.015)
@@ -140,38 +166,39 @@ func _execute_dramatic_zoom(
 
 func _execute_spin(_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType):
 	var start_rot = _camera.rotation.y
-	var tween = _camera.create_tween()
+	var tween = _new_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)
 	tween.tween_property(_camera, "rotation:y", start_rot + TAU, duration)
+	var generation := _motion_generation
 	tween.finished.connect(func():
 		_camera.rotation.y = start_rot
-		_finish_motion()
+		_finish_motion(generation)
 	)
 
 func _execute_overhead(_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType):
 	var overhead_pos = Vector3(0, 2.0, 0)
 	var overhead_rot = Vector3(-PI / 2, 0, 0)
-	var tween = _camera.create_tween()
+	var tween = _new_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)
 	tween.set_parallel(true)
 	tween.tween_property(_camera, "global_position", overhead_pos, duration)
 	tween.tween_property(_camera, "rotation", overhead_rot, duration)
-	tween.finished.connect(_finish_motion)
+	tween.finished.connect(_finish_motion.bind(_motion_generation))
 
 func _execute_low_angle(
 	_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType
 ):
 	var low_pos = _camera.global_position + Vector3(0, -0.3, 0)
 	var low_rot = _camera.rotation + Vector3(0.2, 0, 0)
-	var tween = _camera.create_tween()
+	var tween = _new_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)
 	tween.set_parallel(true)
 	tween.tween_property(_camera, "global_position", low_pos, duration)
 	tween.tween_property(_camera, "rotation", low_rot, duration)
-	tween.finished.connect(_finish_motion)
+	tween.finished.connect(_finish_motion.bind(_motion_generation))
 
 func _execute_dolly(
 	_bench_index: int,
@@ -182,11 +209,11 @@ func _execute_dolly(
 ):
 	var forward = -_camera.global_transform.basis.z
 	var target_pos = _camera.global_position + forward * distance
-	var tween = _camera.create_tween()
+	var tween = _new_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)
 	tween.tween_property(_camera, "global_position", target_pos, duration)
-	tween.finished.connect(_finish_motion)
+	tween.finished.connect(_finish_motion.bind(_motion_generation))
 
 ## Relative delta, in radians per axis.
 func _execute_rotate(
@@ -197,11 +224,11 @@ func _execute_rotate(
 	delta_rot: Vector3
 ):
 	var target_rot = _camera.rotation + delta_rot
-	var tween = _camera.create_tween()
+	var tween = _new_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)
 	tween.tween_property(_camera, "rotation", target_rot, duration)
-	tween.finished.connect(_finish_motion)
+	tween.finished.connect(_finish_motion.bind(_motion_generation))
 
 ## Local-space offset: x is right, y is up.
 func _execute_translate(
@@ -214,50 +241,65 @@ func _execute_translate(
 	var basis = _camera.global_transform.basis
 	var world_offset = basis.x * local_offset.x + basis.y * local_offset.y + basis.z * local_offset.z
 	var target_pos = _camera.global_position + world_offset
-	var tween = _camera.create_tween()
+	var tween = _new_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)
 	tween.tween_property(_camera, "global_position", target_pos, duration)
-	tween.finished.connect(_finish_motion)
+	tween.finished.connect(_finish_motion.bind(_motion_generation))
 
 func _execute_cross_dissolve(
 	_bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType
 ):
+	# Captured before the await: a motion started while this one is in
+	# flight supersedes it, and a superseded motion must not report.
+	var generation := _motion_generation
 	await ScreenEffects.cross_dissolve(duration)
-	_finish_motion()
+	_finish_motion(generation)
 
 func _execute_tracking(
 	bench_index: int, duration: float, _ease_type: Tween.EaseType, _trans_type: Tween.TransitionType
 ):
 	if _bench_camera and bench_index >= 0:
 		_bench_camera.jump_to_bench(bench_index, true)
+	# Captured before the await: a motion started while this one is in
+	# flight supersedes it, and a superseded motion must not report.
+	var generation := _motion_generation
 	await get_tree().create_timer(duration).timeout
-	_finish_motion()
+	_finish_motion(generation)
 
 func _execute_dutch_tilt(
 	_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType
 ):
 	var tilt_angle = deg_to_rad(15.0)
 	var original_z = _camera.rotation.z
-	var tween = _camera.create_tween()
+	var tween = _new_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)
 	tween.tween_property(_camera, "rotation:z", tilt_angle, duration * 0.3)
 	tween.tween_interval(duration * 0.4)
 	tween.tween_property(_camera, "rotation:z", original_z, duration * 0.3)
-	tween.finished.connect(_finish_motion)
+	tween.finished.connect(_finish_motion.bind(_motion_generation))
 
 func _execute_reset(_bench_index: int, duration: float, ease_type: Tween.EaseType, trans_type: Tween.TransitionType):
-	var tween = _camera.create_tween()
+	var tween = _new_tween()
 	tween.set_ease(ease_type)
 	tween.set_trans(trans_type)
 	tween.set_parallel(true)
 	tween.tween_property(_camera, "fov", _original_fov, duration)
 	tween.tween_property(_camera, "rotation:z", 0.0, duration)
-	tween.finished.connect(_finish_motion)
+	tween.finished.connect(_finish_motion.bind(_motion_generation))
 
-func _finish_motion():
+## Reports only for the motion that is still current. Without the guard a
+## superseded motion emits motion_completed for the one that replaced it.
+func _finish_motion(generation: int) -> void:
+	if generation != _motion_generation:
+		return
 	motion_completed.emit()
+
+
+func _new_tween() -> Tween:
+	_active_tween = _camera.create_tween()
+	return _active_tween
 
 func _parse_ease(easing_str: String) -> Tween.EaseType:
 	match easing_str:

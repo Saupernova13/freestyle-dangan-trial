@@ -137,9 +137,11 @@ so they can't be fixed AnimationPlayer clips. The same reasoning keeps the
 
 `freestyle-dangan-trial/textures/ui/` is the single runtime texture set; node
 sizes are defined in scenes and never derived from texture resolution, so
-swapping art never moves layout. Stretch mode is deliberately disabled --
-window size never rescales the UI; the Settings "UI Scale" option
-(`Window.content_scale_factor`) is the only canvas scale. Full rules,
+swapping art never moves layout. Stretch mode is `canvas_items` with
+`aspect=expand` on a 1280x720 base, so resizing the window scales the whole
+canvas; the Settings "UI Scale" option (`Window.content_scale_factor`) layers
+an optional extra zoom on top of that rather than being the only scale. Full
+rules,
 including why 9-slice sources must stay at design resolution, live in
 `freestyle-dangan-trial/textures/ui/README.md`.
 

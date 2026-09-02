@@ -10,10 +10,13 @@ The two invariants everything below serves:
 1. **Texture resolution must never affect layout.** Node sizes are declared
    in the scene; the texture is drawn *into* that rect. You can replace any
    texture with a 2x or 0.5x version and nothing moves.
-2. **Window size must never affect UI size.** Stretch mode is disabled on
-   purpose. The only thing that scales the canvas is the Settings "UI Scale"
-   slider (`Window.content_scale_factor`, 75%–200%). Design in fixed pixels
-   against a ~1920x1080 canvas and let anchors handle other window sizes.
+2. **Window size must never affect UI *layout*.** It does affect UI *size*:
+   stretch mode is `canvas_items` with `aspect=expand` on a 1280x720 base,
+   so the whole canvas scales with the window and the proportions stay put.
+   The Settings "UI Scale" slider (`Window.content_scale_factor`,
+   75%–200%) layers an optional extra zoom on top. Design in fixed pixels
+   against the 1280x720 canvas and let anchors handle aspect ratios other
+   than 16:9.
 
 ---
 

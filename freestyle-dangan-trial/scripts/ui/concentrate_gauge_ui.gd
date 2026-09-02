@@ -20,6 +20,10 @@ func show_gauge():
 func hide_gauge():
 	visible = false
 
+## Tier index -> its colour clip. A lookup rather than an if/elif chain, so the
+## tiers and the clip names stay side by side.
+const TIER_ANIMATIONS := ["color_low", "color_mid", "color_high"]
+
 func _on_concentrate_changed(current: float, maximum: float):
 	var pct = current / maximum if maximum > 0 else 0.0
 	var new_tier: int
@@ -30,18 +34,18 @@ func _on_concentrate_changed(current: float, maximum: float):
 	else:
 		new_tier = 0
 
-	if new_tier != _last_tier and _anim:
-		var anim_name = ""
-		if new_tier == 2:
-			anim_name = "color_high"
-		elif new_tier == 1:
-			anim_name = "color_mid"
-		else:
-			anim_name = "color_low"
-		if _anim.has_animation(anim_name):
-			_anim.play(anim_name)
+	if new_tier != _last_tier:
+		# Recorded outside the _anim check. It used to be set inside it, so a
+		# null AnimationPlayer would have left the tier stuck and this
+		# re-evaluating the same transition forever.
 		_last_tier = new_tier
+		var anim_name: String = TIER_ANIMATIONS[new_tier]
+		if _anim and _anim.has_animation(anim_name):
+			_anim.play(anim_name)
 
-	# Dynamic target, so this one can't be an AnimationPlayer clip.
-	var tween = create_tween()
-	tween.tween_property(_bar_fill, "offset_right", bar_width * pct, 0.2)
+	# Assigned, not tweened. This is a continuous value: drain() emits on every
+	# frame slow-time is held and refill() on every frame after, so a 0.2s
+	# tween per emission meant roughly 60 Tween objects a second and about a
+	# dozen live at once, all animating the same property against each other.
+	# InfluenceGauge can tween because its trigger is discrete damage.
+	_bar_fill.offset_right = bar_width * pct

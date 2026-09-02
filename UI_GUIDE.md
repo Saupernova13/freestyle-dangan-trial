@@ -24,7 +24,7 @@ The two invariants everything below serves:
 
 | Kind of art | Author at | Why |
 |---|---|---|
-| Fixed-rect art (portraits, icons, banners, buttons, decals) | 2x–4x its on-screen size in a 1080p layout | Headroom so it stays crisp at UI Scale 200% on 4K. 4x is the project norm. |
+| Fixed-rect art (portraits, icons, banners, buttons, decals) | 3x–6x the node's rect in canvas units | The canvas is 1280x720 and two scales multiply it: the window (3x on 4K) and UI Scale (up to 2x). 4x is the project norm, which covers 4K at 100%. |
 | 9-slice frames, tiled patterns, anything used in a `StyleBoxTexture` with margins or `region_rect` | Exactly design resolution (its on-screen size) | Godot draws 9-slice margins and regions in *texture pixels*, 1:1 with canvas units. A higher-res source fattens borders and breaks slicing. |
 
 - Save to `freestyle-dangan-trial/textures/ui/<name>.png`. One file per

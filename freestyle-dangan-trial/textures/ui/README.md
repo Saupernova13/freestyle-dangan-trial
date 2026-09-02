@@ -6,9 +6,11 @@ quality tiers; every scene references these files and nothing else.
 ## Authoring rules
 
 - **Fixed-rect art** (portraits, banners, decals, buttons): author at roughly
-  2-4x the size it occupies in a 1080p layout so it stays crisp at high UI
-  scale on 4K displays. Resolution is a quality knob only -- it must never
-  affect layout (see sizing rules below).
+  3-6x the node's rect **in canvas units**. The canvas is 1280x720 and two
+  scales multiply it -- the window (3x on a 4K display) and UI Scale (up to
+  2x) -- so that range is what keeps art crisp at the extremes. 4x is the
+  project norm and covers 4K at 100%. Resolution is a quality knob only -- it
+  must never affect layout (see sizing rules below).
 - **9-slice, tiled, or region-rect textures** (`minigame_name_frame_*`,
   `empty_block`, anything used in a `StyleBoxTexture` with margins or a
   `region_rect`): author at **design resolution**. Godot expresses 9-slice

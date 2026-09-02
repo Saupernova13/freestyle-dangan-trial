@@ -7,6 +7,12 @@ extends RefCounted
 var _characters_dir: String
 var _data_cache: Dictionary = {}     # char_id -> character dict (+ folder_path)
 var _texture_cache: Dictionary = {}  # "char_id:sprite_idx" -> ImageTexture
+# Ids already scanned for and not found. Misses were not cached, so a dangling
+# id reopened Characters/ and reparsed every character.json on every lookup -
+# O(lines x cast) file reads for one bad reference, plus a warning per lookup
+# flooding the log. TrialRoomManager hits this per benchless speaking line and
+# DebateScrum per round.
+var _missing_ids: Dictionary = {}
 
 func _init(characters_dir: String) -> void:
 	_characters_dir = characters_dir
@@ -14,6 +20,7 @@ func _init(characters_dir: String) -> void:
 func clear() -> void:
 	_data_cache.clear()
 	_texture_cache.clear()
+	_missing_ids.clear()
 
 ## Empty dict when not found. Folder names carry no id, so the first lookup
 ## scans every character.json; hits are cached.
@@ -22,6 +29,8 @@ func get_character(character_id: String) -> Dictionary:
 		return {}
 	if _data_cache.has(character_id):
 		return _data_cache[character_id]
+	if _missing_ids.has(character_id):
+		return {}
 
 	if not DirAccess.dir_exists_absolute(_characters_dir):
 		push_warning("Characters directory not found")
@@ -53,6 +62,9 @@ func get_character(character_id: String) -> Dictionary:
 	# "Not found" sends the author hunting for a wrong id. If a file in the
 	# scan could not be read, that is the likelier explanation and the parser
 	# has already said why.
+	# Remembered, so the rescan and the warning happen once per trial rather
+	# than once per reference.
+	_missing_ids[character_id] = true
 	if unreadable.is_empty():
 		push_warning("Character not found: " + character_id)
 	else:

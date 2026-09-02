@@ -23,6 +23,10 @@ import { orderedCopy } from '../../core/minigameDefaults.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 
+// The header, the Add button and addDialogueLine all read this, so the
+// number the author is shown and the number enforced cannot drift apart.
+const MAX_DIALOGUE_LINES = 30;
+
 // Drag state for dialogue lines
 let draggedDialogueLineId = null;
 
@@ -112,7 +116,7 @@ export function renderNonstopDebateEditor(mg) {
 
   html += `
     <div class="minigame-editor-section">
-      <h3>Debate Dialogue Lines (${dialogueLines.length}/30)</h3>
+      <h3>Debate Dialogue Lines (${dialogueLines.length}/${MAX_DIALOGUE_LINES})</h3>
   `;
 
   if (dialogueLines.length === 0) {
@@ -147,8 +151,8 @@ export function renderNonstopDebateEditor(mg) {
 
   html += `</div>`;
 
-  // 30 dialogue lines is the cap.
-  if (dialogueLines.length < 30) {
+  // The button hides at the cap; addDialogueLine enforces it.
+  if (dialogueLines.length < MAX_DIALOGUE_LINES) {
     html += `
       <button class="minigame-floating-btn"
               onclick="addDialogueLine('${mg.gameId}')"
@@ -435,6 +439,16 @@ export function addDialogueLine(gameId) {
 
   if (!mg.typeSpecific.dialogueLines) {
     mg.typeSpecific.dialogueLines = [];
+  }
+
+  // Enforced, not just hidden. 30 was described as the cap while the only
+  // thing it did was hide the Add button, so every other route in - a
+  // keyboard shortcut, a future bulk-add - walked straight past it.
+  // debateScrumEditor caps its 8 arguments this way and its comment is
+  // therefore true.
+  if (mg.typeSpecific.dialogueLines.length >= MAX_DIALOGUE_LINES) {
+    showToast(`Maximum ${MAX_DIALOGUE_LINES} dialogue lines allowed.`, { type: 'warning' });
+    return;
   }
 
   mg.typeSpecific.dialogueLines.push(

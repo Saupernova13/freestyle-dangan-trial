@@ -60,7 +60,12 @@ npm run check   # lint + tests + build, all must pass
 - UI belongs in `.tscn` scenes and animations in resource files — scripts only
   bind data and trigger animations.
 - Log through the `Log` autoload (`Log.info("Tag", "msg")`), not `print()`.
-  `Log.debug/info` are muted in release builds unless `DANGAN_VERBOSE=1`.
+  Four levels, each dropped below the threshold: `debug` and `info` are
+  milestones, `warn` and `error` are problems and go through
+  `push_warning`/`push_error`. The threshold is `DEBUG` in a debug build and
+  `WARN` in a release build, so anything a player needs to report has to be
+  `warn` or above. Override with `DANGAN_LOG_LEVEL=debug|info|warn|error`
+  (`DANGAN_VERBOSE=1` still means `debug`).
 
 ### Engine tests (gdUnit4)
 

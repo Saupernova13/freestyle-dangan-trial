@@ -114,7 +114,7 @@ func _validation_errors(minigame_data: MinigameData) -> Array[String]:
 ## An authoring error must not be a soft-lock. Four minigames spin on empty
 ## data - nothing spawns, nothing can be hit, the timer expires, the attempt
 ## replays identically - and the diagnostics they do emit are Log.info, which
-## prints nothing at all in an exported build.
+## is below the release threshold and so reaches no player.
 func _skip_unplayable(minigame_data: MinigameData, errors: Array[String]) -> void:
 	var detail := ", ".join(errors)
 	Log.error(

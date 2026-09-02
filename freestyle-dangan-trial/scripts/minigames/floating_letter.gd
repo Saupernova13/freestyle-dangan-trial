@@ -5,6 +5,12 @@ extends Control
 ## and spawn point come from the difficulty settings.
 
 signal clicked(letter_node: FloatingLetter)
+## Emitted before the letter frees itself for drifting off screen, so the
+## spawner can drop its reference. Without it the spawner's list only ever
+## grew: entries were removed on a click or a collision and never on an exit,
+## and its per-frame pair scan walked every freed one. DebateTextPanel declares
+## the same signal and both debates prune on it.
+signal exited_screen(letter_node: FloatingLetter)
 
 var letter: String = ""
 var is_answer_letter: bool = false
@@ -25,6 +31,8 @@ func _process(delta):
 	position += velocity * delta
 	var vp = get_viewport_rect().size
 	if position.x < -80 or position.x > vp.x + 80 or position.y < -80 or position.y > vp.y + 80:
+		_active = false
+		exited_screen.emit(self)
 		queue_free()
 
 func _gui_input(event):

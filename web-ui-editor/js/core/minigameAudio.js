@@ -1,6 +1,7 @@
 // Audio storage for minigame voice lines. Owns the
 // Audio/Minigames/<gameId>/ layout so no editor re-implements the walk.
 import { markFileDeleted } from './history.js';
+import { removeEntry, reportFailedRemoval } from './fileOps.js';
 import { state } from './state.js';
 import { showToast } from '../ui/dialogs.js';
 
@@ -19,15 +20,12 @@ export async function saveMinigameAudioFile(gameId, fileName, file) {
   await writable.close();
 }
 
-// Best-effort delete; a missing file is not an error worth surfacing.
+// A missing file is not an error worth surfacing; a failed delete is - it
+// stays in the folder and ships in every export.
 export async function deleteMinigameAudioFile(gameId, fileName) {
   if (!fileName) return;
-  try {
-    const dir = await getMinigameAudioDir(gameId, false);
-    await dir.removeEntry(fileName);
-  } catch (e) {
-    console.warn('Could not remove audio file:', e);
-  }
+  const dir = await getMinigameAudioDir(gameId, false).catch(() => null);
+  reportFailedRemoval(fileName, await removeEntry(dir, fileName));
   // Undo cannot bring the bytes back, so it must not step past this.
   markFileDeleted();
 }

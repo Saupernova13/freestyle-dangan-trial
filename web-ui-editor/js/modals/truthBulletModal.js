@@ -1,4 +1,5 @@
 // Create/edit modal for a single truth bullet.
+import { removeEntry, reportFailedRemoval } from '../core/fileOps.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { showToast } from '../ui/dialogs.js';
@@ -219,15 +220,13 @@ export async function saveTruthBullet() {
       };
       reader.readAsDataURL(bulletFields.imageBlob);
     } else if (bulletFields.imageFile === null && bullet.imageFile) {
-      // Cleared: delete the file, but don't fail the save if it is already gone.
-      try {
-        const bulletsDir = await state.dirHandle.getDirectoryHandle('TruthBullets', {
-          create: false,
-        });
-        await bulletsDir.removeEntry(bullet.imageFile);
-      } catch (e) {
-        console.warn('Could not remove image file:', e);
-      }
+      // Cleared: delete the file, but don't fail the save if it is already
+      // gone. A delete that genuinely failed is reported - the file stays in
+      // the folder and ships in every export.
+      const bulletsDir = await state.dirHandle
+        .getDirectoryHandle('TruthBullets', { create: false })
+        .catch(() => null);
+      reportFailedRemoval(bullet.imageFile, await removeEntry(bulletsDir, bullet.imageFile));
       bullet.imageFile = null;
       bullet.imageDataURL = null;
     }

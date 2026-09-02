@@ -362,17 +362,51 @@ export async function deleteOpfsTrialAndRefresh(folder) {
     danger: true,
   });
   if (!confirmed) return;
+
+  // Resolved before the delete, and compared by identity: matching on
+  // dirHandle.name alone false-positives against an on-disk folder that
+  // happens to share the slug, and would then blank an open trial that was
+  // never touched.
+  const target = await getOpfsTrial(folder, { create: false }).catch(() => null);
+  const isOpen = await sameDirectory(state.dirHandle, target, folder);
+
+  let deleted = true;
   try {
     await deleteOpfsTrial(folder);
   } catch (err) {
     console.warn('Could not delete trial:', err);
+    deleted = false;
   }
-  if (state.dirHandle && state.dirHandle.name === folder) {
+
+  if (isOpen) {
     state.dirHandle = null;
     resetEmptyTrial();
+    // Undo reached back into the trial that is no longer open, and its next
+    // autosave would have written that data somewhere new.
+    resetHistory();
   }
-  showToast('Trial deleted', { type: 'success' });
+
+  if (deleted) {
+    showToast('Trial deleted', { type: 'success' });
+  } else {
+    // It is still there, and it reappears in the hub on the next visit.
+    showToast(`Could not delete "${folder}". It is still in browser storage.`, { type: 'error' });
+  }
   await openTrialHub();
+}
+
+// isSameEntry is the only exact answer; the name comparison is the fallback
+// for a handle that does not implement it.
+async function sameDirectory(a, b, fallbackName) {
+  if (!a) return false;
+  if (b && typeof a.isSameEntry === 'function') {
+    try {
+      return await a.isSameEntry(b);
+    } catch (err) {
+      console.warn('isSameEntry failed; falling back to the folder name:', err);
+    }
+  }
+  return a.name === fallbackName;
 }
 
 // Shown by both gates. findUnsafeIds has already quoted and clipped the

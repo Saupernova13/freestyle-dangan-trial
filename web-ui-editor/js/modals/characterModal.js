@@ -2,6 +2,7 @@
 import { state } from '../core/state.js';
 import { uniqueDirectoryName } from '../core/opfs.js';
 import { markFileDeleted } from '../core/history.js';
+import { removeEntry } from '../core/fileOps.js';
 import { detachCharacter } from '../core/references.js';
 import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
 import {
@@ -458,12 +459,9 @@ export async function removeCharacter() {
     // from the current fields: renaming someone since creation would aim
     // removeEntry at the wrong folder, or silently miss.
     const folderName = existing._folderHandle?.name;
+    let folderRemoval = { failed: false };
     if (charsDir && folderName) {
-      try {
-        await charsDir.removeEntry(folderName, { recursive: true });
-      } catch (e) {
-        console.warn('Could not remove character folder:', e);
-      }
+      folderRemoval = await removeEntry(charsDir, folderName, { recursive: true });
     } else if (!folderName) {
       console.warn(`No folder handle for character ${existing.id}; leaving files in place.`);
     }
@@ -483,7 +481,16 @@ export async function removeCharacter() {
     showLoader(false);
     closeCharModal();
     renderCastGrid();
-    showToast('Character removed', { type: 'success' });
+    // Never a green tick over a folder that is still on disk: the cast slot
+    // is cleared either way, but the files are what ship in the export.
+    if (folderRemoval.failed) {
+      showToast(
+        `Removed from the cast, but Characters/${folderName} could not be deleted.`,
+        { type: 'error' }
+      );
+    } else {
+      showToast('Character removed', { type: 'success' });
+    }
   } catch (error) {
     showLoader(false);
     console.error('Failed to remove character:', error);

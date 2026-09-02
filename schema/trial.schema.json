@@ -15,8 +15,9 @@
       "type": "string"
     },
     "characters": {
-      "description": "Positional bench slots (16 students + 1 headmaster). Each entry is a character id whose data lives in Characters/<Name>/character.json inside the .drtrial, or null for an empty bench.",
+      "description": "Positional bench slots (16 students + 1 headmaster). Each entry is a character id whose data lives in Characters/<Name>/character.json inside the .drtrial, or null for an empty bench. Ids must be unique: a character sits at one bench, and the editor empties any repeated slot on load.",
       "type": "array",
+      "maxItems": 17,
       "items": {
         "type": [
           "string",

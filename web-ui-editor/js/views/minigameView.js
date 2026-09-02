@@ -10,7 +10,7 @@ import { renderLogicDiveEditor } from './minigames/logicDiveEditor.js';
 import { renderMassPanicDebateEditor } from './minigames/massPanicDebateEditor.js';
 import { renderNonstopDebateEditor } from './minigames/nonstopDebateEditor.js';
 import { MINIGAME_TYPE_LABELS } from '../core/constants.js';
-import { ensureTypeSpecific } from '../core/minigameDefaults.js';
+import { hasAuthoredContent, resetTypeSpecific } from '../core/minigameDefaults.js';
 import { setHtml } from '../ui/dom.js';
 let expandedMinigameId = null;
 
@@ -210,43 +210,48 @@ export function renderMinigameEditor(mg) {
   return editorHtml;
 }
 
-export function updateMinigameField(gameId, field, value) {
+export async function updateMinigameField(gameId, field, value) {
   const mg = findMinigame(gameId);
-  if (mg) {
-    mg[field] = value;
+  if (!mg) return;
 
-    // A new game type needs its own typeSpecific shape seeded.
-    if (field === 'gameType') {
-      if (value === 'nonstop_debate' && !mg.typeSpecific) {
-        mg.typeSpecific = { selectedBullets: [], dialogueLines: [] };
-      } else if (value === 'logic_dive' && (!mg.typeSpecific || !mg.typeSpecific.questions)) {
-        mg.typeSpecific = { questions: [] };
-      } else if (
-        value === 'hangmans_gambit' &&
-        (!mg.typeSpecific || mg.typeSpecific.answerKey === undefined)
-      ) {
-        mg.typeSpecific = { answerKey: '' };
-      } else if (value === 'debate_scrum' && (!mg.typeSpecific || !mg.typeSpecific.arguments)) {
-        mg.typeSpecific = { arguments: [] };
-      } else if (
-        value === 'mass_panic_debate' &&
-        (!mg.typeSpecific || !mg.typeSpecific.lineGroups)
-      ) {
-        mg.typeSpecific = {
-          lineGroups: [],
-          speaker1CharacterId: '',
-          speaker2CharacterId: '',
-          speaker3CharacterId: '',
-        };
-      }
-      // Whatever the branches above left, the new type's remaining keys are
-      // filled in here rather than by the editor's render function.
-      ensureTypeSpecific(mg);
-    }
-
-    renderMinigameDetails();
-    autoSaveTrial(); // deliberately not awaited; the UI is already updated
+  if (field === 'gameType') {
+    await changeMinigameType(mg, value);
+    return;
   }
+
+  mg[field] = value;
+  renderMinigameDetails();
+  autoSaveTrial(); // deliberately not awaited; the UI is already updated
+}
+
+// A gameType change replaces typeSpecific, so switching a nonstop debate to
+// mass panic destroys every authored dialogue line. changeScriptLineType
+// confirms for the exactly analogous case; this path used to do it silently.
+//
+// Cancelling re-renders so the dropdown snaps back to the real gameType,
+// which is still what state holds.
+async function changeMinigameType(mg, newType) {
+  if (mg.gameType === newType) return;
+
+  if (hasAuthoredContent(mg)) {
+    const proceed = await confirmDialog({
+      title: 'Change minigame type',
+      message:
+        `This clears everything authored for ${MINIGAME_TYPE_LABELS[mg.gameType] || mg.gameType}` +
+        ' and starts the new type empty. Continue?',
+      confirmLabel: 'Change type',
+      danger: true,
+    });
+    if (!proceed) {
+      renderMinigameDetails();
+      return;
+    }
+  }
+
+  mg.gameType = newType;
+  resetTypeSpecific(mg);
+  renderMinigameDetails();
+  autoSaveTrial();
 }
 
 export function addMinigame() {

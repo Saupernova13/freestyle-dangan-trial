@@ -69,3 +69,35 @@ export function ensureAllTypeSpecific(minigames) {
   (minigames || []).forEach(ensureTypeSpecific);
   return minigames;
 }
+
+// Replaces typeSpecific with the new gameType's defaults, discarding the old
+// type's content. The caller confirms first - see hasAuthoredContent.
+//
+// The old code did this through a chain of five branches, each guarding on
+// whether the NEW type's key was already present, so switching back and forth
+// half-preserved things. One of the five guarded on the wrong key
+// (`!mg.typeSpecific` rather than `!mg.typeSpecific.dialogueLines`), which is
+// never true for a minigame addMinigame created - so logic_dive ->
+// nonstop_debate left `{questions: [...]}` with no dialogueLines at all, and
+// the editor's `|| []` hid it.
+export function resetTypeSpecific(mg) {
+  if (!mg) return mg;
+  mg.typeSpecific = {};
+  return ensureTypeSpecific(mg);
+}
+
+// True when typeSpecific holds anything an author would notice losing.
+// Deliberately shallow: a non-empty list, a non-empty string, or an object
+// with any keys. Counts every key, not just the current type's, so content
+// left behind by an earlier type change is not silently discarded a second
+// time.
+export function hasAuthoredContent(mg) {
+  const typeSpecific = mg && mg.typeSpecific;
+  if (!typeSpecific || typeof typeSpecific !== 'object') return false;
+  return Object.values(typeSpecific).some((value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'string') return value.trim() !== '';
+    if (value && typeof value === 'object') return Object.keys(value).length > 0;
+    return false;
+  });
+}

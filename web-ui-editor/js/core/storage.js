@@ -18,6 +18,7 @@ import {
   getOpfsTrial,
   supportsFsPicker,
 } from './opfs.js';
+import { ensureAllTypeSpecific } from './minigameDefaults.js';
 import { safeZipPathParts, zipRootPrefix } from './zipPaths.js';
 import { updateExportButtonState } from '../export.js';
 import { appSettings } from '../settings.js';
@@ -115,7 +116,10 @@ async function loadTrialIntoState() {
     state.scriptLines = data.script && data.script.lines ? data.script.lines : [];
 
     if (Array.isArray(data.minigames)) {
-      state.minigames = data.minigames;
+      // Seeded once, here, rather than by whichever editor happened to render
+      // first - and the ordered lists numbered, so the sort comparator is
+      // total.
+      state.minigames = ensureAllTypeSpecific(data.minigames);
       await loadMinigameAudio();
     } else {
       state.minigames = [];

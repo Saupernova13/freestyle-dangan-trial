@@ -18,17 +18,10 @@ import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 // ==================== Main Rendering ====================
 
 export function renderMassPanicDebateEditor(mg) {
-  if (!mg.typeSpecific) {
-    mg.typeSpecific = {};
-  }
-  if (!mg.typeSpecific.lineGroups) {
-    mg.typeSpecific.lineGroups = [];
-  }
-  if (!mg.typeSpecific.speaker1CharacterId) mg.typeSpecific.speaker1CharacterId = '';
-  if (!mg.typeSpecific.speaker2CharacterId) mg.typeSpecific.speaker2CharacterId = '';
-  if (!mg.typeSpecific.speaker3CharacterId) mg.typeSpecific.speaker3CharacterId = '';
-
-  const lineGroups = mg.typeSpecific.lineGroups;
+  // Read-only: seeding lives in ensureTypeSpecific, called at load and on a
+  // gameType change. Doing it here mutated trial data as a side effect of
+  // expanding a card, and the next autosave persisted a change undo never saw.
+  const lineGroups = (mg.typeSpecific && mg.typeSpecific.lineGroups) || [];
 
   return `
     <div class="minigame-editor-section mass-panic-section">

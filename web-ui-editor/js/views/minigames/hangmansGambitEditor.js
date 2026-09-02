@@ -4,12 +4,10 @@ import { autoSaveTrial } from '../../core/storage.js';
 import { escapeHtml } from '../../utils.js';
 
 export function renderHangmansGambitEditor(mg) {
-  if (!mg.typeSpecific) {
-    mg.typeSpecific = {};
-  }
-  if (mg.typeSpecific.answerKey === undefined) {
-    mg.typeSpecific.answerKey = '';
-  }
+  // Read-only: seeding lives in ensureTypeSpecific, called at load and on a
+  // gameType change. Doing it here mutated trial data as a side effect of
+  // expanding a card, and the next autosave persisted a change undo never saw.
+  const answerKey = (mg.typeSpecific && mg.typeSpecific.answerKey) || '';
 
   return `
     <div class="minigame-editor-section">
@@ -20,7 +18,7 @@ export function renderHangmansGambitEditor(mg) {
         <label>Answer Key</label>
         <input type="text"
                class="form-input"
-               value="${escapeHtml(mg.typeSpecific.answerKey || '')}"
+               value="${escapeHtml(answerKey)}"
                onchange="updateHangmansGambitField('${mg.gameId}', 'answerKey', this.value)"
                placeholder="Enter answer key">
       </div>

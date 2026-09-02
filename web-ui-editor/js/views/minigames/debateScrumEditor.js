@@ -3,6 +3,7 @@
 
 // Drag state for arguments
 import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
+import { orderedCopy } from '../../core/minigameDefaults.js';
 import {
   deleteMinigameAudioFile,
   loadMinigameAudioFile,
@@ -20,14 +21,10 @@ let draggedArgumentId = null;
 // ==================== Main Rendering ====================
 
 export function renderDebateScrumEditor(mg) {
-  if (!mg.typeSpecific) {
-    mg.typeSpecific = {};
-  }
-  if (!mg.typeSpecific.arguments) {
-    mg.typeSpecific.arguments = [];
-  }
-
-  const args = mg.typeSpecific.arguments;
+  // Read-only: seeding lives in ensureTypeSpecific, called at load and on a
+  // gameType change. Doing it here mutated trial data as a side effect of
+  // expanding a card, and the next autosave persisted a change undo never saw.
+  const args = (mg.typeSpecific && mg.typeSpecific.arguments) || [];
 
   let html = `
     <div class="minigame-editor-section">
@@ -70,10 +67,8 @@ export function renderDebateScrumArguments(gameId, args) {
                 ondrop="handleArgumentDropInGap(event, '${gameId}', 0)"
                 ondragleave="handleArgumentGapDragLeave(event)"></div>`;
 
-  args
-    .sort((a, b) => a.order - b.order)
-    .forEach((arg, index) => {
-      html += `
+  orderedCopy(args).forEach((arg, index) => {
+    html += `
       <div class="argument-wrapper"
            draggable="true"
            ondragstart="handleArgumentDragStart(event, '${gameId}', '${arg.argumentId}')"
@@ -86,7 +81,7 @@ export function renderDebateScrumArguments(gameId, args) {
            ondrop="handleArgumentDropInGap(event, '${gameId}', ${index + 1})"
            ondragleave="handleArgumentGapDragLeave(event)"></div>
     `;
-    });
+  });
 
   return html;
 }

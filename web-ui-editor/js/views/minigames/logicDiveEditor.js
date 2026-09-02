@@ -2,6 +2,7 @@
 
 // Drag state for questions
 import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
+import { orderedCopy } from '../../core/minigameDefaults.js';
 import { confirmDialog } from '../../ui/dialogs.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
@@ -11,14 +12,10 @@ let draggedQuestionId = null;
 // ==================== Main Rendering ====================
 
 export function renderLogicDiveEditor(mg) {
-  if (!mg.typeSpecific) {
-    mg.typeSpecific = {};
-  }
-  if (!mg.typeSpecific.questions) {
-    mg.typeSpecific.questions = [];
-  }
-
-  const questions = mg.typeSpecific.questions;
+  // Read-only: seeding lives in ensureTypeSpecific, called at load and on a
+  // gameType change. Doing it here mutated trial data as a side effect of
+  // expanding a card, and the next autosave persisted a change undo never saw.
+  const questions = (mg.typeSpecific && mg.typeSpecific.questions) || [];
 
   let html = `
     <div class="minigame-editor-section logic-dive-section">
@@ -58,10 +55,8 @@ export function renderLogicDiveQuestions(gameId, questions) {
                 ondrop="handleQuestionDropInGap(event, '${gameId}', 0)"
                 ondragleave="handleQuestionGapDragLeave(event)"></div>`;
 
-  questions
-    .sort((a, b) => a.order - b.order)
-    .forEach((question, index) => {
-      html += `
+  orderedCopy(questions).forEach((question, index) => {
+    html += `
         <div class="logic-dive-question-wrapper"
              draggable="true"
              ondragstart="handleQuestionDragStart(event, '${gameId}', '${question.questionId}')"
@@ -75,7 +70,7 @@ export function renderLogicDiveQuestions(gameId, questions) {
              ondrop="handleQuestionDropInGap(event, '${gameId}', ${index + 1})"
              ondragleave="handleQuestionGapDragLeave(event)"></div>
       `;
-    });
+  });
 
   return html;
 }

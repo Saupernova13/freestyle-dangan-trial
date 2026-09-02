@@ -13,6 +13,7 @@ import { confirmDialog, showToast } from '../../ui/dialogs.js';
 import { renderCharacterOptions } from '../../models/characterModel.js';
 import { state } from '../../core/state.js';
 import { autoSaveTrial } from '../../core/storage.js';
+import { orderedCopy } from '../../core/minigameDefaults.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 
@@ -37,12 +38,12 @@ export function isSectionExpanded(lineId, sectionName) {
 // ==================== Main Rendering ====================
 
 export function renderNonstopDebateEditor(mg) {
-  if (!mg.typeSpecific) {
-    mg.typeSpecific = { selectedBullets: [], dialogueLines: [] };
-  }
-
-  const selectedBullets = mg.typeSpecific.selectedBullets || [];
-  const dialogueLines = mg.typeSpecific.dialogueLines || [];
+  // Read-only: seeding lives in ensureTypeSpecific, called at load and on a
+  // gameType change. Doing it here mutated trial data as a side effect of
+  // expanding a card, and the next autosave persisted a change undo never saw.
+  const typeSpecific = mg.typeSpecific || {};
+  const selectedBullets = typeSpecific.selectedBullets || [];
+  const dialogueLines = typeSpecific.dialogueLines || [];
 
   let html = `
     <div class="minigame-editor-section">
@@ -96,10 +97,8 @@ export function renderNonstopDebateEditor(mg) {
                   ondrop="handleDialogueDropInGap(event, '${mg.gameId}', 0)"
                   ondragleave="handleDialogueGapDragLeave(event)"></div>`;
 
-    dialogueLines
-      .sort((a, b) => a.order - b.order)
-      .forEach((line, index) => {
-        html += `
+    orderedCopy(dialogueLines).forEach((line, index) => {
+      html += `
         <div class="dialogue-line-wrapper"
              draggable="true"
              ondragstart="handleDialogueDragStart(event, '${mg.gameId}', '${line.lineId}')"
@@ -112,7 +111,7 @@ export function renderNonstopDebateEditor(mg) {
              ondrop="handleDialogueDropInGap(event, '${mg.gameId}', ${index + 1})"
              ondragleave="handleDialogueGapDragLeave(event)"></div>
       `;
-      });
+    });
   }
 
   html += `</div>`;

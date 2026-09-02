@@ -71,9 +71,11 @@ describe('safeZipPathParts', () => {
     expect(safeZipPathParts('///')).toBeNull();
   });
 
-  it('yields no components for a bare directory entry', () => {
-    // Directory entries are filtered out before this, but an empty result must
-    // not become a file write.
-    expect(safeZipPathParts('Audio/')).toEqual(['Audio']);
+  it('refuses a directory-like path rather than writing it as a file', () => {
+    // JSZip flags real directory entries, but a malformed archive can carry an
+    // unflagged one - which would otherwise be written as a file named after
+    // the folder.
+    expect(safeZipPathParts('Audio/')).toBeNull();
+    expect(safeZipPathParts('Characters/Someone/')).toBeNull();
   });
 });

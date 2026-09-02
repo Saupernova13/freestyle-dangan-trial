@@ -306,6 +306,35 @@ const corpus = [
     },
     false,
   ],
+  [
+    'minigame with a known difficulty',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [{ gameId: 'mg_1', gameType: 'nonstop_debate', difficulty: 'hard' }];
+      return t;
+    },
+    true,
+  ],
+  [
+    // "Hard" with a capital H passed every check and then fell back to medium
+    // in four independent tuning tables, silently.
+    'minigame with a difficulty that is merely miscapitalised',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [{ gameId: 'mg_1', gameType: 'nonstop_debate', difficulty: 'Hard' }];
+      return t;
+    },
+    false,
+  ],
+  [
+    'minigame with an invented difficulty',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [{ gameId: 'mg_1', gameType: 'nonstop_debate', difficulty: 'hardcore' }];
+      return t;
+    },
+    false,
+  ],
   // typeSpecific used to be unconstrained on both sides, so the half of the
   // format carrying the gameplay content was the unguarded half. ajv and the
   // hand validator must now agree on these too.

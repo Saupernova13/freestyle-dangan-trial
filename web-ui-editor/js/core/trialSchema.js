@@ -12,6 +12,9 @@ import { FORMAT_VERSION, MINIGAME_TYPE_LABELS } from './constants.js';
 
 const LINE_TYPES = ['speaking', 'narrator', 'minigame'];
 const GAME_TYPES = Object.keys(MINIGAME_TYPE_LABELS);
+// The engine keys four independent tuning tables on this and falls back to
+// medium for anything else, silently, in all four.
+const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const VERSION_PATTERN = /^\d+\.\d+$/;
 const COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
@@ -159,8 +162,10 @@ function validateMinigame(mg, n, issues) {
   if (!isString(mg.gameType) || !GAME_TYPES.includes(mg.gameType))
     issues.push(`Minigame ${n} has an unknown gameType "${mg.gameType}".`);
   if ('name' in mg && !isString(mg.name)) issues.push(`Minigame ${n}: name is not a string.`);
-  if ('difficulty' in mg && !isString(mg.difficulty))
-    issues.push(`Minigame ${n}: difficulty is not a string.`);
+  if ('difficulty' in mg && !DIFFICULTIES.includes(mg.difficulty))
+    issues.push(
+      `Minigame ${n}: difficulty "${mg.difficulty}" is not one of ${DIFFICULTIES.join(', ')}.`
+    );
   if ('timeLimit' in mg && !isNumber(mg.timeLimit))
     issues.push(`Minigame ${n}: timeLimit is not a number.`);
   if ('failComment' in mg && !isString(mg.failComment))

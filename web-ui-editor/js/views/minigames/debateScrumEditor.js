@@ -10,7 +10,7 @@ import {
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
 import { toggleAudioPreview } from '../../components/audioPreview.js';
-import { showToast } from '../../ui/dialogs.js';
+import { confirmDialog, showToast } from '../../ui/dialogs.js';
 import { renderCharacterOptions } from '../../models/characterModel.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
@@ -260,7 +260,19 @@ export function addDebateScrumArgument(gameId) {
   autoSaveTrial();
 }
 
-export function deleteDebateScrumArgument(gameId, argumentId) {
+export async function deleteDebateScrumArgument(gameId, argumentId) {
+  // One click used to destroy the whole pair, with the button sitting right
+  // beside the reorder arrows. Every comparable delete in the app confirms.
+  const confirmed = await confirmDialog({
+    title: 'Delete argument',
+    message:
+      'Delete this argument? Both the opposition and defense statements, ' +
+      'their keywords and their audio go with it.',
+    confirmLabel: 'Delete',
+    danger: true,
+  });
+  if (!confirmed) return;
+
   const mg = findMinigame(gameId);
   if (!mg) return;
 

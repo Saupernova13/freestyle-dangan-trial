@@ -307,6 +307,36 @@ const corpus = [
     false,
   ],
   [
+    'minigame with no time limit, spelled 0',
+    () => {
+      const t = minimalTrial();
+      // The engine treats 0 as the absence of a timer at both of its gates.
+      t.minigames = [{ gameId: 'mg_1', gameType: 'nonstop_debate', timeLimit: 0 }];
+      return t;
+    },
+    true,
+  ],
+  [
+    // -5 failed both timer gates, so the minigame had no time-out fail path at
+    // all and any other authoring mistake trapped the player permanently.
+    'minigame with a negative time limit',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [{ gameId: 'mg_1', gameType: 'nonstop_debate', timeLimit: -5 }];
+      return t;
+    },
+    false,
+  ],
+  [
+    'minigame with an absurd time limit',
+    () => {
+      const t = minimalTrial();
+      t.minigames = [{ gameId: 'mg_1', gameType: 'nonstop_debate', timeLimit: 999999 }];
+      return t;
+    },
+    false,
+  ],
+  [
     'minigame with a known difficulty',
     () => {
       const t = minimalTrial();

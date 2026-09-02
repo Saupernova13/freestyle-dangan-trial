@@ -1,6 +1,6 @@
 extends MinigameBase
 
-var questions: Array = []
+var questions: Array[Dictionary] = []
 var current_question_index: int = 0
 
 var _overlay: CanvasLayer
@@ -14,8 +14,7 @@ var _showing_question: bool = false
 
 func initialize(data: MinigameData):
 	super.initialize(data)
-	var type_specific := data.type_specific
-	questions = type_specific.get("questions", [])
+	questions = data.ts_dicts("questions")
 
 func validate_data() -> Array[String]:
 	if questions.is_empty():
@@ -27,24 +26,17 @@ func validate_data() -> Array[String]:
 	# but blanks leaves zero buttons on screen.
 	var errors: Array[String] = []
 	for i in range(questions.size()):
-		var question = questions[i]
-		if not question is Dictionary:
-			errors.append("question %d is not an object" % (i + 1))
-			continue
-		var answers = question.get("answers", [])
-		if not answers is Array:
-			errors.append("question %d: answers is not a list" % (i + 1))
-			continue
-
+		var answers := _answers_of(questions[i])
 		var answerable := 0
 		var correct := 0
 		for answer in answers:
-			if not answer is Dictionary:
-				continue
-			if str(answer.get("answerText", "")).strip_edges().is_empty():
+			if JsonRead.str_of(answer.get("answerText")).strip_edges().is_empty():
 				continue
 			answerable += 1
-			if answer.get("isCorrect", false):
+			# A non-bool isCorrect reads as false here and as false at the
+			# click, so a "true" string is reported as an unwinnable question
+			# rather than binding a String into a bool parameter mid-play.
+			if JsonRead.bool_of(answer.get("isCorrect")):
 				correct += 1
 
 		if answerable == 0:
@@ -82,20 +74,20 @@ func _show_question(index: int):
 	current_question_index = index
 	_showing_question = true
 
-	var q = questions[index]
-	_question_label.text = q.get("questionText", "???")
+	var q := questions[index]
+	_question_label.text = JsonRead.str_of(q.get("questionText"), "???")
 
 	for btn in _lane_buttons:
 		btn.queue_free()
 	_lane_buttons.clear()
 	_button_original_indices.clear()
 
-	var answers = q.get("answers", [])
+	var answers := _answers_of(q)
 	var filtered_answers: Array = []
 
 	for i in range(answers.size()):
-		var answer = answers[i]
-		var answer_text = answer.get("answerText", "").strip_edges()
+		var answer := answers[i]
+		var answer_text := JsonRead.str_of(answer.get("answerText")).strip_edges()
 		if not answer_text.is_empty():
 			filtered_answers.append({"answer": answer, "original_index": i})
 
@@ -107,8 +99,8 @@ func _show_question(index: int):
 		var answer = entry["answer"]
 		var original_index = entry["original_index"]
 		var btn: Button = ResourceRegistry.instantiate("lane_button")
-		btn.text = answer.get("answerText", "?")
-		var is_correct = answer.get("isCorrect", false)
+		btn.text = JsonRead.str_of(answer.get("answerText"), "?")
+		var is_correct := JsonRead.bool_of(answer.get("isCorrect"))
 		btn.pressed.connect(_on_answer_selected.bind(original_index, is_correct))
 		_lanes_container.add_child(btn)
 		_lane_buttons.append(btn)
@@ -125,8 +117,8 @@ func _on_answer_selected(original_index: int, is_correct: bool):
 		return
 	_showing_question = false
 
-	var q = questions[current_question_index]
-	var answers = q.get("answers", [])
+	var q := questions[current_question_index]
+	var answers := _answers_of(q)
 
 	for i in range(_lane_buttons.size()):
 		var btn = _lane_buttons[i]
@@ -134,7 +126,7 @@ func _on_answer_selected(original_index: int, is_correct: bool):
 		var btn_original_idx = _button_original_indices[i]
 		if btn_original_idx == original_index:
 			btn.modulate = UITheme.COLOR_CORRECT if is_correct else UITheme.COLOR_WRONG
-		elif answers[btn_original_idx].get("isCorrect", false):
+		elif JsonRead.bool_of(answers[btn_original_idx].get("isCorrect")):
 			btn.modulate = UITheme.COLOR_CORRECT
 
 	if is_correct:
@@ -146,6 +138,14 @@ func _on_answer_selected(original_index: int, is_correct: bool):
 		InfluenceGauge.take_damage(difficulty)
 		await get_tree().create_timer(1.5).timeout
 		_finish(false, {"reason": "wrong_answer"})
+
+## One reading of `answers`, so validate_data(), _show_question() and the
+## result colouring cannot disagree about which entries exist - the indices
+## _button_original_indices stores are into this filtered list, and both
+## readers must produce it the same way.
+func _answers_of(question: Dictionary) -> Array[Dictionary]:
+	return JsonRead.dicts_of(question.get("answers"), "logic_dive answers")
+
 
 func _on_influence_depleted():
 	_finish(false, {"reason": "influence_depleted"})

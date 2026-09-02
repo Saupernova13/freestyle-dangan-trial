@@ -166,20 +166,22 @@ static func _dangling_references(data: Dictionary) -> Array[String]:
 		if not mg is Dictionary:
 			continue
 		var label = str(mg.get("gameId", "?"))
-		var type_specific = mg.get("typeSpecific")
-		if not type_specific is Dictionary:
-			continue
-		for bullet_id in type_specific.get("selectedBullets", []):
-			if bullet_id is String and not bullet_ids.has(bullet_id):
+		var type_specific := JsonRead.dict_of(mg.get("typeSpecific"))
+		var selected := JsonRead.strings_of(
+			type_specific.get("selectedBullets"), "minigame '%s' selectedBullets" % label
+		)
+		for bullet_id in selected:
+			if not bullet_ids.has(bullet_id):
 				errors.append(
 					"minigame '%s' selects truth bullet '%s', which does not exist"
 					% [label, bullet_id]
 				)
-		for line in type_specific.get("dialogueLines", []):
-			if not line is Dictionary:
-				continue
-			var answer_id = line.get("answerBulletId")
-			if answer_id is String and not answer_id.is_empty() and not bullet_ids.has(answer_id):
+		var dialogue_lines := JsonRead.dicts_of(
+			type_specific.get("dialogueLines"), "minigame '%s' dialogueLines" % label
+		)
+		for line in dialogue_lines:
+			var answer_id := JsonRead.str_of(line.get("answerBulletId"))
+			if not answer_id.is_empty() and not bullet_ids.has(answer_id):
 				errors.append(
 					"minigame '%s' answers with truth bullet '%s', which does not exist"
 					% [label, answer_id]

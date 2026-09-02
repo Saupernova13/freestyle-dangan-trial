@@ -1,7 +1,7 @@
 extends MinigameBase
 
-var line_groups: Array = []
-var speaker_ids: Array = []
+var line_groups: Array[Dictionary] = []
+var speaker_ids: Array[String] = []
 var current_group_index: int = 0
 var focused_row: int = 1
 var _solved: bool = false
@@ -16,12 +16,11 @@ var _overlay_anim: AnimationPlayer
 
 func initialize(data: MinigameData):
 	super.initialize(data)
-	var type_specific := data.type_specific
-	line_groups = type_specific.get("lineGroups", [])
+	line_groups = data.ts_dicts("lineGroups")
 	speaker_ids = [
-		type_specific.get("speaker1CharacterId", ""),
-		type_specific.get("speaker2CharacterId", ""),
-		type_specific.get("speaker3CharacterId", "")
+		data.ts_string("speaker1CharacterId"),
+		data.ts_string("speaker2CharacterId"),
+		data.ts_string("speaker3CharacterId"),
 	]
 
 	_spawn_interval = MinigameConfig.get_spawn_interval("mass_panic_debate", difficulty)
@@ -122,20 +121,20 @@ func _spawn_group():
 	if current_group_index >= line_groups.size():
 		current_group_index = 0
 
-	var group = line_groups[current_group_index]
+	var group := line_groups[current_group_index]
 	current_group_index += 1
 
 	var speaker_keys = ["speaker1", "speaker2", "speaker3"]
 	for i in range(3):
-		var speaker_data = group.get(speaker_keys[i], {})
+		var speaker_data := JsonRead.dict_of(group.get(speaker_keys[i]))
 		if speaker_data.is_empty():
 			continue
 
 		var panel: DebateTextPanel = ResourceRegistry.instantiate("debate_text_panel")
-		var line_data = speaker_data.duplicate()
+		var line_data := speaker_data.duplicate()
 		line_data["characterId"] = speaker_ids[i]
-		var answer_bullet_id = line_data.get("answerBulletId", "")
-		line_data["isShootable"] = (i == focused_row) and answer_bullet_id is String and not answer_bullet_id.is_empty()
+		var answer_bullet_id := JsonRead.str_of(line_data.get("answerBulletId"))
+		line_data["isShootable"] = (i == focused_row) and not answer_bullet_id.is_empty()
 
 		panel.setup(line_data, get_difficulty_multiplier())
 		panel.position.y = 0
@@ -145,13 +144,13 @@ func _spawn_group():
 		_panels_on_screen.append({"panel": panel, "row": i, "data": line_data})
 
 		if i == focused_row:
-			var voice_file = speaker_data.get("voiceLineFile", "")
-			if voice_file is String and not voice_file.is_empty():
+			var voice_file := JsonRead.str_of(speaker_data.get("voiceLineFile"))
+			if not voice_file.is_empty():
 				AudioManager.play_voice_line(voice_file)
 			if not speaker_ids[i].is_empty():
 				focus_camera_on_character(speaker_ids[i])
 
-		if speaker_data.get("isLoudAssertion", false):
+		if JsonRead.bool_of(speaker_data.get("isLoudAssertion")):
 			ScreenEffects.screen_shake(0.2, 0.01)
 			ScreenEffects.red_flash(0.15)
 

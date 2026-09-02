@@ -13,8 +13,7 @@ var _spawn_interval: float = 1.5
 
 func initialize(data: MinigameData):
 	super.initialize(data)
-	var type_specific := data.type_specific
-	answer_key = type_specific.get("answerKey", "").to_upper()
+	answer_key = data.ts_string("answerKey").to_upper()
 	_revealed_letters.resize(answer_key.length())
 	_revealed_letters.fill(false)
 

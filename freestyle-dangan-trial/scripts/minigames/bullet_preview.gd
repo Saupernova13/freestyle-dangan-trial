@@ -12,10 +12,10 @@ func show_bullets(bullets: Array) -> void:
 	for bullet in bullets:
 		var cell := ResourceRegistry.instantiate("bullet_preview_cell")
 		_grid.add_child(cell)
-		(cell.get_node("%Name") as Label).text = bullet.get("name", "?")
-		var desc = bullet.get("description", "")
+		(cell.get_node("%Name") as Label).text = JsonRead.str_of(bullet.get("name"), "?")
+		var desc := JsonRead.str_of(bullet.get("description"))
 		var desc_label: Label = cell.get_node("%Desc")
-		if desc is String and not desc.is_empty():
+		if not desc.is_empty():
 			desc_label.text = desc
 		else:
 			desc_label.visible = false

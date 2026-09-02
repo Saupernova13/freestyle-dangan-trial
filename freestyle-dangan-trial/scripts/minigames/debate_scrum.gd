@@ -1,6 +1,6 @@
 extends MinigameBase
 
-var arguments: Array = []
+var arguments: Array[Dictionary] = []
 var current_argument_index: int = 0
 
 var _overlay: CanvasLayer
@@ -17,20 +17,14 @@ var _turn_active: bool = false
 
 func initialize(data: MinigameData):
 	super.initialize(data)
-	var type_specific := data.type_specific
-	arguments = type_specific.get("arguments", [])
+	arguments = data.ts_dicts("arguments")
 
 func validate_data() -> Array[String]:
 	# A round with no defenseKeywords marks every button wrong, so it can never
 	# be won - _finish(false) then replays it, identically, forever.
 	var errors: Array[String] = []
 	for i in range(arguments.size()):
-		var arg = arguments[i]
-		if not arg is Dictionary:
-			errors.append("argument %d is not an object" % (i + 1))
-			continue
-		var def_keywords = arg.get("defenseKeywords", [])
-		if not def_keywords is Array or def_keywords.is_empty():
+		if _keywords_of(arguments[i], "defenseKeywords").is_empty():
 			errors.append("argument %d has no defenseKeywords, so it cannot be won" % (i + 1))
 	return errors
 
@@ -95,19 +89,22 @@ func _show_argument(index: int):
 	_turn_active = true
 	current_argument_index = index
 	_update_progress_bar(float(index) / float(arguments.size()))
-	var arg = arguments[index]
+	var arg := arguments[index]
 
 	_opposition_label.text = _format_character_line(
-		arg.get("oppositionStatement", "..."), arg.get("oppositionCharacterId", "")
+		JsonRead.str_of(arg.get("oppositionStatement"), "..."),
+		JsonRead.str_of(arg.get("oppositionCharacterId"))
 	)
-	_defense_label.text = _format_character_line(arg.get("defenseStatement", ""), arg.get("defenseCharacterId", ""))
+	_defense_label.text = _format_character_line(
+		JsonRead.str_of(arg.get("defenseStatement")), JsonRead.str_of(arg.get("defenseCharacterId"))
+	)
 
-	var opp_audio = arg.get("oppositionAudioFile", "")
-	if opp_audio:
+	var opp_audio := JsonRead.str_of(arg.get("oppositionAudioFile"))
+	if not opp_audio.is_empty():
 		AudioManager.play_voice_line(opp_audio)
 
-	var def_keywords = arg.get("defenseKeywords", [])
-	var all_keywords = _deal_keywords(def_keywords, arg.get("oppositionKeywords", []))
+	var def_keywords := _keywords_of(arg, "defenseKeywords")
+	var all_keywords := _deal_keywords(def_keywords, _keywords_of(arg, "oppositionKeywords"))
 
 	for i in range(_defense_buttons.size()):
 		var btn = _defense_buttons[i]
@@ -126,6 +123,13 @@ func _show_argument(index: int):
 
 	_update_score_display()
 
+## Keyword lists, strings only. A non-string entry would be seated as a button
+## label and then compared with `in def_keywords`, so it could be scored either
+## way depending on which list it came from.
+func _keywords_of(arg: Dictionary, key: String) -> Array[String]:
+	return JsonRead.strings_of(arg.get(key), "debate_scrum %s" % key)
+
+
 ## The buttons to show, correct answers first-class.
 ##
 ## The old version concatenated both lists, shuffled, then took the first five
@@ -138,9 +142,9 @@ func _show_argument(index: int):
 ##
 ## Every defense keyword is seated first; the remainder is filled from the
 ## opposition list, and only then is the chosen set shuffled.
-func _deal_keywords(def_keywords: Array, opp_keywords: Array) -> Array:
+func _deal_keywords(def_keywords: Array[String], opp_keywords: Array[String]) -> Array[String]:
 	var button_count := _defense_buttons.size()
-	var chosen: Array = []
+	var chosen: Array[String] = []
 	for kw in def_keywords:
 		if not chosen.has(kw):
 			chosen.append(kw)
@@ -155,7 +159,7 @@ func _deal_keywords(def_keywords: Array, opp_keywords: Array) -> Array:
 		chosen.shuffle()
 		chosen.resize(button_count)
 
-	var decoys: Array = []
+	var decoys: Array[String] = []
 	for kw in opp_keywords:
 		if not chosen.has(kw) and not decoys.has(kw):
 			decoys.append(kw)
@@ -174,7 +178,9 @@ func _format_character_line(text: String, char_id: String) -> String:
 	var char_data = TrialLoader.load_character(char_id)
 	if char_data == null or char_data.is_empty():
 		return text
-	var char_name = char_data.get("name", "") + " " + char_data.get("surname", "")
+	var char_name := (
+		JsonRead.str_of(char_data.get("name")) + " " + JsonRead.str_of(char_data.get("surname"))
+	)
 	return char_name.strip_edges() + ":\n" + text
 
 func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
@@ -184,8 +190,8 @@ func _on_keyword_selected(_keyword: String, is_correct: bool, btn: Button):
 
 	if is_correct:
 		btn.modulate = UITheme.COLOR_CORRECT
-		var arg = arguments[current_argument_index]
-		var def_audio = arg.get("defenseAudioFile", "")
+		var arg := arguments[current_argument_index]
+		var def_audio := JsonRead.str_of(arg.get("defenseAudioFile"))
 		if not def_audio.is_empty():
 			AudioManager.play_voice_line(def_audio)
 		_update_score_display()

@@ -168,8 +168,10 @@ func test_a_scrum_round_seats_every_correct_answer_before_any_decoy() -> void:
 	var scrum: MinigameBase = _probe("debate_scrum", {})
 	scrum._defense_buttons.resize(5)
 
-	var defense := ["d1", "d2", "d3"]
-	var opposition := ["o1", "o2", "o3", "o4"]
+	# Typed, because _deal_keywords takes Array[String] - it is fed from
+	# JsonRead.strings_of, so a raw JSON list never reaches it untyped.
+	var defense: Array[String] = ["d1", "d2", "d3"]
+	var opposition: Array[String] = ["o1", "o2", "o3", "o4"]
 	for _attempt in range(50):
 		var dealt: Array = scrum._deal_keywords(defense, opposition)
 		assert_int(dealt.size()).is_equal(5)
@@ -183,7 +185,8 @@ func test_a_scrum_round_fills_the_remaining_buttons_with_decoys() -> void:
 	var scrum: MinigameBase = _probe("debate_scrum", {})
 	scrum._defense_buttons.resize(5)
 
-	var dealt: Array = scrum._deal_keywords(["d1"], ["o1", "o2", "o3", "o4", "o5", "o6"])
+	var opposition: Array[String] = ["o1", "o2", "o3", "o4", "o5", "o6"]
+	var dealt: Array = scrum._deal_keywords(["d1"] as Array[String], opposition)
 	assert_int(dealt.size()).is_equal(5)
 	assert_bool(dealt.has("d1")).is_true()
 
@@ -192,7 +195,7 @@ func test_a_scrum_round_with_few_keywords_deals_only_what_it_has() -> void:
 	var scrum: MinigameBase = _probe("debate_scrum", {})
 	scrum._defense_buttons.resize(5)
 
-	var dealt: Array = scrum._deal_keywords(["d1"], ["o1"])
+	var dealt: Array = scrum._deal_keywords(["d1"] as Array[String], ["o1"] as Array[String])
 	assert_array(dealt).contains_exactly_in_any_order(["d1", "o1"])
 
 
@@ -201,5 +204,7 @@ func test_a_scrum_round_does_not_deal_a_keyword_twice() -> void:
 	var scrum: MinigameBase = _probe("debate_scrum", {})
 	scrum._defense_buttons.resize(5)
 
-	var dealt: Array = scrum._deal_keywords(["shared"], ["shared", "o1"])
+	var dealt: Array = scrum._deal_keywords(
+		["shared"] as Array[String], ["shared", "o1"] as Array[String]
+	)
 	assert_array(dealt).contains_exactly_in_any_order(["shared", "o1"])

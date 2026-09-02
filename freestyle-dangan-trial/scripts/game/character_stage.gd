@@ -61,6 +61,13 @@ func _populate_bench(bench_index: int, character_id: String) -> void:
 func update_sprite(bench_index: int, character_id: String, sprite_index: int) -> void:
 	var texture := TrialLoader.get_sprite_texture(character_id, sprite_index)
 	if not texture:
+		# Keeping the previous emotion is the least surprising thing to show,
+		# but it used to be the only thing that happened - so an author who
+		# mistyped spriteIndex saw a sprite that simply never changed.
+		Log.warn(
+			"CharacterStage",
+			"%s has no sprite %d; keeping the current one" % [character_id, sprite_index]
+		)
 		return
 	var mesh_instance := _mesh_for_bench(bench_index, false)
 	if not mesh_instance:

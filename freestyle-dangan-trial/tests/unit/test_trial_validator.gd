@@ -87,3 +87,32 @@ func test_director_dispatch_is_keyed_on_the_constants() -> void:
 	var director := get_node("/root/ScriptDirector")
 	assert_object(director).is_not_null()
 	assert_array(director._line_handlers.keys()).contains_exactly_in_any_order(ScriptLine.TYPES)
+
+
+func test_an_unknown_game_type_still_loads() -> void:
+	# A warning, not an error: check_version deliberately accepts a newer minor
+	# that might carry a type this build has no script for, and the runner now
+	# tells the player and skips rather than reporting it as a win.
+	var errors := TrialValidator.validate({
+		"trialName": "T",
+		"characters": [],
+		"script": {"lines": []},
+		"minigames": [{"gameId": "mg_1", "gameType": "quantum_debate"}],
+	})
+	assert_array(errors).is_empty()
+
+
+func test_a_known_game_type_is_one_the_runner_can_actually_run() -> void:
+	# MinigameRunner's registry is the normative list, and the schema's enum is
+	# pinned to it by test_trial_manifest.gd - so the validator agreeing with
+	# the registry is what makes the three sources one.
+	for game_type in MinigameRunner.MINIGAME_SCRIPTS:
+		var errors := TrialValidator.validate({
+			"trialName": "T",
+			"characters": [],
+			"script": {"lines": []},
+			"minigames": [{"gameId": "mg_1", "gameType": game_type}],
+		})
+		assert_array(errors).override_failure_message(
+			"%s was rejected: %s" % [game_type, errors]
+		).is_empty()

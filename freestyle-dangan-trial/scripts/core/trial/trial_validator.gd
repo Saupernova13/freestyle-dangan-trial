@@ -76,7 +76,26 @@ static func validate(data: Dictionary) -> Array[String]:
 			if not mg is Dictionary or not mg.get("gameId") is String or not mg.get("gameType") is String:
 				errors.append("a minigame entry is missing gameId/gameType")
 				break
+		_warn_unknown_game_types(data["minigames"])
 
 	if data.has("truthBullets") and not data.get("truthBullets") is Array:
 		errors.append("truthBullets is not an array")
 	return errors
+
+## A warning, not an error: an unknown type is skipped at runtime with a notice
+## rather than making the trial unloadable, and check_version deliberately
+## accepts a newer minor that might carry one. MinigameRunner's registry is the
+## normative list - test_trial_manifest.gd pins it to the schema's enum - so
+## naming it at load makes the problem visible before the player reaches it.
+static func _warn_unknown_game_types(minigames: Array) -> void:
+	var unknown: Array[String] = []
+	for mg in minigames:
+		if not mg is Dictionary:
+			continue
+		var game_type = mg.get("gameType")
+		if not game_type is String or MinigameRunner.MINIGAME_SCRIPTS.has(game_type):
+			continue
+		if not unknown.has(game_type):
+			unknown.append(game_type)
+	if not unknown.is_empty():
+		push_warning("Trial uses minigame types this engine cannot play: %s" % ", ".join(unknown))

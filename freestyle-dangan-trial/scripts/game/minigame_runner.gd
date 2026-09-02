@@ -21,6 +21,9 @@ const MINIGAME_SCRIPTS := {
 ## that always overruns - replays forever, and the settings menu has no quit.
 const MAX_ATTEMPTS := 5
 
+## Long enough to read, and the same beat the stub minigames already use.
+const UNSUPPORTED_NOTICE_SECONDS := 3.0
+
 var _attempts: int = 0
 var _conversation_ui: CanvasItem
 var _roaming_text: CanvasItem
@@ -35,9 +38,7 @@ func setup(conversation_ui: Node, roaming_text: Node, dialogue_label: Node) -> v
 
 func run(minigame: MinigameData) -> void:
 	if not MINIGAME_SCRIPTS.has(minigame.game_type):
-		Log.warn("MinigameRunner", "Unknown minigame type: %s" % minigame.game_type)
-		await get_tree().create_timer(1.0).timeout
-		ScriptDirector.on_minigame_finished(true)
+		await _skip_unsupported_type(minigame)
 		return
 
 	# Before the conversation UI is hidden and before the title card, so a
@@ -163,6 +164,35 @@ func _give_up(game_type: String) -> void:
 		"'%s' failed %d times; ending the trial." % [game_type, _attempts]
 	)
 	InfluenceGauge.take_damage_raw(InfluenceGauge.current_influence)
+
+## Told to the player, not only to the log. This used to pause for a second and
+## call on_minigame_finished(true), so the trial advanced as though the player
+## had won - and Log.warn goes to push_warning, which a player on Android never
+## sees. The three stub minigames already announce themselves through this
+## overlay; a type this build cannot play deserves the same honesty.
+##
+## It still reports a pass, because the alternative replays an unplayable
+## minigame to the attempt cap and ends the trial. Advancing is the only
+## recovery; being quiet about it was the bug.
+func _skip_unsupported_type(minigame: MinigameData) -> void:
+	Log.error(
+		"MinigameRunner",
+		(
+			"Unsupported minigame type '%s' (gameId %s); skipping"
+			% [minigame.game_type, minigame.game_id]
+		)
+	)
+	var overlay = ResourceRegistry.instantiate("stub_minigame_overlay")
+	if overlay:
+		add_child(overlay)
+		overlay.set_title("UNSUPPORTED", Color(1.0, 0.4, 0.3))
+		overlay.set_subtitle(
+			"This trial uses a minigame type ('%s') that this version cannot play - skipping."
+			% minigame.game_type
+		)
+		await get_tree().create_timer(UNSUPPORTED_NOTICE_SECONDS).timeout
+		overlay.queue_free()
+	ScriptDirector.on_minigame_finished(true)
 
 func _hide_conversation_ui() -> void:
 	# The roaming text belongs to the dialogue presentation, so it hides too.

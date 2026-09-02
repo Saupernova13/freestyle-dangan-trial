@@ -24,6 +24,11 @@ export function zipRootPrefix(paths) {
 // folder entirely.
 export function safeZipPathParts(path) {
   if (typeof path !== 'string' || path === '') return null;
+  // A trailing separator names a directory, not a file. JSZip flags real
+  // directory entries, but a malformed archive can carry one that is not
+  // flagged - and without this it would be written as a file named after the
+  // folder.
+  if (path.endsWith('/')) return null;
   // ZIP names are specified to use "/" only, but the Windows API also treats
   // "\" as a separator, so allowing it reopens traversal through the back door.
   if (path.includes('\\')) return null;

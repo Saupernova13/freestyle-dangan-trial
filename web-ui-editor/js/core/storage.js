@@ -293,14 +293,30 @@ export async function importTrialFromFile(file) {
     const prefix = zipRootPrefix(entries.map((e) => e.name));
     const trialJsonEntry = zip.file(prefix + 'trial.json');
 
-    // Parsed once: the display name and the id gate below both need it.
+    // Refused rather than imported empty. Without a trial.json,
+    // loadTrialIntoState resets to an empty trial, so the import would land in
+    // the hub looking real, open with nothing in it, and be saved over by the
+    // first edit - after a success toast.
+    if (!trialJsonEntry) {
+      showLoader(false);
+      await alertDialog({
+        title: 'Not a trial archive',
+        type: 'error',
+        message:
+          'This file contains no trial.json, so there is no trial in it to ' +
+          'import.\n\nExport a trial from the editor to get a .drtrial file.',
+      });
+      return;
+    }
+
+    // Parsed once: the display name and the id gate below both need it. An
+    // unparseable trial.json is still imported - the editor is where the
+    // author repairs one - and is reported when it opens.
     let parsed = null;
-    if (trialJsonEntry) {
-      try {
-        parsed = JSON.parse(await trialJsonEntry.async('string'));
-      } catch {
-        /* an unparseable trial.json is reported on open */
-      }
+    try {
+      parsed = JSON.parse(await trialJsonEntry.async('string'));
+    } catch {
+      /* reported on open */
     }
 
     // Prefer the name inside trial.json; fall back to the file name.

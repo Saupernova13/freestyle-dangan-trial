@@ -1,6 +1,12 @@
 // Runtime validation for trial.json. schema/trial.schema.json is normative;
 // this hand-written mirror keeps a schema engine out of the bundle and emits
 // author-friendly messages. tests/schema.test.js cross-checks the two with ajv.
+//
+// That cross-check covers the envelope only. Both sides deliberately decline
+// to constrain typeSpecific, so a minigame payload can hold anything and pass
+// - which is how the shared fixture came to certify field names no code has
+// ever written or read. See #59.
+//
 // Keep DOM-free: those tests run under node.
 import { FORMAT_VERSION, MINIGAME_TYPE_LABELS } from './constants.js';
 

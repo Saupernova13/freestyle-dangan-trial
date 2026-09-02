@@ -116,3 +116,34 @@ func test_empty_dict_yields_empty_manifest() -> void:
 	assert_array(manifest.script_lines).is_empty()
 	assert_array(manifest.minigames).is_empty()
 	assert_object(manifest.find_minigame("anything")).is_null()
+
+
+## The engine half of the fixture check. debate_text_panel.gd reads these names
+## and nothing else; the fixture used to carry text/isWeakPoint/correctBulletId,
+## which no code has ever written or read, and neither validator constrains
+## typeSpecific enough to notice.
+func test_fixture_debate_lines_use_the_names_the_panel_reads() -> void:
+	var required := [
+		"sentenceBeginning",
+		"target",
+		"sentenceEnd",
+		"isShootable",
+		"answerBulletId",
+		"useNegativeBullet",
+		"textEffect",
+		"textFont",
+		"textMovementDirection",
+		"characterId",
+	]
+	var debates := _load_manifest().minigames.filter(
+		func(mg: MinigameData) -> bool: return mg.game_type == "nonstop_debate"
+	)
+	assert_array(debates).is_not_empty()
+	for minigame in debates:
+		var lines: Array = minigame.type_specific.get("dialogueLines", [])
+		assert_array(lines).is_not_empty()
+		for line in lines:
+			for key in required:
+				assert_bool(line.has(key)).override_failure_message(
+					"fixture dialogue line is missing '%s'" % key
+				).is_true()

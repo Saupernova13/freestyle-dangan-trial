@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
-import { sanitizeTrialJson } from '../js/export.js';
+import { addDirectoryToZip, sanitizeTrialJson } from '../js/export.js';
 import { buildTrialJson } from '../js/core/trialSerialize.js';
 
 describe('sanitizeTrialJson', () => {
@@ -102,5 +102,79 @@ describe('the packaged trial.json', () => {
     );
     expect(shipped.script.lines[0].text).toBe('The last thing I typed.');
     expect(shipped.trialName).toBe('Rescue Me');
+  });
+});
+
+// countFilesInDirectory computed the true total and filesAdded only counted
+// successes, but the two were never compared - so a locked file, an I/O error
+// or a per-folder NotAllowedError produced a green "Exported … 214 files" over
+// a trial missing sprites and voice lines.
+describe('addDirectoryToZip', () => {
+  function fileEntry(name, { fails = false } = {}) {
+    return { kind: 'file', name, fails };
+  }
+
+  function dirHandle(entries, { unopenable = [] } = {}) {
+    return {
+      values: () => entries[Symbol.iterator](),
+      getFileHandle: async (name) => {
+        const entry = entries.find((e) => e.name === name);
+        if (entry.fails) throw new Error('NotReadableError');
+        return { getFile: async () => ({ arrayBuffer: async () => new ArrayBuffer(4) }) };
+      },
+      getDirectoryHandle: async (name) => {
+        if (unopenable.includes(name)) throw new Error('NotAllowedError');
+        return entries.find((e) => e.name === name).handle;
+      },
+    };
+  }
+
+  function zipStub() {
+    const added = [];
+    return { added, file: (path) => added.push(path) };
+  }
+
+  it('records a file it could not read and keeps going', async () => {
+    const dir = dirHandle([
+      fileEntry('a.png'),
+      fileEntry('locked.png', { fails: true }),
+      fileEntry('b.png'),
+    ]);
+    const zip = zipStub();
+    const progress = { count: 1, total: 4, failed: [] };
+    await addDirectoryToZip(zip, dir, '', null, progress);
+
+    expect(progress.failed).toEqual(['locked.png']);
+    // The other two still ship - the export is truncated, not abandoned.
+    expect(zip.added).toEqual(['a.png', 'b.png']);
+  });
+
+  it('records a folder it could not open instead of aborting the export', async () => {
+    const dir = dirHandle([fileEntry('a.png'), { kind: 'directory', name: 'Characters' }], {
+      unopenable: ['Characters'],
+    });
+    const zip = zipStub();
+    const progress = { count: 1, total: 3, failed: [] };
+    await expect(addDirectoryToZip(zip, dir, '', null, progress)).resolves.toBeUndefined();
+
+    expect(progress.failed).toEqual(['Characters/']);
+    expect(zip.added).toEqual(['a.png']);
+  });
+
+  it('reports nothing when every file packages', async () => {
+    const dir = dirHandle([fileEntry('a.png'), fileEntry('b.png')]);
+    const progress = { count: 1, total: 3, failed: [] };
+    await addDirectoryToZip(zipStub(), dir, '', null, progress);
+
+    expect(progress.failed).toEqual([]);
+    expect(progress.count).toBe(3);
+  });
+
+  it('creates its own failure list when a caller does not pass one', async () => {
+    const dir = dirHandle([fileEntry('locked.png', { fails: true })]);
+    const progress = { count: 1, total: 2 };
+    await addDirectoryToZip(zipStub(), dir, '', null, progress);
+
+    expect(progress.failed).toEqual(['locked.png']);
   });
 });

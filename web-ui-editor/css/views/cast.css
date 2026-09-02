@@ -277,6 +277,22 @@
   margin: 0 0 0.6rem;
 }
 
+/* Shown when the trial directory could not be enumerated, so a failed listing
+   does not look like an empty one. */
+.hub-trials-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--error);
+  border-radius: 6px;
+  background: rgba(var(--error-rgb), 0.08);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-align: left;
+}
+
 .hub-trial-list {
   list-style: none;
   margin: 0;

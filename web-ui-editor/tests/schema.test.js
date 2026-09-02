@@ -636,9 +636,73 @@ describe('checkFormatVersion', () => {
   });
 });
 
+// Every RUNTIME_FIELD, at the depth it actually occurs. A debate_scrum entry
+// is added because the fixture has none, so oppositionAudioBlob and
+// defenseAudioBlob were never exercised at all.
+function withRuntimeBlobs(minigames) {
+  const withBlobs = minigames.map((mg) => {
+    const copy = JSON.parse(JSON.stringify(mg));
+    const lines = (copy.typeSpecific && copy.typeSpecific.dialogueLines) || [];
+    lines.forEach((line) => {
+      line.voiceLineBlob = 'runtime-junk';
+    });
+    const groups = (copy.typeSpecific && copy.typeSpecific.lineGroups) || [];
+    groups.forEach((group) => {
+      ['speaker1', 'speaker2', 'speaker3'].forEach((k) => {
+        if (group[k]) group[k].voiceLineBlob = 'runtime-junk';
+      });
+    });
+    return copy;
+  });
+
+  withBlobs.push({
+    gameId: 'mg_scrum',
+    name: 'Scrum',
+    gameType: 'debate_scrum',
+    difficulty: 'medium',
+    timeLimit: 60,
+    typeSpecific: {
+      arguments: [
+        {
+          argumentId: 'arg_1',
+          order: 0,
+          oppositionStatement: 'It was you.',
+          oppositionCharacterId: '',
+          oppositionKeywords: ['keyword-one'],
+          oppositionAudioFile: null,
+          oppositionAudioBlob: 'runtime-junk',
+          defenseStatement: 'It was not.',
+          defenseCharacterId: '',
+          defenseKeywords: ['keyword-two'],
+          defenseAudioFile: null,
+          defenseAudioBlob: 'runtime-junk',
+        },
+      ],
+    },
+  });
+  return withBlobs;
+}
+
 describe('export path keeps the contract', () => {
   it('sanitizeTrialJson output of the fixture still validates', () => {
+    // The fixture's highlights are already normalized, so sanitization is a
+    // no-op on it and this alone would pass with sanitizeTrialJson deleted.
+    // The case below is the one that exercises it; this one pins that a
+    // valid trial survives the pass unchanged.
     const out = JSON.parse(sanitizeTrialJson(readFileSync(fixturePath, 'utf8')));
+    expect(ajvValidate(out), JSON.stringify(ajvValidate.errors)).toBe(true);
+    expect(validateTrialData(out)).toEqual([]);
+  });
+
+  it('sanitizeTrialJson normalizes a highlight the schema would reject', () => {
+    const t = fixture();
+    const line = t.script.lines.find((l) => l.type === 'speaking');
+    // start/end are the legacy names, and a reversed range is what a
+    // hand-edit produces. Both fail the schema before sanitization.
+    line.highlights = [{ start: 5, end: 2, color: '#00FF00' }];
+    expect(ajvValidate(t)).toBe(false);
+
+    const out = JSON.parse(sanitizeTrialJson(JSON.stringify(t)));
     expect(ajvValidate(out), JSON.stringify(ajvValidate.errors)).toBe(true);
     expect(validateTrialData(out)).toEqual([]);
   });
@@ -649,14 +713,26 @@ describe('export path keeps the contract', () => {
       trialName: f.trialName,
       cast: [{ id: 'FC_20000101_FIXTUR', name: 'Fixture' }, null, null],
       scriptLines: f.script.lines,
-      minigames: f.minigames.map((mg) => ({ ...mg, voiceLineBlob: 'runtime-junk' })),
+      // Planted where storage.js actually writes them - inside
+      // typeSpecific.dialogueLines[i] and lineGroups[].speakerN - not at the
+      // top level of the minigame, where no runtime blob ever lives. The
+      // stringify replacer strips by key at any depth, so a "simplification"
+      // to `delete mg.voiceLineBlob` would still have passed the old version
+      // while every audio Blob leaked into trial.json and inflated it to
+      // hundreds of megabytes.
+      minigames: withRuntimeBlobs(f.minigames),
       truthBullets: f.truthBullets.map((b) => ({ ...b, imageDataURL: 'data:image/png;...' })),
     };
     const out = JSON.parse(JSON.stringify(buildTrialJson(fakeState)));
     expect(ajvValidate(out), JSON.stringify(ajvValidate.errors)).toBe(true);
     expect(validateTrialData(out)).toEqual([]);
     expect(out.metadata.version).toBe(FORMAT_VERSION);
-    expect(JSON.stringify(out)).not.toContain('voiceLineBlob');
+    for (const key of ['voiceLineBlob', 'oppositionAudioBlob', 'defenseAudioBlob']) {
+      expect(JSON.stringify(out), key).not.toContain(key);
+    }
     expect(JSON.stringify(out)).not.toContain('imageDataURL');
+    // And the content around them survived, so "strips everything" would fail.
+    expect(out.minigames.some((mg) => mg.gameType === 'debate_scrum')).toBe(true);
+    expect(JSON.stringify(out)).toContain('keyword-one');
   });
 });

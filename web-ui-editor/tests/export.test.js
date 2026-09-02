@@ -54,16 +54,47 @@ describe('sanitizeTrialJson', () => {
   });
 
   it('leaves trials without script lines untouched', () => {
+    // The guard clause only. Kept because reaching the walk with no
+    // script.lines used to throw, but it exercises no sanitization - the
+    // cases above and below are what cover that.
     const trial = { trialName: 'Empty', minigames: [] };
     const result = JSON.parse(sanitizeTrialJson(JSON.stringify(trial)));
     expect(result).toEqual(trial);
   });
 
-  it('preserves unrelated line fields', () => {
+  it('preserves unrelated line fields while normalizing the highlights', () => {
+    // The line needs highlights that actually get rewritten, or the
+    // normalization branch never runs and this passes with sanitizeTrialJson
+    // replaced by the identity function.
     const trial = {
       script: {
-        lines: [{ id: 'line_1', type: 'minigame', minigameId: 'mg_1' }],
+        lines: [
+          {
+            id: 'line_1',
+            type: 'speaking',
+            characterId: 'ch_1',
+            dialogue: 'Short',
+            audioFile: 'line_1.mp3',
+            spriteIndex: 3,
+            cameraMotion: { type: 'pan', duration: 1 },
+            highlights: [{ startChar: 2, endChar: 50, color: '#00FF00' }],
+          },
+        ],
       },
+    };
+    const result = JSON.parse(sanitizeTrialJson(JSON.stringify(trial)));
+    const line = result.script.lines[0];
+
+    expect(line.highlights).toEqual([{ startChar: 2, endChar: 5, color: '#00FF00' }]);
+    expect(line.characterId).toBe('ch_1');
+    expect(line.audioFile).toBe('line_1.mp3');
+    expect(line.spriteIndex).toBe(3);
+    expect(line.cameraMotion).toEqual({ type: 'pan', duration: 1 });
+  });
+
+  it('leaves a line with no highlights exactly as it found it', () => {
+    const trial = {
+      script: { lines: [{ id: 'line_1', type: 'minigame', minigameId: 'mg_1' }] },
     };
     const result = JSON.parse(sanitizeTrialJson(JSON.stringify(trial)));
     expect(result.script.lines[0]).toEqual({ id: 'line_1', type: 'minigame', minigameId: 'mg_1' });

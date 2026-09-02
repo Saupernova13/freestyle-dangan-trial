@@ -4,18 +4,27 @@ import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { showToast } from '../ui/dialogs.js';
 import { focusFirstField } from '../ui/modalBehaviors.js';
-import { escapeHtml, showLoader } from '../utils.js';
+import { escapeHtml, fileToDataUrl, showLoader } from '../utils.js';
 import { renderTruthBulletsView } from '../views/truthBulletsView.js';
 
 import { setHtml } from '../ui/dom.js';
 let activeBulletId = null;
 let bulletModalErr = '';
 let bulletModalMsg = '';
+// The edit buffer. imageDataURL is in it for the same reason the rest are:
+// the preview used to be written straight onto the live state.truthBullets
+// entry, so Remove Image followed by Cancel left the bullet with a null
+// dataURL and its imageFile intact - and renderTruthBulletDetail computes
+// `hasImage = imageFile && imageDataURL`, so the detail pane and the
+// nonstop-debate bullet picker both showed a placeholder for a bullet whose
+// image was still on disk and still exported. It stayed wrong until the trial
+// was reopened.
 let bulletFields = {
   name: '',
   description: '',
   imageFile: null,
   imageBlob: null,
+  imageDataURL: null,
   inversedLieBulletName: '',
 };
 
@@ -40,6 +49,7 @@ export function openTruthBulletModal(bulletId) {
     description: bullet.description || '',
     imageFile: bullet.imageFile || null,
     imageBlob: null,
+    imageDataURL: bullet.imageDataURL || null,
     inversedLieBulletName: bullet.inversedLieBulletName || '',
   };
 
@@ -49,8 +59,7 @@ export function openTruthBulletModal(bulletId) {
 
 export function renderTruthBulletModal() {
   const root = document.getElementById('modalroot');
-  const bullet = state.truthBullets.find((b) => b.bulletId === activeBulletId);
-
+  // Renders from bulletFields alone; nothing here reads the live entry.
   const hasImage = bulletFields.imageFile !== null;
 
   setHtml(
@@ -102,7 +111,7 @@ export function renderTruthBulletModal() {
                     ? `
                   <div class="bullet-image-preview">
                     <div class="bullet-image-preview-container">
-                      <img src="${bullet.imageDataURL || ''}" alt="Bullet image">
+                      <img src="${bulletFields.imageDataURL || ''}" alt="Bullet image">
                     </div>
                     <button class="btn btn-secondary" onclick="clearBulletImage()">${window.icon('trash')} Remove Image</button>
                   </div>
@@ -144,7 +153,7 @@ export function triggerBulletImageInput() {
   document.getElementById('bulletImageInput').click();
 }
 
-export function handleBulletImageUpload(event) {
+export async function handleBulletImageUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -156,29 +165,28 @@ export function handleBulletImageUpload(event) {
 
   bulletFields.imageFile = file.name;
   bulletFields.imageBlob = file;
-
-  // Preview before the file is written to the trial folder.
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const bullet = state.truthBullets.find((b) => b.bulletId === activeBulletId);
-    if (bullet) {
-      bullet.imageDataURL = e.target.result;
-      renderTruthBulletModal();
-    }
-  };
-  reader.readAsDataURL(file);
-
   bulletModalErr = '';
+  renderTruthBulletModal();
+
+  // fileToDataUrl rather than a bare FileReader: this path had no onerror and
+  // was never awaited, so a failed read left the preview blank and said
+  // nothing. Into the buffer, so Cancel discards it.
+  try {
+    bulletFields.imageDataURL = await fileToDataUrl(file);
+  } catch (err) {
+    console.error('Could not read the selected image:', err);
+    bulletModalErr = 'Could not read that image file. Try another.';
+    bulletFields.imageFile = null;
+    bulletFields.imageBlob = null;
+    bulletFields.imageDataURL = null;
+  }
   renderTruthBulletModal();
 }
 
 export function clearBulletImage() {
   bulletFields.imageFile = null;
   bulletFields.imageBlob = null;
-  const bullet = state.truthBullets.find((b) => b.bulletId === activeBulletId);
-  if (bullet) {
-    bullet.imageDataURL = null;
-  }
+  bulletFields.imageDataURL = null;
   renderTruthBulletModal();
 }
 
@@ -213,12 +221,9 @@ export async function saveTruthBullet() {
       await writable.close();
 
       bullet.imageFile = imageFileName;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        bullet.imageDataURL = e.target.result;
-      };
-      reader.readAsDataURL(bulletFields.imageBlob);
+      // Already read for the preview; fall back only if that read failed.
+      bullet.imageDataURL =
+        bulletFields.imageDataURL || (await fileToDataUrl(bulletFields.imageBlob));
     } else if (bulletFields.imageFile === null && bullet.imageFile) {
       // Cleared: delete the file, but don't fail the save if it is already
       // gone. A delete that genuinely failed is reported - the file stays in

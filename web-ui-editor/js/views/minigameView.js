@@ -1,6 +1,7 @@
 // Minigame list and common settings; each game type's body comes from its
 // own module under views/minigames/.
 import { state } from '../core/state.js';
+import { icon } from '../ui/icons.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { confirmDialog, showToast } from '../ui/dialogs.js';
 import { generateId, escapeHtml } from '../utils.js';
@@ -42,11 +43,11 @@ export function renderMinigameDetails() {
       `
       <div id="minigameDetailsContainer">
         <div class="script-empty-state">
-          <div class="script-empty-icon">${window.icon('gamepad', { size: 56 })}</div>
+          <div class="script-empty-icon">${icon('gamepad', { size: 56 })}</div>
           <h2>No Minigames Configured</h2>
           <p>Click the button below to create your first minigame instance</p>
           <button class="btn btn-primary script-add-btn" data-on-click="addMinigame">
-            ${window.icon('plus')} Create Minigame
+            ${icon('plus')} Create Minigame
           </button>
         </div>
       </div>
@@ -91,14 +92,14 @@ export function renderMinigameCard(mg, index) {
             <span class="minigame-difficulty" style="color: ${difficultyColors[mg.difficulty] || 'inherit'}">
               ${escapeHtml(mg.difficulty)}
             </span>
-            <span class="minigame-time">${window.icon('timer', { size: 14 })} ${escapeHtml(mg.timeLimit)}s</span>
+            <span class="minigame-time">${icon('timer', { size: 14 })} ${escapeHtml(mg.timeLimit)}s</span>
           </div>
         </div>
 
         <div class="minigame-card-actions">
           <button class="btn-icon" data-game-id="${escapeHtml(mg.gameId)}"
-                  data-on-click="deleteMinigame" title="Delete minigame">${window.icon('trash', { size: 16 })}</button>
-          <span class="expand-icon">${isExpanded ? window.icon('chevronDown', { size: 14 }) : window.icon('chevronRight', { size: 14 })}</span>
+                  data-on-click="deleteMinigame" title="Delete minigame">${icon('trash', { size: 16 })}</button>
+          <span class="expand-icon">${isExpanded ? icon('chevronDown', { size: 14 }) : icon('chevronRight', { size: 14 })}</span>
         </div>
       </div>
   `;

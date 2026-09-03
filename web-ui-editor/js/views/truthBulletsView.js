@@ -1,5 +1,6 @@
 // Truth bullets, as a split pane: list on the left, detail on the right.
 import { updateFloatingAddButton } from '../components/floatingAddButton.js';
+import { icon } from '../ui/icons.js';
 import { removeEntry, reportFailedRemoval } from '../core/fileOps.js';
 import { markFileDeleted } from '../core/history.js';
 import { detachTruthBullet } from '../core/references.js';
@@ -31,11 +32,11 @@ export function renderTruthBulletsView() {
       `
       <div id="truthBulletsContainer">
         <div class="script-empty-state">
-          <div class="script-empty-icon">${window.icon('target', { size: 56 })}</div>
+          <div class="script-empty-icon">${icon('target', { size: 56 })}</div>
           <h2>No Truth Bullets</h2>
           <p>Create truth bullets that can be used as evidence in debates</p>
           <button class="btn btn-primary script-add-btn" data-on-click="addTruthBullet">
-            ${window.icon('plus')} Add Truth Bullet
+            ${icon('plus')} Add Truth Bullet
           </button>
         </div>
       </div>
@@ -101,9 +102,9 @@ export function renderTruthBulletListItem(bullet) {
       <span class="bullet-list-name">${displayName}</span>
       <div class="bullet-list-actions">
         <button data-bullet-id="${escapeHtml(bullet.bulletId)}"
-                data-on-click="openTruthBulletModal" title="Edit bullet">${window.icon('edit', { size: 16 })}</button>
+                data-on-click="openTruthBulletModal" title="Edit bullet">${icon('edit', { size: 16 })}</button>
         <button data-bullet-id="${escapeHtml(bullet.bulletId)}"
-                data-on-click="deleteTruthBullet" title="Delete bullet">${window.icon('trash', { size: 16 })}</button>
+                data-on-click="deleteTruthBullet" title="Delete bullet">${icon('trash', { size: 16 })}</button>
       </div>
     </div>
   `;
@@ -118,7 +119,7 @@ export function renderTruthBulletDetail(bullet) {
       ${
         hasImage
           ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name || 'Bullet image')}" />`
-          : `<div class="truth-bullet-no-image-large">${window.icon('image', { size: 48 })}</div>`
+          : `<div class="truth-bullet-no-image-large">${icon('image', { size: 48 })}</div>`
       }
     </div>
 
@@ -147,9 +148,9 @@ export function renderTruthBulletDetail(bullet) {
 
       <div class="detail-actions">
         <button class="btn btn-primary" data-bullet-id="${escapeHtml(bullet.bulletId)}"
-                data-on-click="openTruthBulletModal">${window.icon('edit')} Edit Bullet</button>
+                data-on-click="openTruthBulletModal">${icon('edit')} Edit Bullet</button>
         <button class="btn btn-danger" data-bullet-id="${escapeHtml(bullet.bulletId)}"
-                data-on-click="deleteTruthBullet">${window.icon('trash')} Delete Bullet</button>
+                data-on-click="deleteTruthBullet">${icon('trash')} Delete Bullet</button>
       </div>
     </div>
   `;

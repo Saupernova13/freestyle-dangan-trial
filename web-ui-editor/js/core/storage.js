@@ -37,6 +37,7 @@ import { registerActions } from '../ui/actions.js';
 // the functions live - viewManager already imports this module, so the
 // registration goes the way the dependency already runs.
 registerActions('click', {
+  openTrialHub: () => openTrialHub(),
   chooseTrialDir: () => chooseTrialDir(),
   newOpfsTrial: () => newOpfsTrial(),
   triggerImportTrial: () => triggerImportTrial(),

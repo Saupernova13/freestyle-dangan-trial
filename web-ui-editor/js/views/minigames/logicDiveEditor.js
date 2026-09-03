@@ -1,10 +1,32 @@
 // Logic Dive editor: questions, their answers, and drag-to-reorder.
 import { moveItem, reindexOrder } from '../../core/listOps.js';
+import { icon } from '../../ui/icons.js';
 import { orderedCopy } from '../../core/minigameDefaults.js';
 import { confirmDialog } from '../../ui/dialogs.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
+import { registerActions } from '../../ui/actions.js';
+
+const questionOf = (el) => [el.dataset.gameId, el.dataset.questionId];
+const answerOf = (el) => [...questionOf(el), el.dataset.answerId];
+
+registerActions('click', {
+  addLogicDiveQuestion: (el) => addLogicDiveQuestion(el.dataset.gameId),
+  moveQuestionUp: (el) => moveQuestionUp(...questionOf(el)),
+  moveQuestionDown: (el) => moveQuestionDown(...questionOf(el)),
+  deleteLogicDiveQuestion: (el) => deleteLogicDiveQuestion(...questionOf(el)),
+  addLogicDiveAnswer: (el) => addLogicDiveAnswer(...questionOf(el)),
+  deleteLogicDiveAnswer: (el) => deleteLogicDiveAnswer(...answerOf(el)),
+});
+
+registerActions('change', {
+  updateLogicDiveQuestion: (el) =>
+    updateLogicDiveQuestion(...questionOf(el), el.dataset.field, el.value),
+  setCorrectAnswer: (el) => setCorrectAnswer(...answerOf(el)),
+  updateLogicDiveAnswer: (el) =>
+    updateLogicDiveAnswer(...answerOf(el), el.dataset.field, el.value),
+});
 
 // --- Main Rendering ---
 
@@ -33,9 +55,9 @@ export function renderLogicDiveEditor(mg) {
 
       <!-- Floating button for questions -->
       <button class="minigame-floating-btn"
-              onclick="addLogicDiveQuestion('${mg.gameId}')"
+              data-game-id="${escapeHtml(mg.gameId)}" data-on-click="addLogicDiveQuestion"
               title="Add Question">
-        ${window.icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Question</span>
+        ${icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Question</span>
       </button>
     </div>
   `;
@@ -48,24 +70,27 @@ export function renderLogicDiveQuestions(gameId, questions) {
 
   html += `<div class="question-drop-zone"
                 data-insert-position="0"
-                ondragover="handleListGapDragOver(event)"
-                ondrop="handleListDropInGap(event, '${gameId}', 'questions', 0)"
-                ondragleave="handleListGapDragLeave(event)"></div>`;
+                data-on-dragover="listGapDragOver"
+                data-game-id="${escapeHtml(gameId)}" data-list-key="questions"
+           data-on-drop="listDropInGap"
+                data-on-dragleave="listGapDragLeave"></div>`;
 
   orderedCopy(questions).forEach((question, index) => {
     html += `
         <div class="reorder-wrapper"
              draggable="true"
-             ondragstart="handleListDragStart(event, 'questions', 'questionId', '${question.questionId}')"
-             ondragend="handleListDragEnd(event)">
+             data-list-key="questions" data-id-key="questionId" data-item-id="${escapeHtml(question.questionId)}"
+           data-on-dragstart="listDragStart"
+             data-on-dragend="listDragEnd">
           ${renderLogicDiveQuestionEditor(gameId, question, index)}
         </div>
 
         <div class="question-drop-zone"
              data-insert-position="${index + 1}"
-             ondragover="handleListGapDragOver(event)"
-             ondrop="handleListDropInGap(event, '${gameId}', 'questions', ${index + 1})"
-             ondragleave="handleListGapDragLeave(event)"></div>
+             data-on-dragover="listGapDragOver"
+             data-game-id="${escapeHtml(gameId)}" data-list-key="questions"
+           data-on-drop="listDropInGap"
+             data-on-dragleave="listGapDragLeave"></div>
       `;
   });
 
@@ -97,15 +122,18 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
       <div class="reorder-card-header">
         <div class="reorder-drag-handle">
           <div class="arrow-btn arrow-up"
-               onclick="event.stopPropagation(); moveQuestionUp('${gameId}', '${question.questionId}')"
-               title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
+               data-game-id="${escapeHtml(gameId)}" data-question-id="${escapeHtml(question.questionId)}"
+               data-on-click="moveQuestionUp"
+               title="Move up">${icon('chevronUp', { size: 14 })}</div>
           <div class="arrow-btn arrow-down"
-               onclick="event.stopPropagation(); moveQuestionDown('${gameId}', '${question.questionId}')"
-               title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
+               data-game-id="${escapeHtml(gameId)}" data-question-id="${escapeHtml(question.questionId)}"
+               data-on-click="moveQuestionDown"
+               title="Move down">${icon('chevronDown', { size: 14 })}</div>
         </div>
         <div class="reorder-number">Question #${index + 1}</div>
-        <button class="btn-icon" onclick="deleteLogicDiveQuestion('${gameId}', '${question.questionId}')"
-                title="Delete question">${window.icon('trash', { size: 16 })}</button>
+        <button class="btn-icon" data-game-id="${escapeHtml(gameId)}" data-question-id="${escapeHtml(question.questionId)}"
+                data-on-click="deleteLogicDiveQuestion"
+                title="Delete question">${icon('trash', { size: 16 })}</button>
       </div>
 
       <div class="question-body">
@@ -114,7 +142,8 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
           <textarea class="form-input"
                     rows="2"
                     placeholder="Enter the question..."
-                    onchange="updateLogicDiveQuestion('${gameId}', '${question.questionId}', 'questionText', this.value)">${escapeHtml(question.questionText || '')}</textarea>
+                    data-game-id="${escapeHtml(gameId)}" data-question-id="${escapeHtml(question.questionId)}" data-field="questionText"
+                    data-on-change="updateLogicDiveQuestion">${escapeHtml(question.questionText || '')}</textarea>
         </div>
 
         <div class="answers-section">
@@ -124,8 +153,9 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
               answers.length < 5
                 ? `
               <button class="btn btn-secondary btn-sm"
-                      onclick="addLogicDiveAnswer('${gameId}', '${question.questionId}')">
-                ${window.icon('plus', { size: 15 })} Add Answer
+                      data-game-id="${escapeHtml(gameId)}" data-question-id="${escapeHtml(question.questionId)}"
+                      data-on-click="addLogicDiveAnswer">
+                ${icon('plus', { size: 15 })} Add Answer
               </button>
             `
                 : ''
@@ -141,20 +171,23 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
                   <input type="radio"
                          name="correct_${question.questionId}"
                          ${answer.isCorrect ? 'checked' : ''}
-                         onchange="setCorrectAnswer('${gameId}', '${question.questionId}', '${answer.answerId}')"
+                         data-game-id="${escapeHtml(gameId)}" data-question-id="${escapeHtml(question.questionId)}" data-answer-id="${escapeHtml(answer.answerId)}"
+                         data-on-change="setCorrectAnswer"
                          title="Mark as correct answer">
                 </div>
                 <input type="text"
                        class="form-input answer-text-input"
                        placeholder="Answer ${ansIndex + 1}"
                        value="${escapeHtml(answer.answerText || '')}"
-                       onchange="updateLogicDiveAnswer('${gameId}', '${question.questionId}', '${answer.answerId}', 'answerText', this.value)">
+                       data-game-id="${escapeHtml(gameId)}" data-question-id="${escapeHtml(question.questionId)}" data-answer-id="${escapeHtml(answer.answerId)}" data-field="answerText"
+                       data-on-change="updateLogicDiveAnswer">
                 ${
                   answers.length > 2
                     ? `
                   <button class="btn-icon btn-icon-danger"
-                          onclick="deleteLogicDiveAnswer('${gameId}', '${question.questionId}', '${answer.answerId}')"
-                          title="Delete answer">${window.icon('trash', { size: 15 })}</button>
+                          data-game-id="${escapeHtml(gameId)}" data-question-id="${escapeHtml(question.questionId)}" data-answer-id="${escapeHtml(answer.answerId)}"
+                          data-on-click="deleteLogicDiveAnswer"
+                          title="Delete answer">${icon('trash', { size: 15 })}</button>
                 `
                     : ''
                 }
@@ -167,7 +200,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
           ${
             answers.length < 2
               ? `
-            <p class="validation-warning">${window.icon('warning', { size: 15 })} Add at least 2 answers</p>
+            <p class="validation-warning">${icon('warning', { size: 15 })} Add at least 2 answers</p>
           `
               : ''
           }

@@ -1,5 +1,6 @@
 // Highlighting tab: drag across the dialogue to paint colored runs onto it.
 import { escapeHtml, normalizeHighlights } from '../../utils.js';
+import { icon } from '../../ui/icons.js';
 import { COLOR_REGEX, activeLine, sl } from './state.js';
 import { renderScriptLineModal, failField } from '../scriptLineModal.js';
 
@@ -52,7 +53,7 @@ export function renderHighlightingTab(line) {
           <span class="highlight-range">(chars ${h.startChar}-${h.endChar})</span>
         </div>
         <button class="btn btn-secondary btn-sm" data-index="${idx}" data-on-click="removeHighlight">
-          ${window.icon('trash', { size: 15 })}
+          ${icon('trash', { size: 15 })}
         </button>
       </div>
     `;
@@ -128,10 +129,10 @@ export function renderHighlightingTab(line) {
 
         <div class="highlight-button-row">
           <button class="btn btn-primary" data-on-click="addHighlightFromSelection" id="add-highlight-btn" disabled>
-            ${window.icon('plus')} Add Highlight
+            ${icon('plus')} Add Highlight
           </button>
           <button class="btn btn-secondary" data-on-click="clearHighlightSelection">
-            ${window.icon('close')} Clear Selection
+            ${icon('close')} Clear Selection
           </button>
         </div>
       </div>

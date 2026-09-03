@@ -1,5 +1,6 @@
 // Sprite tab: pick which character sprite shows during a speaking line.
 import { sl } from './state.js';
+import { icon } from '../../ui/icons.js';
 import { renderScriptLineModal, failField } from '../scriptLineModal.js';
 import { registerActions } from '../../ui/actions.js';
 
@@ -35,7 +36,7 @@ export function renderSpriteSelectionTab(character) {
            data-sprite-index="${idx + 1}" data-on-click="selectSprite"
            title="Sprite ${idx + 1}">
         <img src="${spr.dataURL}" alt="Sprite ${idx + 1}">
-        ${isSelected ? `<div class="sprite-check">${window.icon('check', { size: 16 })}</div>` : ''}
+        ${isSelected ? `<div class="sprite-check">${icon('check', { size: 16 })}</div>` : ''}
       </div>
     `;
     })

@@ -4,6 +4,7 @@
 // The application bootstrap used to sit at the top of this file, which gave
 // "where does the app start?" a two-file answer; it is in main.js now.
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
+import { icon } from './ui/icons.js';
 import { markFileDeleted } from './core/history.js';
 import { removeEntry, reportFailedRemoval } from './core/fileOps.js';
 import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
@@ -79,11 +80,11 @@ export function renderScriptEditor() {
       `
       <div id="scriptEditorContainer">
         <div class="script-empty-state">
-          <div class="script-empty-icon">${window.icon('script', { size: 56 })}</div>
+          <div class="script-empty-icon">${icon('script', { size: 56 })}</div>
           <h2>No Script Lines Yet</h2>
           <p>Click the button below to add your first script line</p>
           <button class="btn btn-primary script-add-btn" data-on-click="addScriptLine">
-            ${window.icon('plus')} Add Script Line
+            ${icon('plus')} Add Script Line
           </button>
         </div>
       </div>
@@ -114,7 +115,7 @@ export function renderScriptEditor() {
         <div class="script-header">
           <h2>Trial Script</h2>
           <div class="script-search">
-            ${window.icon('search', { size: 16 })}
+            ${icon('search', { size: 16 })}
             <input type="text" id="scriptSearch" placeholder="Search lines…"
                    value="${escapeHtml(scriptFilter)}" data-on-input="filterScript"
                    spellcheck="false">
@@ -526,7 +527,7 @@ export function renderScriptLineBar(line, index) {
     ? `<div class="script-line-badges">${badgeDefs
         .map(
           ([ic, title]) =>
-            `<span class="script-line-badge" title="${title}">${window.icon(ic, { size: 13 })}</span>`
+            `<span class="script-line-badge" title="${title}">${icon(ic, { size: 13 })}</span>`
         )
         .join('')}</div>`
     : '';
@@ -541,10 +542,10 @@ export function renderScriptLineBar(line, index) {
          data-on-click="toggleLineSelection">
 
       <div class="script-drag-handle">
-        <div class="arrow-btn" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineTop" title="Move to top">${window.icon('chevronsUp', { size: 13 })}</div>
-        <div class="arrow-btn arrow-up" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineUp" title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
-        <div class="arrow-btn arrow-down" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineDown" title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
-        <div class="arrow-btn" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineBottom" title="Move to bottom">${window.icon('chevronsDown', { size: 13 })}</div>
+        <div class="arrow-btn" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineTop" title="Move to top">${icon('chevronsUp', { size: 13 })}</div>
+        <div class="arrow-btn arrow-up" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineUp" title="Move up">${icon('chevronUp', { size: 14 })}</div>
+        <div class="arrow-btn arrow-down" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineDown" title="Move down">${icon('chevronDown', { size: 14 })}</div>
+        <div class="arrow-btn" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineBottom" title="Move to bottom">${icon('chevronsDown', { size: 13 })}</div>
       </div>
 
       <div class="script-line-number">#${lineNumber}</div>
@@ -561,9 +562,9 @@ export function renderScriptLineBar(line, index) {
         </select>
       </div>
 
-      ${line.type === 'speaking' || line.type === 'narrator' ? `<button class="script-line-edit" data-line-id="${escapeHtml(line.id)}" data-on-click="openScriptLineModal" title="Edit advanced properties">${window.icon('edit', { size: 16 })}</button>` : ''}
+      ${line.type === 'speaking' || line.type === 'narrator' ? `<button class="script-line-edit" data-line-id="${escapeHtml(line.id)}" data-on-click="openScriptLineModal" title="Edit advanced properties">${icon('edit', { size: 16 })}</button>` : ''}
 
-      <button class="script-line-delete" data-line-id="${escapeHtml(line.id)}" data-on-click="deleteScriptLine" title="Delete line">${window.icon('trash', { size: 16 })}</button>
+      <button class="script-line-delete" data-line-id="${escapeHtml(line.id)}" data-on-click="deleteScriptLine" title="Delete line">${icon('trash', { size: 16 })}</button>
     </div>
   `;
 }

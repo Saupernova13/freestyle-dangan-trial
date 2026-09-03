@@ -4,6 +4,7 @@ import {
   seekAudioPreview,
   toggleAudioPreview,
 } from '../../components/audioPreview.js';
+import { icon } from '../../ui/icons.js';
 import { state } from '../../core/state.js';
 import { MAX_AUDIO_SIZE } from '../../core/constants.js';
 import { escapeHtml } from '../../utils.js';
@@ -35,7 +36,7 @@ export function renderAudioUploadTab() {
           ? `
         <div class="audio-preview">
           <div class="audio-info">
-            <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
+            <span class="audio-icon">${icon('music', { size: 16 })}</span>
             <span class="audio-filename">${escapeHtml(sl.fields.audioFile || 'audio.mp3')}</span>
           </div>
 
@@ -52,8 +53,8 @@ export function renderAudioUploadTab() {
           </div>
 
           <div class="audio-controls">
-            <button class="btn btn-secondary" id="audio-play-btn" data-on-click="playAudioPreview">${isAudioPreviewPlaying(AUDIO_PREVIEW_KEY) ? `${window.icon('pause')} Pause` : `${window.icon('play')} Play`}</button>
-            <button class="btn btn-secondary" data-on-click="clearAudio">${window.icon('trash')} Remove</button>
+            <button class="btn btn-secondary" id="audio-play-btn" data-on-click="playAudioPreview">${isAudioPreviewPlaying(AUDIO_PREVIEW_KEY) ? `${icon('pause')} Pause` : `${icon('play')} Play`}</button>
+            <button class="btn btn-secondary" data-on-click="clearAudio">${icon('trash')} Remove</button>
           </div>
         </div>
       `
@@ -67,7 +68,7 @@ export function renderAudioUploadTab() {
       <input type="file" accept="audio/*" id="audioFileInput"
              data-on-change="handleAudioUpload" style="display: none;">
       <button class="btn btn-primary" data-on-click="triggerAudioInput">
-        ${window.icon('upload')} ${hasAudio ? 'Replace' : 'Upload'} Audio
+        ${icon('upload')} ${hasAudio ? 'Replace' : 'Upload'} Audio
       </button>
     </div>
   `;

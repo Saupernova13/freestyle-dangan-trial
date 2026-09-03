@@ -7,6 +7,7 @@ import {
   saveMinigameAudioFile,
   validateAudioUpload,
 } from '../../core/minigameAudio.js';
+import { icon } from '../../ui/icons.js';
 import { seekAudioPreview, toggleAudioPreview } from '../../components/audioPreview.js';
 import { confirmDialog, showToast } from '../../ui/dialogs.js';
 import { renderCharacterOptions } from '../../models/characterModel.js';
@@ -21,6 +22,31 @@ import {
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 import { renderVoiceLineField, voiceLineElementIds } from './voiceLineField.js';
+import { registerActions } from '../../ui/actions.js';
+
+const speaker = (el) => [el.dataset.gameId, el.dataset.groupId, el.dataset.speakerKey];
+
+registerActions('click', {
+  addMassPanicLineGroup: (el) => addMassPanicLineGroup(el.dataset.gameId),
+  deleteMassPanicLineGroup: (el) =>
+    deleteMassPanicLineGroup(el.dataset.gameId, el.dataset.groupId),
+  playPanicAudioPreview: (el) => playPanicAudioPreview(...speaker(el)),
+  clearPanicVoiceLine: (el) => clearPanicVoiceLine(...speaker(el)),
+});
+
+registerActions('input', {
+  seekPanicAudio: (el) => seekPanicAudio(...speaker(el), el.value),
+});
+
+registerActions('change', {
+  updateMassPanicField: (el) =>
+    updateMassPanicField(el.dataset.gameId, el.dataset.field, el.value),
+  updateMassPanicLineField: (el) =>
+    updateMassPanicLineField(...speaker(el), el.dataset.field, el.value),
+  handleLoudAssertionToggle: (el) => handleLoudAssertionToggle(...speaker(el), el.checked),
+  handleMassPanicAnswerSelection: (el) => handleMassPanicAnswerSelection(...speaker(el), el.value),
+  handlePanicVoiceUpload: (el, event) => handlePanicVoiceUpload(...speaker(el), event),
+});
 import { renderOptions } from '../../ui/options.js';
 
 // --- Main Rendering ---
@@ -33,7 +59,7 @@ export function renderMassPanicDebateEditor(mg) {
 
   return `
     <div class="minigame-editor-section mass-panic-section">
-      <h3>${window.icon('burst', { size: 20 })} Mass Panic Debate - Simultaneous Speakers</h3>
+      <h3>${icon('burst', { size: 20 })} Mass Panic Debate - Simultaneous Speakers</h3>
       <p class="section-description">
         Configure 3 characters who speak simultaneously. Each line group has all 3 speakers talking at once.
         Only one speaker can have a loud assertion per line group.
@@ -51,7 +77,8 @@ export function renderMassPanicDebateEditor(mg) {
               return `
           <div class="form-group">
             <label>Speaker ${n} Character</label>
-            <select class="form-input" onchange="updateMassPanicField('${mg.gameId}', '${field}', this.value)">
+            <select class="form-input" data-game-id="${escapeHtml(mg.gameId)}" data-field="${field}"
+                    data-on-change="updateMassPanicField">
               ${renderCharacterOptions(mg.typeSpecific[field], otherIds)}
             </select>
           </div>`;
@@ -76,9 +103,9 @@ export function renderMassPanicDebateEditor(mg) {
 
       <!-- Floating button for line groups -->
       <button class="minigame-floating-btn"
-              onclick="addMassPanicLineGroup('${mg.gameId}')"
+              data-game-id="${escapeHtml(mg.gameId)}" data-on-click="addMassPanicLineGroup"
               title="Add Line Group (All 3 Speakers)">
-        ${window.icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Line Group</span>
+        ${icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Line Group</span>
       </button>
     </div>
   `;
@@ -96,7 +123,8 @@ export function renderMassPanicLineGroup(gameId, group, groupIndex) {
     <div class="mass-panic-group-card">
       <div class="mass-panic-group-header">
         <span class="group-number">Line Group #${groupIndex + 1}</span>
-        <button class="btn-icon" onclick="deleteMassPanicLineGroup('${gameId}', '${group.groupId}')" title="Delete line group">${window.icon('trash', { size: 16 })}</button>
+        <button class="btn-icon" data-game-id="${escapeHtml(gameId)}" data-group-id="${escapeHtml(group.groupId)}"
+                data-on-click="deleteMassPanicLineGroup" title="Delete line group">${icon('trash', { size: 16 })}</button>
       </div>
 
       <div class="mass-panic-group-body">
@@ -136,7 +164,7 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
     <div class="mass-panic-speaker-line" style="border-left: 4px solid ${color};">
       <div class="speaker-line-header">
         <h5>${escapeHtml(enhancedLabel)}</h5>
-        ${line.isLoudAssertion ? `<span class="badge badge-loud">${window.icon('megaphone', { size: 13 })} LOUD</span>` : ''}
+        ${line.isLoudAssertion ? `<span class="badge badge-loud">${icon('megaphone', { size: 13 })} LOUD</span>` : ''}
       </div>
 
       <div class="sentence-structure">
@@ -144,17 +172,20 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
                class="form-input sentence-part"
                value="${escapeHtml(line.sentenceBeginning || '')}"
                placeholder="Beginning..."
-               onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'sentenceBeginning', this.value)">
+               data-game-id="${escapeHtml(gameId)}" data-group-id="${escapeHtml(group.groupId)}" data-speaker-key="${escapeHtml(speakerKey)}" data-field="sentenceBeginning"
+               data-on-change="updateMassPanicLineField">
         <input type="text"
                class="form-input sentence-part target-part"
                value="${escapeHtml(line.target || '')}"
                placeholder="Target (shootable)"
-               onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'target', this.value)">
+               data-game-id="${escapeHtml(gameId)}" data-group-id="${escapeHtml(group.groupId)}" data-speaker-key="${escapeHtml(speakerKey)}" data-field="target"
+               data-on-change="updateMassPanicLineField">
         <input type="text"
                class="form-input sentence-part"
                value="${escapeHtml(line.sentenceEnd || '')}"
                placeholder="...end"
-               onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'sentenceEnd', this.value)">
+               data-game-id="${escapeHtml(gameId)}" data-group-id="${escapeHtml(group.groupId)}" data-speaker-key="${escapeHtml(speakerKey)}" data-field="sentenceEnd"
+               data-on-change="updateMassPanicLineField">
       </div>
 
       <div class="form-row">
@@ -162,14 +193,16 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
           <label class="checkbox-label">
             <input type="checkbox"
                    ${line.isLoudAssertion ? 'checked' : ''}
-                   onchange="handleLoudAssertionToggle('${gameId}', '${group.groupId}', '${speakerKey}', this.checked)">
+                   data-game-id="${escapeHtml(gameId)}" data-group-id="${escapeHtml(group.groupId)}" data-speaker-key="${escapeHtml(speakerKey)}"
+                   data-on-change="handleLoudAssertionToggle">
             <span>Loud Assertion (Only 1 per group)</span>
           </label>
         </div>
         <div class="form-group">
           <label>Correct Answer Bullet (Only 1 per minigame)</label>
           <select class="form-input"
-                  onchange="handleMassPanicAnswerSelection('${gameId}', '${group.groupId}', '${speakerKey}', this.value)">
+                  data-game-id="${escapeHtml(gameId)}" data-group-id="${escapeHtml(group.groupId)}" data-speaker-key="${escapeHtml(speakerKey)}"
+                  data-on-change="handleMassPanicAnswerSelection">
             ${renderOptions(
               [
                 { value: '', label: 'None' },
@@ -185,21 +218,24 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
         <div class="form-group">
           <label>Text Effect</label>
           <select class="form-input"
-                  onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'textEffect', this.value)">
+                  data-game-id="${escapeHtml(gameId)}" data-group-id="${escapeHtml(group.groupId)}" data-speaker-key="${escapeHtml(speakerKey)}" data-field="textEffect"
+               data-on-change="updateMassPanicLineField">
             ${renderTextStyleOptions(TEXT_EFFECTS, line.textEffect)}
           </select>
         </div>
         <div class="form-group">
           <label>Text Font</label>
           <select class="form-input"
-                  onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'textFont', this.value)">
+                  data-game-id="${escapeHtml(gameId)}" data-group-id="${escapeHtml(group.groupId)}" data-speaker-key="${escapeHtml(speakerKey)}" data-field="textFont"
+               data-on-change="updateMassPanicLineField">
             ${renderTextStyleOptions(TEXT_FONTS, line.textFont)}
           </select>
         </div>
         <div class="form-group">
           <label>Movement Direction</label>
           <select class="form-input"
-                  onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'textMovementDirection', this.value)">
+                  data-game-id="${escapeHtml(gameId)}" data-group-id="${escapeHtml(group.groupId)}" data-speaker-key="${escapeHtml(speakerKey)}" data-field="textMovementDirection"
+               data-on-change="updateMassPanicLineField">
             ${renderTextStyleOptions(TEXT_DIRECTIONS, line.textMovementDirection)}
           </select>
         </div>
@@ -210,10 +246,13 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
         ${renderVoiceLineField({
           fileName: line.voiceLineFile,
           idBase: `${group.groupId}-${speakerKey}`,
-          onPlay: `playPanicAudioPreview('${gameId}', '${group.groupId}', '${speakerKey}')`,
-          onSeek: `seekPanicAudio('${gameId}', '${group.groupId}', '${speakerKey}', this.value)`,
-          onClear: `clearPanicVoiceLine('${gameId}', '${group.groupId}', '${speakerKey}')`,
-          onUpload: `handlePanicVoiceUpload('${gameId}', '${group.groupId}', '${speakerKey}', event)`,
+          data: { gameId, groupId: group.groupId, speakerKey },
+          actions: {
+            play: 'playPanicAudioPreview',
+            seek: 'seekPanicAudio',
+            clear: 'clearPanicVoiceLine',
+            upload: 'handlePanicVoiceUpload',
+          },
         })}
       </div>
     </div>

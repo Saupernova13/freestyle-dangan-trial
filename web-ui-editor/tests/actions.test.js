@@ -165,3 +165,32 @@ describe('events that do not bubble', () => {
     expect(seen).toEqual(['f1']);
   });
 });
+
+describe('nothing is wired inline any more', () => {
+  it('has no on<event>= attribute left in js/ or index.html', () => {
+    // The acceptance criterion. An inline attribute is the only thing that
+    // needs a global, and the only place a trial-derived id would sit inside
+    // an executable string.
+    const sources = [
+      ...jsFiles().map((file) => [relative(root, file), readFileSync(file, 'utf8')]),
+      ['index.html', readFileSync(join(root, 'index.html'), 'utf8')],
+    ];
+    const inline = [];
+    for (const [name, source] of sources) {
+      for (const [match] of source.matchAll(/ on[a-z]+="/g)) {
+        inline.push(`${name}: ${match.trim()}`);
+      }
+    }
+    expect(inline).toEqual([]);
+  });
+
+  it('puts no handler on window', () => {
+    // main.js used to bridge every module export onto window purely so the
+    // inline attributes could reach them.
+    const main = readFileSync(join(root, 'js/main.js'), 'utf8');
+    expect(main).not.toContain('window[name]');
+    for (const [name, source] of jsFiles().map((f) => [f, readFileSync(f, 'utf8')])) {
+      expect([name, /window\.\w+ =/.test(source)]).toEqual([name, false]);
+    }
+  });
+});

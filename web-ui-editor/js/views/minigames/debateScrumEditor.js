@@ -2,6 +2,7 @@
 // keywords on each side.
 
 import { moveItem, reindexOrder } from '../../core/listOps.js';
+import { icon } from '../../ui/icons.js';
 import { orderedCopy } from '../../core/minigameDefaults.js';
 import {
   deleteMinigameAudioFile,
@@ -15,6 +16,28 @@ import { renderCharacterOptions } from '../../models/characterModel.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
+import { registerActions } from '../../ui/actions.js';
+
+const argumentOf = (el) => [el.dataset.gameId, el.dataset.argumentId];
+const sideOf = (el) => [...argumentOf(el), el.dataset.side];
+
+registerActions('click', {
+  addDebateScrumArgument: (el) => addDebateScrumArgument(el.dataset.gameId),
+  moveArgumentUp: (el) => moveArgumentUp(...argumentOf(el)),
+  moveArgumentDown: (el) => moveArgumentDown(...argumentOf(el)),
+  deleteDebateScrumArgument: (el) => deleteDebateScrumArgument(...argumentOf(el)),
+  playDebateScrumAudio: (el) => playDebateScrumAudio(...sideOf(el)),
+  clearDebateScrumAudio: (el) => clearDebateScrumAudio(...sideOf(el)),
+});
+
+registerActions('change', {
+  updateDebateScrumArgument: (el) =>
+    updateDebateScrumArgument(...argumentOf(el), el.dataset.field, el.value),
+  updateDebateScrumArgumentKeywords: (el) =>
+    updateDebateScrumArgumentKeywords(...sideOf(el), el.value),
+  handleDebateScrumAudioUpload: (el, event) =>
+    handleDebateScrumAudioUpload(...sideOf(el), event),
+});
 
 // --- Main Rendering ---
 
@@ -47,9 +70,9 @@ export function renderDebateScrumEditor(mg) {
   if (args.length < 8) {
     html += `
       <button class="minigame-floating-btn"
-              onclick="addDebateScrumArgument('${mg.gameId}')"
+              data-game-id="${escapeHtml(mg.gameId)}" data-on-click="addDebateScrumArgument"
               title="Add Argument">
-        ${window.icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Argument</span>
+        ${icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Argument</span>
       </button>
     `;
   }
@@ -62,23 +85,26 @@ export function renderDebateScrumArguments(gameId, args) {
 
   html += `<div class="argument-drop-zone"
                 data-insert-position="0"
-                ondragover="handleListGapDragOver(event)"
-                ondrop="handleListDropInGap(event, '${gameId}', 'arguments', 0)"
-                ondragleave="handleListGapDragLeave(event)"></div>`;
+                data-on-dragover="listGapDragOver"
+                data-game-id="${escapeHtml(gameId)}" data-list-key="arguments"
+           data-on-drop="listDropInGap"
+                data-on-dragleave="listGapDragLeave"></div>`;
 
   orderedCopy(args).forEach((arg, index) => {
     html += `
       <div class="reorder-wrapper"
            draggable="true"
-           ondragstart="handleListDragStart(event, 'arguments', 'argumentId', '${arg.argumentId}')"
-           ondragend="handleListDragEnd(event)">
+           data-list-key="arguments" data-id-key="argumentId" data-item-id="${escapeHtml(arg.argumentId)}"
+           data-on-dragstart="listDragStart"
+           data-on-dragend="listDragEnd">
         ${renderDebateScrumArgumentEditor(gameId, arg, index)}
       </div>
       <div class="argument-drop-zone"
            data-insert-position="${index + 1}"
-           ondragover="handleListGapDragOver(event)"
-           ondrop="handleListDropInGap(event, '${gameId}', 'arguments', ${index + 1})"
-           ondragleave="handleListGapDragLeave(event)"></div>
+           data-on-dragover="listGapDragOver"
+           data-game-id="${escapeHtml(gameId)}" data-list-key="arguments"
+           data-on-drop="listDropInGap"
+           data-on-dragleave="listGapDragLeave"></div>
     `;
   });
 
@@ -91,26 +117,30 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
       <div class="reorder-card-header">
         <div class="reorder-drag-handle">
           <div class="arrow-btn arrow-up"
-               onclick="event.stopPropagation(); moveArgumentUp('${gameId}', '${arg.argumentId}')"
-               title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
+               data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}"
+               data-on-click="moveArgumentUp"
+               title="Move up">${icon('chevronUp', { size: 14 })}</div>
           <div class="arrow-btn arrow-down"
-               onclick="event.stopPropagation(); moveArgumentDown('${gameId}', '${arg.argumentId}')"
-               title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
+               data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}"
+               data-on-click="moveArgumentDown"
+               title="Move down">${icon('chevronDown', { size: 14 })}</div>
         </div>
         <div class="reorder-number">Argument #${index + 1}</div>
         <button class="btn-icon"
-                onclick="event.stopPropagation(); deleteDebateScrumArgument('${gameId}', '${arg.argumentId}')"
-                title="Delete argument">${window.icon('trash', { size: 16 })}</button>
+                data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}"
+                data-on-click="deleteDebateScrumArgument"
+                title="Delete argument">${icon('trash', { size: 16 })}</button>
       </div>
 
       <div class="argument-body">
         <div class="argument-side opposition-side">
-          <h4><span style="color: var(--error)">${window.icon('dot', { size: 12 })}</span> Opposition Side</h4>
+          <h4><span style="color: var(--error)">${icon('dot', { size: 12 })}</span> Opposition Side</h4>
 
           <div class="form-group">
             <label>Character</label>
             <select class="form-input"
-                    onchange="updateDebateScrumArgument('${gameId}', '${arg.argumentId}', 'oppositionCharacterId', this.value)">
+                    data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-field="oppositionCharacterId"
+                    data-on-change="updateDebateScrumArgument">
               ${renderCharacterOptions(arg.oppositionCharacterId)}
             </select>
           </div>
@@ -120,7 +150,8 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input"
                       rows="3"
                       placeholder="Opposition statement..."
-                      onchange="updateDebateScrumArgument('${gameId}', '${arg.argumentId}', 'oppositionStatement', this.value)">${escapeHtml(arg.oppositionStatement || '')}</textarea>
+                      data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-field="oppositionStatement"
+                    data-on-change="updateDebateScrumArgument">${escapeHtml(arg.oppositionStatement || '')}</textarea>
           </div>
 
           <div class="form-group">
@@ -128,7 +159,8 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input keywords-input"
                       rows="2"
                       placeholder="Enter keywords, one per line..."
-                      onchange="updateDebateScrumArgumentKeywords('${gameId}', '${arg.argumentId}', 'opposition', this.value)">${escapeHtml((arg.oppositionKeywords || []).join('\n'))}</textarea>
+                      data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-side="opposition"
+                      data-on-change="updateDebateScrumArgumentKeywords">${escapeHtml((arg.oppositionKeywords || []).join('\n'))}</textarea>
             <small style="color: var(--text-tertiary);">Keywords that will be highlighted during this argument</small>
           </div>
 
@@ -138,35 +170,39 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
               arg.oppositionAudioFile
                 ? `
               <div class="audio-preview-mini">
-                <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
+                <span class="audio-icon">${icon('music', { size: 16 })}</span>
                 <span class="audio-filename">${escapeHtml(arg.oppositionAudioFile)}</span>
                 <button class="btn btn-secondary btn-sm"
                         id="scrum-play-btn-${arg.argumentId}-opposition"
-                        onclick="playDebateScrumAudio('${gameId}', '${arg.argumentId}', 'opposition')">
-                  ${window.icon('play')} Play
+                        data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-side="opposition"
+                        data-on-click="playDebateScrumAudio">
+                  ${icon('play')} Play
                 </button>
                 <button class="btn btn-secondary btn-sm"
-                        onclick="clearDebateScrumAudio('${gameId}', '${arg.argumentId}', 'opposition')">
-                  ${window.icon('trash')} Remove
+                        data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-side="opposition"
+                        data-on-click="clearDebateScrumAudio">
+                  ${icon('trash')} Remove
                 </button>
               </div>
             `
                 : `
               <input type="file"
                      accept="audio/*"
-                     onchange="handleDebateScrumAudioUpload('${gameId}', '${arg.argumentId}', 'opposition', event)">
+                     data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-side="opposition"
+                     data-on-change="handleDebateScrumAudioUpload">
             `
             }
           </div>
         </div>
 
         <div class="argument-side defense-side">
-          <h4><span style="color: var(--secondary)">${window.icon('dot', { size: 12 })}</span> Defense Side</h4>
+          <h4><span style="color: var(--secondary)">${icon('dot', { size: 12 })}</span> Defense Side</h4>
 
           <div class="form-group">
             <label>Character</label>
             <select class="form-input"
-                    onchange="updateDebateScrumArgument('${gameId}', '${arg.argumentId}', 'defenseCharacterId', this.value)">
+                    data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-field="defenseCharacterId"
+                    data-on-change="updateDebateScrumArgument">
               ${renderCharacterOptions(arg.defenseCharacterId)}
             </select>
           </div>
@@ -176,7 +212,8 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input"
                       rows="3"
                       placeholder="Defense counter statement..."
-                      onchange="updateDebateScrumArgument('${gameId}', '${arg.argumentId}', 'defenseStatement', this.value)">${escapeHtml(arg.defenseStatement || '')}</textarea>
+                      data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-field="defenseStatement"
+                    data-on-change="updateDebateScrumArgument">${escapeHtml(arg.defenseStatement || '')}</textarea>
           </div>
 
           <div class="form-group">
@@ -184,7 +221,8 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
             <textarea class="form-input keywords-input"
                       rows="2"
                       placeholder="Enter keywords, one per line..."
-                      onchange="updateDebateScrumArgumentKeywords('${gameId}', '${arg.argumentId}', 'defense', this.value)">${escapeHtml((arg.defenseKeywords || []).join('\n'))}</textarea>
+                      data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-side="defense"
+                      data-on-change="updateDebateScrumArgumentKeywords">${escapeHtml((arg.defenseKeywords || []).join('\n'))}</textarea>
             <small style="color: var(--text-tertiary);">Keywords that will be highlighted during this argument</small>
           </div>
 
@@ -194,23 +232,26 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
               arg.defenseAudioFile
                 ? `
               <div class="audio-preview-mini">
-                <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
+                <span class="audio-icon">${icon('music', { size: 16 })}</span>
                 <span class="audio-filename">${escapeHtml(arg.defenseAudioFile)}</span>
                 <button class="btn btn-secondary btn-sm"
                         id="scrum-play-btn-${arg.argumentId}-defense"
-                        onclick="playDebateScrumAudio('${gameId}', '${arg.argumentId}', 'defense')">
-                  ${window.icon('play')} Play
+                        data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-side="defense"
+                        data-on-click="playDebateScrumAudio">
+                  ${icon('play')} Play
                 </button>
                 <button class="btn btn-secondary btn-sm"
-                        onclick="clearDebateScrumAudio('${gameId}', '${arg.argumentId}', 'defense')">
-                  ${window.icon('trash')} Remove
+                        data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-side="defense"
+                        data-on-click="clearDebateScrumAudio">
+                  ${icon('trash')} Remove
                 </button>
               </div>
             `
                 : `
               <input type="file"
                      accept="audio/*"
-                     onchange="handleDebateScrumAudioUpload('${gameId}', '${arg.argumentId}', 'defense', event)">
+                     data-game-id="${escapeHtml(gameId)}" data-argument-id="${escapeHtml(arg.argumentId)}" data-side="defense"
+                     data-on-change="handleDebateScrumAudioUpload">
             `
             }
           </div>

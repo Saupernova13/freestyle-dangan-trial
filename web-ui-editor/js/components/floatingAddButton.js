@@ -1,5 +1,6 @@
 // One floating "add" button, relabelled per view.
 import { addScriptLine } from '../app.js';
+import { icon } from '../ui/icons.js';
 import { state } from '../core/state.js';
 import { addMinigame } from '../views/minigameView.js';
 import { addTruthBullet } from '../views/truthBulletsView.js';
@@ -12,7 +13,7 @@ export function initFloatingAddButton() {
     floatingButton = document.createElement('button');
     floatingButton.id = 'floatingAddButton';
     floatingButton.className = 'floating-add-btn';
-    setHtml(floatingButton, window.icon('plus', { size: 24 }));
+    setHtml(floatingButton, icon('plus', { size: 24 }));
     floatingButton.style.display = 'none';
     document.body.appendChild(floatingButton);
   }
@@ -64,11 +65,11 @@ export function updateFloatingAddButton() {
       floatingButton.classList.add('extended');
       setHtml(
         floatingButton,
-        `${window.icon('plus', { size: 22 })} <span class="floating-add-btn-text">${escapeHtml(buttonConfig.text)}</span>`
+        `${icon('plus', { size: 22 })} <span class="floating-add-btn-text">${escapeHtml(buttonConfig.text)}</span>`
       );
     } else {
       floatingButton.classList.remove('extended');
-      setHtml(floatingButton, window.icon('plus', { size: 24 }));
+      setHtml(floatingButton, icon('plus', { size: 24 }));
     }
   } else {
     floatingButton.style.display = 'none';

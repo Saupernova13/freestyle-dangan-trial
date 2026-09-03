@@ -3,6 +3,7 @@
 // generation, and the highlight normaliser every preview and save runs
 // through.
 import { setHtml } from './ui/dom.js';
+import { icon } from './ui/icons.js';
 export function showLoader(on, text = '') {
   document.getElementById('loaderOverlay').classList.toggle('visible', !!on);
   const label = document.getElementById('loaderText');
@@ -21,7 +22,7 @@ export function fileToDataUrl(file) {
 export function renderDirDisplay(dH, label) {
   const el = document.getElementById('dirDisplay');
   if (!el) return;
-  setHtml(el, dH ? `${window.icon('folder', { size: 15 })} ${escapeHtml(label || dH.name)}` : '');
+  setHtml(el, dH ? `${icon('folder', { size: 15 })} ${escapeHtml(label || dH.name)}` : '');
 }
 
 // Seconds as M:SS.

@@ -17,7 +17,7 @@
       <h1>Class Trial Editor</h1>
       <div class="header-actions">
         <span id="saveStatus" class="save-status" aria-live="polite"></span>
-        <button class="settings-toggle" onclick="openSettings()" title="Settings">
+        <button class="settings-toggle" data-on-click="openSettings" title="Settings">
           <svg
             width="18"
             height="18"
@@ -48,7 +48,7 @@
         spellcheck="false"
       />
       <div class="dir-actions">
-        <button class="btn btn-primary" onclick="openTrialHub()" title="Open or switch trial">
+        <button class="btn btn-primary" data-on-click="openTrialHub" title="Open or switch trial">
           <svg
             width="18"
             height="18"
@@ -67,7 +67,7 @@
         </button>
         <button
           class="btn btn-success"
-          onclick="exportToPlayableFile()"
+          data-on-click="exportToPlayableFile"
           id="exportBtn"
           disabled
           title="Export trial to .drtrial file"
@@ -97,7 +97,7 @@
 
     <main>
       <nav>
-        <div class="nav-item selected" data-view="cast" onclick="switchView('cast')" role="button" tabindex="0">
+        <div class="nav-item selected" data-view="cast" data-on-click="switchView" role="button" tabindex="0">
           <svg
             class="icon"
             width="20"
@@ -117,7 +117,7 @@
           </svg>
           <span>Cast</span>
         </div>
-        <div class="nav-item" data-view="script" onclick="switchView('script')" role="button" tabindex="0">
+        <div class="nav-item" data-view="script" data-on-click="switchView" role="button" tabindex="0">
           <svg
             class="icon"
             width="20"
@@ -136,7 +136,7 @@
           </svg>
           <span>Script</span>
         </div>
-        <div class="nav-item" data-view="truthBullets" onclick="switchView('truthBullets')" role="button" tabindex="0">
+        <div class="nav-item" data-view="truthBullets" data-on-click="switchView" role="button" tabindex="0">
           <svg
             class="icon"
             width="20"
@@ -155,7 +155,7 @@
           </svg>
           <span>Truth Bullets</span>
         </div>
-        <div class="nav-item" data-view="minigames" onclick="switchView('minigames')" role="button" tabindex="0">
+        <div class="nav-item" data-view="minigames" data-on-click="switchView" role="button" tabindex="0">
           <svg
             class="icon"
             width="20"
@@ -190,8 +190,8 @@
       <div class="loader-text" id="loaderText"></div>
     </div>
 
-    <!-- The only entry point: main.js imports every module and bridges the
-       public handlers onto window for the inline onclick markup. -->
+    <!-- The only entry point: main.js imports every module, which registers
+       the delegated handlers, and then boots the app. -->
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

@@ -1,10 +1,12 @@
 import { closeModal } from './modals/modalCoordinator.js';
+import { icon } from './ui/icons.js';
 import { alertDialog, showToast } from './ui/dialogs.js';
 import { focusFirstField } from './ui/modalBehaviors.js';
 import { setHtml } from './ui/dom.js';
 import { registerActions } from './ui/actions.js';
 
 registerActions('click', {
+  openSettings: () => openSettings(),
   closeModal: () => closeModal(),
   saveAppSettings: () => saveAppSettings(),
 });
@@ -103,7 +105,7 @@ export function openSettings() {
       <div class="dr-modal">
         <button class="dr-close" data-on-click="closeModal">&times;</button>
         <div class="dr-tabs">
-          <div class="dr-tab active">${window.icon('settings')} Settings</div>
+          <div class="dr-tab active">${icon('settings')} Settings</div>
         </div>
         <div class="dr-modal-content">
           <div class="dr-form">

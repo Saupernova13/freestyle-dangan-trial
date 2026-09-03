@@ -149,15 +149,15 @@ describe('the inline wiring', () => {
   it('names a handler that exists for every drag attribute in all three editors', () => {
     // The names live in strings, so nothing else in the toolchain checks them.
     const exported = new Set([
-      'handleListDragStart',
-      'handleListDragEnd',
-      'handleListDropInGap',
-      'handleListGapDragOver',
-      'handleListGapDragLeave',
+      'listDragStart',
+      'listDragEnd',
+      'listDropInGap',
+      'listGapDragOver',
+      'listGapDragLeave',
     ]);
     for (const file of EDITORS) {
       const source = readSource(file);
-      const used = [...source.matchAll(/ondrag\w*="(\w+)\(|ondrop="(\w+)\(/g)].map(
+      const used = [...source.matchAll(/data-on-drag\w*="(\w+)"|data-on-drop="(\w+)"/g)].map(
         (m) => m[1] || m[2]
       );
       expect(used.length).toBeGreaterThan(0);
@@ -175,11 +175,15 @@ describe('the inline wiring', () => {
     };
     for (const [file, listKey] of Object.entries(lists)) {
       const source = readSource(file);
-      const drops = [...source.matchAll(/handleListDropInGap\(event, [^,]+, '(\w+)'/g)];
-      expect(drops.length).toBeGreaterThan(0);
-      for (const [, named] of drops) expect(named).toBe(listKey);
-      const starts = [...source.matchAll(/handleListDragStart\(event, '(\w+)'/g)];
-      for (const [, named] of starts) expect(named).toBe(listKey);
+      const keys = [...source.matchAll(/data-list-key="(\w+)"/g)].map((m) => m[1]);
+      expect(keys.length).toBeGreaterThan(0);
+      for (const named of keys) expect(named).toBe(listKey);
+    }
+  });
+
+  it('carries no inline drag attribute at all', () => {
+    for (const file of EDITORS) {
+      expect(readSource(file)).not.toMatch(/ ondrag\w*=|( ondrop=)/);
     }
   });
 });

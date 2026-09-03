@@ -4,6 +4,7 @@
 // tab to a module under ./scriptLine/. The tabs are re-exported here so
 // main.js's single `import * as scriptLineModal` still bridges every handler.
 import { stopAudioPreview } from '../components/audioPreview.js';
+import { icon } from '../ui/icons.js';
 import { renderScriptEditor } from '../app.js';
 import { markFileDeleted } from '../core/history.js';
 import { state } from '../core/state.js';
@@ -149,7 +150,7 @@ export function renderScriptLineModal() {
   const tab = (name, iconName, label) =>
     availableTabs.includes(name)
       ? `<div class="dr-tab ${sl.tab === name ? 'active' : ''}" data-tab="${name}" data-on-click="switchScriptLineTab">
-           ${window.icon(iconName)} ${label}
+           ${icon(iconName)} ${label}
          </div>`
       : '';
 

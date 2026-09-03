@@ -1,5 +1,6 @@
 // Create/edit modal for a single truth bullet.
 import { removeEntry, reportFailedRemoval } from '../core/fileOps.js';
+import { icon } from '../ui/icons.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { showToast } from '../ui/dialogs.js';
@@ -137,7 +138,7 @@ export function renderTruthBulletModal() {
                     <div class="bullet-image-preview-container">
                       <img src="${bulletFields.imageDataURL || ''}" alt="Bullet image">
                     </div>
-                    <button class="btn btn-secondary" data-on-click="clearBulletImage">${window.icon('trash')} Remove Image</button>
+                    <button class="btn btn-secondary" data-on-click="clearBulletImage">${icon('trash')} Remove Image</button>
                   </div>
                 `
                     : `
@@ -149,7 +150,7 @@ export function renderTruthBulletModal() {
                 <input type="file" accept="image/*" id="bulletImageInput"
                        data-on-change="handleBulletImageUpload" style="display: none;">
                 <button class="btn btn-primary" data-on-click="triggerBulletImageInput">
-                  ${window.icon('upload')} ${hasImage ? 'Replace' : 'Upload'} Image
+                  ${icon('upload')} ${hasImage ? 'Replace' : 'Upload'} Image
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 // Create/edit modal for a state.cast member.
 import { state } from '../core/state.js';
+import { icon } from '../ui/icons.js';
 import { uniqueDirectoryName } from '../core/opfs.js';
 import { markFileDeleted } from '../core/history.js';
 import { removeEntry } from '../core/fileOps.js';
@@ -133,7 +134,7 @@ export function renderCharacterModal() {
         <button class="dr-close" data-on-click="closeCharModal">&times;</button>
         <div class="dr-tabs">
           <button class="dr-tab${modalTab === 'details' ? ' active' : ''}" data-tab="details" data-on-click="switchCharModalTab">
-            ${isHeadmasterChar ? window.icon('crown') : window.icon('cap')} Character Details (${characterType.charAt(0).toUpperCase() + characterType.slice(1)})
+            ${isHeadmasterChar ? icon('crown') : icon('cap')} Character Details (${characterType.charAt(0).toUpperCase() + characterType.slice(1)})
           </button>
           <button class="dr-tab${modalTab === 'sprites' ? ' active' : ''}" data-tab="sprites" data-on-click="switchCharModalTab">Sprites</button>
         </div>
@@ -143,7 +144,7 @@ export function renderCharacterModal() {
           ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ''}
         </div>
         <div class="dr-btn-row">
-          ${state.cast[activeIdx] ? `<button class="btn btn-danger dr-btn-remove" data-on-click="removeCharacter">${window.icon('trash')} Remove</button>` : ''}
+          ${state.cast[activeIdx] ? `<button class="btn btn-danger dr-btn-remove" data-on-click="removeCharacter">${icon('trash')} Remove</button>` : ''}
           <button class="btn btn-secondary" data-on-click="closeCharModal">Cancel</button>
           <button class="btn btn-primary" data-on-click="trySaveChar" ${!state.dirHandle ? 'disabled' : ''}>Save ${isHeadmasterChar ? 'Headmaster' : 'Student'}</button>
         </div>
@@ -275,7 +276,7 @@ export function renderCharDetailsTab() {
 
   return `<form class="dr-form" data-on-submit="preventDefault">
     <div class="dr-role-banner${isHeadmasterChar ? ' dr-role-banner--headmaster' : ''}">
-      ${isHeadmasterChar ? `${window.icon('crown')} HEADMASTER CHARACTER` : `${window.icon('cap')} STUDENT CHARACTER`}
+      ${isHeadmasterChar ? `${icon('crown')} HEADMASTER CHARACTER` : `${icon('cap')} STUDENT CHARACTER`}
     </div>
     ${rows}
   </form>`;
@@ -286,7 +287,7 @@ export function renderCharSpritesTab() {
 
   return `
     <div class="dr-form">
-      <button class="btn btn-primary dr-sprslot-bulk" type="button" data-on-click="bulkImportSprites">${window.icon('folder')} Bulk Import ${isHeadmasterChar ? 'Headmaster' : 'Student'} Sprites</button>
+      <button class="btn btn-primary dr-sprslot-bulk" type="button" data-on-click="bulkImportSprites">${icon('folder')} Bulk Import ${isHeadmasterChar ? 'Headmaster' : 'Student'} Sprites</button>
       <div class="dr-sprgrid">
         ${charSprites
           .map(

@@ -16,7 +16,7 @@ import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 
-// ==================== Main Rendering ====================
+// --- Main Rendering ---
 
 export function renderDebateScrumEditor(mg) {
   // Read-only: seeding lives in ensureTypeSpecific, called at load and on a
@@ -42,7 +42,8 @@ export function renderDebateScrumEditor(mg) {
 
   html += `</div>`;
 
-  // 8 arguments is the cap.
+  // Hiding the button is cosmetic; the cap itself is enforced in
+  // addDebateScrumArgument, which is what a caller has to go through.
   if (args.length < 8) {
     html += `
       <button class="minigame-floating-btn"
@@ -219,7 +220,7 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
   `;
 }
 
-// ==================== Argument Management ====================
+// --- Argument Management ---
 
 export function addDebateScrumArgument(gameId) {
   const mg = findMinigame(gameId);
@@ -316,7 +317,7 @@ export function updateDebateScrumArgumentKeywords(gameId, argumentId, side, valu
   autoSaveTrial();
 }
 
-// ==================== Argument Reordering ====================
+// --- Argument Reordering ---
 
 export function moveArgumentUp(gameId, argumentId) {
   const mg = findMinigame(gameId);
@@ -334,7 +335,7 @@ export function moveArgumentDown(gameId, argumentId) {
   autoSaveTrial();
 }
 
-// ==================== Audio Handling ====================
+// --- Audio Handling ---
 
 export async function handleDebateScrumAudioUpload(gameId, argumentId, side, event) {
   const file = validateAudioUpload(event);
@@ -390,7 +391,7 @@ export async function clearDebateScrumAudio(gameId, argumentId, side) {
   autoSaveTrial();
 }
 
-// ==================== Audio Playback ====================
+// --- Audio Playback ---
 
 export async function playDebateScrumAudio(gameId, argumentId, side) {
   const mg = findMinigame(gameId);

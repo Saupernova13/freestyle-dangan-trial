@@ -83,10 +83,8 @@ export function validateTrialForExport() {
   return issues;
 }
 
-/**
- * Last gate before packaging: older files and hand edits carry overlapping or
- * out-of-bounds highlight ranges, so renormalize against each line's text.
- */
+// Last gate before packaging: older files and hand edits carry overlapping or
+// out-of-bounds highlight ranges, so renormalize against each line's text.
 export function sanitizeTrialJson(content) {
   try {
     const trial = JSON.parse(content);
@@ -117,7 +115,7 @@ export async function exportToPlayableFile() {
     return;
   }
 
-  // Pre-flight only — the author can always export anyway. Schema violations
+  // Pre-flight only - the author can always export anyway. Schema violations
   // are checked against the exact object a save would write.
   const issues = validateTrialData(buildTrialJson(state)).concat(validateTrialForExport());
   if (issues.length > 0) {

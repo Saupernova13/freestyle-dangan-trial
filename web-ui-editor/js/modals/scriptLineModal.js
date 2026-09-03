@@ -1,6 +1,6 @@
 // Script line modal: the per-line "advanced properties" editor.
 //
-// Owns the modal shell — tab bar, footer, open/close, save — and delegates each
+// Owns the modal shell - tab bar, footer, open/close, save - and delegates each
 // tab to a module under ./scriptLine/. The tabs are re-exported here so
 // main.js's single `import * as scriptLineModal` still bridges every handler.
 import { stopAudioPreview } from '../components/audioPreview.js';

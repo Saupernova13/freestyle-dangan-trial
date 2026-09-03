@@ -74,7 +74,7 @@ export function isSectionExpanded(lineId, sectionName) {
   return expandedSections[lineId]?.[sectionName] || false;
 }
 
-// ==================== Main Rendering ====================
+// --- Main Rendering ---
 
 export function renderNonstopDebateEditor(mg) {
   // Read-only: seeding lives in ensureTypeSpecific, called at load and on a
@@ -377,7 +377,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
   `;
 }
 
-// ==================== Truth Bullet Selection ====================
+// --- Truth Bullet Selection ---
 
 export function toggleBulletForMinigame(gameId, bulletId) {
   const mg = findMinigame(gameId);
@@ -400,7 +400,7 @@ export function toggleBulletForMinigame(gameId, bulletId) {
   autoSaveTrial();
 }
 
-// ==================== Dialogue Line Management ====================
+// --- Dialogue Line Management ---
 
 export function addDialogueLine(gameId) {
   const mg = findMinigame(gameId);
@@ -471,7 +471,7 @@ export async function deleteDialogueLine(gameId, lineId) {
   autoSaveTrial();
 }
 
-// ==================== Dialogue Line Reordering ====================
+// --- Dialogue Line Reordering ---
 
 export function moveDialogueLineUp(gameId, lineId) {
   const mg = findMinigame(gameId);
@@ -489,7 +489,7 @@ export function moveDialogueLineDown(gameId, lineId) {
   autoSaveTrial();
 }
 
-// ==================== Voice Line Handling ====================
+// --- Voice Line Handling ---
 
 export async function handleDialogueVoiceUpload(gameId, lineId, event) {
   const file = validateAudioUpload(event);
@@ -507,7 +507,7 @@ export async function handleDialogueVoiceUpload(gameId, lineId, event) {
     await saveMinigameAudioFile(gameId, audioFileName, file);
 
     line.voiceLineFile = audioFileName;
-    line.voiceLineBlob = file; // Keep blob for preview
+    line.voiceLineBlob = file;
 
     renderMinigameDetails();
     autoSaveTrial();
@@ -532,7 +532,7 @@ export async function clearDialogueVoiceLine(gameId, lineId) {
   autoSaveTrial();
 }
 
-// ==================== Audio Playback ====================
+// --- Audio Playback ---
 
 export async function playDialogueAudioPreview(gameId, lineId) {
   const mg = findMinigame(gameId);

@@ -1,4 +1,7 @@
-// Utility functions
+// Small helpers with no home of their own: the loader overlay, the
+// directory display, file-to-data-URL, time formatting, HTML escaping, id
+// generation, and the highlight normaliser every preview and save runs
+// through.
 import { setHtml } from './ui/dom.js';
 export function showLoader(on, text = '') {
   document.getElementById('loaderOverlay').classList.toggle('visible', !!on);

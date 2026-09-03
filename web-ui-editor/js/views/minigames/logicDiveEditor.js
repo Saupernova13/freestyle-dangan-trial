@@ -6,7 +6,7 @@ import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 
-// ==================== Main Rendering ====================
+// --- Main Rendering ---
 
 export function renderLogicDiveEditor(mg) {
   // Read-only: seeding lives in ensureTypeSpecific, called at load and on a
@@ -177,7 +177,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
   `;
 }
 
-// ==================== Question Management ====================
+// --- Question Management ---
 
 export function addLogicDiveQuestion(gameId) {
   const mg = findMinigame(gameId);
@@ -240,7 +240,7 @@ export function updateLogicDiveQuestion(gameId, questionId, field, value) {
   autoSaveTrial();
 }
 
-// ==================== Answer Management ====================
+// --- Answer Management ---
 
 export function addLogicDiveAnswer(gameId, questionId) {
   const mg = findMinigame(gameId);
@@ -269,7 +269,8 @@ export async function deleteLogicDiveAnswer(gameId, questionId, answerId) {
   const question = mg.typeSpecific.questions.find((q) => q.questionId === questionId);
   if (!question) return;
   ensureAnswers(question);
-  if (question.answers.length <= 2) return; // Minimum 2 answers
+  // Two is the floor: a question with one answer is not a question.
+  if (question.answers.length <= 2) return;
 
   // Removing the correct answer silently promotes the first one, so this
   // deletes more than the text the author clicked next to.
@@ -325,7 +326,7 @@ export function setCorrectAnswer(gameId, questionId, answerId) {
   autoSaveTrial();
 }
 
-// ==================== Question Reordering ====================
+// --- Question Reordering ---
 
 export function moveQuestionUp(gameId, questionId) {
   const mg = findMinigame(gameId);

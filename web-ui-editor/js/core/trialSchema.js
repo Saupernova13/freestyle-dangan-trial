@@ -340,7 +340,7 @@ function validateTruthBullet(b, n, issues) {
     issues.push(`Truth bullet ${n}: inversedLieBulletName is not a string.`);
 }
 
-// Structure only — empty dialogue, draft characters and dangling minigame
+// Structure only - empty dialogue, draft characters and dangling minigame
 // references are validateTrialForExport's job.
 export function validateTrialData(data) {
   const issues = [];

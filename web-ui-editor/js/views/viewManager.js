@@ -18,7 +18,7 @@ export function switchView(viewName) {
   state.activeView = viewName;
   updateNavSelection();
   renderActiveView();
-  updateFloatingAddButton(); // Update floating button for new view
+  updateFloatingAddButton();
 }
 
 export function updateNavSelection() {

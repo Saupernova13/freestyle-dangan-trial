@@ -23,7 +23,7 @@ import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 import { renderVoiceLineField, voiceLineElementIds } from './voiceLineField.js';
 import { renderOptions } from '../../ui/options.js';
 
-// ==================== Main Rendering ====================
+// --- Main Rendering ---
 
 export function renderMassPanicDebateEditor(mg) {
   // Read-only: seeding lives in ensureTypeSpecific, called at load and on a
@@ -220,7 +220,7 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
   `;
 }
 
-// ==================== Line Group Management ====================
+// --- Line Group Management ---
 
 export function validateSpeakerSelection(gameId, speakerField, selectedCharacterId) {
   const mg = findMinigame(gameId);
@@ -262,7 +262,7 @@ export function updateMassPanicField(gameId, field, value) {
   }
 
   mg.typeSpecific[field] = value;
-  renderMinigameDetails(); // Re-render to update labels
+  renderMinigameDetails();
   autoSaveTrial();
 }
 
@@ -392,7 +392,7 @@ export function handleMassPanicAnswerSelection(gameId, groupId, speakerKey, bull
   autoSaveTrial();
 }
 
-// ==================== Audio Handling ====================
+// --- Audio Handling ---
 
 export async function handlePanicVoiceUpload(gameId, groupId, speakerKey, event) {
   const file = validateAudioUpload(event);
@@ -436,7 +436,7 @@ export async function clearPanicVoiceLine(gameId, groupId, speakerKey) {
   autoSaveTrial();
 }
 
-// ==================== Audio Playback ====================
+// --- Audio Playback ---
 
 export async function playPanicAudioPreview(gameId, groupId, speakerKey) {
   const mg = findMinigame(gameId);

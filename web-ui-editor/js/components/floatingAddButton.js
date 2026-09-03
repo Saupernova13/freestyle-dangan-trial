@@ -32,7 +32,7 @@ export function updateFloatingAddButton() {
       buttonConfig = {
         text: 'Add Line',
         onclick: () => addScriptLine(),
-        show: state.scriptLines.length > 0, // Show when not empty
+        show: state.scriptLines.length > 0,
       };
       break;
 
@@ -40,7 +40,7 @@ export function updateFloatingAddButton() {
       buttonConfig = {
         text: 'Add Bullet',
         onclick: () => addTruthBullet(),
-        show: state.truthBullets.length > 0, // Show when not empty
+        show: state.truthBullets.length > 0,
       };
       break;
 
@@ -48,7 +48,7 @@ export function updateFloatingAddButton() {
       buttonConfig = {
         text: 'Create Minigame',
         onclick: () => addMinigame(),
-        show: state.minigames.length > 0, // Show when not empty
+        show: state.minigames.length > 0,
       };
       break;
 

@@ -139,7 +139,6 @@ export function renderGameTypeOptions(selectedType) {
 }
 
 export function renderMinigameEditor(mg) {
-  // Common settings
   let editorHtml = `
     <div class="minigame-editor-section">
       <h3>Common Settings</h3>
@@ -193,7 +192,6 @@ export function renderMinigameEditor(mg) {
   if (renderTypeEditor) {
     editorHtml += renderTypeEditor(mg);
   } else {
-    // Placeholder for other types
     editorHtml += `
       <div class="minigame-editor-section">
         <p style="color: var(--text-tertiary); padding: 2rem; text-align: center; font-style: italic;">
@@ -290,7 +288,7 @@ export function addMinigame() {
     },
   };
   state.minigames.push(newMinigame);
-  expandedMinigameId = newMinigame.gameId; // Auto-expand new minigame
+  expandedMinigameId = newMinigame.gameId;
   renderMinigameDetails();
   autoSaveTrial();
 }

@@ -1,8 +1,7 @@
 // Debate Scrum editor: paired opposition/defense arguments, with audio and
 // keywords on each side.
 
-// Drag state for arguments
-import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
+import { moveItem, reindexOrder } from '../../core/listOps.js';
 import { orderedCopy } from '../../core/minigameDefaults.js';
 import {
   deleteMinigameAudioFile,
@@ -16,7 +15,6 @@ import { renderCharacterOptions } from '../../models/characterModel.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
-let draggedArgumentId = null;
 
 // ==================== Main Rendering ====================
 
@@ -63,23 +61,23 @@ export function renderDebateScrumArguments(gameId, args) {
 
   html += `<div class="argument-drop-zone"
                 data-insert-position="0"
-                ondragover="handleArgumentGapDragOver(event)"
-                ondrop="handleArgumentDropInGap(event, '${gameId}', 0)"
-                ondragleave="handleArgumentGapDragLeave(event)"></div>`;
+                ondragover="handleListGapDragOver(event)"
+                ondrop="handleListDropInGap(event, '${gameId}', 'arguments', 0)"
+                ondragleave="handleListGapDragLeave(event)"></div>`;
 
   orderedCopy(args).forEach((arg, index) => {
     html += `
-      <div class="argument-wrapper"
+      <div class="reorder-wrapper"
            draggable="true"
-           ondragstart="handleArgumentDragStart(event, '${gameId}', '${arg.argumentId}')"
-           ondragend="handleArgumentDragEnd(event)">
+           ondragstart="handleListDragStart(event, 'arguments', 'argumentId', '${arg.argumentId}')"
+           ondragend="handleListDragEnd(event)">
         ${renderDebateScrumArgumentEditor(gameId, arg, index)}
       </div>
       <div class="argument-drop-zone"
            data-insert-position="${index + 1}"
-           ondragover="handleArgumentGapDragOver(event)"
-           ondrop="handleArgumentDropInGap(event, '${gameId}', ${index + 1})"
-           ondragleave="handleArgumentGapDragLeave(event)"></div>
+           ondragover="handleListGapDragOver(event)"
+           ondrop="handleListDropInGap(event, '${gameId}', 'arguments', ${index + 1})"
+           ondragleave="handleListGapDragLeave(event)"></div>
     `;
   });
 
@@ -88,9 +86,9 @@ export function renderDebateScrumArguments(gameId, args) {
 
 export function renderDebateScrumArgumentEditor(gameId, arg, index) {
   return `
-    <div class="debate-argument-card" data-argument-id="${arg.argumentId}">
-      <div class="argument-header">
-        <div class="argument-drag-handle">
+    <div class="reorder-card" data-argument-id="${arg.argumentId}">
+      <div class="reorder-card-header">
+        <div class="reorder-drag-handle">
           <div class="arrow-btn arrow-up"
                onclick="event.stopPropagation(); moveArgumentUp('${gameId}', '${arg.argumentId}')"
                title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
@@ -98,7 +96,7 @@ export function renderDebateScrumArgumentEditor(gameId, arg, index) {
                onclick="event.stopPropagation(); moveArgumentDown('${gameId}', '${arg.argumentId}')"
                title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
         </div>
-        <div class="argument-number">Argument #${index + 1}</div>
+        <div class="reorder-number">Argument #${index + 1}</div>
         <button class="btn-icon"
                 onclick="event.stopPropagation(); deleteDebateScrumArgument('${gameId}', '${arg.argumentId}')"
                 title="Delete argument">${window.icon('trash', { size: 16 })}</button>
@@ -334,50 +332,6 @@ export function moveArgumentDown(gameId, argumentId) {
   if (!moveItem(mg.typeSpecific.arguments, 'argumentId', argumentId, 1)) return;
   renderMinigameDetails();
   autoSaveTrial();
-}
-
-// ==================== Drag-and-Drop for Arguments ====================
-
-export function handleArgumentDragStart(event, gameId, argumentId) {
-  draggedArgumentId = argumentId;
-  event.target.classList.add('dragging');
-  event.dataTransfer.effectAllowed = 'move';
-}
-
-export function handleArgumentDragEnd(event) {
-  event.target.classList.remove('dragging');
-  draggedArgumentId = null;
-  document.querySelectorAll('.drag-over-gap').forEach((el) => {
-    el.classList.remove('drag-over-gap');
-  });
-}
-
-export function handleArgumentDropInGap(event, gameId, insertPosition) {
-  event.preventDefault();
-  event.stopPropagation();
-
-  const mg = findMinigame(gameId);
-  if (!mg || !draggedArgumentId) return;
-
-  const changed = dropAtGap(
-    mg.typeSpecific.arguments,
-    'argumentId',
-    [draggedArgumentId],
-    insertPosition
-  );
-  draggedArgumentId = null;
-  renderMinigameDetails();
-  if (changed) autoSaveTrial();
-}
-
-export function handleArgumentGapDragOver(event) {
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'move';
-  event.currentTarget.classList.add('drag-over-gap');
-}
-
-export function handleArgumentGapDragLeave(event) {
-  event.currentTarget.classList.remove('drag-over-gap');
 }
 
 // ==================== Audio Handling ====================

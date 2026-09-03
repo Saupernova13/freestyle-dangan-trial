@@ -47,11 +47,19 @@ export function isCharacterComplete(char) {
 // The blood types the profile offers. They are their own labels.
 export const BLOOD_TYPES = ['A', 'B', 'O', 'AB', 'Unknown'];
 
+// blood is an optional free string, so a character can hold no blood type at
+// all or one this list does not name - an imported profile saying "AB-", say.
+// With only the five fixed entries the control showed "A" selected in both
+// cases while the file said otherwise, and the next edit to any other field
+// on the form saved that "A" over it.
 export function renderBloodTypeOptions(selected) {
-  return renderOptions(
-    BLOOD_TYPES.map((type) => ({ value: type, label: type })),
-    selected
+  const items = [{ value: '', label: 'Not set' }].concat(
+    BLOOD_TYPES.map((type) => ({ value: type, label: type }))
   );
+  if (selected && !BLOOD_TYPES.includes(selected)) {
+    items.push({ value: selected, label: selected, suffix: ' (from the file)' });
+  }
+  return renderOptions(items, selected || '');
 }
 
 // `disabledIds` are shown greyed with an "(already selected)" note, for the

@@ -8,7 +8,7 @@
 // does not hold.
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderLabelOptions, renderOptions } from '../js/ui/options.js';
-import { renderCharacterOptions } from '../js/models/characterModel.js';
+import { renderBloodTypeOptions, renderCharacterOptions } from '../js/models/characterModel.js';
 import { DIFFICULTY_LABELS, SCRIPT_LINE_TYPE_LABELS } from '../js/core/constants.js';
 import { state } from '../js/core/state.js';
 import { validateTrialData } from '../js/core/trialSchema.js';
@@ -171,5 +171,27 @@ describe('renderCharacterOptions', () => {
     state.cast = [{ id: 'c1', name: '<img src=x>', surname: '' }];
     const el = select(renderCharacterOptions('c1'));
     expect(el.querySelector('img')).toBeNull();
+  });
+});
+
+describe('renderBloodTypeOptions', () => {
+  it('shows nothing selected when the character has no blood type', () => {
+    // blood is optional. Showing "A" for a blank field is the control
+    // inventing data, and the next save writes the invention to disk.
+    const el = select(renderBloodTypeOptions(''));
+    expect(el.value).toBe('');
+    expect(el.options[0].textContent).toBe('Not set');
+  });
+
+  it('keeps a value the list does not name', () => {
+    const el = select(renderBloodTypeOptions('AB-'));
+    expect(el.value).toBe('AB-');
+    expect(el.options[el.selectedIndex].textContent).toBe('AB- (from the file)');
+  });
+
+  it('selects a listed type', () => {
+    const el = select(renderBloodTypeOptions('AB'));
+    expect(el.value).toBe('AB');
+    expect(values(el)).toEqual(['', 'A', 'B', 'O', 'AB', 'Unknown']);
   });
 });

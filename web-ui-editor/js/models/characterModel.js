@@ -1,7 +1,7 @@
 // Helpers for reading and rendering cast members.
 import { blockTypes } from '../core/constants.js';
 import { state } from '../core/state.js';
-import { escapeHtml } from '../utils.js';
+import { renderOptions } from '../ui/options.js';
 
 export function getCharacterType(index) {
   return blockTypes[index] ? 'headmaster' : 'student';
@@ -44,17 +44,29 @@ export function isCharacterComplete(char) {
   return missingCharacterFields(char, hasSprite).length === 0;
 }
 
+// The blood types the profile offers. They are their own labels.
+export const BLOOD_TYPES = ['A', 'B', 'O', 'AB', 'Unknown'];
+
+export function renderBloodTypeOptions(selected) {
+  return renderOptions(
+    BLOOD_TYPES.map((type) => ({ value: type, label: type })),
+    selected
+  );
+}
+
 // `disabledIds` are shown greyed with an "(already selected)" note, for the
 // editors where one character cannot fill two roles.
 export function renderCharacterOptions(selectedId, disabledIds = []) {
-  const options = state.cast
+  const items = state.cast
     .filter((c) => c)
     .map((c) => {
       const isDisabled = disabledIds.includes(c.id);
-      return `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}>
-        ${escapeHtml(`${c.name} ${c.surname}`)}${isDisabled ? ' (already selected)' : ''}
-      </option>`;
-    })
-    .join('');
-  return `<option value="">None</option>${options}`;
+      return {
+        value: c.id,
+        label: `${c.name} ${c.surname}`,
+        disabled: isDisabled,
+        suffix: isDisabled ? ' (already selected)' : '',
+      };
+    });
+  return renderOptions([{ value: '', label: 'None' }, ...items], selectedId);
 }

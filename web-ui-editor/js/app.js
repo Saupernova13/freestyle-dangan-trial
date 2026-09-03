@@ -16,7 +16,8 @@ import { clearStoredSettings, loadSettings } from './settings.js';
 import { initializeTheme } from './ui/theme.js';
 import { generateId, escapeHtml } from './utils.js';
 import { renderActiveView } from './views/viewManager.js';
-import { MINIGAME_TYPE_LABELS } from './core/constants.js';
+import { MINIGAME_TYPE_LABELS, SCRIPT_LINE_TYPE_LABELS } from './core/constants.js';
+import { renderLabelOptions, renderOptions } from './ui/options.js';
 import { hasCameraMotion, hasCustomBoxStyle, hasSpecialEffects } from './core/scriptLineFields.js';
 
 import { setHtml } from './ui/dom.js';
@@ -517,13 +518,14 @@ export function renderScriptLineBar(line, index) {
       >${escapeHtml(line.text || '')}</textarea>
     `;
   } else if (line.type === 'minigame') {
-    const minigameOptions = state.minigames
-      .map((mg) => {
-        return `<option value="${mg.gameId}" ${line.minigameId === mg.gameId ? 'selected' : ''}>
-        ${escapeHtml(mg.name)} (${MINIGAME_TYPE_LABELS[mg.gameType] || mg.gameType})
-      </option>`;
-      })
-      .join('');
+    const minigameOptions = renderOptions(
+      state.minigames.map((mg) => ({
+        value: mg.gameId,
+        label: mg.name,
+        suffix: ` (${MINIGAME_TYPE_LABELS[mg.gameType] || mg.gameType})`,
+      })),
+      line.minigameId
+    );
 
     contentHtml = `
       <select class="script-minigame-select" onchange="updateScriptLine('${line.id}', 'minigameId', this.value)" onclick="event.stopPropagation()">
@@ -580,9 +582,7 @@ export function renderScriptLineBar(line, index) {
 
       <div class="script-line-type-select">
         <select onchange="changeScriptLineType('${line.id}', this.value)" onclick="event.stopPropagation()">
-          <option value="speaking" ${line.type === 'speaking' ? 'selected' : ''}>Speaking</option>
-          <option value="narrator" ${line.type === 'narrator' ? 'selected' : ''}>Narrator</option>
-          <option value="minigame" ${line.type === 'minigame' ? 'selected' : ''}>Minigame</option>
+          ${renderLabelOptions(SCRIPT_LINE_TYPE_LABELS, line.type)}
         </select>
       </div>
 

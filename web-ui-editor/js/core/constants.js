@@ -19,6 +19,23 @@ export const blockNames = [...Array(16)]
 // false = student, true = headmaster.
 export const blockTypes = [...Array(16)].fill(false).concat([true]);
 
+// The three line shapes changeScriptLineType() can produce. trialSchema
+// derives its accepted line types from these keys, so the dropdown and the
+// validator cannot come to disagree about what a line may be.
+export const SCRIPT_LINE_TYPE_LABELS = {
+  speaking: 'Speaking',
+  narrator: 'Narrator',
+  minigame: 'Minigame',
+};
+
+// The engine keys four independent tuning tables on this and falls back to
+// medium for anything else, silently, in all four.
+export const DIFFICULTY_LABELS = {
+  easy: 'Easy',
+  medium: 'Medium',
+  hard: 'Hard',
+};
+
 export const MINIGAME_TYPE_LABELS = {
   nonstop_debate: 'Nonstop Debate',
   mass_panic_debate: 'Mass Panic Debate',

@@ -12,6 +12,7 @@
 // reporting the first entry.
 //
 // DOM-free, so the tests can run it under node.
+import { renderOptions } from '../ui/options.js';
 
 // debate_text_panel.gd:333-340. "normal" is the absence of an effect.
 export const TEXT_EFFECTS = [
@@ -40,17 +41,17 @@ export const TEXT_DIRECTIONS = [
   { value: 'right_to_left', label: 'Right to Left' },
 ];
 
-// <option> markup for one of the tables above. The selected value is never
-// disabled, or the control could not display what the line actually holds.
-export function renderOptions(options, selected) {
-  return options
-    .map((option) => {
-      const isSelected = option.value === selected;
-      const unsupported = option.supported === false;
-      const attrs =
-        (isSelected ? ' selected' : '') + (unsupported && !isSelected ? ' disabled' : '');
-      const label = unsupported ? `${option.label} (not rendered yet)` : option.label;
-      return `<option value="${option.value}"${attrs}>${label}</option>`;
-    })
-    .join('');
+// <option> markup for one of the tables above, via the shared builder. The
+// only debate-specific part is what `supported: false` means to a reader: the
+// engine parses the value but renders nothing for it, so it is shown disabled
+// with a note rather than dropped.
+export function renderTextStyleOptions(options, selected) {
+  return renderOptions(
+    options.map((option) =>
+      option.supported === false
+        ? { ...option, disabled: true, suffix: ' (not rendered yet)' }
+        : option
+    ),
+    selected
+  );
 }

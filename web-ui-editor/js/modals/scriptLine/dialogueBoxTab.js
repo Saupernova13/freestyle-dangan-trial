@@ -3,6 +3,7 @@ import { COLOR_REGEX, refreshTabBody, sl } from './state.js';
 import { escapeHtml } from '../../utils.js';
 import { failField } from '../scriptLineModal.js';
 import { renderOptions } from '../../ui/options.js';
+import { renderOptionPreview } from './optionPreview.js';
 
 const BOX_STYLES = [
   { value: 'default', label: 'Default', desc: 'Standard rectangular box' },
@@ -22,8 +23,6 @@ export function renderDialogueBoxTab() {
     box.style
   );
 
-  const selectedStyle = BOX_STYLES.find((s) => s.value === box.style);
-
   return `
     <div class="dr-form">
       <h3>Dialogue Box Style</h3>
@@ -31,13 +30,7 @@ export function renderDialogueBoxTab() {
         Customize the appearance of the dialogue box for this line.
       </p>
 
-      <div class="dialoguebox-preview-box">
-        <div class="dialoguebox-preview-icon">${window.icon('message', { size: 28 })}</div>
-        <div class="dialoguebox-preview-text">
-          <strong>${selectedStyle ? selectedStyle.label : 'Default'}</strong>
-          <p>${selectedStyle ? selectedStyle.desc : 'Standard rectangular box'}</p>
-        </div>
-      </div>
+${renderOptionPreview('message', BOX_STYLES, box.style)}
 
       <div class="dr-fg-row">
         <div class="dr-fg-field" style="flex: 2;">

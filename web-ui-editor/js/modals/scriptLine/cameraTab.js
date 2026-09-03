@@ -2,6 +2,7 @@
 import { refreshTabBody, sl } from './state.js';
 import { failField } from '../scriptLineModal.js';
 import { renderOptions } from '../../ui/options.js';
+import { renderOptionPreview } from './optionPreview.js';
 
 const CAMERA_TYPES = [
   { value: 'none', label: 'None', desc: 'No camera movement' },
@@ -54,8 +55,6 @@ export function renderCameraMotionTab() {
 
   const easingOptions = renderOptions(EASING_TYPES, cam.easing);
 
-  const selectedType = CAMERA_TYPES.find((t) => t.value === cam.type);
-
   return `
     <div class="dr-form">
       <h3>Camera Motion</h3>
@@ -63,13 +62,7 @@ export function renderCameraMotionTab() {
         Configure camera animation during this dialogue line.
       </p>
 
-      <div class="camera-preview-box">
-        <div class="camera-preview-icon">${window.icon('camera', { size: 28 })}</div>
-        <div class="camera-preview-text">
-          <strong>${selectedType ? selectedType.label : 'None'}</strong>
-          <p>${selectedType ? selectedType.desc : 'No camera movement'}</p>
-        </div>
-      </div>
+${renderOptionPreview('camera', CAMERA_TYPES, cam.type)}
 
       <div class="dr-fg-row">
         <div class="dr-fg-field" style="flex: 2;">

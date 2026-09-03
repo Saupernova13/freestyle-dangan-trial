@@ -20,6 +20,7 @@ import {
 } from '../../core/debateTextOptions.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
+import { renderVoiceLineField, voiceLineElementIds } from './voiceLineField.js';
 import { renderOptions } from '../../ui/options.js';
 
 // ==================== Main Rendering ====================
@@ -206,47 +207,14 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
 
       <div class="form-group">
         <label>Voice Line Audio</label>
-        ${
-          line.voiceLineFile
-            ? `
-          <div class="audio-preview">
-            <div class="audio-info">
-              <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
-              <span class="audio-filename">${escapeHtml(line.voiceLineFile)}</span>
-            </div>
-            <div class="audio-seek-container">
-              <span class="audio-time-current" id="panic-audio-time-current-${group.groupId}-${speakerKey}">0:00</span>
-              <input type="range"
-                     class="audio-seek-bar"
-                     id="panic-audio-seek-bar-${group.groupId}-${speakerKey}"
-                     min="0"
-                     max="100"
-                     value="0"
-                     oninput="seekPanicAudio('${gameId}', '${group.groupId}', '${speakerKey}', this.value)">
-              <span class="audio-time-total" id="panic-audio-time-total-${group.groupId}-${speakerKey}">0:00</span>
-            </div>
-            <div class="audio-controls">
-              <button class="btn btn-secondary"
-                      id="panic-play-btn-${group.groupId}-${speakerKey}"
-                      onclick="playPanicAudioPreview('${gameId}', '${group.groupId}', '${speakerKey}')">
-                ${window.icon('play')} Play
-              </button>
-              <button class="btn btn-secondary"
-                      onclick="clearPanicVoiceLine('${gameId}', '${group.groupId}', '${speakerKey}')">
-                ${window.icon('trash')} Remove
-              </button>
-            </div>
-          </div>
-        `
-            : `
-          <div class="audio-empty">
-            <p>No audio file uploaded</p>
-          </div>
-          <input type="file"
-                 accept="audio/*"
-                 onchange="handlePanicVoiceUpload('${gameId}', '${group.groupId}', '${speakerKey}', event)">
-        `
-        }
+        ${renderVoiceLineField({
+          fileName: line.voiceLineFile,
+          idBase: `${group.groupId}-${speakerKey}`,
+          onPlay: `playPanicAudioPreview('${gameId}', '${group.groupId}', '${speakerKey}')`,
+          onSeek: `seekPanicAudio('${gameId}', '${group.groupId}', '${speakerKey}', this.value)`,
+          onClear: `clearPanicVoiceLine('${gameId}', '${group.groupId}', '${speakerKey}')`,
+          onUpload: `handlePanicVoiceUpload('${gameId}', '${group.groupId}', '${speakerKey}', event)`,
+        })}
       </div>
     </div>
   `;
@@ -481,10 +449,7 @@ export async function playPanicAudioPreview(gameId, groupId, speakerKey) {
   if (!line.voiceLineFile) return;
 
   await toggleAudioPreview(`${gameId}_${groupId}_${speakerKey}`, {
-    buttonId: `panic-play-btn-${groupId}-${speakerKey}`,
-    seekBarId: `panic-audio-seek-bar-${groupId}-${speakerKey}`,
-    timeCurrentId: `panic-audio-time-current-${groupId}-${speakerKey}`,
-    timeTotalId: `panic-audio-time-total-${groupId}-${speakerKey}`,
+    ...voiceLineElementIds(`${groupId}-${speakerKey}`),
     getBlob: async () => {
       if (!line.voiceLineBlob) {
         line.voiceLineBlob = await loadMinigameAudioFile(gameId, line.voiceLineFile);

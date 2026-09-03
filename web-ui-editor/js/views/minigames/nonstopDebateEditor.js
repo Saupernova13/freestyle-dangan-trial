@@ -22,6 +22,7 @@ import {
 import { orderedCopy } from '../../core/minigameDefaults.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
+import { renderVoiceLineField, voiceLineElementIds } from './voiceLineField.js';
 import { renderOptions } from '../../ui/options.js';
 
 // The header, the Add button and addDialogueLine all read this, so the
@@ -256,49 +257,14 @@ export function renderDialogueLineEditor(gameId, line, index) {
         <!-- 4. VOICE LINE AUDIO (moved up) -->
         <div class="form-group">
           <label>Voice Line Audio</label>
-          ${
-            line.voiceLineFile
-              ? `
-            <div class="audio-preview">
-              <div class="audio-info">
-                <span class="audio-icon">${window.icon('music', { size: 16 })}</span>
-                <span class="audio-filename">${escapeHtml(line.voiceLineFile)}</span>
-              </div>
-
-              <div class="audio-seek-container">
-                <span class="audio-time-current" id="dialogue-audio-time-current-${line.lineId}">0:00</span>
-                <input type="range"
-                       class="audio-seek-bar"
-                       id="dialogue-audio-seek-bar-${line.lineId}"
-                       min="0"
-                       max="100"
-                       value="0"
-                       oninput="seekDialogueAudio('${gameId}', '${line.lineId}', this.value)">
-                <span class="audio-time-total" id="dialogue-audio-time-total-${line.lineId}">0:00</span>
-              </div>
-
-              <div class="audio-controls">
-                <button class="btn btn-secondary"
-                        id="dialogue-play-btn-${line.lineId}"
-                        onclick="playDialogueAudioPreview('${gameId}', '${line.lineId}')">
-                  ${window.icon('play')} Play
-                </button>
-                <button class="btn btn-secondary"
-                        onclick="clearDialogueVoiceLine('${gameId}', '${line.lineId}')">
-                  ${window.icon('trash')} Remove
-                </button>
-              </div>
-            </div>
-          `
-              : `
-            <div class="audio-empty">
-              <p>No audio file uploaded</p>
-            </div>
-            <input type="file"
-                   accept="audio/*"
-                   onchange="handleDialogueVoiceUpload('${gameId}', '${line.lineId}', event)">
-          `
-          }
+          ${renderVoiceLineField({
+            fileName: line.voiceLineFile,
+            idBase: line.lineId,
+            onPlay: `playDialogueAudioPreview('${gameId}', '${line.lineId}')`,
+            onSeek: `seekDialogueAudio('${gameId}', '${line.lineId}', this.value)`,
+            onClear: `clearDialogueVoiceLine('${gameId}', '${line.lineId}')`,
+            onUpload: `handleDialogueVoiceUpload('${gameId}', '${line.lineId}', event)`,
+          })}
         </div>
 
         <!-- 5. COLLAPSIBLE: Advanced Text Styling -->
@@ -576,10 +542,7 @@ export async function playDialogueAudioPreview(gameId, lineId) {
   if (!line || !line.voiceLineFile) return;
 
   await toggleAudioPreview(`${gameId}_${lineId}`, {
-    buttonId: `dialogue-play-btn-${lineId}`,
-    seekBarId: `dialogue-audio-seek-bar-${lineId}`,
-    timeCurrentId: `dialogue-audio-time-current-${lineId}`,
-    timeTotalId: `dialogue-audio-time-total-${lineId}`,
+    ...voiceLineElementIds(lineId),
     getBlob: async () => {
       if (!line.voiceLineBlob) {
         line.voiceLineBlob = await loadMinigameAudioFile(gameId, line.voiceLineFile);

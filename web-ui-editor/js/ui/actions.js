@@ -21,6 +21,11 @@
 const HANDLERS = new Map();
 const listening = new Set();
 
+// focus and blur do not bubble, so a document listener never sees them in the
+// bubble phase. Capture does reach the document, and the dispatch below finds
+// the element from event.target either way.
+const CAPTURE_ONLY = new Set(['focus', 'blur']);
+
 function dispatch(eventType, event) {
   const target = event.target;
   if (!target || typeof target.closest !== 'function') return;
@@ -51,7 +56,9 @@ export function registerActions(eventType, handlers) {
     HANDLERS.set(key, handler);
   }
   if (!listening.has(eventType) && typeof document !== 'undefined') {
-    document.addEventListener(eventType, (event) => dispatch(eventType, event));
+    document.addEventListener(eventType, (event) => dispatch(eventType, event), {
+      capture: CAPTURE_ONLY.has(eventType),
+    });
     listening.add(eventType);
   }
 }

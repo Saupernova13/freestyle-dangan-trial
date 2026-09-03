@@ -16,6 +16,59 @@ import { renderLabelOptions, renderOptions } from './ui/options.js';
 import { hasCameraMotion, hasCustomBoxStyle, hasSpecialEffects } from './core/scriptLineFields.js';
 
 import { setHtml } from './ui/dom.js';
+import { registerActions } from './ui/actions.js';
+import {
+  filterCharacters,
+  handleCharacterKeydown,
+  openCharacterDropdown,
+} from './components/characterSearchDropdown.js';
+
+// The arrow buttons, the edit and delete buttons and the type select all sit
+// inside the line bar, which selects the line when clicked. Innermost-wins
+// replaces the `event.stopPropagation()` each of them used to carry, and the
+// two text inputs use `data-stop-click` to claim a click and do nothing with
+// it - typing must not select the line.
+registerActions('click', {
+  addScriptLine: () => addScriptLine(),
+  clearSelection: () => clearSelection(),
+  toggleLineSelection: (el, event) => toggleLineSelection(event, el.dataset.lineId),
+  moveLineTop: (el) => moveLineTop(el.dataset.lineId),
+  moveLineUp: (el) => moveLineUp(el.dataset.lineId),
+  moveLineDown: (el) => moveLineDown(el.dataset.lineId),
+  moveLineBottom: (el) => moveLineBottom(el.dataset.lineId),
+  deleteScriptLine: (el) => deleteScriptLine(el.dataset.lineId),
+});
+
+registerActions('input', {
+  filterScript: (el) => filterScript(el.value),
+  filterCharacters: (el) => filterCharacters(el.dataset.lineId, el.value),
+  updateScriptLine: (el) => updateScriptLine(el.dataset.lineId, el.dataset.field, el.value),
+});
+
+registerActions('change', {
+  updateScriptLine: (el) => updateScriptLine(el.dataset.lineId, el.dataset.field, el.value),
+  changeScriptLineType: (el) => changeScriptLineType(el.dataset.lineId, el.value),
+});
+
+registerActions('focus', {
+  openCharacterDropdown: (el) => openCharacterDropdown(el.dataset.lineId),
+});
+
+registerActions('keydown', {
+  handleCharacterKeydown: (el, event) => handleCharacterKeydown(el.dataset.lineId, event),
+});
+
+// Script lines carry their own drag state (multi-select, a drag ghost and a
+// reorder animation), so these are app.js's own, not listDragReorder's.
+registerActions('dragstart', {
+  scriptDragStart: (el, event) => handleDragStart(event, el.dataset.lineId),
+});
+registerActions('dragend', { scriptDragEnd: (el, event) => handleDragEnd(event) });
+registerActions('dragover', { scriptGapDragOver: (el, event) => handleGapDragOver(event) });
+registerActions('dragleave', { scriptGapDragLeave: (el, event) => handleGapDragLeave(event) });
+registerActions('drop', {
+  scriptDropInGap: (el, event) => handleDropInGap(event, Number(el.dataset.insertPosition)),
+});
 
 export function renderScriptEditor() {
   const grid = document.getElementById('mainGrid');
@@ -29,7 +82,7 @@ export function renderScriptEditor() {
           <div class="script-empty-icon">${window.icon('script', { size: 56 })}</div>
           <h2>No Script Lines Yet</h2>
           <p>Click the button below to add your first script line</p>
-          <button class="btn btn-primary script-add-btn" onclick="addScriptLine()">
+          <button class="btn btn-primary script-add-btn" data-on-click="addScriptLine">
             ${window.icon('plus')} Add Script Line
           </button>
         </div>
@@ -40,18 +93,18 @@ export function renderScriptEditor() {
     // A drop zone before the first line, then one after every line.
     let linesHtml = '';
 
-    linesHtml += `<div class="script-drop-zone" data-insert-position="0" ondragover="handleGapDragOver(event)" ondrop="handleDropInGap(event, 0)" ondragleave="handleGapDragLeave(event)"></div>`;
+    linesHtml += `<div class="script-drop-zone" data-insert-position="0" data-on-dragover="scriptGapDragOver" data-on-drop="scriptDropInGap" data-on-dragleave="scriptGapDragLeave"></div>`;
 
     state.scriptLines.forEach((line, index) => {
       linesHtml += renderScriptLineBar(line, index);
-      linesHtml += `<div class="script-drop-zone" data-insert-position="${index + 1}" ondragover="handleGapDragOver(event)" ondrop="handleDropInGap(event, ${index + 1})" ondragleave="handleGapDragLeave(event)"></div>`;
+      linesHtml += `<div class="script-drop-zone" data-insert-position="${index + 1}" data-on-dragover="scriptGapDragOver" data-on-drop="scriptDropInGap" data-on-dragleave="scriptGapDragLeave"></div>`;
     });
 
     const selCount = state.selectedLineIds.size;
     const hintHtml =
       selCount > 0
         ? `<span>${selCount} selected — drag any selected line to move them together.</span>
-           <button class="script-hint-clear" onclick="clearSelection()">Clear selection</button>`
+           <button class="script-hint-clear" data-on-click="clearSelection">Clear selection</button>`
         : `<span>Tip: Ctrl/Cmd-click lines to select several, then drag to reorder.</span>`;
 
     setHtml(
@@ -63,7 +116,7 @@ export function renderScriptEditor() {
           <div class="script-search">
             ${window.icon('search', { size: 16 })}
             <input type="text" id="scriptSearch" placeholder="Search lines…"
-                   value="${escapeHtml(scriptFilter)}" oninput="filterScript(this.value)"
+                   value="${escapeHtml(scriptFilter)}" data-on-input="filterScript"
                    spellcheck="false">
           </div>
         </div>
@@ -406,16 +459,16 @@ export function renderScriptLineBar(line, index) {
     const displayValue = selectedChar ? `${selectedChar.name} ${selectedChar.surname}` : '';
 
     contentHtml = `
-      <div class="searchable-dropdown" onclick="event.stopPropagation()">
+      <div class="searchable-dropdown" data-stop-click>
         <input
           type="text"
           id="char-dropdown-input-${line.id}"
           class="searchable-dropdown-input"
           placeholder="Search character..."
           value="${escapeHtml(displayValue)}"
-          onfocus="openCharacterDropdown('${line.id}')"
-          oninput="filterCharacters('${line.id}', this.value)"
-          onkeydown="handleCharacterKeydown('${line.id}', event)"
+          data-line-id="${escapeHtml(line.id)}" data-on-focus="openCharacterDropdown"
+          data-on-input="filterCharacters"
+          data-on-keydown="handleCharacterKeydown"
         />
         <div id="char-dropdown-list-${line.id}" class="searchable-dropdown-list" style="display: none;"></div>
       </div>
@@ -423,8 +476,8 @@ export function renderScriptLineBar(line, index) {
         class="script-dialogue-input"
         rows="1"
         placeholder="Enter dialogue..."
-        oninput="updateScriptLine('${line.id}', 'dialogue', this.value)"
-        onclick="event.stopPropagation()"
+        data-line-id="${escapeHtml(line.id)}" data-field="dialogue" data-on-input="updateScriptLine"
+        data-stop-click
       >${escapeHtml(line.dialogue || '')}</textarea>
     `;
   } else if (line.type === 'narrator') {
@@ -433,8 +486,8 @@ export function renderScriptLineBar(line, index) {
         class="script-narration-input"
         rows="1"
         placeholder="Enter narration text..."
-        oninput="updateScriptLine('${line.id}', 'text', this.value)"
-        onclick="event.stopPropagation()"
+        data-line-id="${escapeHtml(line.id)}" data-field="text" data-on-input="updateScriptLine"
+        data-stop-click
       >${escapeHtml(line.text || '')}</textarea>
     `;
   } else if (line.type === 'minigame') {
@@ -448,7 +501,8 @@ export function renderScriptLineBar(line, index) {
     );
 
     contentHtml = `
-      <select class="script-minigame-select" onchange="updateScriptLine('${line.id}', 'minigameId', this.value)" onclick="event.stopPropagation()">
+      <select class="script-minigame-select" data-line-id="${escapeHtml(line.id)}" data-field="minigameId"
+              data-on-change="updateScriptLine" data-stop-click>
         <option value="">Select a minigame…</option>
         ${minigameOptions}
         ${state.minigames.length === 0 ? '<option value="" disabled>No minigames yet — create one in the Minigames tab</option>' : ''}
@@ -481,15 +535,16 @@ export function renderScriptLineBar(line, index) {
     <div class="script-line-bar ${isSelected ? 'selected' : ''}"
          data-line-id="${line.id}"
          draggable="true"
-         ondragstart="handleDragStart(event, '${line.id}')"
-         ondragend="handleDragEnd(event)"
-         onclick="toggleLineSelection(event, '${line.id}')">
+         data-line-id="${escapeHtml(line.id)}"
+         data-on-dragstart="scriptDragStart"
+         data-on-dragend="scriptDragEnd"
+         data-on-click="toggleLineSelection">
 
       <div class="script-drag-handle">
-        <div class="arrow-btn" onclick="event.stopPropagation(); moveLineTop('${line.id}')" title="Move to top">${window.icon('chevronsUp', { size: 13 })}</div>
-        <div class="arrow-btn arrow-up" onclick="event.stopPropagation(); moveLineUp('${line.id}')" title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
-        <div class="arrow-btn arrow-down" onclick="event.stopPropagation(); moveLineDown('${line.id}')" title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
-        <div class="arrow-btn" onclick="event.stopPropagation(); moveLineBottom('${line.id}')" title="Move to bottom">${window.icon('chevronsDown', { size: 13 })}</div>
+        <div class="arrow-btn" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineTop" title="Move to top">${window.icon('chevronsUp', { size: 13 })}</div>
+        <div class="arrow-btn arrow-up" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineUp" title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
+        <div class="arrow-btn arrow-down" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineDown" title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
+        <div class="arrow-btn" data-line-id="${escapeHtml(line.id)}" data-on-click="moveLineBottom" title="Move to bottom">${window.icon('chevronsDown', { size: 13 })}</div>
       </div>
 
       <div class="script-line-number">#${lineNumber}</div>
@@ -501,14 +556,14 @@ export function renderScriptLineBar(line, index) {
       ${badgesHtml}
 
       <div class="script-line-type-select">
-        <select onchange="changeScriptLineType('${line.id}', this.value)" onclick="event.stopPropagation()">
+        <select data-line-id="${escapeHtml(line.id)}" data-on-change="changeScriptLineType" data-stop-click>
           ${renderLabelOptions(SCRIPT_LINE_TYPE_LABELS, line.type)}
         </select>
       </div>
 
-      ${line.type === 'speaking' || line.type === 'narrator' ? `<button class="script-line-edit" onclick="event.stopPropagation(); openScriptLineModal('${line.id}')" title="Edit advanced properties">${window.icon('edit', { size: 16 })}</button>` : ''}
+      ${line.type === 'speaking' || line.type === 'narrator' ? `<button class="script-line-edit" data-line-id="${escapeHtml(line.id)}" data-on-click="openScriptLineModal" title="Edit advanced properties">${window.icon('edit', { size: 16 })}</button>` : ''}
 
-      <button class="script-line-delete" onclick="event.stopPropagation(); deleteScriptLine('${line.id}')" title="Delete line">${window.icon('trash', { size: 16 })}</button>
+      <button class="script-line-delete" data-line-id="${escapeHtml(line.id)}" data-on-click="deleteScriptLine" title="Delete line">${window.icon('trash', { size: 16 })}</button>
     </div>
   `;
 }

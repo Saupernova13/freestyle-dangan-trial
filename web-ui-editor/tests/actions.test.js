@@ -152,3 +152,16 @@ describe('the wiring across the editor', () => {
     expect(missing).toEqual([]);
   });
 });
+
+describe('events that do not bubble', () => {
+  it('still reaches a focus handler', () => {
+    // focus never bubbles, so a document listener in the bubble phase would
+    // never fire - and the character dropdown, which opens on focus, would
+    // simply stop opening.
+    const seen = [];
+    registerActions('focus', { testFocus: (el) => seen.push(el.dataset.thingId) });
+    document.body.innerHTML = '<input data-on-focus="testFocus" data-thing-id="f1">';
+    document.querySelector('input').dispatchEvent(new window.Event('focus'));
+    expect(seen).toEqual(['f1']);
+  });
+});

@@ -31,6 +31,9 @@ import { setHtml } from '../ui/dom.js';
 import { registerActions } from '../ui/actions.js';
 
 registerActions('click', {
+  // Rendered by app.js's line bar, handled here where the modal lives - that
+  // module already imports this one.
+  openScriptLineModal: (el) => openScriptLineModal(el.dataset.lineId),
   switchScriptLineTab: (el) => switchScriptLineTab(el.dataset.tab),
   closeScriptLineModal: () => closeScriptLineModal(),
   saveScriptLineAdvanced: () => saveScriptLineAdvanced(),

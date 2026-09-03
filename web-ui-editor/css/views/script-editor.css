@@ -63,7 +63,13 @@
   background: var(--bg-primary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
-  transition: all 0.2s ease;
+  /* transform is separate so a reorder settles over 0.3s; app.js holds the
+     .reordering class for exactly that long. This used to be a second
+     .script-line-bar rule 820 lines further down, silently overriding this
+     one. */
+  transition:
+    all 0.2s ease,
+    transform 0.3s ease;
   font-size: 0.9375rem;
 }
 
@@ -108,7 +114,7 @@
 .searchable-dropdown-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.15);
+  box-shadow: var(--focus-ring);
 }
 
 .searchable-dropdown-list {
@@ -167,7 +173,7 @@
 .script-narration-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.15);
+  box-shadow: var(--focus-ring);
 }
 
 /* Textareas that grow with their content (Chromium field-sizing), so long
@@ -291,7 +297,10 @@
 }
 
 /* Edit Button */
-.script-line-edit {
+/* The two trailing icon buttons on a script line. Same button, and they had
+   the same body written out twice, 445 lines apart; only the hover differs. */
+.script-line-edit,
+.script-line-delete {
   padding: 0.5rem 0.625rem;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
@@ -736,17 +745,7 @@
   color: var(--text-tertiary);
 }
 
-.script-line-delete {
-  padding: 0.5rem 0.625rem;
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 1.125rem;
-}
-
+/* Body shared with .script-line-edit, above. */
 .script-line-delete:hover {
   background: rgba(var(--error-rgb), 0.1);
   color: var(--error);
@@ -877,12 +876,6 @@
   box-shadow: var(--shadow-lg);
   font-size: 0.95rem;
   pointer-events: none;
-}
-
-.script-line-bar {
-  transition:
-    all 0.2s ease,
-    transform 0.3s ease;
 }
 
 /* Mobile: drag handle and drop zones */

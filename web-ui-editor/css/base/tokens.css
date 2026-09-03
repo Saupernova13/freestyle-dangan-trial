@@ -70,6 +70,11 @@
   --shadow-hard: 4px 4px 0 rgb(0 0 0 / 0.55); /* pop-art offset */
   --shadow-accent: 5px 5px 0 var(--primary); /* active hero element */
 
+  /* The ring every focused text control wears. It was written out in six
+     partials, identically, because the token system had shadows and radii
+     but nothing for focus. */
+  --focus-ring: 0 0 0 2px rgba(var(--primary-rgb), 0.15);
+
   /* Angular clip -- notched corner used on hero panels/buttons */
   --clip-notch: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
 }

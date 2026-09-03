@@ -20,6 +20,7 @@ import {
 } from './opfs.js';
 import { checkCharacterFormatVersion, validateCharacterData } from './characterSchema.js';
 import { ensureAllTypeSpecific } from './minigameDefaults.js';
+import { minigameAudioSlots } from './minigameAudio.js';
 import { reindexOrder } from './listOps.js';
 import { safeZipPathParts, zipRootPrefix } from './zipPaths.js';
 import { updateExportButtonState } from '../export.js';
@@ -748,67 +749,17 @@ export async function loadMinigameAudio() {
     const audioDir = await state.dirHandle.getDirectoryHandle('Audio', { create: false });
     const minigamesDir = await audioDir.getDirectoryHandle('Minigames', { create: false });
 
-    for (let mg of state.minigames) {
+    for (const mg of state.minigames) {
       try {
         const gameAudioDir = await minigamesDir.getDirectoryHandle(mg.gameId, { create: false });
 
-        if (mg.gameType === 'nonstop_debate' && mg.typeSpecific && mg.typeSpecific.dialogueLines) {
-          for (let line of mg.typeSpecific.dialogueLines) {
-            if (line.voiceLineFile) {
-              try {
-                const fileHandle = await gameAudioDir.getFileHandle(line.voiceLineFile);
-                const file = await fileHandle.getFile();
-                line.voiceLineBlob = file;
-              } catch (error) {
-                console.warn(`Failed to load audio for dialogue line ${line.lineId}:`, error);
-              }
-            }
-          }
-        }
-
-        if (mg.gameType === 'debate_scrum' && mg.typeSpecific && mg.typeSpecific.arguments) {
-          for (let arg of mg.typeSpecific.arguments) {
-            if (arg.oppositionAudioFile) {
-              try {
-                const fileHandle = await gameAudioDir.getFileHandle(arg.oppositionAudioFile);
-                const file = await fileHandle.getFile();
-                arg.oppositionAudioBlob = file;
-              } catch (error) {
-                console.warn(
-                  `Failed to load opposition audio for argument ${arg.argumentId}:`,
-                  error
-                );
-              }
-            }
-            if (arg.defenseAudioFile) {
-              try {
-                const fileHandle = await gameAudioDir.getFileHandle(arg.defenseAudioFile);
-                const file = await fileHandle.getFile();
-                arg.defenseAudioBlob = file;
-              } catch (error) {
-                console.warn(`Failed to load defense audio for argument ${arg.argumentId}:`, error);
-              }
-            }
-          }
-        }
-
-        if (mg.gameType === 'mass_panic_debate' && mg.typeSpecific && mg.typeSpecific.lineGroups) {
-          for (let group of mg.typeSpecific.lineGroups) {
-            for (let speakerKey of ['speaker1', 'speaker2', 'speaker3']) {
-              const line = group[speakerKey];
-              if (line && line.voiceLineFile) {
-                try {
-                  const fileHandle = await gameAudioDir.getFileHandle(line.voiceLineFile);
-                  const file = await fileHandle.getFile();
-                  line.voiceLineBlob = file;
-                } catch (error) {
-                  console.warn(
-                    `Failed to load audio for panic line ${group.groupId}-${speakerKey}:`,
-                    error
-                  );
-                }
-              }
-            }
+        for (const { owner, file, blob, label } of minigameAudioSlots(mg)) {
+          if (!owner[file]) continue;
+          try {
+            const fileHandle = await gameAudioDir.getFileHandle(owner[file]);
+            owner[blob] = await fileHandle.getFile();
+          } catch (error) {
+            console.warn(`Failed to load audio for ${label}:`, error);
           }
         }
       } catch (error) {

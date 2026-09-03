@@ -19,6 +19,7 @@ import * as truthBulletsView from './views/truthBulletsView.js';
 import * as minigameView from './views/minigameView.js';
 import * as nonstopDebateEditor from './views/minigames/nonstopDebateEditor.js';
 import * as listDragReorder from './views/minigames/listDragReorder.js';
+import * as voiceLineField from './views/minigames/voiceLineField.js';
 import * as logicDiveEditor from './views/minigames/logicDiveEditor.js';
 import * as debateScrumEditor from './views/minigames/debateScrumEditor.js';
 import * as massPanicDebateEditor from './views/minigames/massPanicDebateEditor.js';
@@ -47,6 +48,7 @@ const modules = [
   minigameView,
   nonstopDebateEditor,
   listDragReorder,
+  voiceLineField,
   logicDiveEditor,
   debateScrumEditor,
   massPanicDebateEditor,

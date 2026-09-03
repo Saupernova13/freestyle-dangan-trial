@@ -27,10 +27,6 @@
   clip-path: var(--clip-notch);
 }
 
-.dr-modal-small {
-  max-width: 600px;
-}
-
 .dr-close {
   position: absolute;
   top: 1rem;

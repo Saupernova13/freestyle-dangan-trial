@@ -2,6 +2,7 @@
 import { blockTypes } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { renderOptions } from '../ui/options.js';
+import { requiredCharacterFields } from './characterFields.js';
 
 export function getCharacterType(index) {
   return blockTypes[index] ? 'headmaster' : 'student';
@@ -11,17 +12,10 @@ export function isHeadmaster(index) {
   return blockTypes[index] === true;
 }
 
-// Required fields for a "complete" character profile, with display labels.
-const REQUIRED_FIELDS = [
-  ['name', 'First name'],
-  ['surname', 'Last name'],
-  ['dob', 'Date of birth'],
-  ['weight', 'Weight'],
-  ['chest', 'Chest'],
-  ['likes', 'Likes'],
-  ['dislikes', 'Dislikes'],
-  ['notes', 'Notes'],
-];
+// Required fields for a "complete" character profile, with display labels -
+// from the one field table, so a new required field cannot be added to the
+// form and forgotten here.
+const REQUIRED_FIELDS = requiredCharacterFields();
 
 // `fields` is the modal's edit buffer or a saved character. Returns the
 // display labels of what is still missing.

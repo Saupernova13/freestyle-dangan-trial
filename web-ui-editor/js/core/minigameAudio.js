@@ -11,6 +11,71 @@ async function getMinigameAudioDir(gameId, create) {
   return minigamesDir.getDirectoryHandle(gameId, { create });
 }
 
+// Every audio slot a minigame holds: the object that owns it, the field
+// naming the file on disk, the field the loaded File is cached in, and a
+// label for a warning.
+//
+// The loader used to re-encode this per-gameType structure itself, three
+// near-identical blocks deep, which put the same knowledge in two places -
+// this module already owns where a trial keeps its voice clips.
+//
+// A list that is not a list is skipped rather than iterated: a corrupt
+// trial.json can hold a string there, and a string iterates character by
+// character.
+function listOf(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+const SLOTS_BY_TYPE = {
+  *nonstop_debate(ts) {
+    for (const line of listOf(ts.dialogueLines)) {
+      yield {
+        owner: line,
+        file: 'voiceLineFile',
+        blob: 'voiceLineBlob',
+        label: `dialogue line ${line.lineId}`,
+      };
+    }
+  },
+  *debate_scrum(ts) {
+    for (const arg of listOf(ts.arguments)) {
+      yield {
+        owner: arg,
+        file: 'oppositionAudioFile',
+        blob: 'oppositionAudioBlob',
+        label: `argument ${arg.argumentId} opposition`,
+      };
+      yield {
+        owner: arg,
+        file: 'defenseAudioFile',
+        blob: 'defenseAudioBlob',
+        label: `argument ${arg.argumentId} defense`,
+      };
+    }
+  },
+  *mass_panic_debate(ts) {
+    for (const group of listOf(ts.lineGroups)) {
+      for (const speakerKey of ['speaker1', 'speaker2', 'speaker3']) {
+        const line = group[speakerKey];
+        if (!line) continue;
+        yield {
+          owner: line,
+          file: 'voiceLineFile',
+          blob: 'voiceLineBlob',
+          label: `panic line ${group.groupId}-${speakerKey}`,
+        };
+      }
+    }
+  },
+};
+
+export function* minigameAudioSlots(mg) {
+  const typeSpecific = mg && mg.typeSpecific;
+  if (!typeSpecific || typeof typeSpecific !== 'object') return;
+  const walk = SLOTS_BY_TYPE[mg.gameType];
+  if (walk) yield* walk(typeSpecific);
+}
+
 // Throws on failure; callers report it.
 export async function saveMinigameAudioFile(gameId, fileName, file) {
   const dir = await getMinigameAudioDir(gameId, true);

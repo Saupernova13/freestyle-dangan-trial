@@ -9,6 +9,16 @@ import { MAX_AUDIO_SIZE } from '../../core/constants.js';
 import { escapeHtml } from '../../utils.js';
 import { AUDIO_PREVIEW_KEY, sl } from './state.js';
 import { renderScriptLineModal, failField } from '../scriptLineModal.js';
+import { registerActions } from '../../ui/actions.js';
+
+registerActions('click', {
+  playAudioPreview: () => playAudioPreview(),
+  clearAudio: () => clearAudio(),
+  triggerAudioInput: () => triggerAudioInput(),
+});
+
+registerActions('input', { seekAudio: (el) => seekAudio(el.value) });
+registerActions('change', { handleAudioUpload: (el, event) => handleAudioUpload(event) });
 
 export function renderAudioUploadTab() {
   const hasAudio = sl.fields.audioFile !== null;
@@ -37,13 +47,13 @@ export function renderAudioUploadTab() {
                    min="0"
                    max="100"
                    value="0"
-                   oninput="seekAudio(this.value)">
+                   data-on-input="seekAudio">
             <span class="audio-time-total" id="audio-time-total">0:00</span>
           </div>
 
           <div class="audio-controls">
-            <button class="btn btn-secondary" id="audio-play-btn" onclick="playAudioPreview()">${isAudioPreviewPlaying(AUDIO_PREVIEW_KEY) ? `${window.icon('pause')} Pause` : `${window.icon('play')} Play`}</button>
-            <button class="btn btn-secondary" onclick="clearAudio()">${window.icon('trash')} Remove</button>
+            <button class="btn btn-secondary" id="audio-play-btn" data-on-click="playAudioPreview">${isAudioPreviewPlaying(AUDIO_PREVIEW_KEY) ? `${window.icon('pause')} Pause` : `${window.icon('play')} Play`}</button>
+            <button class="btn btn-secondary" data-on-click="clearAudio">${window.icon('trash')} Remove</button>
           </div>
         </div>
       `
@@ -55,8 +65,8 @@ export function renderAudioUploadTab() {
       }
 
       <input type="file" accept="audio/*" id="audioFileInput"
-             onchange="handleAudioUpload(event)" style="display: none;">
-      <button class="btn btn-primary" onclick="triggerAudioInput()">
+             data-on-change="handleAudioUpload" style="display: none;">
+      <button class="btn btn-primary" data-on-click="triggerAudioInput">
         ${window.icon('upload')} ${hasAudio ? 'Replace' : 'Upload'} Audio
       </button>
     </div>

@@ -28,6 +28,13 @@ import {
 } from './scriptLine/highlightingTab.js';
 
 import { setHtml } from '../ui/dom.js';
+import { registerActions } from '../ui/actions.js';
+
+registerActions('click', {
+  switchScriptLineTab: (el) => switchScriptLineTab(el.dataset.tab),
+  closeScriptLineModal: () => closeScriptLineModal(),
+  saveScriptLineAdvanced: () => saveScriptLineAdvanced(),
+});
 // Re-export every tab's handlers so they reach window via main.js's bridge.
 export * from './scriptLine/spriteTab.js';
 export * from './scriptLine/audioTab.js';
@@ -138,7 +145,7 @@ export function renderScriptLineModal() {
 
   const tab = (name, iconName, label) =>
     availableTabs.includes(name)
-      ? `<div class="dr-tab ${sl.tab === name ? 'active' : ''}" onclick="switchScriptLineTab('${name}')">
+      ? `<div class="dr-tab ${sl.tab === name ? 'active' : ''}" data-tab="${name}" data-on-click="switchScriptLineTab">
            ${window.icon(iconName)} ${label}
          </div>`
       : '';
@@ -148,7 +155,7 @@ export function renderScriptLineModal() {
     `
     <div class="dr-modal-bg">
       <div class="dr-modal">
-        <button class="dr-close" onclick="closeScriptLineModal()">&times;</button>
+        <button class="dr-close" data-on-click="closeScriptLineModal">&times;</button>
 
         <div class="dr-tabs">
           ${tab('sprite', 'sprite', 'Sprite')}
@@ -167,8 +174,8 @@ export function renderScriptLineModal() {
         ${sl.msg ? `<div class="dr-success">${sl.msg}</div>` : ''}
 
         <div class="dr-btn-row">
-          <button class="btn btn-secondary" onclick="closeScriptLineModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveScriptLineAdvanced()">Save Changes</button>
+          <button class="btn btn-secondary" data-on-click="closeScriptLineModal">Cancel</button>
+          <button class="btn btn-primary" data-on-click="saveScriptLineAdvanced">Save Changes</button>
         </div>
       </div>
     </div>

@@ -4,6 +4,19 @@ import { COLOR_REGEX, activeLine, sl } from './state.js';
 import { renderScriptLineModal, failField } from '../scriptLineModal.js';
 
 import { setHtml } from '../../ui/dom.js';
+import { registerActions } from '../../ui/actions.js';
+
+registerActions('click', {
+  removeHighlight: (el) => removeHighlight(Number(el.dataset.index)),
+  selectHighlightColor: (el) => selectHighlightColor(el.dataset.color),
+  addHighlightFromSelection: () => addHighlightFromSelection(),
+  clearHighlightSelection: () => clearHighlightSelection(),
+});
+
+registerActions('change', {
+  // The custom color input reports its own value; the swatches carry theirs.
+  selectHighlightColor: (el) => selectHighlightColor(el.value),
+});
 // The colors the preset swatches offer. The buttons used to be written out
 // by hand with their hex inline, and selectHighlightColor then read each
 // color back out of btn.style.background - which the browser has serialized
@@ -38,7 +51,7 @@ export function renderHighlightingTab(line) {
           <span class="highlight-text">"${excerpt}"</span>
           <span class="highlight-range">(chars ${h.startChar}-${h.endChar})</span>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="removeHighlight(${idx})">
+        <button class="btn btn-secondary btn-sm" data-index="${idx}" data-on-click="removeHighlight">
           ${window.icon('trash', { size: 15 })}
         </button>
       </div>
@@ -100,12 +113,12 @@ export function renderHighlightingTab(line) {
             <button class="color-preset ${sameColor(preset.color, sl.highlighting.currentColor) ? 'active' : ''}"
                     style="background: ${preset.color};"
                     data-color="${preset.color}"
-                    onclick="selectHighlightColor('${preset.color}')"
+                    data-color="${preset.color}" data-on-click="selectHighlightColor"
                     title="${preset.title}">
             </button>`
             ).join('')}
             <input type="color" value="${sl.highlighting.currentColor}"
-                   onchange="selectHighlightColor(this.value)"
+                   data-on-change="selectHighlightColor"
                    title="Custom color">
           </div>
           <div class="current-color-preview" style="background: ${sl.highlighting.currentColor};">
@@ -114,10 +127,10 @@ export function renderHighlightingTab(line) {
         </div>
 
         <div class="highlight-button-row">
-          <button class="btn btn-primary" onclick="addHighlightFromSelection()" id="add-highlight-btn" disabled>
+          <button class="btn btn-primary" data-on-click="addHighlightFromSelection" id="add-highlight-btn" disabled>
             ${window.icon('plus')} Add Highlight
           </button>
-          <button class="btn btn-secondary" onclick="clearHighlightSelection()">
+          <button class="btn btn-secondary" data-on-click="clearHighlightSelection">
             ${window.icon('close')} Clear Selection
           </button>
         </div>

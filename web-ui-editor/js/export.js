@@ -8,6 +8,10 @@ import { buildTrialJson } from './core/trialSerialize.js';
 import { isCharacterComplete, missingCharacterFields } from './models/characterModel.js';
 import { alertDialog, confirmDialog, showToast } from './ui/dialogs.js';
 import { normalizeHighlights, showLoader } from './utils.js';
+import { registerActions } from './ui/actions.js';
+
+registerActions('click', { exportToPlayableFile: () => exportToPlayableFile() });
+
 
 function minigameIsEmpty(mg) {
   const ts = mg.typeSpecific || {};

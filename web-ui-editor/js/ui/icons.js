@@ -89,7 +89,3 @@ export function icon(name, opts = {}) {
   const fill = isFilled ? 'currentColor' : 'none';
   return `<svg class="icon${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 }
-
-if (typeof window !== 'undefined') {
-  window.icon = icon;
-}

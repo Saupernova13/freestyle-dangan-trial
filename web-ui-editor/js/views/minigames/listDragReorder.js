@@ -14,6 +14,25 @@
 import { dropAtGap } from '../../core/listOps.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
+import { registerActions } from '../../ui/actions.js';
+
+// The three lists render the same attributes; only the data differs.
+registerActions('dragstart', {
+  listDragStart: (el, event) =>
+    handleListDragStart(event, el.dataset.listKey, el.dataset.idKey, el.dataset.itemId),
+});
+registerActions('dragend', { listDragEnd: (el, event) => handleListDragEnd(event) });
+registerActions('dragover', { listGapDragOver: (el, event) => handleListGapDragOver(event) });
+registerActions('dragleave', { listGapDragLeave: (el, event) => handleListGapDragLeave(event) });
+registerActions('drop', {
+  listDropInGap: (el, event) =>
+    handleListDropInGap(
+      event,
+      el.dataset.gameId,
+      el.dataset.listKey,
+      Number(el.dataset.insertPosition)
+    ),
+});
 
 // { listKey, idKey, itemId } for the drag in flight, or null.
 let dragged = null;

@@ -2,6 +2,12 @@
 import { findMinigame } from '../minigameView.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { escapeHtml } from '../../utils.js';
+import { registerActions } from '../../ui/actions.js';
+
+registerActions('change', {
+  updateHangmansGambitField: (el) =>
+    updateHangmansGambitField(el.dataset.gameId, el.dataset.field, el.value),
+});
 
 export function renderHangmansGambitEditor(mg) {
   // Read-only: seeding lives in ensureTypeSpecific, called at load and on a
@@ -19,7 +25,8 @@ export function renderHangmansGambitEditor(mg) {
         <input type="text"
                class="form-input"
                value="${escapeHtml(answerKey)}"
-               onchange="updateHangmansGambitField('${mg.gameId}', 'answerKey', this.value)"
+               data-game-id="${escapeHtml(mg.gameId)}" data-field="answerKey"
+               data-on-change="updateHangmansGambitField"
                placeholder="Enter answer key">
       </div>
     </div>

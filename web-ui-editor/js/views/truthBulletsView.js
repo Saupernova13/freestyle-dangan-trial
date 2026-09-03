@@ -1,5 +1,6 @@
 // Truth bullets, as a split pane: list on the left, detail on the right.
 import { updateFloatingAddButton } from '../components/floatingAddButton.js';
+import { icon } from '../ui/icons.js';
 import { removeEntry, reportFailedRemoval } from '../core/fileOps.js';
 import { markFileDeleted } from '../core/history.js';
 import { detachTruthBullet } from '../core/references.js';
@@ -10,6 +11,18 @@ import { confirmDialog } from '../ui/dialogs.js';
 import { generateId, escapeHtml } from '../utils.js';
 
 import { setHtml } from '../ui/dom.js';
+import { registerActions } from '../ui/actions.js';
+
+// The edit and delete buttons sit inside the list row, so the innermost-wins
+// rule is what keeps a click on one of them from also selecting the row -
+// which is what the two `event.stopPropagation()` calls used to do by hand.
+registerActions('click', {
+  addTruthBullet: () => addTruthBullet(),
+  selectTruthBullet: (el) => selectTruthBullet(el.dataset.bulletId),
+  openTruthBulletModal: (el) => openTruthBulletModal(el.dataset.bulletId),
+  deleteTruthBullet: (el) => deleteTruthBullet(el.dataset.bulletId),
+});
+
 export function renderTruthBulletsView() {
   const grid = document.getElementById('mainGrid');
 
@@ -19,11 +32,11 @@ export function renderTruthBulletsView() {
       `
       <div id="truthBulletsContainer">
         <div class="script-empty-state">
-          <div class="script-empty-icon">${window.icon('target', { size: 56 })}</div>
+          <div class="script-empty-icon">${icon('target', { size: 56 })}</div>
           <h2>No Truth Bullets</h2>
           <p>Create truth bullets that can be used as evidence in debates</p>
-          <button class="btn btn-primary script-add-btn" onclick="addTruthBullet()">
-            ${window.icon('plus')} Add Truth Bullet
+          <button class="btn btn-primary script-add-btn" data-on-click="addTruthBullet">
+            ${icon('plus')} Add Truth Bullet
           </button>
         </div>
       </div>
@@ -84,12 +97,14 @@ export function renderTruthBulletListItem(bullet) {
 
   return `
     <div class="truth-bullet-list-item ${isSelected ? 'selected' : ''}"
-         data-bullet-id="${bullet.bulletId}"
-         onclick="selectTruthBullet('${bullet.bulletId}')">
+         data-bullet-id="${escapeHtml(bullet.bulletId)}"
+         data-on-click="selectTruthBullet">
       <span class="bullet-list-name">${displayName}</span>
       <div class="bullet-list-actions">
-        <button onclick="openTruthBulletModal('${bullet.bulletId}'); event.stopPropagation()" title="Edit bullet">${window.icon('edit', { size: 16 })}</button>
-        <button onclick="deleteTruthBullet('${bullet.bulletId}'); event.stopPropagation()" title="Delete bullet">${window.icon('trash', { size: 16 })}</button>
+        <button data-bullet-id="${escapeHtml(bullet.bulletId)}"
+                data-on-click="openTruthBulletModal" title="Edit bullet">${icon('edit', { size: 16 })}</button>
+        <button data-bullet-id="${escapeHtml(bullet.bulletId)}"
+                data-on-click="deleteTruthBullet" title="Delete bullet">${icon('trash', { size: 16 })}</button>
       </div>
     </div>
   `;
@@ -104,7 +119,7 @@ export function renderTruthBulletDetail(bullet) {
       ${
         hasImage
           ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name || 'Bullet image')}" />`
-          : `<div class="truth-bullet-no-image-large">${window.icon('image', { size: 48 })}</div>`
+          : `<div class="truth-bullet-no-image-large">${icon('image', { size: 48 })}</div>`
       }
     </div>
 
@@ -132,8 +147,10 @@ export function renderTruthBulletDetail(bullet) {
       }
 
       <div class="detail-actions">
-        <button class="btn btn-primary" onclick="openTruthBulletModal('${bullet.bulletId}')">${window.icon('edit')} Edit Bullet</button>
-        <button class="btn btn-danger" onclick="deleteTruthBullet('${bullet.bulletId}')">${window.icon('trash')} Delete Bullet</button>
+        <button class="btn btn-primary" data-bullet-id="${escapeHtml(bullet.bulletId)}"
+                data-on-click="openTruthBulletModal">${icon('edit')} Edit Bullet</button>
+        <button class="btn btn-danger" data-bullet-id="${escapeHtml(bullet.bulletId)}"
+                data-on-click="deleteTruthBullet">${icon('trash')} Delete Bullet</button>
       </div>
     </div>
   `;

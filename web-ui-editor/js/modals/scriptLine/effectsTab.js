@@ -1,8 +1,15 @@
 // Effects tab: toggle screen/transition effects that fire on this line.
 import { refreshTabBody, sl } from './state.js';
+import { icon } from '../../ui/icons.js';
 import { escapeHtml } from '../../utils.js';
+import { registerActions } from '../../ui/actions.js';
 
-// `icon` is an icon-set name (see js/ui/icons.js), rendered via window.icon().
+registerActions('click', {
+  removeEffect: (el) => removeEffect(Number(el.dataset.index)),
+  toggleEffect: (el) => toggleEffect(el.dataset.effectType),
+});
+
+// `icon` is an icon-set name (see js/ui/icons.js), rendered via icon().
 const AVAILABLE_EFFECTS = [
   { type: 'shake', label: 'Screen Shake', icon: 'vibrate', hasIntensity: true },
   { type: 'flash', label: 'Flash', icon: 'zap', hasColor: true },
@@ -32,7 +39,7 @@ export function renderSpecialEffectsTab() {
       const effectDef = AVAILABLE_EFFECTS.find((e) => e.type === effect.type);
       return `
       <div class="effect-active-item">
-        <span class="effect-icon">${window.icon(effectDef ? effectDef.icon : 'sparkles', { size: 18 })}</span>
+        <span class="effect-icon">${icon(effectDef ? effectDef.icon : 'sparkles', { size: 18 })}</span>
         <div class="effect-details">
           <strong>${effectDef ? effectDef.label : escapeHtml(effect.type)}</strong>
           <div class="effect-params">
@@ -41,8 +48,8 @@ export function renderSpecialEffectsTab() {
             ${effect.duration ? `Duration: ${escapeHtml(effect.duration)}s` : ''}
           </div>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="removeEffect(${idx})">
-          ${window.icon('trash', { size: 15 })}
+        <button class="btn btn-secondary btn-sm" data-index="${idx}" data-on-click="removeEffect">
+          ${icon('trash', { size: 15 })}
         </button>
       </div>
     `;
@@ -53,10 +60,10 @@ export function renderSpecialEffectsTab() {
     const isActive = effects.some((e) => e.type === effect.type);
     return `
       <div class="effect-option ${isActive ? 'effect-active' : ''}"
-           onclick="toggleEffect('${effect.type}')">
-        <div class="effect-option-icon">${window.icon(effect.icon, { size: 22 })}</div>
+           data-effect-type="${escapeHtml(effect.type)}" data-on-click="toggleEffect">
+        <div class="effect-option-icon">${icon(effect.icon, { size: 22 })}</div>
         <div class="effect-option-label">${effect.label}</div>
-        ${isActive ? `<div class="effect-checkmark">${window.icon('check', { size: 14 })}</div>` : ''}
+        ${isActive ? `<div class="effect-checkmark">${icon('check', { size: 14 })}</div>` : ''}
       </div>
     `;
   }).join('');
@@ -87,7 +94,7 @@ export function renderSpecialEffectsTab() {
       </div>
 
       <div class="effects-help">
-        <small>${window.icon('bulb', { size: 15 })} Click an effect to add/remove it. Effects will trigger when this dialogue line appears.</small>
+        <small>${icon('bulb', { size: 15 })} Click an effect to add/remove it. Effects will trigger when this dialogue line appears.</small>
       </div>
     </div>
   `;

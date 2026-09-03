@@ -3,6 +3,12 @@ import { refreshTabBody, sl } from './state.js';
 import { failField } from '../scriptLineModal.js';
 import { renderOptions } from '../../ui/options.js';
 import { renderOptionPreview } from './optionPreview.js';
+import { registerActions } from '../../ui/actions.js';
+import { fieldValue } from './fieldValue.js';
+
+registerActions('change', {
+  updateCameraMotion: (el) => updateCameraMotion(el.dataset.field, fieldValue(el)),
+});
 
 const CAMERA_TYPES = [
   { value: 'none', label: 'None', desc: 'No camera movement' },
@@ -67,7 +73,7 @@ ${renderOptionPreview('camera', CAMERA_TYPES, cam.type)}
       <div class="dr-fg-row">
         <div class="dr-fg-field" style="flex: 2;">
           <label>Motion Type:</label>
-          <select onchange="updateCameraMotion('type', this.value)">
+          <select data-field="type" data-on-change="updateCameraMotion">
             ${cameraOptions}
           </select>
         </div>
@@ -81,11 +87,11 @@ ${renderOptionPreview('camera', CAMERA_TYPES, cam.type)}
             <label>Duration (seconds):</label>
             <input type="number" min="0.1" max="10" step="0.1"
                    value="${cam.duration}"
-                   onchange="updateCameraMotion('duration', parseFloat(this.value))">
+                   data-field="duration" data-number="float" data-on-change="updateCameraMotion">
           </div>
           <div class="dr-fg-field">
             <label>Easing:</label>
-            <select onchange="updateCameraMotion('easing', this.value)">
+            <select data-field="easing" data-on-change="updateCameraMotion">
               ${easingOptions}
             </select>
           </div>

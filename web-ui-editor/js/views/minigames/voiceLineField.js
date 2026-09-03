@@ -25,17 +25,28 @@ export function voiceLineElementIds(idBase) {
   };
 }
 
-// `onSeek`, `onPlay`, `onClear` and `onUpload` are inline handler expressions,
-// because that is how the editor wires everything it renders. Each is the
-// whole call, so the caller decides what it passes - `this.value` for the seek
-// bar, `event` for the file input.
-export function renderVoiceLineField({ fileName, idBase, onPlay, onSeek, onClear, onUpload }) {
+// `actions` names the four delegated actions to fire, and `data` is the
+// arguments they read - { gameId, lineId } for a debate line,
+// { gameId, groupId, speakerKey } for a mass panic one. Both editors' controls
+// carry the same attributes, so the caller decides the values and not the
+// wiring.
+function dataAttributes(data) {
+  return Object.entries(data)
+    .map(([key, value]) => {
+      const attr = key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+      return `data-${attr}="${escapeHtml(value)}"`;
+    })
+    .join(' ');
+}
+
+export function renderVoiceLineField({ fileName, idBase, actions, data }) {
+  const attrs = dataAttributes(data);
   if (!fileName) {
     return `
       <div class="audio-empty">
         <p>No audio file uploaded</p>
       </div>
-      <input type="file" accept="audio/*" onchange="${onUpload}">
+      <input type="file" accept="audio/*" ${attrs} data-on-change="${actions.upload}">
     `;
   }
 
@@ -55,15 +66,15 @@ export function renderVoiceLineField({ fileName, idBase, onPlay, onSeek, onClear
                min="0"
                max="100"
                value="0"
-               oninput="${onSeek}">
+               ${attrs} data-on-input="${actions.seek}">
         <span class="audio-time-total" id="${timeTotalId}">0:00</span>
       </div>
 
       <div class="audio-controls">
-        <button class="btn btn-secondary" id="${buttonId}" onclick="${onPlay}">
+        <button class="btn btn-secondary" id="${buttonId}" ${attrs} data-on-click="${actions.play}">
           ${icon('play')} Play
         </button>
-        <button class="btn btn-secondary" onclick="${onClear}">
+        <button class="btn btn-secondary" ${attrs} data-on-click="${actions.clear}">
           ${icon('trash')} Remove
         </button>
       </div>

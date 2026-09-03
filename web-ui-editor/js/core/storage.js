@@ -31,6 +31,19 @@ import { alertDialog, confirmDialog, promptDialog, showToast } from '../ui/dialo
 import { setSaveStatus } from '../ui/saveStatus.js';
 import { renderDirDisplay, showLoader } from '../utils.js';
 import { renderActiveView } from '../views/viewManager.js';
+import { registerActions } from '../ui/actions.js';
+
+// The trial hub's buttons are rendered by viewManager and handled here, where
+// the functions live - viewManager already imports this module, so the
+// registration goes the way the dependency already runs.
+registerActions('click', {
+  openTrialHub: () => openTrialHub(),
+  chooseTrialDir: () => chooseTrialDir(),
+  newOpfsTrial: () => newOpfsTrial(),
+  triggerImportTrial: () => triggerImportTrial(),
+  openOpfsTrialByName: (el) => openOpfsTrialByName(el.dataset.folder),
+  deleteOpfsTrialAndRefresh: (el) => deleteOpfsTrialAndRefresh(el.dataset.folder),
+});
 
 function resetEmptyTrial() {
   state.trialName = '';

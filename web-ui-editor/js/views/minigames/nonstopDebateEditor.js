@@ -2,6 +2,7 @@
 
 // Audio players state
 import { moveItem, reindexOrder } from '../../core/listOps.js';
+import { icon } from '../../ui/icons.js';
 import {
   deleteMinigameAudioFile,
   loadMinigameAudioFile,
@@ -23,6 +24,39 @@ import { orderedCopy } from '../../core/minigameDefaults.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
 import { renderVoiceLineField, voiceLineElementIds } from './voiceLineField.js';
+import { registerActions } from '../../ui/actions.js';
+
+// The move and delete buttons sit inside the line header, which toggles it,
+// so innermost-wins replaces their `event.stopPropagation()`.
+registerActions('click', {
+  toggleBulletForMinigame: (el) =>
+    toggleBulletForMinigame(el.dataset.gameId, el.dataset.bulletId),
+  addDialogueLine: (el) => addDialogueLine(el.dataset.gameId),
+  moveDialogueLineUp: (el) => moveDialogueLineUp(el.dataset.gameId, el.dataset.lineId),
+  moveDialogueLineDown: (el) => moveDialogueLineDown(el.dataset.gameId, el.dataset.lineId),
+  deleteDialogueLine: (el) => deleteDialogueLine(el.dataset.gameId, el.dataset.lineId),
+  toggleSection: (el) => toggleSection(el.dataset.lineId, el.dataset.section),
+  playDialogueAudioPreview: (el) =>
+    playDialogueAudioPreview(el.dataset.gameId, el.dataset.lineId),
+  clearDialogueVoiceLine: (el) => clearDialogueVoiceLine(el.dataset.gameId, el.dataset.lineId),
+});
+
+registerActions('input', {
+  seekDialogueAudio: (el) => seekDialogueAudio(el.dataset.gameId, el.dataset.lineId, el.value),
+});
+
+registerActions('change', {
+  // A checkbox reports .checked, everything else .value.
+  updateDialogueLine: (el) =>
+    updateDialogueLine(
+      el.dataset.gameId,
+      el.dataset.lineId,
+      el.dataset.field,
+      'checkbox' in el.dataset ? el.checked : el.value
+    ),
+  handleDialogueVoiceUpload: (el, event) =>
+    handleDialogueVoiceUpload(el.dataset.gameId, el.dataset.lineId, event),
+});
 import { renderOptions } from '../../ui/options.js';
 
 // The header, the Add button and addDialogueLine all read this, so the
@@ -102,10 +136,11 @@ export function renderNonstopDebateEditor(mg) {
       const isSelected = selectedBullets.includes(bullet.bulletId);
       html += `
         <div class="bullet-select-card ${isSelected ? 'selected' : ''}"
-             onclick="toggleBulletForMinigame('${mg.gameId}', '${bullet.bulletId}')">
-          <div class="bullet-select-checkbox">${isSelected ? window.icon('check', { size: 14 }) : ''}</div>
+             data-game-id="${escapeHtml(mg.gameId)}" data-bullet-id="${escapeHtml(bullet.bulletId)}"
+             data-on-click="toggleBulletForMinigame">
+          <div class="bullet-select-checkbox">${isSelected ? icon('check', { size: 14 }) : ''}</div>
           <div class="bullet-select-image">
-            ${bullet.imageDataURL ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name)}">` : window.icon('image', { size: 28 })}
+            ${bullet.imageDataURL ? `<img src="${bullet.imageDataURL}" alt="${escapeHtml(bullet.name)}">` : icon('image', { size: 28 })}
           </div>
           <div class="bullet-select-info">
             <div class="bullet-select-name">${escapeHtml(bullet.name || 'Unnamed')}</div>
@@ -132,23 +167,26 @@ export function renderNonstopDebateEditor(mg) {
   } else {
     html += `<div class="dialogue-drop-zone"
                   data-insert-position="0"
-                  ondragover="handleListGapDragOver(event)"
-                  ondrop="handleListDropInGap(event, '${mg.gameId}', 'dialogueLines', 0)"
-                  ondragleave="handleListGapDragLeave(event)"></div>`;
+                  data-on-dragover="listGapDragOver"
+                  data-game-id="${escapeHtml(mg.gameId)}" data-list-key="dialogueLines"
+           data-on-drop="listDropInGap"
+                  data-on-dragleave="listGapDragLeave"></div>`;
 
     orderedCopy(dialogueLines).forEach((line, index) => {
       html += `
         <div class="dialogue-line-wrapper"
              draggable="true"
-             ondragstart="handleListDragStart(event, 'dialogueLines', 'lineId', '${line.lineId}')"
-             ondragend="handleListDragEnd(event)">
+             data-list-key="dialogueLines" data-id-key="lineId" data-item-id="${escapeHtml(line.lineId)}"
+           data-on-dragstart="listDragStart"
+             data-on-dragend="listDragEnd">
           ${renderDialogueLineEditor(mg.gameId, line, index)}
         </div>
         <div class="dialogue-drop-zone"
              data-insert-position="${index + 1}"
-             ondragover="handleListGapDragOver(event)"
-             ondrop="handleListDropInGap(event, '${mg.gameId}', 'dialogueLines', ${index + 1})"
-             ondragleave="handleListGapDragLeave(event)"></div>
+             data-on-dragover="listGapDragOver"
+             data-game-id="${escapeHtml(mg.gameId)}" data-list-key="dialogueLines"
+           data-on-drop="listDropInGap"
+             data-on-dragleave="listGapDragLeave"></div>
       `;
     });
   }
@@ -159,9 +197,9 @@ export function renderNonstopDebateEditor(mg) {
   if (dialogueLines.length < MAX_DIALOGUE_LINES) {
     html += `
       <button class="minigame-floating-btn"
-              onclick="addDialogueLine('${mg.gameId}')"
+              data-game-id="${escapeHtml(mg.gameId)}" data-on-click="addDialogueLine"
               title="Add Dialogue Line">
-        ${window.icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Dialogue Line</span>
+        ${icon('plus', { size: 20 })} <span class="minigame-floating-btn-text">Add Dialogue Line</span>
       </button>
     `;
   }
@@ -177,22 +215,25 @@ export function renderDialogueLineEditor(gameId, line, index) {
       <div class="dialogue-line-header">
         <div class="dialogue-drag-handle">
           <div class="arrow-btn arrow-up"
-               onclick="event.stopPropagation(); moveDialogueLineUp('${gameId}', '${line.lineId}')"
-               title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
+               data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}"
+               data-on-click="moveDialogueLineUp"
+               title="Move up">${icon('chevronUp', { size: 14 })}</div>
           <div class="arrow-btn arrow-down"
-               onclick="event.stopPropagation(); moveDialogueLineDown('${gameId}', '${line.lineId}')"
-               title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
+               data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}"
+               data-on-click="moveDialogueLineDown"
+               title="Move down">${icon('chevronDown', { size: 14 })}</div>
         </div>
         <div class="dialogue-line-number">#${index + 1}</div>
         <div class="dialogue-line-preview">${fullSentence ? escapeHtml(fullSentence) : '&lt;empty line&gt;'}</div>
-        <button class="btn-icon" onclick="event.stopPropagation(); deleteDialogueLine('${gameId}', '${line.lineId}')" title="Delete line">${window.icon('trash', { size: 16 })}</button>
+        <button class="btn-icon" data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}"
+                data-on-click="deleteDialogueLine" title="Delete line">${icon('trash', { size: 16 })}</button>
       </div>
 
       <div class="dialogue-line-body">
         <!-- 1. CHARACTER (moved to top) -->
         <div class="form-group">
           <label>Character</label>
-          <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'characterId', this.value)">
+          <select class="form-input" data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="characterId" data-on-change="updateDialogueLine">
             ${renderCharacterOptions(line.characterId)}
           </select>
         </div>
@@ -204,17 +245,17 @@ export function renderDialogueLineEditor(gameId, line, index) {
             <input type="text"
                    class="form-input sentence-part"
                    value="${escapeHtml(line.sentenceBeginning || '')}"
-                   onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'sentenceBeginning', this.value)"
+                   data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="sentenceBeginning" data-on-change="updateDialogueLine"
                    placeholder="Beginning...">
             <input type="text"
                    class="form-input sentence-part target-part"
                    value="${escapeHtml(line.target || '')}"
-                   onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'target', this.value)"
+                   data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="target" data-on-change="updateDialogueLine"
                    placeholder="Target (shootable)">
             <input type="text"
                    class="form-input sentence-part"
                    value="${escapeHtml(line.sentenceEnd || '')}"
-                   onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'sentenceEnd', this.value)"
+                   data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="sentenceEnd" data-on-change="updateDialogueLine"
                    placeholder="...end">
           </div>
         </div>
@@ -224,7 +265,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
           <div class="form-group">
             <label>Correct Answer Bullet</label>
             <select class="form-input"
-                    onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'answerBulletId', this.value)">
+                    data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="answerBulletId" data-on-change="updateDialogueLine">
               ${renderOptions(
                 [
                   { value: '', label: 'No answer (false target)' },
@@ -245,7 +286,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
               <label>
                 <input type="checkbox"
                        ${line.useNegativeBullet ? 'checked' : ''}
-                       onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'useNegativeBullet', this.checked)">
+                       data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="useNegativeBullet" data-checkbox data-on-change="updateDialogueLine">
                 Use Lie/Negative Version
               </label>
             </div>
@@ -260,10 +301,13 @@ export function renderDialogueLineEditor(gameId, line, index) {
           ${renderVoiceLineField({
             fileName: line.voiceLineFile,
             idBase: line.lineId,
-            onPlay: `playDialogueAudioPreview('${gameId}', '${line.lineId}')`,
-            onSeek: `seekDialogueAudio('${gameId}', '${line.lineId}', this.value)`,
-            onClear: `clearDialogueVoiceLine('${gameId}', '${line.lineId}')`,
-            onUpload: `handleDialogueVoiceUpload('${gameId}', '${line.lineId}', event)`,
+            data: { gameId, lineId: line.lineId },
+            actions: {
+              play: 'playDialogueAudioPreview',
+              seek: 'seekDialogueAudio',
+              clear: 'clearDialogueVoiceLine',
+              upload: 'handleDialogueVoiceUpload',
+            },
           })}
         </div>
 
@@ -271,8 +315,9 @@ export function renderDialogueLineEditor(gameId, line, index) {
         <div class="collapsible-section">
           <button type="button"
                   class="collapsible-header ${isSectionExpanded(line.lineId, 'textStyling') ? 'expanded' : ''}"
-                  onclick="toggleSection('${line.lineId}', 'textStyling')">
-            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'textStyling') ? window.icon('chevronDown', { size: 12 }) : window.icon('chevronRight', { size: 12 })}</span>
+                  data-line-id="${escapeHtml(line.lineId)}" data-section="textStyling"
+                  data-on-click="toggleSection">
+            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'textStyling') ? icon('chevronDown', { size: 12 }) : icon('chevronRight', { size: 12 })}</span>
             <span class="collapsible-title">Advanced Text Styling</span>
             <span class="collapsible-badge">Optional</span>
           </button>
@@ -283,21 +328,21 @@ export function renderDialogueLineEditor(gameId, line, index) {
               <div class="form-row">
                 <div class="form-group">
                   <label>Text Effect</label>
-                  <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textEffect', this.value)">
+                  <select class="form-input" data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="textEffect" data-on-change="updateDialogueLine">
                     ${renderTextStyleOptions(TEXT_EFFECTS, line.textEffect)}
                   </select>
                 </div>
 
                 <div class="form-group">
                   <label>Text Font</label>
-                  <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textFont', this.value)">
+                  <select class="form-input" data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="textFont" data-on-change="updateDialogueLine">
                     ${renderTextStyleOptions(TEXT_FONTS, line.textFont)}
                   </select>
                 </div>
 
                 <div class="form-group">
                   <label>Movement Direction</label>
-                  <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textMovementDirection', this.value)">
+                  <select class="form-input" data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="textMovementDirection" data-on-change="updateDialogueLine">
                     ${renderTextStyleOptions(TEXT_DIRECTIONS, line.textMovementDirection)}
                   </select>
                 </div>
@@ -312,8 +357,9 @@ export function renderDialogueLineEditor(gameId, line, index) {
         <div class="collapsible-section">
           <button type="button"
                   class="collapsible-header ${isSectionExpanded(line.lineId, 'characterDisplay') ? 'expanded' : ''}"
-                  onclick="toggleSection('${line.lineId}', 'characterDisplay')">
-            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'characterDisplay') ? window.icon('chevronDown', { size: 12 }) : window.icon('chevronRight', { size: 12 })}</span>
+                  data-line-id="${escapeHtml(line.lineId)}" data-section="characterDisplay"
+                  data-on-click="toggleSection">
+            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'characterDisplay') ? icon('chevronDown', { size: 12 }) : icon('chevronRight', { size: 12 })}</span>
             <span class="collapsible-title">Character Display</span>
             <span class="collapsible-badge">Optional</span>
           </button>
@@ -325,7 +371,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
                 <label>
                   <input type="checkbox"
                          ${line.characterSpotlight ? 'checked' : ''}
-                         onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'characterSpotlight', this.checked)">
+                         data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="characterSpotlight" data-checkbox data-on-change="updateDialogueLine">
                   Enable Character Spotlight
                 </label>
               </div>
@@ -339,8 +385,9 @@ export function renderDialogueLineEditor(gameId, line, index) {
         <div class="collapsible-section">
           <button type="button"
                   class="collapsible-header ${isSectionExpanded(line.lineId, 'feedback') ? 'expanded' : ''}"
-                  onclick="toggleSection('${line.lineId}', 'feedback')">
-            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'feedback') ? window.icon('chevronDown', { size: 12 }) : window.icon('chevronRight', { size: 12 })}</span>
+                  data-line-id="${escapeHtml(line.lineId)}" data-section="feedback"
+                  data-on-click="toggleSection">
+            <span class="collapsible-icon">${isSectionExpanded(line.lineId, 'feedback') ? icon('chevronDown', { size: 12 }) : icon('chevronRight', { size: 12 })}</span>
             <span class="collapsible-title">User Feedback Messages</span>
             <span class="collapsible-badge">Optional</span>
           </button>
@@ -354,7 +401,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
                   <input type="text"
                          class="form-input"
                          value="${escapeHtml(line.userFailedComment || '')}"
-                         onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'userFailedComment', this.value)"
+                         data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="userFailedComment" data-on-change="updateDialogueLine"
                          placeholder="Message when user fails">
                 </div>
 
@@ -363,7 +410,7 @@ export function renderDialogueLineEditor(gameId, line, index) {
                   <input type="text"
                          class="form-input"
                          value="${escapeHtml(line.userWrongAnswerComment || '')}"
-                         onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'userWrongAnswerComment', this.value)"
+                         data-game-id="${escapeHtml(gameId)}" data-line-id="${escapeHtml(line.lineId)}" data-field="userWrongAnswerComment" data-on-change="updateDialogueLine"
                          placeholder="Message when user shoots wrong target">
                 </div>
               </div>

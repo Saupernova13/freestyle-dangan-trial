@@ -1,5 +1,11 @@
 // Switches the main grid between the editor views and the welcome hub.
 import { renderScriptEditor } from '../app.js';
+import { icon } from '../ui/icons.js';
+import { registerActions } from '../ui/actions.js';
+
+// The four nav items and the trial-bar buttons live in index.html, which is
+// the last place inline onclick attributes survived.
+registerActions('click', { switchView: (el) => switchView(el.dataset.view) });
 import { updateFloatingAddButton } from '../components/floatingAddButton.js';
 import { state } from '../core/state.js';
 import {
@@ -63,7 +69,7 @@ function renderWelcomeHub(mainGrid) {
       mainGrid,
       `
       <div class="welcome-screen">
-        <div class="script-empty-icon">${window.icon('warning', { size: 56 })}</div>
+        <div class="script-empty-icon">${icon('warning', { size: 56 })}</div>
         <h2>This browser isn't supported</h2>
         <p>The editor needs either the File System Access API or the Origin
         Private File System. Please use a current version of Chrome, Edge,
@@ -85,22 +91,22 @@ function renderWelcomeHub(mainGrid) {
         ${
           hasPicker
             ? `<div class="hub-card">
-                 <div class="hub-card-icon">${window.icon('folder', { size: 28 })}</div>
+                 <div class="hub-card-icon">${icon('folder', { size: 28 })}</div>
                  <h3>Folder on disk</h3>
                  <p>Edit a trial folder on your computer. Changes save in place.</p>
-                 <button class="btn btn-primary" onclick="chooseTrialDir()">Open folder…</button>
+                 <button class="btn btn-primary" data-on-click="chooseTrialDir">Open folder…</button>
                </div>`
             : ''
         }
         ${
           hasOpfs
             ? `<div class="hub-card">
-                 <div class="hub-card-icon">${window.icon('layers', { size: 28 })}</div>
+                 <div class="hub-card-icon">${icon('layers', { size: 28 })}</div>
                  <h3>Browser storage</h3>
                  <p>Store trials inside this browser. Move them between machines with Export / Import.</p>
                  <div class="hub-card-actions">
-                   <button class="btn btn-primary" onclick="newOpfsTrial()">${window.icon('plus')} New trial</button>
-                   <button class="btn btn-secondary" onclick="triggerImportTrial()">${window.icon('upload')} Import .drtrial</button>
+                   <button class="btn btn-primary" data-on-click="newOpfsTrial">${icon('plus')} New trial</button>
+                   <button class="btn btn-secondary" data-on-click="triggerImportTrial">${icon('upload')} Import .drtrial</button>
                  </div>
                </div>`
             : ''
@@ -134,7 +140,7 @@ export async function populateHubTrials() {
       `
       <h3 class="hub-trials-title">Saved in this browser</h3>
       <p class="hub-trials-error">
-        ${window.icon('alert', { size: 16 })}
+        ${icon('alert', { size: 16 })}
         Could not read browser storage${err && err.name ? ` (${escapeHtml(err.name)})` : ''}.
         Your saved trials are probably still there - reload the page before
         creating or importing anything.
@@ -177,12 +183,14 @@ export async function populateHubTrials() {
         .map(
           (r) => `
         <li class="hub-trial-row">
-          <button class="hub-trial-open" data-folder="${escapeHtml(r.folder)}">
-            ${window.icon('script', { size: 16 })}
+          <button class="hub-trial-open" data-folder="${escapeHtml(r.folder)}"
+                  data-on-click="openOpfsTrialByName">
+            ${icon('script', { size: 16 })}
             <span class="hub-trial-name">${escapeHtml(r.name)}</span>
           </button>
-          <button class="hub-trial-delete" title="Delete trial" data-folder="${escapeHtml(r.folder)}">
-            ${window.icon('trash', { size: 15 })}
+          <button class="hub-trial-delete" title="Delete trial" data-folder="${escapeHtml(r.folder)}"
+                  data-on-click="deleteOpfsTrialAndRefresh">
+            ${icon('trash', { size: 15 })}
           </button>
         </li>`
         )
@@ -191,10 +199,4 @@ export async function populateHubTrials() {
   `
   );
 
-  container.querySelectorAll('.hub-trial-open').forEach((btn) => {
-    btn.addEventListener('click', () => window.openOpfsTrialByName(btn.dataset.folder));
-  });
-  container.querySelectorAll('.hub-trial-delete').forEach((btn) => {
-    btn.addEventListener('click', () => window.deleteOpfsTrialAndRefresh(btn.dataset.folder));
-  });
 }

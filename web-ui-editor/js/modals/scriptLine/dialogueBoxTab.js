@@ -4,6 +4,12 @@ import { escapeHtml } from '../../utils.js';
 import { failField } from '../scriptLineModal.js';
 import { renderOptions } from '../../ui/options.js';
 import { renderOptionPreview } from './optionPreview.js';
+import { registerActions } from '../../ui/actions.js';
+import { fieldValue } from './fieldValue.js';
+
+const updateFromControl = (el) => updateDialogueBoxStyle(el.dataset.field, fieldValue(el));
+registerActions('change', { updateDialogueBoxStyle: updateFromControl });
+registerActions('input', { updateDialogueBoxStyle: updateFromControl });
 
 const BOX_STYLES = [
   { value: 'default', label: 'Default', desc: 'Standard rectangular box' },
@@ -35,7 +41,7 @@ ${renderOptionPreview('message', BOX_STYLES, box.style)}
       <div class="dr-fg-row">
         <div class="dr-fg-field" style="flex: 2;">
           <label>Box Style:</label>
-          <select onchange="updateDialogueBoxStyle('style', this.value)">
+          <select data-field="style" data-on-change="updateDialogueBoxStyle">
             ${styleOptions}
           </select>
         </div>
@@ -47,7 +53,7 @@ ${renderOptionPreview('message', BOX_STYLES, box.style)}
           <div style="display: flex; gap: 0.5rem; align-items: center;">
             <input type="color"
                    value="${escapeHtml(box.borderColor)}"
-                   onchange="updateDialogueBoxStyle('borderColor', this.value)"
+                   data-field="borderColor" data-on-change="updateDialogueBoxStyle"
                    style="width: 50px; height: 35px;">
             <span style="font-size: 0.875rem; color: var(--text-tertiary);">${escapeHtml(box.borderColor)}</span>
           </div>
@@ -59,7 +65,7 @@ ${renderOptionPreview('message', BOX_STYLES, box.style)}
                  max="1"
                  step="0.1"
                  value="${box.bgOpacity}"
-                 oninput="updateDialogueBoxStyle('bgOpacity', parseFloat(this.value))"
+                 data-field="bgOpacity" data-number="float" data-on-input="updateDialogueBoxStyle"
                  style="width: 100%;">
           <span style="font-size: 0.875rem; color: var(--text-tertiary);">${Math.round(box.bgOpacity * 100)}%</span>
         </div>
@@ -73,7 +79,7 @@ ${renderOptionPreview('message', BOX_STYLES, box.style)}
                  max="10"
                  step="1"
                  value="${box.borderThickness}"
-                 onchange="updateDialogueBoxStyle('borderThickness', parseInt(this.value))">
+                 data-field="borderThickness" data-number="int" data-on-change="updateDialogueBoxStyle">
         </div>
       </div>
     </div>

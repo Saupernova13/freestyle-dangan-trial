@@ -1,5 +1,6 @@
 // Create/edit modal for a single truth bullet.
 import { removeEntry, reportFailedRemoval } from '../core/fileOps.js';
+import { icon } from '../ui/icons.js';
 import { state } from '../core/state.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { showToast } from '../ui/dialogs.js';
@@ -8,6 +9,22 @@ import { escapeHtml, fileToDataUrl, showLoader } from '../utils.js';
 import { renderTruthBulletsView } from '../views/truthBulletsView.js';
 
 import { setHtml } from '../ui/dom.js';
+import { registerActions } from '../ui/actions.js';
+
+registerActions('click', {
+  closeTruthBulletModal: () => closeTruthBulletModal(),
+  clearBulletImage: () => clearBulletImage(),
+  triggerBulletImageInput: () => triggerBulletImageInput(),
+  saveTruthBullet: () => saveTruthBullet(),
+});
+
+registerActions('input', {
+  updateBulletField: (el) => updateBulletField(el.dataset.field, el.value),
+});
+
+registerActions('change', {
+  handleBulletImageUpload: (el, event) => handleBulletImageUpload(event),
+});
 let activeBulletId = null;
 // True while editing a bullet that addTruthBullet created for this modal.
 // Cancelling one of those has to take the bullet with it: it was pushed into
@@ -75,7 +92,7 @@ export function renderTruthBulletModal() {
     `
     <div class="dr-modal-bg">
       <div class="dr-modal">
-        <button class="dr-close" onclick="closeTruthBulletModal()">&times;</button>
+        <button class="dr-close" data-on-click="closeTruthBulletModal">&times;</button>
 
         <div class="dr-modal-content">
           <div class="dr-form">
@@ -86,7 +103,7 @@ export function renderTruthBulletModal() {
                 <label>Bullet Name:</label>
                 <input type="text"
                        value="${escapeHtml(bulletFields.name)}"
-                       oninput="updateBulletField('name', this.value)"
+                       data-field="name" data-on-input="updateBulletField"
                        placeholder="E.g., Bloody Knife">
               </div>
             </div>
@@ -95,7 +112,7 @@ export function renderTruthBulletModal() {
               <div class="dr-fg-field">
                 <label>Description:</label>
                 <textarea rows="3"
-                          oninput="updateBulletField('description', this.value)"
+                          data-field="description" data-on-input="updateBulletField"
                           placeholder="Describe this evidence...">${escapeHtml(bulletFields.description)}</textarea>
               </div>
             </div>
@@ -105,7 +122,7 @@ export function renderTruthBulletModal() {
                 <label>Inversed Lie Bullet Name:</label>
                 <input type="text"
                        value="${escapeHtml(bulletFields.inversedLieBulletName)}"
-                       oninput="updateBulletField('inversedLieBulletName', this.value)"
+                       data-field="inversedLieBulletName" data-on-input="updateBulletField"
                        placeholder="E.g., Clean Knife">
                 <small style="color: var(--text-tertiary);">Name when converted to a lie</small>
               </div>
@@ -121,7 +138,7 @@ export function renderTruthBulletModal() {
                     <div class="bullet-image-preview-container">
                       <img src="${bulletFields.imageDataURL || ''}" alt="Bullet image">
                     </div>
-                    <button class="btn btn-secondary" onclick="clearBulletImage()">${window.icon('trash')} Remove Image</button>
+                    <button class="btn btn-secondary" data-on-click="clearBulletImage">${icon('trash')} Remove Image</button>
                   </div>
                 `
                     : `
@@ -131,9 +148,9 @@ export function renderTruthBulletModal() {
                 `
                 }
                 <input type="file" accept="image/*" id="bulletImageInput"
-                       onchange="handleBulletImageUpload(event)" style="display: none;">
-                <button class="btn btn-primary" onclick="triggerBulletImageInput()">
-                  ${window.icon('upload')} ${hasImage ? 'Replace' : 'Upload'} Image
+                       data-on-change="handleBulletImageUpload" style="display: none;">
+                <button class="btn btn-primary" data-on-click="triggerBulletImageInput">
+                  ${icon('upload')} ${hasImage ? 'Replace' : 'Upload'} Image
                 </button>
               </div>
             </div>
@@ -144,8 +161,8 @@ export function renderTruthBulletModal() {
         ${bulletModalMsg ? `<div class="dr-success">${bulletModalMsg}</div>` : ''}
 
         <div class="dr-btn-row">
-          <button class="btn btn-secondary" onclick="closeTruthBulletModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveTruthBullet()">Save Bullet</button>
+          <button class="btn btn-secondary" data-on-click="closeTruthBulletModal">Cancel</button>
+          <button class="btn btn-primary" data-on-click="saveTruthBullet">Save Bullet</button>
         </div>
       </div>
     </div>

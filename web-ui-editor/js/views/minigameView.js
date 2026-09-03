@@ -1,6 +1,7 @@
 // Minigame list and common settings; each game type's body comes from its
 // own module under views/minigames/.
 import { state } from '../core/state.js';
+import { icon } from '../ui/icons.js';
 import { autoSaveTrial } from '../core/storage.js';
 import { confirmDialog, showToast } from '../ui/dialogs.js';
 import { generateId, escapeHtml } from '../utils.js';
@@ -13,6 +14,20 @@ import { DIFFICULTY_LABELS, MINIGAME_TYPE_LABELS } from '../core/constants.js';
 import { renderLabelOptions, renderOptions } from '../ui/options.js';
 import { hasAuthoredContent, resetTypeSpecific } from '../core/minigameDefaults.js';
 import { setHtml } from '../ui/dom.js';
+import { registerActions } from '../ui/actions.js';
+
+// The delete button sits inside the card header, which toggles the card, so
+// the innermost-wins rule replaces its `event.stopPropagation()`.
+registerActions('click', {
+  addMinigame: () => addMinigame(),
+  toggleMinigameExpand: (el) => toggleMinigameExpand(el.dataset.gameId),
+  deleteMinigame: (el) => deleteMinigame(el.dataset.gameId),
+});
+
+registerActions('change', {
+  updateMinigameField: (el) => updateMinigameField(el.dataset.gameId, el.dataset.field, el.value),
+  updateMinigameTimeLimit: (el) => updateMinigameTimeLimit(el.dataset.gameId, el.value),
+});
 let expandedMinigameId = null;
 
 export function findMinigame(gameId) {
@@ -28,11 +43,11 @@ export function renderMinigameDetails() {
       `
       <div id="minigameDetailsContainer">
         <div class="script-empty-state">
-          <div class="script-empty-icon">${window.icon('gamepad', { size: 56 })}</div>
+          <div class="script-empty-icon">${icon('gamepad', { size: 56 })}</div>
           <h2>No Minigames Configured</h2>
           <p>Click the button below to create your first minigame instance</p>
-          <button class="btn btn-primary script-add-btn" onclick="addMinigame()">
-            ${window.icon('plus')} Create Minigame
+          <button class="btn btn-primary script-add-btn" data-on-click="addMinigame">
+            ${icon('plus')} Create Minigame
           </button>
         </div>
       </div>
@@ -68,7 +83,8 @@ export function renderMinigameCard(mg, index) {
 
   let cardContent = `
     <div class="minigame-card ${isExpanded ? 'expanded' : ''}" data-minigame-id="${mg.gameId}">
-      <div class="minigame-card-header" onclick="toggleMinigameExpand('${mg.gameId}')">
+      <div class="minigame-card-header" data-game-id="${escapeHtml(mg.gameId)}"
+           data-on-click="toggleMinigameExpand">
         <div class="minigame-info">
           <div class="minigame-name">${escapeHtml(mg.name || 'Unnamed Minigame')}</div>
           <div class="minigame-meta">
@@ -76,13 +92,14 @@ export function renderMinigameCard(mg, index) {
             <span class="minigame-difficulty" style="color: ${difficultyColors[mg.difficulty] || 'inherit'}">
               ${escapeHtml(mg.difficulty)}
             </span>
-            <span class="minigame-time">${window.icon('timer', { size: 14 })} ${escapeHtml(mg.timeLimit)}s</span>
+            <span class="minigame-time">${icon('timer', { size: 14 })} ${escapeHtml(mg.timeLimit)}s</span>
           </div>
         </div>
 
         <div class="minigame-card-actions">
-          <button class="btn-icon" onclick="event.stopPropagation(); deleteMinigame('${mg.gameId}')" title="Delete minigame">${window.icon('trash', { size: 16 })}</button>
-          <span class="expand-icon">${isExpanded ? window.icon('chevronDown', { size: 14 }) : window.icon('chevronRight', { size: 14 })}</span>
+          <button class="btn-icon" data-game-id="${escapeHtml(mg.gameId)}"
+                  data-on-click="deleteMinigame" title="Delete minigame">${icon('trash', { size: 16 })}</button>
+          <span class="expand-icon">${isExpanded ? icon('chevronDown', { size: 14 }) : icon('chevronRight', { size: 14 })}</span>
         </div>
       </div>
   `;
@@ -148,21 +165,24 @@ export function renderMinigameEditor(mg) {
         <input type="text"
                class="form-input"
                value="${escapeHtml(mg.name || '')}"
-               onchange="updateMinigameField('${mg.gameId}', 'name', this.value)"
+               data-game-id="${escapeHtml(mg.gameId)}" data-field="name"
+               data-on-change="updateMinigameField"
                placeholder="The question shown to the player">
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label>Game Type</label>
-          <select class="form-input" onchange="updateMinigameField('${mg.gameId}', 'gameType', this.value)">
+          <select class="form-input" data-game-id="${escapeHtml(mg.gameId)}" data-field="gameType"
+                  data-on-change="updateMinigameField">
             ${renderGameTypeOptions(mg.gameType)}
           </select>
         </div>
 
         <div class="form-group">
           <label>Difficulty</label>
-          <select class="form-input" onchange="updateMinigameField('${mg.gameId}', 'difficulty', this.value)">
+          <select class="form-input" data-game-id="${escapeHtml(mg.gameId)}" data-field="difficulty"
+                  data-on-change="updateMinigameField">
             ${renderLabelOptions(DIFFICULTY_LABELS, mg.difficulty)}
           </select>
         </div>
@@ -172,7 +192,8 @@ export function renderMinigameEditor(mg) {
           <input type="number"
                  class="form-input"
                  value="${mg.timeLimit || 60}"
-                 onchange="updateMinigameTimeLimit('${mg.gameId}', this.value)"
+                 data-game-id="${escapeHtml(mg.gameId)}"
+                 data-on-change="updateMinigameTimeLimit"
                  min="0" max="3600">
         </div>
       </div>
@@ -182,7 +203,8 @@ export function renderMinigameEditor(mg) {
         <input type="text"
                class="form-input"
                value="${escapeHtml(mg.failComment || '')}"
-               onchange="updateMinigameField('${mg.gameId}', 'failComment', this.value)"
+               data-game-id="${escapeHtml(mg.gameId)}" data-field="failComment"
+               data-on-change="updateMinigameField"
                placeholder="Shown on the result card when the player fails this minigame">
       </div>
     </div>

@@ -183,9 +183,9 @@ describe('the rendered form', () => {
 
   it('renders a control for every field in the table', async () => {
     const host = await form();
-    const markup = host.innerHTML;
+    const fields = [...host.querySelectorAll('[data-field]')].map((el) => el.dataset.field);
     for (const field of CHARACTER_FIELDS) {
-      expect(markup).toContain(`fieldUpdate('${field.key}'`);
+      expect(fields).toContain(field.key);
     }
   });
 
@@ -196,8 +196,18 @@ describe('the rendered form', () => {
     const host = await form();
     for (const el of host.querySelectorAll('input, textarea')) {
       if (el.type === 'file') continue;
-      expect(el.getAttribute('oninput')).toBeTruthy();
-      expect(el.getAttribute('onchange')).toBeNull();
+      expect(el.dataset.onInput).toBe('fieldUpdate');
+      expect(el.dataset.onChange).toBeUndefined();
+    }
+  });
+
+  it('carries no executable attribute at all', async () => {
+    // The field name is data now; nothing in this form is an inline handler.
+    const host = await form();
+    for (const el of host.querySelectorAll('*')) {
+      for (const attr of el.attributes) {
+        expect(attr.name.startsWith('on')).toBe(false);
+      }
     }
   });
 
@@ -240,9 +250,7 @@ describe('the rendered form', () => {
     const inputs = [...host.querySelectorAll('input')].map((el) => el.getAttribute('value'));
     expect(inputs).toContain('Aoi');
     expect(inputs).toContain('56');
-    const notes = [...host.querySelectorAll('textarea')].find((el) =>
-      el.getAttribute('oninput').includes("'notes'")
-    );
+    const notes = host.querySelector('textarea[data-field="notes"]');
     expect(notes.textContent).toBe('Swimmer');
   });
 });

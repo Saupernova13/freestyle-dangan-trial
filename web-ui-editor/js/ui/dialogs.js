@@ -3,6 +3,7 @@
 // Renders into #dialogroot and #toastroot, which sit above #modalroot so a
 // confirm can appear over an open editor modal.
 import { escapeHtml } from '../utils.js';
+import { icon } from './icons.js';
 
 import { setHtml } from './dom.js';
 // Escapes first, so the <br> substitution can't inject markup.
@@ -30,7 +31,7 @@ export function showToast(message, opts = {}) {
   setHtml(
     el,
     `
-    <span class="dr-toast-icon">${window.icon(TOAST_ICONS[type] || 'bulb', { size: 18 })}</span>
+    <span class="dr-toast-icon">${icon(TOAST_ICONS[type] || 'bulb', { size: 18 })}</span>
     <span class="dr-toast-msg">${formatMessage(message)}</span>
   `
   );
@@ -52,7 +53,7 @@ export function showToast(message, opts = {}) {
 
 // `buttons`: { label, value, class, default?, escapes? }. Resolves with the
 // clicked button's value, or the `escapes` one on Esc / backdrop click.
-function openDialog({ title, message, icon = 'alert', buttons }) {
+function openDialog({ title, message, iconName = 'alert', buttons }) {
   return new Promise((resolve) => {
     const root = document.getElementById('dialogroot');
     if (!root) {
@@ -80,7 +81,7 @@ function openDialog({ title, message, icon = 'alert', buttons }) {
       `
       <div class="dr-dialog">
         <div class="dr-dialog-head">
-          <span class="dr-dialog-icon">${window.icon(icon, { size: 22 })}</span>
+          <span class="dr-dialog-icon">${icon(iconName, { size: 22 })}</span>
           <h3 class="dr-dialog-title">${escapeHtml(title)}</h3>
         </div>
         ${message ? `<div class="dr-dialog-msg">${formatMessage(message)}</div>` : ''}
@@ -141,7 +142,7 @@ export function confirmDialog(opts = {}) {
   return openDialog({
     title,
     message,
-    icon: danger ? 'warning' : 'alert',
+    iconName: danger ? 'warning' : 'alert',
     // On a danger dialog Cancel takes the focus and the Enter binding. Enter is
     // caught by a keydown listener registered on document in the capture
     // phase, so it runs ahead of the bubble-phase handlers the rest of the app
@@ -171,12 +172,12 @@ export function confirmDialog(opts = {}) {
 export function alertDialog(opts = {}) {
   if (typeof opts === 'string') opts = { message: opts };
   const { title, message = '', okLabel = 'OK', type = 'info' } = opts;
-  const icon = type === 'error' ? 'alert' : type === 'warning' ? 'warning' : 'bulb';
+  const iconName = type === 'error' ? 'alert' : type === 'warning' ? 'warning' : 'bulb';
   const resolvedTitle = title || (type === 'error' ? 'Error' : 'Notice');
   return openDialog({
     title: resolvedTitle,
     message,
-    icon,
+    iconName,
     buttons: [{ label: okLabel, value: true, class: 'btn-primary', default: true, escapes: true }],
   }).then(() => undefined);
 }
@@ -209,7 +210,7 @@ export function promptDialog(opts = {}) {
       `
       <div class="dr-dialog">
         <div class="dr-dialog-head">
-          <span class="dr-dialog-icon">${window.icon('edit', { size: 22 })}</span>
+          <span class="dr-dialog-icon">${icon('edit', { size: 22 })}</span>
           <h3 class="dr-dialog-title">${escapeHtml(title)}</h3>
         </div>
         ${message ? `<div class="dr-dialog-msg">${formatMessage(message)}</div>` : ''}

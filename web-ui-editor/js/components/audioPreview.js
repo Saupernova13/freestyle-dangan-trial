@@ -2,6 +2,7 @@
 // editors. Players are registered under caller-chosen ids; callers supply
 // their control ids and a lazy blob loader.
 import { showToast } from '../ui/dialogs.js';
+import { icon } from '../ui/icons.js';
 import { formatAudioTime } from '../utils.js';
 
 import { setHtml } from '../ui/dom.js';
@@ -18,7 +19,7 @@ function releaseSrc(audio) {
 function setPlayButton(entry, isPlaying) {
   const btn = entry.opts.buttonId && document.getElementById(entry.opts.buttonId);
   if (btn)
-    setHtml(btn, isPlaying ? `${window.icon('pause')} Pause` : `${window.icon('play')} Play`);
+    setHtml(btn, isPlaying ? `${icon('pause')} Pause` : `${icon('play')} Play`);
 }
 
 function updateSeekDisplay(entry) {

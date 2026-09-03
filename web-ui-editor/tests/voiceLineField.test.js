@@ -23,10 +23,8 @@ function render(opts) {
   host.innerHTML = renderVoiceLineField({
     fileName: 'voice.wav',
     idBase: 'l1',
-    onPlay: 'play()',
-    onSeek: 'seek(this.value)',
-    onClear: 'clear()',
-    onUpload: 'upload(event)',
+    data: { gameId: 'g1', lineId: 'l1' },
+    actions: { play: 'playIt', seek: 'seekIt', clear: 'clearIt', upload: 'uploadIt' },
     ...opts,
   });
   return host;
@@ -60,18 +58,31 @@ describe('the voice line field', () => {
     expect(host.querySelector('input[type="file"]')).toBeNull();
   });
 
-  it('wires each control to the call the caller passed', () => {
+  it('names the action the caller passed on each control', () => {
     const host = render();
     const ids = voiceLineElementIds('l1');
-    expect(host.querySelector(`#${ids.buttonId}`).getAttribute('onclick')).toBe('play()');
-    expect(host.querySelector(`#${ids.seekBarId}`).getAttribute('oninput')).toBe(
-      'seek(this.value)'
-    );
+    expect(host.querySelector(`#${ids.buttonId}`).dataset.onClick).toBe('playIt');
+    expect(host.querySelector(`#${ids.seekBarId}`).dataset.onInput).toBe('seekIt');
     const buttons = [...host.querySelectorAll('button')];
-    expect(buttons.at(-1).getAttribute('onclick')).toBe('clear()');
-    expect(render({ fileName: null }).querySelector('input').getAttribute('onchange')).toBe(
-      'upload(event)'
-    );
+    expect(buttons.at(-1).dataset.onClick).toBe('clearIt');
+    expect(render({ fileName: null }).querySelector('input').dataset.onChange).toBe('uploadIt');
+  });
+
+  it('stamps the arguments on every control, escaped', () => {
+    // Both editors' controls carry the same attributes; only the values
+    // differ. A quote in a value is inert here, where in an inline handler it
+    // was one gate away from executing.
+    const host = render({ data: { gameId: 'g1', lineId: `a" onx="y` } });
+    for (const el of host.querySelectorAll('[data-on-click], [data-on-input]')) {
+      expect(el.dataset.gameId).toBe('g1');
+      expect(el.dataset.lineId).toBe(`a" onx="y`);
+      expect(el.getAttribute('onx')).toBeNull();
+    }
+  });
+
+  it('turns a camelCase argument into its data attribute', () => {
+    const host = render({ data: { gameId: 'g1', speakerKey: 'speaker2' } });
+    expect(host.querySelector('[data-on-click]').dataset.speakerKey).toBe('speaker2');
   });
 
   it('escapes the file name', () => {

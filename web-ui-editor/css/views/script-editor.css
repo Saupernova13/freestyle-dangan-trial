@@ -611,8 +611,9 @@
   outline-offset: 2px;
 }
 
-/* Camera Motion Tab */
-.camera-preview-box {
+/* The selected-option preview card, shared by the Camera Motion and Dialogue
+   Box Style tabs. It was defined twice, byte for byte, under two names. */
+.option-preview {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -623,24 +624,24 @@
   border: 1px solid var(--border-primary);
 }
 
-.camera-preview-icon {
+.option-preview-icon {
   font-size: 2.5rem;
   flex-shrink: 0;
 }
 
-.camera-preview-text {
+.option-preview-text {
   flex: 1;
   min-width: 0;
 }
 
-.camera-preview-text strong {
+.option-preview-text strong {
   font-size: 1rem;
   color: var(--text-primary);
   display: block;
   margin-bottom: 0.25rem;
 }
 
-.camera-preview-text p {
+.option-preview-text p {
   margin: 0;
   color: var(--text-tertiary);
   font-size: 0.8125rem;
@@ -936,39 +937,4 @@
   .script-drop-zone.drag-over-gap {
     height: 2rem;
   }
-}
-
-/* Dialogue Box Style Tab */
-.dialoguebox-preview-box {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--border-primary);
-}
-
-.dialoguebox-preview-icon {
-  font-size: 2.5rem;
-  flex-shrink: 0;
-}
-
-.dialoguebox-preview-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.dialoguebox-preview-text strong {
-  font-size: 1rem;
-  color: var(--text-primary);
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.dialoguebox-preview-text p {
-  margin: 0;
-  color: var(--text-tertiary);
-  font-size: 0.8125rem;
 }

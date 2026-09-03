@@ -49,8 +49,10 @@ npm run check   # lint + tests + build, all must pass
   is a lint error) and escape user-entered text with `escapeHtml()`.
 - Put pure logic in DOM-free modules and add unit tests in `tests/` (vitest
   runs in a node environment — no DOM).
-- Functions referenced by inline `onclick` markup must be exported (the
-  `js/main.js` bridge exposes them on `window`).
+- Behaviour for rendered markup is named in `data-on-<event>` and registered
+  with `registerActions()` (`js/ui/actions.js`); arguments travel in escaped
+  `data-*` attributes. Do not add an inline `on*` attribute or a `window.*`
+  handler - a test fails on both.
 
 ## Godot engine (freestyle-dangan-trial)
 

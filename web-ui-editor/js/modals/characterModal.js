@@ -11,6 +11,12 @@ import {
   missingCharacterFields,
 } from '../models/characterModel.js';
 import { CHARACTER_FORMAT_VERSION } from '../core/constants.js';
+import {
+  CHARACTER_FIELDS_BY_KEY,
+  characterFieldsFrom,
+  characterJsonFields,
+  emptyCharacterFields,
+} from '../models/characterFields.js';
 import { renderBloodTypeOptions } from '../models/characterModel.js';
 import { appSettings } from '../settings.js';
 import { confirmDialog, showToast } from '../ui/dialogs.js';
@@ -20,19 +26,7 @@ import { renderCastGrid } from '../views/castView.js';
 
 import { setHtml } from '../ui/dom.js';
 let activeIdx = null;
-let charFields = {
-  name: '',
-  surname: '',
-  heightM: 1,
-  heightCM: 50,
-  weight: '',
-  chest: '',
-  blood: 'A',
-  dob: '',
-  likes: '',
-  dislikes: '',
-  notes: '',
-};
+let charFields = emptyCharacterFields();
 let charSprites = [];
 let modalTab = 'details';
 let modalErr = '';
@@ -84,19 +78,7 @@ export async function openCharModal(idx) {
   saveAttempted = false;
 
   let c = state.cast[idx] || {};
-  charFields = {
-    name: c.name || '',
-    surname: c.surname || '',
-    heightM: c.heightM || 1,
-    heightCM: c.heightCM || 50,
-    weight: c.weight || '',
-    chest: c.chest || '',
-    blood: c.blood || 'A',
-    dob: c.dob || '',
-    likes: c.likes || '',
-    dislikes: c.dislikes || '',
-    notes: c.notes || '',
-  };
+  charFields = characterFieldsFrom(c);
 
   if (c.id && c._folderHandle) {
     showLoader(true, 'Loading sprites…');
@@ -183,73 +165,95 @@ function neededMark(key) {
   return !String(charFields[key] ?? '').trim() ? ' <span class="req-flag">needed</span>' : '';
 }
 
+// The form's row layout. Each entry is a row of one or two cells; a cell is a
+// field key, `height` for the bespoke two-input Height control, or null for a
+// spacer. Everything else about a field - its label, its type, its bounds,
+// whether it is required - comes from CHARACTER_FIELDS.
+const FORM_ROWS = [
+  ['name', 'surname'],
+  ['dob', 'blood'],
+  ['height', 'weight'],
+  ['chest', null],
+  ['likes', 'dislikes'],
+  ['notes'],
+];
+
+function heightCell() {
+  // A real two-input special case: one label over two bounded numbers with
+  // their units. The table drives the bounds; the row itself is hand-written
+  // rather than contorting the table to swallow it.
+  const m = CHARACTER_FIELDS_BY_KEY.heightM;
+  const cm = CHARACTER_FIELDS_BY_KEY.heightCM;
+  return `<label>Height</label>
+        <div class="dr-fg-field input2">
+          ${numberInput(m)}
+          <span>m</span>
+          ${numberInput(cm)}
+          <span>cm</span>
+        </div>`;
+}
+
+function numberInput(field, extraClass = '') {
+  return `<input type="number" min="${field.min}" max="${field.max}"${
+    field.step ? ` step="${field.step}"` : ''
+  } class="${extraClass}" value="${escapeHtml(charFields[field.key] ?? '')}" oninput="fieldUpdate('${field.key}',this.value)">`;
+}
+
+// One field's label and control. `oninput` alone: it fires for every control
+// type used here, type=date included, so the onchange that used to sit beside
+// each of these was a second attribute doing the same work.
+function renderCharacterField(key, isHeadmasterChar) {
+  const field = CHARACTER_FIELDS_BY_KEY[key];
+  const label = `<label>${field.label}${field.required ? neededMark(key) : ''}</label>`;
+  const invalid = field.required ? invalidClass(key) : '';
+  const value = charFields[key] ?? '';
+  const update = `fieldUpdate('${key}',this.value)`;
+
+  switch (field.type) {
+    case 'select':
+      return `${label}
+        <select required onchange="${update}">
+          ${renderBloodTypeOptions(charFields.blood)}
+        </select>`;
+    case 'number':
+      return `${label}
+        ${numberInput(field, invalid)}`;
+    case 'textarea':
+      return `${label}
+        <textarea class="${invalid}" oninput="${update}" placeholder="${escapeHtml(
+          field.placeholder(isHeadmasterChar)
+        )}">${escapeHtml(value)}</textarea>`;
+    case 'date':
+      return `${label}
+        <input type="date" class="${invalid}" value="${escapeHtml(value)}" oninput="${update}">`;
+    default:
+      return `${label}
+        <input class="${invalid}" value="${escapeHtml(value)}" oninput="${update}">`;
+  }
+}
+
 export function renderCharDetailsTab() {
   const isHeadmasterChar = isHeadmaster(activeIdx);
+
+  const rows = FORM_ROWS.map((cells) => {
+    const body = cells
+      .map((cell) => {
+        if (cell === null) return '<div class="dr-fg-field"></div>';
+        const inner =
+          cell === 'height' ? heightCell() : renderCharacterField(cell, isHeadmasterChar);
+        return `<div class="dr-fg-field">${inner}</div>`;
+      })
+      .join('\n      ');
+    return `<div class="dr-fg-row${cells.length === 1 ? ' single' : ''}">
+      ${body}
+    </div>`;
+  }).join('\n    ');
 
   return `<form class="dr-form" onsubmit="event.preventDefault();">
     <div class="dr-role-banner${isHeadmasterChar ? ' dr-role-banner--headmaster' : ''}">
       ${isHeadmasterChar ? `${window.icon('crown')} HEADMASTER CHARACTER` : `${window.icon('cap')} STUDENT CHARACTER`}
     </div>
-    <div class="dr-fg-row">
-      <div class="dr-fg-field">
-          <label>First Name${neededMark('name')}</label>
-          <input class="${invalidClass('name')}" value="${escapeHtml(charFields.name || '')}" onchange="fieldUpdate('name',this.value)" oninput="fieldUpdate('name',this.value)">
-      </div>
-      <div class="dr-fg-field">
-          <label>Last Name${neededMark('surname')}</label>
-          <input class="${invalidClass('surname')}" value="${escapeHtml(charFields.surname || '')}" onchange="fieldUpdate('surname',this.value)" oninput="fieldUpdate('surname',this.value)">
-      </div>
-    </div>
-    <div class="dr-fg-row">
-      <div class="dr-fg-field">
-          <label>Date of Birth${neededMark('dob')}</label>
-          <input type="date" class="${invalidClass('dob')}" value="${charFields.dob || ''}" onchange="fieldUpdate('dob',this.value)" oninput="fieldUpdate('dob',this.value)">
-      </div>
-      <div class="dr-fg-field">
-        <label>Blood Type</label>
-        <select required onchange="fieldUpdate('blood',this.value)">
-          ${renderBloodTypeOptions(charFields.blood)}
-        </select>
-      </div>
-    </div>
-    <div class="dr-fg-row">
-      <div class="dr-fg-field">
-        <label>Height</label>
-        <div class="dr-fg-field input2">
-          <input type="number" min="0.9" max="2.5" step="0.01" value="${charFields.heightM || ''}" onchange="fieldUpdate('heightM',this.value)" oninput="fieldUpdate('heightM',this.value)">
-          <span>m</span>
-          <input type="number" min="0" max="99" step="1" value="${charFields.heightCM || ''}" onchange="fieldUpdate('heightCM',this.value)" oninput="fieldUpdate('heightCM',this.value)">
-          <span>cm</span>
-        </div>
-      </div>
-      <div class="dr-fg-field">
-        <label>Weight (kg)${neededMark('weight')}</label>
-        <input type="number" min="0" max="300" class="${invalidClass('weight')}" value="${charFields.weight || ''}" onchange="fieldUpdate('weight',this.value)" oninput="fieldUpdate('weight',this.value)">
-      </div>
-    </div>
-    <div class="dr-fg-row">
-      <div class="dr-fg-field">
-        <label>Chest (cm)${neededMark('chest')}</label>
-        <input type="number" min="0" max="200" class="${invalidClass('chest')}" value="${charFields.chest || ''}" onchange="fieldUpdate('chest',this.value)" oninput="fieldUpdate('chest',this.value)">
-      </div>
-      <div class="dr-fg-field"></div>
-    </div>
-    <div class="dr-fg-row">
-      <div class="dr-fg-field">
-        <label>Likes${neededMark('likes')}</label>
-        <textarea class="${invalidClass('likes')}" onchange="fieldUpdate('likes',this.value)" oninput="fieldUpdate('likes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster enjoy?' : 'What does this student like?'}">${escapeHtml(charFields.likes || '')}</textarea>
-      </div>
-      <div class="dr-fg-field">
-        <label>Dislikes${neededMark('dislikes')}</label>
-        <textarea class="${invalidClass('dislikes')}" onchange="fieldUpdate('dislikes',this.value)" oninput="fieldUpdate('dislikes',this.value)" placeholder="${isHeadmasterChar ? 'What does this headmaster dislike?' : 'What does this student dislike?'}">${escapeHtml(charFields.dislikes || '')}</textarea>
-      </div>
-    </div>
-    <div class="dr-fg-row single">
-      <div class="dr-fg-field">
-        <label>Notes${neededMark('notes')}</label>
-        <textarea class="${invalidClass('notes')}" onchange="fieldUpdate('notes',this.value)" oninput="fieldUpdate('notes',this.value)" placeholder="${isHeadmasterChar ? 'Additional notes about this headmaster...' : 'Additional notes about this student...'}">${escapeHtml(charFields.notes || '')}</textarea>
-      </div>
-    </div>
+    ${rows}
   </form>`;
 }
 
@@ -379,17 +383,7 @@ export async function trySaveChar() {
       // Absent in older files, which are treated as the current major.
       formatVersion: CHARACTER_FORMAT_VERSION,
       id: characterId,
-      name: charFields.name,
-      surname: charFields.surname,
-      heightM: parseFloat(charFields.heightM),
-      heightCM: parseInt(charFields.heightCM),
-      weight: parseInt(charFields.weight),
-      chest: parseInt(charFields.chest),
-      blood: charFields.blood,
-      dob: charFields.dob,
-      likes: charFields.likes,
-      dislikes: charFields.dislikes,
-      notes: charFields.notes,
+      ...characterJsonFields(charFields),
       isHeadmaster: isHeadmaster(activeIdx),
       position: activeIdx,
       lastModified: new Date().toISOString(),

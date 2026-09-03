@@ -4,6 +4,23 @@ import { COLOR_REGEX, activeLine, sl } from './state.js';
 import { renderScriptLineModal, failField } from '../scriptLineModal.js';
 
 import { setHtml } from '../../ui/dom.js';
+// The colors the preset swatches offer. The buttons used to be written out
+// by hand with their hex inline, and selectHighlightColor then read each
+// color back out of btn.style.background - which the browser has serialized
+// to rgb() - and converted it to hex again just to decide which swatch was
+// active. The source of truth for "which colors are presets" was a CSS
+// inline style on generated markup.
+const HIGHLIGHT_PRESETS = [
+  { color: '#FFFF00', title: 'Yellow' },
+  { color: '#FF0000', title: 'Red' },
+  { color: '#00FF00', title: 'Green' },
+];
+
+// The color input reports lowercase hex, so the comparison cannot be exact.
+function sameColor(a, b) {
+  return typeof a === 'string' && typeof b === 'string' && a.toLowerCase() === b.toLowerCase();
+}
+
 export function renderHighlightingTab(line) {
   const dialogue = line.dialogue || line.text || '';
 
@@ -78,21 +95,15 @@ export function renderHighlightingTab(line) {
         <div class="color-selection">
           <label>Text Color:</label>
           <div class="color-presets">
-            <button class="color-preset ${sl.highlighting.currentColor === '#FFFF00' ? 'active' : ''}"
-                    style="background: #FFFF00;"
-                    onclick="selectHighlightColor('#FFFF00')"
-                    title="Yellow">
-            </button>
-            <button class="color-preset ${sl.highlighting.currentColor === '#FF0000' ? 'active' : ''}"
-                    style="background: #FF0000;"
-                    onclick="selectHighlightColor('#FF0000')"
-                    title="Red">
-            </button>
-            <button class="color-preset ${sl.highlighting.currentColor === '#00FF00' ? 'active' : ''}"
-                    style="background: #00FF00;"
-                    onclick="selectHighlightColor('#00FF00')"
-                    title="Green">
-            </button>
+            ${HIGHLIGHT_PRESETS.map(
+              (preset) => `
+            <button class="color-preset ${sameColor(preset.color, sl.highlighting.currentColor) ? 'active' : ''}"
+                    style="background: ${preset.color};"
+                    data-color="${preset.color}"
+                    onclick="selectHighlightColor('${preset.color}')"
+                    title="${preset.title}">
+            </button>`
+            ).join('')}
             <input type="color" value="${sl.highlighting.currentColor}"
                    onchange="selectHighlightColor(this.value)"
                    title="Custom color">
@@ -216,19 +227,7 @@ export function initializeDragSelection() {
         : 'None'
     );
 
-    const unifiedPreview = document.getElementById('highlight-unified-preview');
-    if (unifiedPreview) {
-      const tempHighlights = [...sl.fields.highlights];
-      if (sl.highlighting.endChar > sl.highlighting.startChar) {
-        tempHighlights.push({
-          startChar: sl.highlighting.startChar,
-          endChar: sl.highlighting.endChar,
-          color: sl.highlighting.currentColor,
-          isTemp: true,
-        });
-      }
-      setHtml(unifiedPreview, renderHighlightedDialogue(dialogue, tempHighlights));
-    }
+    repaintPreview();
   }
 }
 
@@ -277,6 +276,28 @@ export function clearHighlightSelection() {
   }
 }
 
+// The unified preview, including the selection being made right now. Both the
+// selection handler and the color picker used to build this array and paint
+// it themselves; the only textual difference was an `isTemp: true` that was
+// written once and read nowhere, since normalizeHighlights rebuilds plain
+// objects and drops it.
+function repaintPreview() {
+  const unifiedPreview = document.getElementById('highlight-unified-preview');
+  const line = activeLine();
+  if (!unifiedPreview || !line) return;
+
+  const dialogue = line.dialogue || line.text || '';
+  const highlights = [...sl.fields.highlights];
+  if (sl.highlighting.endChar > sl.highlighting.startChar) {
+    highlights.push({
+      startChar: sl.highlighting.startChar,
+      endChar: sl.highlighting.endChar,
+      color: sl.highlighting.currentColor,
+    });
+  }
+  setHtml(unifiedPreview, renderHighlightedDialogue(dialogue, highlights));
+}
+
 export function selectHighlightColor(color) {
   if (!COLOR_REGEX.test(color)) {
     failField('Invalid color. Please use a valid hex color (e.g., #FF0000)');
@@ -294,43 +315,11 @@ export function selectHighlightColor(color) {
   }
 
   document.querySelectorAll('.color-preset').forEach((btn) => {
-    const btnColor = normalizeColorFormat(btn.style.background);
-    const targetColor = normalizeColorFormat(color);
-    if (btnColor && targetColor && btnColor.toLowerCase() === targetColor.toLowerCase()) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
+    btn.classList.toggle('active', sameColor(btn.dataset.color, color));
   });
 
   // Repaint so an in-progress selection takes the new color.
-  const line = activeLine();
-  const unifiedPreview = document.getElementById('highlight-unified-preview');
-  if (unifiedPreview && line && sl.highlighting.endChar > sl.highlighting.startChar) {
-    const dialogue = line.dialogue || line.text || '';
-    const tempHighlights = [
-      ...sl.fields.highlights,
-      {
-        startChar: sl.highlighting.startChar,
-        endChar: sl.highlighting.endChar,
-        color: sl.highlighting.currentColor,
-      },
-    ];
-    setHtml(unifiedPreview, renderHighlightedDialogue(dialogue, tempHighlights));
-  }
-}
-
-// hex or rgb() -> #RRGGBB, so the two can be compared.
-function normalizeColorFormat(color) {
-  if (!color || typeof color !== 'string') return null;
-  color = color.trim();
-  if (color.startsWith('#')) return color;
-  const match = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/i);
-  if (!match) return null;
-  const r = parseInt(match[1], 10).toString(16).padStart(2, '0');
-  const g = parseInt(match[2], 10).toString(16).padStart(2, '0');
-  const b = parseInt(match[3], 10).toString(16).padStart(2, '0');
-  return `#${r}${g}${b}`;
+  repaintPreview();
 }
 
 export function addHighlightFromSelection() {

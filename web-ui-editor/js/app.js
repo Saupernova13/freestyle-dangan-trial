@@ -1,101 +1,21 @@
 // Script editor view: the line list, line CRUD, and drag-to-reorder.
+//
 // The per-line character dropdown lives in components/characterSearchDropdown.js.
-import { initCharacterSearchDropdown } from './components/characterSearchDropdown.js';
+// The application bootstrap used to sit at the top of this file, which gave
+// "where does the app start?" a two-file answer; it is in main.js now.
 import { updateFloatingAddButton } from './components/floatingAddButton.js';
-import { initSpriteMagnifier } from './components/spriteMagnifier.js';
-import { initHistory, markFileDeleted, redo, undo } from './core/history.js';
+import { markFileDeleted } from './core/history.js';
 import { removeEntry, reportFailedRemoval } from './core/fileOps.js';
 import { dropAtGap, moveItem, reindexOrder } from './core/listOps.js';
 import { state } from './core/state.js';
-import { autoSaveTrial, hasPendingWrites, scheduleAutoSave } from './core/storage.js';
-import { alertDialog, confirmDialog } from './ui/dialogs.js';
-import { initModalBehaviors } from './ui/modalBehaviors.js';
-import { initKeyboardActivation } from './ui/a11y.js';
-import { updateExportButtonState } from './export.js';
-import { clearStoredSettings, loadSettings } from './settings.js';
-import { initializeTheme } from './ui/theme.js';
+import { autoSaveTrial, scheduleAutoSave } from './core/storage.js';
+import { confirmDialog } from './ui/dialogs.js';
 import { generateId, escapeHtml } from './utils.js';
-import { renderActiveView } from './views/viewManager.js';
 import { MINIGAME_TYPE_LABELS, SCRIPT_LINE_TYPE_LABELS } from './core/constants.js';
 import { renderLabelOptions, renderOptions } from './ui/options.js';
 import { hasCameraMotion, hasCustomBoxStyle, hasSpecialEffects } from './core/scriptLineFields.js';
 
 import { setHtml } from './ui/dom.js';
-
-document.addEventListener('DOMContentLoaded', function () {
-  // The editor had no unload handler of any kind, so closing the tab inside
-  // the 600 ms debounce window - or at any point after a save started failing
-  // - threw the work away without a word. The browser decides what prompt to
-  // show; all a handler can do is ask for one. Registered here rather than at
-  // module scope so importing this module does not require a DOM.
-  window.addEventListener('beforeunload', (e) => {
-    if (!hasPendingWrites()) return;
-    e.preventDefault();
-    e.returnValue = '';
-  });
-
-  initializeTheme();
-
-  // Nothing after this point runs if an initialiser throws, and there is no
-  // window.onerror to catch it, so the settings load reports failure instead:
-  // a corrupt localStorage value used to leave a permanently blank editor.
-  if (!loadSettings()) {
-    clearStoredSettings();
-    alertDialog({
-      title: 'Settings reset',
-      type: 'warning',
-      message:
-        'Your saved editor settings could not be read and have been reset to ' +
-        'their defaults. Your trials are unaffected.',
-    });
-  }
-
-  initSpriteMagnifier();
-  initCharacterSearchDropdown();
-  initModalBehaviors();
-  initKeyboardActivation();
-  renderActiveView();
-
-  document.getElementById('trialNameInput').addEventListener('input', (e) => {
-    state.trialName = e.target.value.trim();
-    updateExportButtonState();
-    scheduleAutoSave();
-  });
-
-  // skipHistory keeps the restore itself from being recorded as a new edit.
-  initHistory(() => {
-    document.getElementById('trialNameInput').value = state.trialName;
-    renderActiveView();
-    updateFloatingAddButton();
-    updateExportButtonState();
-    autoSaveTrial({ skipHistory: true });
-  });
-
-  document.addEventListener('keydown', (event) => {
-    if (!(event.ctrlKey || event.metaKey)) return;
-    const key = event.key.toLowerCase();
-    const isUndo = key === 'z' && !event.shiftKey;
-    const isRedo = key === 'y' || (key === 'z' && event.shiftKey);
-    if (!isUndo && !isRedo) return;
-
-    // No trial open: nothing to undo.
-    if (!state.dirHandle) return;
-    // A modal owns the keyboard; undoing under it would yank out its data.
-    if (
-      document.getElementById('modalroot')?.childElementCount ||
-      document.getElementById('dialogroot')?.childElementCount
-    ) {
-      return;
-    }
-    // Text fields keep native undo; their edits still reach scheduleAutoSave.
-    const t = event.target;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-
-    event.preventDefault();
-    if (isUndo) undo();
-    else redo();
-  });
-});
 
 export function renderScriptEditor() {
   const grid = document.getElementById('mainGrid');

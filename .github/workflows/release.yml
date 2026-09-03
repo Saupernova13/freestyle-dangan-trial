@@ -139,6 +139,20 @@ jobs:
       - uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
+          # Prepended above the generated notes. The Android APK is a debug
+          # export signed with a keystore CI generates fresh on every run, so
+          # its signature changes between releases and Android will refuse to
+          # install one over another. Saying so on the page is the least a
+          # release can do while that is still true; the fix needs a release
+          # keystore held in repository secrets (#137).
+          body: |
+            ## Downloads
+
+            - **Windows** - `CustomRonpa-windows-*.zip`, a release build.
+            - **Android** - `CustomRonpa-android-*.apk`, a **debug-signed**
+              build. Installing it over an earlier release will fail with a
+              signature mismatch: uninstall the old version first, which
+              also removes any trials you extracted and your settings.
           files: |
             CustomRonpa-windows-*.zip
             CustomRonpa-android-*.apk

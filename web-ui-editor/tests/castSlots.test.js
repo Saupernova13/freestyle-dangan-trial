@@ -18,7 +18,7 @@ vi.mock('../js/ui/dialogs.js', () => ({
 }));
 
 const { state } = await import('../js/core/state.js');
-const { loadCharactersFromIds } = await import('../js/core/storage.js');
+const { loadCharactersFromIds } = await import('../js/core/trialAssets.js');
 const { BLOCK_COUNT } = await import('../js/core/constants.js');
 const { validateTrialData } = await import('../js/core/trialSchema.js');
 

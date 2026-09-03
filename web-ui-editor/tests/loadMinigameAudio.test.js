@@ -13,7 +13,7 @@ vi.mock('../js/ui/dialogs.js', () => ({
 }));
 
 const { state } = await import('../js/core/state.js');
-const { loadMinigameAudio } = await import('../js/core/storage.js');
+const { loadMinigameAudio } = await import('../js/core/trialAssets.js');
 
 // A directory tree of { 'Audio': { 'Minigames': { g1: { 'a.wav': 'contents' } } } }.
 function dirHandle(tree) {

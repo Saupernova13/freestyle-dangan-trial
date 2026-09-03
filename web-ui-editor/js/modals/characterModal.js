@@ -4,7 +4,8 @@ import { uniqueDirectoryName } from '../core/opfs.js';
 import { markFileDeleted } from '../core/history.js';
 import { removeEntry } from '../core/fileOps.js';
 import { detachCharacter } from '../core/references.js';
-import { autoSaveTrial, loadRemainingSprites } from '../core/storage.js';
+import { autoSaveTrial } from '../core/storage.js';
+import { loadRemainingSprites } from '../core/trialAssets.js';
 import {
   getCharacterType,
   isHeadmaster,

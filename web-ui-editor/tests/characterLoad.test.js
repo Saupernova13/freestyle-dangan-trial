@@ -8,12 +8,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { BLOCK_COUNT } from '../js/core/constants.js';
 import { state } from '../js/core/state.js';
-import { loadCharactersFromIds } from '../js/core/storage.js';
+import { loadCharactersFromIds } from '../js/core/trialAssets.js';
 import { buildTrialJson } from '../js/core/trialSerialize.js';
 
 const GOOD = { id: 'FC_1', name: 'Fixture', surname: 'Chan' };
 
-// Minimal stand-ins for the File System Access handles storage.js walks.
+// Minimal stand-ins for the File System Access handles trialAssets.js walks.
 function fileHandle(text) {
   return { getFile: async () => ({ text: async () => text, name: 'character.json' }) };
 }

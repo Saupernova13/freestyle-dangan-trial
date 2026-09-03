@@ -8,6 +8,7 @@ import * as dialogs from './ui/dialogs.js';
 import * as theme from './ui/theme.js';
 import * as settings from './settings.js';
 import * as storage from './core/storage.js';
+import * as trialAssets from './core/trialAssets.js';
 import * as exporter from './export.js';
 import * as floatingAddButton from './components/floatingAddButton.js';
 import * as spriteMagnifier from './components/spriteMagnifier.js';
@@ -37,6 +38,7 @@ const modules = [
   theme,
   settings,
   storage,
+  trialAssets,
   exporter,
   floatingAddButton,
   spriteMagnifier,

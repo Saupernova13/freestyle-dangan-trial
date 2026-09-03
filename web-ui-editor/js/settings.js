@@ -2,6 +2,12 @@ import { closeModal } from './modals/modalCoordinator.js';
 import { alertDialog, showToast } from './ui/dialogs.js';
 import { focusFirstField } from './ui/modalBehaviors.js';
 import { setHtml } from './ui/dom.js';
+import { registerActions } from './ui/actions.js';
+
+registerActions('click', {
+  closeModal: () => closeModal(),
+  saveAppSettings: () => saveAppSettings(),
+});
 export const DEFAULT_SETTINGS = Object.freeze({
   maxSprites: 25,
 });
@@ -95,7 +101,7 @@ export function openSettings() {
     `
     <div class="dr-modal-bg">
       <div class="dr-modal">
-        <button class="dr-close" onclick="closeModal()">&times;</button>
+        <button class="dr-close" data-on-click="closeModal">&times;</button>
         <div class="dr-tabs">
           <div class="dr-tab active">${window.icon('settings')} Settings</div>
         </div>
@@ -114,8 +120,8 @@ export function openSettings() {
           </div>
         </div>
         <div class="dr-btn-row">
-          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveAppSettings()">Save Settings</button>
+          <button class="btn btn-secondary" data-on-click="closeModal">Cancel</button>
+          <button class="btn btn-primary" data-on-click="saveAppSettings">Save Settings</button>
         </div>
       </div>
     </div>

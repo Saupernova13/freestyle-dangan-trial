@@ -88,7 +88,7 @@ function renderWelcomeHub(mainGrid) {
                  <div class="hub-card-icon">${window.icon('folder', { size: 28 })}</div>
                  <h3>Folder on disk</h3>
                  <p>Edit a trial folder on your computer. Changes save in place.</p>
-                 <button class="btn btn-primary" onclick="chooseTrialDir()">Open folder…</button>
+                 <button class="btn btn-primary" data-on-click="chooseTrialDir">Open folder…</button>
                </div>`
             : ''
         }
@@ -99,8 +99,8 @@ function renderWelcomeHub(mainGrid) {
                  <h3>Browser storage</h3>
                  <p>Store trials inside this browser. Move them between machines with Export / Import.</p>
                  <div class="hub-card-actions">
-                   <button class="btn btn-primary" onclick="newOpfsTrial()">${window.icon('plus')} New trial</button>
-                   <button class="btn btn-secondary" onclick="triggerImportTrial()">${window.icon('upload')} Import .drtrial</button>
+                   <button class="btn btn-primary" data-on-click="newOpfsTrial">${window.icon('plus')} New trial</button>
+                   <button class="btn btn-secondary" data-on-click="triggerImportTrial">${window.icon('upload')} Import .drtrial</button>
                  </div>
                </div>`
             : ''
@@ -177,11 +177,13 @@ export async function populateHubTrials() {
         .map(
           (r) => `
         <li class="hub-trial-row">
-          <button class="hub-trial-open" data-folder="${escapeHtml(r.folder)}">
+          <button class="hub-trial-open" data-folder="${escapeHtml(r.folder)}"
+                  data-on-click="openOpfsTrialByName">
             ${window.icon('script', { size: 16 })}
             <span class="hub-trial-name">${escapeHtml(r.name)}</span>
           </button>
-          <button class="hub-trial-delete" title="Delete trial" data-folder="${escapeHtml(r.folder)}">
+          <button class="hub-trial-delete" title="Delete trial" data-folder="${escapeHtml(r.folder)}"
+                  data-on-click="deleteOpfsTrialAndRefresh">
             ${window.icon('trash', { size: 15 })}
           </button>
         </li>`
@@ -191,10 +193,4 @@ export async function populateHubTrials() {
   `
   );
 
-  container.querySelectorAll('.hub-trial-open').forEach((btn) => {
-    btn.addEventListener('click', () => window.openOpfsTrialByName(btn.dataset.folder));
-  });
-  container.querySelectorAll('.hub-trial-delete').forEach((btn) => {
-    btn.addEventListener('click', () => window.deleteOpfsTrialAndRefresh(btn.dataset.folder));
-  });
 }

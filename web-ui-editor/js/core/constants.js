@@ -36,6 +36,12 @@ export const DIFFICULTY_LABELS = {
   hard: 'Hard',
 };
 
+// The cap on any audio file the editor will take. Enforced in both upload
+// paths - the script line's audio tab and the minigames' shared
+// validateAudioUpload - so "rejected before it reaches the trial folder" is
+// true of every clip, not just the one path that used to check.
+export const MAX_AUDIO_SIZE = 50 * 1024 * 1024;
+
 // These keys are the schema's allowed set for gameType: trialSchema derives
 // GAME_TYPES from Object.keys, and the type dropdown renders every one of
 // them (disabling those without an editor). So adding a label makes a type

@@ -3,6 +3,7 @@
 import { markFileDeleted } from './history.js';
 import { removeEntry, reportFailedRemoval } from './fileOps.js';
 import { state } from './state.js';
+import { MAX_AUDIO_SIZE } from './constants.js';
 import { showToast } from '../ui/dialogs.js';
 
 async function getMinigameAudioDir(gameId, create) {
@@ -113,6 +114,17 @@ export function validateAudioUpload(event) {
   if (!file) return null;
   if (!file.type.startsWith('audio/')) {
     showToast('Please select an audio file.', { type: 'warning' });
+    event.target.value = '';
+    return null;
+  }
+  // Every minigame voice line came through here with no size check at all,
+  // while the script line's audio tab enforced the cap - so the one limit in
+  // the editor covered one of the two ways to attach a clip. An oversized
+  // one is written into the trial folder and then into every export.
+  if (file.size > MAX_AUDIO_SIZE) {
+    showToast(`Audio file is too large. Maximum size is ${MAX_AUDIO_SIZE / (1024 * 1024)}MB.`, {
+      type: 'warning',
+    });
     event.target.value = '';
     return null;
   }

@@ -7,6 +7,13 @@ import { blockTypes, FORMAT_VERSION } from './constants.js';
 export function buildTrialJson(s) {
   let characterIds = s.cast.map((c) => (c ? c.id : null));
 
+  // Every Blob field the minigame tree can hold, listed so JSON.stringify
+  // drops them instead of emitting `{}`. This is a schema contract, not an
+  // optimisation: a fourth blob field added by a new editor would be written
+  // to trial.json as an empty object and read back by the engine as a
+  // corrupt record - and nothing would fail, because the schema allows
+  // unknown keys. tests/runtimeFields.test.js checks this set against the
+  // blob fields minigameAudioSlots actually walks.
   const RUNTIME_FIELDS = new Set(['voiceLineBlob', 'oppositionAudioBlob', 'defenseAudioBlob']);
   let minigamesForSave = JSON.parse(
     JSON.stringify(s.minigames, (k, v) => (RUNTIME_FIELDS.has(k) ? undefined : v))

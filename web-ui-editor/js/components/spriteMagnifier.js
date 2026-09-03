@@ -4,7 +4,10 @@
 // re-renders without listeners to rebind.
 
 const SPRITE_MAGNIFIER_ZOOM = 2.5;
-const SPRITE_MAGNIFIER_SIZE = 200; // lens diameter in px
+// Must equal .sprite-magnifier-lens's width/height in css/components/modal.css:
+// the lens is positioned by subtracting half of this, and the background is
+// offset by the same, so a mismatch puts the zoom under the wrong pixel.
+const SPRITE_MAGNIFIER_SIZE = 200;
 const SPRITE_MAGNIFIER_OFFSET = 24; // gap between cursor and lens
 
 let _magnifierLens = null;

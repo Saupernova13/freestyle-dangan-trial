@@ -36,6 +36,11 @@ export const DIFFICULTY_LABELS = {
   hard: 'Hard',
 };
 
+// These keys are the schema's allowed set for gameType: trialSchema derives
+// GAME_TYPES from Object.keys, and the type dropdown renders every one of
+// them (disabling those without an editor). So adding a label makes a type
+// both selectable and valid, and trimming an "unused" one makes every trial
+// that holds it fail validation.
 export const MINIGAME_TYPE_LABELS = {
   nonstop_debate: 'Nonstop Debate',
   mass_panic_debate: 'Mass Panic Debate',

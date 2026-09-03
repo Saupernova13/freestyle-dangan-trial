@@ -1,6 +1,12 @@
 // Effects tab: toggle screen/transition effects that fire on this line.
 import { refreshTabBody, sl } from './state.js';
 import { escapeHtml } from '../../utils.js';
+import { registerActions } from '../../ui/actions.js';
+
+registerActions('click', {
+  removeEffect: (el) => removeEffect(Number(el.dataset.index)),
+  toggleEffect: (el) => toggleEffect(el.dataset.effectType),
+});
 
 // `icon` is an icon-set name (see js/ui/icons.js), rendered via window.icon().
 const AVAILABLE_EFFECTS = [
@@ -41,7 +47,7 @@ export function renderSpecialEffectsTab() {
             ${effect.duration ? `Duration: ${escapeHtml(effect.duration)}s` : ''}
           </div>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="removeEffect(${idx})">
+        <button class="btn btn-secondary btn-sm" data-index="${idx}" data-on-click="removeEffect">
           ${window.icon('trash', { size: 15 })}
         </button>
       </div>
@@ -53,7 +59,7 @@ export function renderSpecialEffectsTab() {
     const isActive = effects.some((e) => e.type === effect.type);
     return `
       <div class="effect-option ${isActive ? 'effect-active' : ''}"
-           onclick="toggleEffect('${effect.type}')">
+           data-effect-type="${escapeHtml(effect.type)}" data-on-click="toggleEffect">
         <div class="effect-option-icon">${window.icon(effect.icon, { size: 22 })}</div>
         <div class="effect-option-label">${effect.label}</div>
         ${isActive ? `<div class="effect-checkmark">${window.icon('check', { size: 14 })}</div>` : ''}

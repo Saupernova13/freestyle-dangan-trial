@@ -1,6 +1,11 @@
 // Sprite tab: pick which character sprite shows during a speaking line.
 import { sl } from './state.js';
 import { renderScriptLineModal, failField } from '../scriptLineModal.js';
+import { registerActions } from '../../ui/actions.js';
+
+registerActions('click', {
+  selectSprite: (el) => selectSprite(Number(el.dataset.spriteIndex)),
+});
 
 export function renderSpriteSelectionTab(character) {
   if (!character.sprites || character.sprites.length === 0) {
@@ -27,7 +32,7 @@ export function renderSpriteSelectionTab(character) {
       const isSelected = sl.fields.spriteIndex === idx + 1;
       return `
       <div class="dr-sprslot ${isSelected ? 'selected-sprite' : ''}"
-           onclick="selectSprite(${idx + 1})"
+           data-sprite-index="${idx + 1}" data-on-click="selectSprite"
            title="Sprite ${idx + 1}">
         <img src="${spr.dataURL}" alt="Sprite ${idx + 1}">
         ${isSelected ? `<div class="sprite-check">${window.icon('check', { size: 16 })}</div>` : ''}

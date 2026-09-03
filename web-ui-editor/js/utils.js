@@ -44,6 +44,11 @@ export function escapeHtml(text) {
 //
 // Ranges paint a per-character color map (later entries win), then re-emit as
 // runs, so overlaps, stale ranges and bad indices cannot survive.
+//
+// startIndex/endIndex are the pre-4.0 spelling of startChar/endChar, read
+// here so an older trial's highlights survive being opened. They appear
+// nowhere else and are not written back - which is exactly why they read as
+// dead defensive code and need this line to keep them from being deleted.
 export function normalizeHighlights(highlights, textLength) {
   if (!Array.isArray(highlights) || textLength <= 0) return [];
 

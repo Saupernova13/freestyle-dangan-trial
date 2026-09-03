@@ -5,12 +5,10 @@ import {
   toggleAudioPreview,
 } from '../../components/audioPreview.js';
 import { state } from '../../core/state.js';
+import { MAX_AUDIO_SIZE } from '../../core/constants.js';
 import { escapeHtml } from '../../utils.js';
 import { AUDIO_PREVIEW_KEY, sl } from './state.js';
 import { renderScriptLineModal, failField } from '../scriptLineModal.js';
-
-// Audio files larger than this are rejected before they reach the trial folder.
-const MAX_AUDIO_SIZE = 50 * 1024 * 1024;
 
 export function renderAudioUploadTab() {
   const hasAudio = sl.fields.audioFile !== null;

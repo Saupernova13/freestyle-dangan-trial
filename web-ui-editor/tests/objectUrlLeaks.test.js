@@ -20,6 +20,8 @@ vi.mock('../js/ui/dialogs.js', () => ({
 }));
 vi.mock('../js/core/storage.js', () => ({
   autoSaveTrial: vi.fn(async () => {}),
+}));
+vi.mock('../js/core/trialAssets.js', () => ({
   loadRemainingSprites: vi.fn(async () => {}),
 }));
 vi.mock('../js/views/castView.js', () => ({ renderCastGrid: vi.fn() }));

@@ -15,6 +15,8 @@ const readSource = (file) => readFileSync(resolve(here, '..', file), 'utf8');
 
 vi.mock('../js/core/storage.js', () => ({
   autoSaveTrial: vi.fn(),
+}));
+vi.mock('../js/core/trialAssets.js', () => ({
   loadRemainingSprites: vi.fn(),
 }));
 vi.mock('../js/views/minigameView.js', () => ({

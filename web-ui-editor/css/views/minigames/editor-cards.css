@@ -115,7 +115,7 @@
 .form-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.15);
+  box-shadow: var(--focus-ring);
 }
 
 .form-input::placeholder,

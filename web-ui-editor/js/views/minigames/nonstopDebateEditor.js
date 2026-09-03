@@ -17,11 +17,12 @@ import {
   TEXT_DIRECTIONS,
   TEXT_EFFECTS,
   TEXT_FONTS,
-  renderOptions,
+  renderTextStyleOptions,
 } from '../../core/debateTextOptions.js';
 import { orderedCopy } from '../../core/minigameDefaults.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
+import { renderOptions } from '../../ui/options.js';
 
 // The header, the Add button and addDialogueLine all read this, so the
 // number the author is shown and the number enforced cannot drift apart.
@@ -224,16 +225,16 @@ export function renderDialogueLineEditor(gameId, line, index) {
             <label>Correct Answer Bullet</label>
             <select class="form-input"
                     onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'answerBulletId', this.value)">
-              <option value="">No answer (false target)</option>
-              ${state.truthBullets
-                .map(
-                  (bullet) => `
-                <option value="${bullet.bulletId}" ${line.answerBulletId === bullet.bulletId ? 'selected' : ''}>
-                  ${escapeHtml(bullet.name || 'Unnamed Bullet')}
-                </option>
-              `
-                )
-                .join('')}
+              ${renderOptions(
+                [
+                  { value: '', label: 'No answer (false target)' },
+                  ...state.truthBullets.map((bullet) => ({
+                    value: bullet.bulletId,
+                    label: bullet.name || 'Unnamed Bullet',
+                  })),
+                ],
+                line.answerBulletId
+              )}
             </select>
           </div>
 
@@ -318,21 +319,21 @@ export function renderDialogueLineEditor(gameId, line, index) {
                 <div class="form-group">
                   <label>Text Effect</label>
                   <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textEffect', this.value)">
-                    ${renderOptions(TEXT_EFFECTS, line.textEffect)}
+                    ${renderTextStyleOptions(TEXT_EFFECTS, line.textEffect)}
                   </select>
                 </div>
 
                 <div class="form-group">
                   <label>Text Font</label>
                   <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textFont', this.value)">
-                    ${renderOptions(TEXT_FONTS, line.textFont)}
+                    ${renderTextStyleOptions(TEXT_FONTS, line.textFont)}
                   </select>
                 </div>
 
                 <div class="form-group">
                   <label>Movement Direction</label>
                   <select class="form-input" onchange="updateDialogueLine('${gameId}', '${line.lineId}', 'textMovementDirection', this.value)">
-                    ${renderOptions(TEXT_DIRECTIONS, line.textMovementDirection)}
+                    ${renderTextStyleOptions(TEXT_DIRECTIONS, line.textMovementDirection)}
                   </select>
                 </div>
               </div>

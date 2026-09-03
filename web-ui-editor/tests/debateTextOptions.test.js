@@ -9,7 +9,7 @@ import {
   TEXT_DIRECTIONS,
   TEXT_EFFECTS,
   TEXT_FONTS,
-  renderOptions,
+  renderTextStyleOptions,
 } from '../js/core/debateTextOptions.js';
 import {
   renderNonstopDebateEditor,
@@ -19,7 +19,7 @@ import { renderMassPanicLine } from '../js/views/minigames/massPanicDebateEditor
 
 function optionsOf(html, selected) {
   const select = document.createElement('select');
-  select.innerHTML = renderOptions(html, selected);
+  select.innerHTML = renderTextStyleOptions(html, selected);
   return [...select.options];
 }
 
@@ -27,7 +27,7 @@ beforeEach(() => {
   window.icon = () => '';
 });
 
-describe('renderOptions', () => {
+describe('renderTextStyleOptions', () => {
   it('offers every value in the table', () => {
     expect(optionsOf(TEXT_EFFECTS, 'normal').map((o) => o.value)).toEqual(
       TEXT_EFFECTS.map((e) => e.value)

@@ -8,13 +8,19 @@
 // ever written or read. See #59.
 //
 // Keep DOM-free: those tests run under node.
-import { BLOCK_COUNT, FORMAT_VERSION, MINIGAME_TYPE_LABELS } from './constants.js';
+import {
+  BLOCK_COUNT,
+  DIFFICULTY_LABELS,
+  FORMAT_VERSION,
+  MINIGAME_TYPE_LABELS,
+  SCRIPT_LINE_TYPE_LABELS,
+} from './constants.js';
 
-const LINE_TYPES = ['speaking', 'narrator', 'minigame'];
+// Derived from the same tables the dropdowns render, so a value the editor
+// offers is a value the validator accepts.
+const LINE_TYPES = Object.keys(SCRIPT_LINE_TYPE_LABELS);
 const GAME_TYPES = Object.keys(MINIGAME_TYPE_LABELS);
-// The engine keys four independent tuning tables on this and falls back to
-// medium for anything else, silently, in all four.
-const DIFFICULTIES = ['easy', 'medium', 'hard'];
+const DIFFICULTIES = Object.keys(DIFFICULTY_LABELS);
 const VERSION_PATTERN = /^\d+\.\d+$/;
 const COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 

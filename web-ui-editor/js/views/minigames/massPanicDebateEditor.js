@@ -16,10 +16,11 @@ import {
   TEXT_DIRECTIONS,
   TEXT_EFFECTS,
   TEXT_FONTS,
-  renderOptions,
+  renderTextStyleOptions,
 } from '../../core/debateTextOptions.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
+import { renderOptions } from '../../ui/options.js';
 
 // ==================== Main Rendering ====================
 
@@ -168,16 +169,13 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
           <label>Correct Answer Bullet (Only 1 per minigame)</label>
           <select class="form-input"
                   onchange="handleMassPanicAnswerSelection('${gameId}', '${group.groupId}', '${speakerKey}', this.value)">
-            <option value="">None</option>
-            ${state.truthBullets
-              .map(
-                (b) => `
-              <option value="${b.bulletId}" ${line.answerBulletId === b.bulletId ? 'selected' : ''}>
-                ${escapeHtml(b.name)}
-              </option>
-            `
-              )
-              .join('')}
+            ${renderOptions(
+              [
+                { value: '', label: 'None' },
+                ...state.truthBullets.map((b) => ({ value: b.bulletId, label: b.name })),
+              ],
+              line.answerBulletId
+            )}
           </select>
         </div>
       </div>
@@ -187,21 +185,21 @@ export function renderMassPanicLine(gameId, group, line, speakerKey, speakerInde
           <label>Text Effect</label>
           <select class="form-input"
                   onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'textEffect', this.value)">
-            ${renderOptions(TEXT_EFFECTS, line.textEffect)}
+            ${renderTextStyleOptions(TEXT_EFFECTS, line.textEffect)}
           </select>
         </div>
         <div class="form-group">
           <label>Text Font</label>
           <select class="form-input"
                   onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'textFont', this.value)">
-            ${renderOptions(TEXT_FONTS, line.textFont)}
+            ${renderTextStyleOptions(TEXT_FONTS, line.textFont)}
           </select>
         </div>
         <div class="form-group">
           <label>Movement Direction</label>
           <select class="form-input"
                   onchange="updateMassPanicLineField('${gameId}', '${group.groupId}', '${speakerKey}', 'textMovementDirection', this.value)">
-            ${renderOptions(TEXT_DIRECTIONS, line.textMovementDirection)}
+            ${renderTextStyleOptions(TEXT_DIRECTIONS, line.textMovementDirection)}
           </select>
         </div>
       </div>

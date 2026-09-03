@@ -1,7 +1,7 @@
 // Helpers for reading and rendering cast members.
 import { blockTypes } from '../core/constants.js';
 import { state } from '../core/state.js';
-import { escapeHtml } from '../utils.js';
+import { renderOptions } from '../ui/options.js';
 
 export function getCharacterType(index) {
   return blockTypes[index] ? 'headmaster' : 'student';
@@ -44,17 +44,37 @@ export function isCharacterComplete(char) {
   return missingCharacterFields(char, hasSprite).length === 0;
 }
 
+// The blood types the profile offers. They are their own labels.
+export const BLOOD_TYPES = ['A', 'B', 'O', 'AB', 'Unknown'];
+
+// blood is an optional free string, so a character can hold no blood type at
+// all or one this list does not name - an imported profile saying "AB-", say.
+// With only the five fixed entries the control showed "A" selected in both
+// cases while the file said otherwise, and the next edit to any other field
+// on the form saved that "A" over it.
+export function renderBloodTypeOptions(selected) {
+  const items = [{ value: '', label: 'Not set' }].concat(
+    BLOOD_TYPES.map((type) => ({ value: type, label: type }))
+  );
+  if (selected && !BLOOD_TYPES.includes(selected)) {
+    items.push({ value: selected, label: selected, suffix: ' (from the file)' });
+  }
+  return renderOptions(items, selected || '');
+}
+
 // `disabledIds` are shown greyed with an "(already selected)" note, for the
 // editors where one character cannot fill two roles.
 export function renderCharacterOptions(selectedId, disabledIds = []) {
-  const options = state.cast
+  const items = state.cast
     .filter((c) => c)
     .map((c) => {
       const isDisabled = disabledIds.includes(c.id);
-      return `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}>
-        ${escapeHtml(`${c.name} ${c.surname}`)}${isDisabled ? ' (already selected)' : ''}
-      </option>`;
-    })
-    .join('');
-  return `<option value="">None</option>${options}`;
+      return {
+        value: c.id,
+        label: `${c.name} ${c.surname}`,
+        disabled: isDisabled,
+        suffix: isDisabled ? ' (already selected)' : '',
+      };
+    });
+  return renderOptions([{ value: '', label: 'None' }, ...items], selectedId);
 }

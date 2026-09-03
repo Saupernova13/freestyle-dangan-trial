@@ -9,7 +9,8 @@ import { renderHangmansGambitEditor } from './minigames/hangmansGambitEditor.js'
 import { renderLogicDiveEditor } from './minigames/logicDiveEditor.js';
 import { renderMassPanicDebateEditor } from './minigames/massPanicDebateEditor.js';
 import { renderNonstopDebateEditor } from './minigames/nonstopDebateEditor.js';
-import { MINIGAME_TYPE_LABELS } from '../core/constants.js';
+import { DIFFICULTY_LABELS, MINIGAME_TYPE_LABELS } from '../core/constants.js';
+import { renderLabelOptions, renderOptions } from '../ui/options.js';
 import { hasAuthoredContent, resetTypeSpecific } from '../core/minigameDefaults.js';
 import { setHtml } from '../ui/dom.js';
 let expandedMinigameId = null;
@@ -128,16 +129,13 @@ const MINIGAME_EDITORS = {
 // author can see what the trial holds, but cannot newly author a type the
 // editor cannot fill in.
 export function renderGameTypeOptions(selectedType) {
-  return Object.entries(MINIGAME_TYPE_LABELS)
-    .map(([type, label]) => {
-      const isSelected = selectedType === type;
+  return renderOptions(
+    Object.entries(MINIGAME_TYPE_LABELS).map(([type, label]) => {
       const hasEditor = Boolean(MINIGAME_EDITORS[type]);
-      const attrs =
-        (isSelected ? ' selected' : '') + (!hasEditor && !isSelected ? ' disabled' : '');
-      const suffix = hasEditor ? '' : ' (no editor yet)';
-      return `<option value="${type}"${attrs}>${escapeHtml(label + suffix)}</option>`;
-    })
-    .join('');
+      return { value: type, label, disabled: !hasEditor, suffix: hasEditor ? '' : ' (no editor yet)' };
+    }),
+    selectedType
+  );
 }
 
 export function renderMinigameEditor(mg) {
@@ -166,9 +164,7 @@ export function renderMinigameEditor(mg) {
         <div class="form-group">
           <label>Difficulty</label>
           <select class="form-input" onchange="updateMinigameField('${mg.gameId}', 'difficulty', this.value)">
-            <option value="easy" ${mg.difficulty === 'easy' ? 'selected' : ''}>Easy</option>
-            <option value="medium" ${mg.difficulty === 'medium' ? 'selected' : ''}>Medium</option>
-            <option value="hard" ${mg.difficulty === 'hard' ? 'selected' : ''}>Hard</option>
+            ${renderLabelOptions(DIFFICULTY_LABELS, mg.difficulty)}
           </select>
         </div>
 

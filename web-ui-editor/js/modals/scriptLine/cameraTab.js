@@ -1,6 +1,7 @@
 // Camera tab: per-line camera motion (speaking lines only).
 import { refreshTabBody, sl } from './state.js';
 import { failField } from '../scriptLineModal.js';
+import { renderOptions } from '../../ui/options.js';
 
 const CAMERA_TYPES = [
   { value: 'none', label: 'None', desc: 'No camera movement' },
@@ -46,19 +47,12 @@ const EASING_TYPES = [
 export function renderCameraMotionTab() {
   const cam = sl.fields.cameraMotion;
 
-  const cameraOptions = CAMERA_TYPES.map(
-    (type) =>
-      `<option value="${type.value}" ${cam.type === type.value ? 'selected' : ''} title="${type.desc}">
-      ${type.label}
-    </option>`
-  ).join('');
+  const cameraOptions = renderOptions(
+    CAMERA_TYPES.map((type) => ({ ...type, title: type.desc })),
+    cam.type
+  );
 
-  const easingOptions = EASING_TYPES.map(
-    (easing) =>
-      `<option value="${easing.value}" ${cam.easing === easing.value ? 'selected' : ''}>
-      ${easing.label}
-    </option>`
-  ).join('');
+  const easingOptions = renderOptions(EASING_TYPES, cam.easing);
 
   const selectedType = CAMERA_TYPES.find((t) => t.value === cam.type);
 

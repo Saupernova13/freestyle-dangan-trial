@@ -11,6 +11,7 @@ import {
   missingCharacterFields,
 } from '../models/characterModel.js';
 import { CHARACTER_FORMAT_VERSION } from '../core/constants.js';
+import { renderBloodTypeOptions } from '../models/characterModel.js';
 import { appSettings } from '../settings.js';
 import { confirmDialog, showToast } from '../ui/dialogs.js';
 import { focusFirstField } from '../ui/modalBehaviors.js';
@@ -207,11 +208,7 @@ export function renderCharDetailsTab() {
       <div class="dr-fg-field">
         <label>Blood Type</label>
         <select required onchange="fieldUpdate('blood',this.value)">
-          <option${charFields.blood === 'A' ? ' selected' : ''}>A</option>
-          <option${charFields.blood === 'B' ? ' selected' : ''}>B</option>
-          <option${charFields.blood === 'O' ? ' selected' : ''}>O</option>
-          <option${charFields.blood === 'AB' ? ' selected' : ''}>AB</option>
-          <option${charFields.blood === 'Unknown' ? ' selected' : ''}>Unknown</option>
+          ${renderBloodTypeOptions(charFields.blood)}
         </select>
       </div>
     </div>

@@ -2,6 +2,7 @@
 import { COLOR_REGEX, refreshTabBody, sl } from './state.js';
 import { escapeHtml } from '../../utils.js';
 import { failField } from '../scriptLineModal.js';
+import { renderOptions } from '../../ui/options.js';
 
 const BOX_STYLES = [
   { value: 'default', label: 'Default', desc: 'Standard rectangular box' },
@@ -16,12 +17,10 @@ const BOX_STYLES = [
 export function renderDialogueBoxTab() {
   const box = sl.fields.dialogueBoxStyle;
 
-  const styleOptions = BOX_STYLES.map(
-    (style) =>
-      `<option value="${style.value}" ${box.style === style.value ? 'selected' : ''} title="${style.desc}">
-      ${style.label}
-    </option>`
-  ).join('');
+  const styleOptions = renderOptions(
+    BOX_STYLES.map((style) => ({ ...style, title: style.desc })),
+    box.style
+  );
 
   const selectedStyle = BOX_STYLES.find((s) => s.value === box.style);
 

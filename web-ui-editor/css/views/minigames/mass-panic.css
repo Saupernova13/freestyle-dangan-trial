@@ -15,12 +15,6 @@
   gap: 1rem;
 }
 
-.mass-panic-controls {
-  margin: 1rem 0;
-  display: flex;
-  justify-content: flex-start;
-}
-
 .mass-panic-line-groups {
   margin-top: 1rem;
 }
@@ -88,11 +82,6 @@
 .badge-loud {
   background: rgba(255, 71, 71, 0.16);
   color: var(--error);
-}
-
-.badge-weak {
-  background: rgba(var(--primary-rgb), 0.15);
-  color: var(--primary);
 }
 
 .checkbox-label {

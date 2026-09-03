@@ -26,6 +26,28 @@ import { escapeHtml, showLoader } from '../utils.js';
 import { renderCastGrid } from '../views/castView.js';
 
 import { setHtml } from '../ui/dom.js';
+import { registerActions } from '../ui/actions.js';
+
+registerActions('click', {
+  closeCharModal: () => closeCharModal(),
+  switchCharModalTab: (el) => switchCharModalTab(el.dataset.tab),
+  removeCharacter: () => removeCharacter(),
+  trySaveChar: () => trySaveChar(),
+  bulkImportSprites: () => bulkImportSprites(),
+  triggerSpriteInput: (el) => triggerSpriteInput(Number(el.dataset.index)),
+});
+
+registerActions('input', { fieldUpdate: (el) => fieldUpdate(el.dataset.field, el.value) });
+
+registerActions('change', {
+  // The blood type control is a <select>, which reports `change`.
+  fieldUpdate: (el) => fieldUpdate(el.dataset.field, el.value),
+  spriteUpload: (el, event) => spriteUpload(event, Number(el.dataset.index)),
+});
+
+// The form has no submit button, but Enter in a text field submits one anyway,
+// which would reload the page and lose the edit.
+registerActions('submit', { preventDefault: (el, event) => event.preventDefault() });
 let activeIdx = null;
 let charFields = emptyCharacterFields();
 let charSprites = [];
@@ -108,12 +130,12 @@ export function renderCharacterModal() {
     `
     <div class="dr-modal-bg">
       <div class="dr-modal">
-        <button class="dr-close" onclick="closeCharModal()">&times;</button>
+        <button class="dr-close" data-on-click="closeCharModal">&times;</button>
         <div class="dr-tabs">
-          <button class="dr-tab${modalTab === 'details' ? ' active' : ''}" onclick="switchCharModalTab('details')">
+          <button class="dr-tab${modalTab === 'details' ? ' active' : ''}" data-tab="details" data-on-click="switchCharModalTab">
             ${isHeadmasterChar ? window.icon('crown') : window.icon('cap')} Character Details (${characterType.charAt(0).toUpperCase() + characterType.slice(1)})
           </button>
-          <button class="dr-tab${modalTab === 'sprites' ? ' active' : ''}" onclick="switchCharModalTab('sprites')">Sprites</button>
+          <button class="dr-tab${modalTab === 'sprites' ? ' active' : ''}" data-tab="sprites" data-on-click="switchCharModalTab">Sprites</button>
         </div>
         <div class="dr-modal-content">
           <div id="dr-tab-content">${modalTab === 'details' ? renderCharDetailsTab() : renderCharSpritesTab()}</div>
@@ -121,9 +143,9 @@ export function renderCharacterModal() {
           ${modalMsg ? `<div class="dr-success">${modalMsg}</div>` : ''}
         </div>
         <div class="dr-btn-row">
-          ${state.cast[activeIdx] ? `<button class="btn btn-danger dr-btn-remove" onclick="removeCharacter()">${window.icon('trash')} Remove</button>` : ''}
-          <button class="btn btn-secondary" onclick="closeCharModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="trySaveChar()" ${!state.dirHandle ? 'disabled' : ''}>Save ${isHeadmasterChar ? 'Headmaster' : 'Student'}</button>
+          ${state.cast[activeIdx] ? `<button class="btn btn-danger dr-btn-remove" data-on-click="removeCharacter">${window.icon('trash')} Remove</button>` : ''}
+          <button class="btn btn-secondary" data-on-click="closeCharModal">Cancel</button>
+          <button class="btn btn-primary" data-on-click="trySaveChar" ${!state.dirHandle ? 'disabled' : ''}>Save ${isHeadmasterChar ? 'Headmaster' : 'Student'}</button>
         </div>
       </div>
     </div>
@@ -197,7 +219,7 @@ function heightCell() {
 function numberInput(field, extraClass = '') {
   return `<input type="number" min="${field.min}" max="${field.max}"${
     field.step ? ` step="${field.step}"` : ''
-  } class="${extraClass}" value="${escapeHtml(charFields[field.key] ?? '')}" oninput="fieldUpdate('${field.key}',this.value)">`;
+  } class="${extraClass}" value="${escapeHtml(charFields[field.key] ?? '')}" data-field="${field.key}" data-on-input="fieldUpdate">`;
 }
 
 // One field's label and control. `oninput` alone: it fires for every control
@@ -208,12 +230,13 @@ function renderCharacterField(key, isHeadmasterChar) {
   const label = `<label>${field.label}${field.required ? neededMark(key) : ''}</label>`;
   const invalid = field.required ? invalidClass(key) : '';
   const value = charFields[key] ?? '';
-  const update = `fieldUpdate('${key}',this.value)`;
+  // The field name travels as data, so the markup carries no expression.
+  const update = `data-field="${key}" data-on-input="fieldUpdate"`;
 
   switch (field.type) {
     case 'select':
       return `${label}
-        <select required onchange="${update}">
+        <select required data-field="${key}" data-on-change="fieldUpdate">
           ${renderBloodTypeOptions(charFields.blood)}
         </select>`;
     case 'number':
@@ -221,15 +244,15 @@ function renderCharacterField(key, isHeadmasterChar) {
         ${numberInput(field, invalid)}`;
     case 'textarea':
       return `${label}
-        <textarea class="${invalid}" oninput="${update}" placeholder="${escapeHtml(
+        <textarea class="${invalid}" ${update} placeholder="${escapeHtml(
           field.placeholder(isHeadmasterChar)
         )}">${escapeHtml(value)}</textarea>`;
     case 'date':
       return `${label}
-        <input type="date" class="${invalid}" value="${escapeHtml(value)}" oninput="${update}">`;
+        <input type="date" class="${invalid}" value="${escapeHtml(value)}" ${update}>`;
     default:
       return `${label}
-        <input class="${invalid}" value="${escapeHtml(value)}" oninput="${update}">`;
+        <input class="${invalid}" value="${escapeHtml(value)}" ${update}>`;
   }
 }
 
@@ -250,7 +273,7 @@ export function renderCharDetailsTab() {
     </div>`;
   }).join('\n    ');
 
-  return `<form class="dr-form" onsubmit="event.preventDefault();">
+  return `<form class="dr-form" data-on-submit="preventDefault">
     <div class="dr-role-banner${isHeadmasterChar ? ' dr-role-banner--headmaster' : ''}">
       ${isHeadmasterChar ? `${window.icon('crown')} HEADMASTER CHARACTER` : `${window.icon('cap')} STUDENT CHARACTER`}
     </div>
@@ -263,13 +286,13 @@ export function renderCharSpritesTab() {
 
   return `
     <div class="dr-form">
-      <button class="btn btn-primary dr-sprslot-bulk" type="button" onclick="bulkImportSprites()">${window.icon('folder')} Bulk Import ${isHeadmasterChar ? 'Headmaster' : 'Student'} Sprites</button>
+      <button class="btn btn-primary dr-sprslot-bulk" type="button" data-on-click="bulkImportSprites">${window.icon('folder')} Bulk Import ${isHeadmasterChar ? 'Headmaster' : 'Student'} Sprites</button>
       <div class="dr-sprgrid">
         ${charSprites
           .map(
             (spr, i) =>
-              `<div class="dr-sprslot" onclick="triggerSpriteInput(${i})">
-            <input type="file" accept="image/*" id="sprite_inp_${i}" onchange="spriteUpload(event,${i})">
+              `<div class="dr-sprslot" data-index="${i}" data-on-click="triggerSpriteInput">
+            <input type="file" accept="image/*" id="sprite_inp_${i}" data-index="${i}" data-on-change="spriteUpload">
             ${
               spr
                 ? `<img src="${spr.dataURL}" alt="Sprite ${i + 1}"><span class="dr-sprslot-num">#${i + 1}</span>`

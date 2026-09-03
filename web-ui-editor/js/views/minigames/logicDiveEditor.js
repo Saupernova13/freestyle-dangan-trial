@@ -1,13 +1,10 @@
 // Logic Dive editor: questions, their answers, and drag-to-reorder.
-
-// Drag state for questions
-import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
+import { moveItem, reindexOrder } from '../../core/listOps.js';
 import { orderedCopy } from '../../core/minigameDefaults.js';
 import { confirmDialog } from '../../ui/dialogs.js';
 import { autoSaveTrial } from '../../core/storage.js';
 import { generateId, escapeHtml } from '../../utils.js';
 import { findMinigame, renderMinigameDetails } from '../minigameView.js';
-let draggedQuestionId = null;
 
 // ==================== Main Rendering ====================
 
@@ -51,24 +48,24 @@ export function renderLogicDiveQuestions(gameId, questions) {
 
   html += `<div class="question-drop-zone"
                 data-insert-position="0"
-                ondragover="handleQuestionGapDragOver(event)"
-                ondrop="handleQuestionDropInGap(event, '${gameId}', 0)"
-                ondragleave="handleQuestionGapDragLeave(event)"></div>`;
+                ondragover="handleListGapDragOver(event)"
+                ondrop="handleListDropInGap(event, '${gameId}', 'questions', 0)"
+                ondragleave="handleListGapDragLeave(event)"></div>`;
 
   orderedCopy(questions).forEach((question, index) => {
     html += `
-        <div class="logic-dive-question-wrapper"
+        <div class="reorder-wrapper"
              draggable="true"
-             ondragstart="handleQuestionDragStart(event, '${gameId}', '${question.questionId}')"
-             ondragend="handleQuestionDragEnd(event)">
+             ondragstart="handleListDragStart(event, 'questions', 'questionId', '${question.questionId}')"
+             ondragend="handleListDragEnd(event)">
           ${renderLogicDiveQuestionEditor(gameId, question, index)}
         </div>
 
         <div class="question-drop-zone"
              data-insert-position="${index + 1}"
-             ondragover="handleQuestionGapDragOver(event)"
-             ondrop="handleQuestionDropInGap(event, '${gameId}', ${index + 1})"
-             ondragleave="handleQuestionGapDragLeave(event)"></div>
+             ondragover="handleListGapDragOver(event)"
+             ondrop="handleListDropInGap(event, '${gameId}', 'questions', ${index + 1})"
+             ondragleave="handleListGapDragLeave(event)"></div>
       `;
   });
 
@@ -96,9 +93,9 @@ function ensureAnswers(question) {
 export function renderLogicDiveQuestionEditor(gameId, question, index) {
   const answers = answersOf(question);
   return `
-    <div class="logic-dive-question-card">
-      <div class="question-header">
-        <div class="question-drag-handle">
+    <div class="reorder-card">
+      <div class="reorder-card-header">
+        <div class="reorder-drag-handle">
           <div class="arrow-btn arrow-up"
                onclick="event.stopPropagation(); moveQuestionUp('${gameId}', '${question.questionId}')"
                title="Move up">${window.icon('chevronUp', { size: 14 })}</div>
@@ -106,7 +103,7 @@ export function renderLogicDiveQuestionEditor(gameId, question, index) {
                onclick="event.stopPropagation(); moveQuestionDown('${gameId}', '${question.questionId}')"
                title="Move down">${window.icon('chevronDown', { size: 14 })}</div>
         </div>
-        <div class="question-number">Question #${index + 1}</div>
+        <div class="reorder-number">Question #${index + 1}</div>
         <button class="btn-icon" onclick="deleteLogicDiveQuestion('${gameId}', '${question.questionId}')"
                 title="Delete question">${window.icon('trash', { size: 16 })}</button>
       </div>
@@ -346,46 +343,3 @@ export function moveQuestionDown(gameId, questionId) {
   autoSaveTrial();
 }
 
-// ==================== Drag-and-Drop for Questions ====================
-
-export function handleQuestionDragStart(event, gameId, questionId) {
-  draggedQuestionId = questionId;
-  event.target.classList.add('dragging');
-  event.dataTransfer.effectAllowed = 'move';
-}
-
-export function handleQuestionDragEnd(event) {
-  event.target.classList.remove('dragging');
-  draggedQuestionId = null;
-  document.querySelectorAll('.drag-over-gap').forEach((el) => {
-    el.classList.remove('drag-over-gap');
-  });
-}
-
-export function handleQuestionDropInGap(event, gameId, insertPosition) {
-  event.preventDefault();
-  event.stopPropagation();
-
-  const mg = findMinigame(gameId);
-  if (!mg || !draggedQuestionId) return;
-
-  const changed = dropAtGap(
-    mg.typeSpecific.questions,
-    'questionId',
-    [draggedQuestionId],
-    insertPosition
-  );
-  draggedQuestionId = null;
-  renderMinigameDetails();
-  if (changed) autoSaveTrial();
-}
-
-export function handleQuestionGapDragOver(event) {
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'move';
-  event.currentTarget.classList.add('drag-over-gap');
-}
-
-export function handleQuestionGapDragLeave(event) {
-  event.currentTarget.classList.remove('drag-over-gap');
-}

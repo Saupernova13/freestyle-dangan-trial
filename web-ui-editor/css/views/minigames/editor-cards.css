@@ -225,13 +225,59 @@
   text-align: center;
 }
 
-/* Dialogue Line Cards */
-.dialogue-line-card {
+/* Drag-to-reorder list items.
+   Nonstop debate's dialogue lines, debate scrum's arguments and logic dive's
+   questions are one component under three names, and the names were the whole
+   of the difference - which is how the drag feedback came to be defined for
+   two of the three and not the third. */
+.reorder-wrapper {
+  margin-bottom: 1rem;
+}
+
+.reorder-wrapper.dragging,
+.dialogue-line-wrapper.dragging {
+  opacity: 0.5;
+}
+
+/* Cards. The two margins are the two the sites were authored with; the rest
+   was byte-identical in four places. */
+.reorder-card,
+.dialogue-line-card,
+.mass-panic-group-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
-  margin-bottom: 0.75rem;
   overflow: hidden;
+}
+
+.reorder-card {
+  margin-bottom: 0.5rem;
+}
+
+.dialogue-line-card,
+.mass-panic-group-card {
+  margin-bottom: 0.75rem;
+}
+
+.reorder-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+}
+
+.reorder-drag-handle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.reorder-number {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex: 1;
 }
 
 .dialogue-line-card.shootable-target {

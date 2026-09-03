@@ -25,14 +25,6 @@
   margin-top: 1rem;
 }
 
-.mass-panic-group-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-
 .mass-panic-group-header {
   display: flex;
   align-items: center;

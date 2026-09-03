@@ -1,7 +1,7 @@
 // Nonstop Debate editor: truth bullet selection and dialogue lines.
 
 // Audio players state
-import { dropAtGap, moveItem, reindexOrder } from '../../core/listOps.js';
+import { moveItem, reindexOrder } from '../../core/listOps.js';
 import {
   deleteMinigameAudioFile,
   loadMinigameAudioFile,
@@ -29,7 +29,6 @@ import { renderOptions } from '../../ui/options.js';
 const MAX_DIALOGUE_LINES = 30;
 
 // Drag state for dialogue lines
-let draggedDialogueLineId = null;
 
 // lineId -> { textStyling, characterDisplay, feedback }
 // Per-line collapse state, keyed by lineId. Pruned in deleteDialogueLine:
@@ -132,23 +131,23 @@ export function renderNonstopDebateEditor(mg) {
   } else {
     html += `<div class="dialogue-drop-zone"
                   data-insert-position="0"
-                  ondragover="handleDialogueGapDragOver(event)"
-                  ondrop="handleDialogueDropInGap(event, '${mg.gameId}', 0)"
-                  ondragleave="handleDialogueGapDragLeave(event)"></div>`;
+                  ondragover="handleListGapDragOver(event)"
+                  ondrop="handleListDropInGap(event, '${mg.gameId}', 'dialogueLines', 0)"
+                  ondragleave="handleListGapDragLeave(event)"></div>`;
 
     orderedCopy(dialogueLines).forEach((line, index) => {
       html += `
         <div class="dialogue-line-wrapper"
              draggable="true"
-             ondragstart="handleDialogueDragStart(event, '${mg.gameId}', '${line.lineId}')"
-             ondragend="handleDialogueDragEnd(event)">
+             ondragstart="handleListDragStart(event, 'dialogueLines', 'lineId', '${line.lineId}')"
+             ondragend="handleListDragEnd(event)">
           ${renderDialogueLineEditor(mg.gameId, line, index)}
         </div>
         <div class="dialogue-drop-zone"
              data-insert-position="${index + 1}"
-             ondragover="handleDialogueGapDragOver(event)"
-             ondrop="handleDialogueDropInGap(event, '${mg.gameId}', ${index + 1})"
-             ondragleave="handleDialogueGapDragLeave(event)"></div>
+             ondragover="handleListGapDragOver(event)"
+             ondrop="handleListDropInGap(event, '${mg.gameId}', 'dialogueLines', ${index + 1})"
+             ondragleave="handleListGapDragLeave(event)"></div>
       `;
     });
   }
@@ -522,50 +521,6 @@ export function moveDialogueLineDown(gameId, lineId) {
   if (!moveItem(mg.typeSpecific.dialogueLines, 'lineId', lineId, 1)) return;
   renderMinigameDetails();
   autoSaveTrial();
-}
-
-// ==================== Drag-and-Drop for Dialogue Lines ====================
-
-export function handleDialogueDragStart(event, gameId, lineId) {
-  draggedDialogueLineId = lineId;
-  event.target.classList.add('dragging');
-  event.dataTransfer.effectAllowed = 'move';
-}
-
-export function handleDialogueDragEnd(event) {
-  event.target.classList.remove('dragging');
-  draggedDialogueLineId = null;
-  document.querySelectorAll('.drag-over-gap').forEach((el) => {
-    el.classList.remove('drag-over-gap');
-  });
-}
-
-export function handleDialogueDropInGap(event, gameId, insertPosition) {
-  event.preventDefault();
-  event.stopPropagation();
-
-  const mg = findMinigame(gameId);
-  if (!mg || !draggedDialogueLineId) return;
-
-  const changed = dropAtGap(
-    mg.typeSpecific.dialogueLines,
-    'lineId',
-    [draggedDialogueLineId],
-    insertPosition
-  );
-  draggedDialogueLineId = null;
-  renderMinigameDetails();
-  if (changed) autoSaveTrial();
-}
-
-export function handleDialogueGapDragOver(event) {
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'move';
-  event.currentTarget.classList.add('drag-over-gap');
-}
-
-export function handleDialogueGapDragLeave(event) {
-  event.currentTarget.classList.remove('drag-over-gap');
 }
 
 // ==================== Voice Line Handling ====================
